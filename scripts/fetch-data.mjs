@@ -53,7 +53,7 @@ const ROSTER = [
 ["new","EPL","Newcastle United"],
 ["rma","LALIGA","Real Madrid"],["bar","LALIGA","Barcelona"],
 ["bay","BUNDES","Bayern Munich"],["psg","LIGUE1","Paris Saint-Germain"],["int","SERIEA","Inter Milan"],
-["van-mls","MLS","Vancouver Whitecaps FC"],["tfc","MLS","Toronto FC"],
+["van-mls","MLS","Vancouver Whitecaps"],["tfc","MLS","Toronto FC"],
 ["mtl-mls","MLS","CF Montreal"],["lafc","MLS","Los Angeles FC"],
 ["mia","MLS","Inter Miami CF"],["sou","MLS","Seattle Sounders FC"]
 ];
@@ -62,7 +62,23 @@ const EXTRA = { EPL:["EFL","FAC","UCL"], LALIGA:["UCL"], BUNDES:["UCL"], LIGUE1:
 
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
 const pad = n => String(n).padStart(2,"0");
-const NAME_TO_ID = new Map(ROSTER.map(([id,,name])=>[norm(name), id]));
+/* Match on the name, and on the name minus a club suffix. ESPN says
+   "Vancouver Whitecaps" where the roster said "Vancouver Whitecaps FC",
+   and that one word silently detached every one of their fixtures from
+   the person following them. Tolerate the difference both ways. */
+const trimSuffix = n => n.replace(/\b(fc|cf|sc|afc)\b/gi, "").replace(/\s+/g," ").trim();
+const NAME_TO_ID = new Map();
+for(const [id,,name] of ROSTER){
+  NAME_TO_ID.set(norm(name), id);
+  const bare = norm(trimSuffix(name));
+  if(bare && !NAME_TO_ID.has(bare)) NAME_TO_ID.set(bare, id);
+}
+function idFor(displayName){
+  const n = norm(displayName);
+  if(NAME_TO_ID.has(n)) return NAME_TO_ID.get(n);
+  const bare = norm(trimSuffix(displayName || ""));
+  return NAME_TO_ID.get(bare) || null;
+}
 
 // US Eastern is UTC-4 in DST, UTC-5 otherwise. Close enough for date bucketing.
 function easternDate(ms){
@@ -116,7 +132,7 @@ function parseEvent(ev, comp){
   const num = v => { const n = parseInt(String(v==null?"":v).replace(/[^0-9-]/g,""),10); return Number.isNaN(n)?null:n; };
   const side = c => {
     const t = c.team;
-    return { id: NAME_TO_ID.get(norm(t.displayName)) || null,
+    return { id: idFor(t.displayName),
              name: t.displayName || t.name || "", abbr: (t.abbreviation||"?").slice(0,4),
              // the home club's city is what names the venue in the UI, so it
              // has to survive for clubs outside the followable roster too
@@ -162,7 +178,7 @@ for(const comp of [...comps].filter(c=>NA.has(c))){
   const teams = (((list||{}).sports||[{}])[0].leagues||[{}])[0].teams || [];
   for(const w of teams){
     const t = w.team; if(!t) continue;
-    const id = NAME_TO_ID.get(norm(t.displayName));
+    const id = idFor(t.displayName);
     if(id) espnIds[id] = { comp, espn: t.id };
   }
 }
@@ -192,6 +208,19 @@ for(const comp of [...comps].filter(c=>!NA.has(c))){
 }
 
 fixtures.sort((a,b)=>a.start-b.start);
+
+/* A roster entry that matched no fixture at all is almost always a name
+   that drifted, not a team with an empty schedule. Say so loudly: this
+   failure is invisible in the app, where it just looks like a team that
+   never plays. */
+const matched = new Set();
+fixtures.forEach(f=>{ if(f.home.id) matched.add(f.home.id); if(f.away.id) matched.add(f.away.id); });
+const unmatched = ROSTER.filter(([id])=>!matched.has(id)).map(([id,comp,name])=>id+" ("+name+", "+comp+")");
+if(unmatched.length){
+  console.warn("\n  !! " + unmatched.length + " roster team(s) matched no fixture — check the name against the feed:");
+  unmatched.forEach(u=>console.warn("     " + u));
+  console.warn("");
+}
 const withScore = fixtures.filter(f=>f.score).length;
 const byComp = {};
 fixtures.forEach(f=>{ byComp[f.comp] = (byComp[f.comp]||0)+1; });
@@ -234,7 +263,8 @@ const out = {
   generated: new Date(now).toISOString(),
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
-  counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures },
+  counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
+            unmatchedTeams: unmatched },
   fixtures
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");

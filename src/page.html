@@ -604,7 +604,9 @@ TEAM_ROWS.forEach(r=>{
 const teamList = Object.values(TEAMS);
 const CLUB_NAMES = {"van-mls":"Vancouver Whitecaps","tfc":"Toronto FC","mtl-mls":"CF Montréal","lafc":"LAFC","mia":"Inter Miami","sou":"Seattle Sounders"};
 const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1};
-const fullName = t => t ? (CLUB_NAMES[t.id] || (SOCCER[t.home] ? t.name : t.city+" "+t.name)) : "TBD";
+const fullName = t => !t ? "TBD"
+  : t.full ? t.name                       // came from the feed already complete
+  : (CLUB_NAMES[t.id] || (SOCCER[t.home] ? t.name : t.city+" "+t.name));
 
 /* ---- filler opponents: real clubs you can't select, so schedules look real ---- */
 /* Opponents referenced by the baked fallback below. Everything else
@@ -669,11 +671,23 @@ function addGame(o){
    different games between the same clubs on one date, and collapsing
    them would silently hide one. */
 const SAME_WINDOW = 4*3600000;
+function normName(x){
+  return (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+}
+/* Clubs outside the followable roster get a synthetic id, and the prefix
+   depends on which path created them — the committed file, a direct
+   fetch, or a remembered result. Comparing those raw made one game look
+   like two. Identity is the roster id where there is one, and the club's
+   name where there isn't. */
+function idKey(t){
+  if(!t) return "";
+  return (t.id && !/^(feed|espn):/.test(t.id)) ? t.id : normName(t.name);
+}
 function sameGame(a, b){
   if(!a.away || !b.away || a.comp !== b.comp) return false;
   if(Math.abs(a.start - b.start) >= SAME_WINDOW) return false;
-  return (a.home.id === b.home.id && a.away.id === b.away.id)
-      || (a.home.id === b.away.id && a.away.id === b.home.id);
+  const ah = idKey(a.home), aa = idKey(a.away), bh = idKey(b.home), ba = idKey(b.away);
+  return (ah === bh && aa === ba) || (ah === ba && aa === bh);
 }
 function mergeReal(built){
   // Replace by identity. Without this a refresh re-added every fixture
@@ -805,8 +819,8 @@ const ESPN_NAME = {
   bou:"AFC Bournemouth", ips:"Ipswich Town", avl:"Aston Villa", bha:"Brighton & Hove Albion",
   whu:"West Ham United", eve:"Everton", cry:"Crystal Palace", bre:"Brentford", ful:"Fulham",
   rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Inter Milan",
-  "van-mls":"Vancouver Whitecaps FC", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
-  lafc:"Los Angeles FC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
+  "van-mls":"Vancouver Whitecaps", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
+  lafc:"LAFC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
 };
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 let liveMode = null;          // null = not tried, true = reachable, false = blocked
@@ -832,9 +846,9 @@ function espnTeamObj(e, comp){
   }
   const key = "espn:"+comp+":"+(e.id||e.abbreviation||norm(disp));
   if(!TEAMS[key]){
-    TEAMS[key] = {id:key, home:comp, city:e.location||"", name:e.shortDisplayName||e.name||disp,
+    TEAMS[key] = {id:key, home:comp, city:e.location||"", name:disp || e.name || "?",
       abbr:(e.abbreviation||norm(disp).slice(0,3)).toUpperCase().slice(0,4), tz:"ET",
-      color:e.color?("#"+String(e.color).replace("#","")):"#5A6478", ghost:true, comps:[comp]};
+      color:e.color?("#"+String(e.color).replace("#","")):"#5A6478", ghost:true, full:true, comps:[comp]};
     allTeams.push(TEAMS[key]);
   }
   return TEAMS[key];
@@ -879,7 +893,7 @@ function staticTeam(t, comp){
   const key = "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
   if(!TEAMS[key]){
     TEAMS[key] = {id:key, home:comp, city:t.city || "", name:t.name || "?", abbr:(t.abbr||"?").slice(0,4),
-      color:t.color || "#5A6478", ghost:true, comps:[comp]};
+      color:t.color || "#5A6478", ghost:true, full:true, comps:[comp]};
     allTeams.push(TEAMS[key]);
   }
   return TEAMS[key];
@@ -914,9 +928,11 @@ async function espnTeamsList(comp){
   espnCache[comp] = list;
   return list;
 }
+const bare = n => norm(String(n||"").replace(/\b(fc|cf|sc|afc)\b/gi,""));
 function findEspnTeam(t, list){
   const want = norm(ESPN_NAME[t.id] || (t.city+" "+t.name));
   return list.find(e=>norm(e.displayName)===want)
+      || list.find(e=>bare(e.displayName)===bare(ESPN_NAME[t.id] || (t.city+" "+t.name)))
       || list.find(e=>norm(e.displayName)===norm(t.city+" "+t.name))
       || list.find(e=>norm(e.name)===norm(t.name) && norm(e.location)===norm(t.city))
       || list.find(e=>norm(e.name)===norm(t.name))
@@ -1227,7 +1243,8 @@ function gameRow(g, now){
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
     + (g.listed?'<span class="pill confirmed" title="Real fixture from a published TV listing">Listed</span>':"")
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
-    + (g.home && g.home.city ? '<span>in '+esc(g.home.city)+'</span>' : '')
+    + (g.home && g.home.city && normName(g.home.city) !== normName(g.home.name)
+        ? '<span>in '+esc(g.home.city)+'</span>' : '')
     + '</div>';
 
   let watch;
