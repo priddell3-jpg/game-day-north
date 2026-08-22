@@ -31,12 +31,15 @@ When sources disagree, the primary release wins and the disagreement goes in the
 
 ## Data
 
-Two layers:
+Three layers, in precedence order:
 
-1. **`LIVE_FIXTURES`** — real fixtures with real Canadian listings, scraped from published TV schedules. These render with a **Listed** badge.
-2. **Projections** — everything beyond the listing horizon, generated from season shapes and resolved against the rights table.
+1. **ESPN's public scoreboard API**, called from the browser on load and refreshed while a game is on. Gives real fixtures, real opponents, real scores and real game state. Rendered with a **Listed** badge.
+2. **`LIVE_FIXTURES`** — a small set of hand-checked fixtures with Canadian listings, used as a fallback where the API can't be reached.
+3. **Projections** — everything beyond that, generated from season shapes and resolved against the rights table.
 
-The page says which is which instead of blurring them. **Scores are simulated** — the fixtures and carriage are the real work here.
+Canadian carriage always comes from the rights table, never from ESPN, whose broadcast data is US-facing.
+
+**There is no code that invents a score.** Where a score can't be fetched, the page says so and links to the version that can. That matters because the page runs in two places: on GitHub Pages it can reach the API, while inside the claude.ai artifact viewer a strict CSP blocks all outside requests. The same file feature-detects and degrades honestly rather than filling the gap with a plausible number.
 
 ### Why the split
 
@@ -63,7 +66,7 @@ A scheduled task refreshes `LIVE_FIXTURES` daily and re-checks the rights table 
 
 - [ ] Service worker + manifest so it installs to an iPhone home screen
 - [ ] Web push for pre-game alerts and time changes (iOS 16.4+, home-screen installs only)
-- [ ] Widen the live-fixture window past ~2 weeks
+- [ ] Cache API responses so a reload isn't a cold fetch
 - [ ] Resolve FA Cup Canadian carriage before the third round in January
 
 ## License

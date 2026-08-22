@@ -908,25 +908,19 @@ const LIVE_FIXTURES = [
   {comp:"NHL", date:"2026-09-29", et:[19, 0], home:"tor-nhl", away:"mtl-nhl", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"},
   {comp:"NHL", date:"2026-09-29", et:[22, 0], home:"edm",     away:"van-nhl", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"}
 ];
-(function mergeLive(){
-  const spans = {};   // team+comp -> [earliest, latest] covered by real listings
-  const built = [];
-  LIVE_FIXTURES.forEach(f=>{
-    const home=TEAMS[f.home], away=TEAMS[f.away];
-    if(!home||!away) return;
-    const dayMs = Date.parse(f.date+"T00:00:00Z");
-    const start = makeStart(dayMs, "ET", f.et[0], f.et[1]);
-    [f.home,f.away].forEach(id=>{
-      const k = f.comp+"|"+id, sp = spans[k];
-      spans[k] = sp ? [Math.min(sp[0],start), Math.max(sp[1],start)] : [start,start];
+function mergeReal(built){
+  // drop projections inside any window that real data already covers
+  const spans = {};
+  built.forEach(g=>{
+    [g.home&&g.home.id, g.away&&g.away.id].forEach(id=>{
+      if(!id) return;
+      const k = g.comp+"|"+id, sp = spans[k];
+      spans[k] = sp ? [Math.min(sp[0],g.start), Math.max(sp[1],g.start)] : [g.start,g.start];
     });
-    built.push({comp:f.comp, home, away, start, moved:null,
-      localDow:new Date(dayMs).getUTCDay(), slotHour:f.et[0], stage:"",
-      liveCarriers:f.carriers.map(c=>({name:c[0], kind:c[1]})), liveSrc:LIVE_SRC[f.src], listed:true});
   });
-  // drop projections inside a window that real listings already cover
   for(let i=GAMES.length-1;i>=0;i--){
     const g = GAMES[i];
+    if(g.espn) continue;   // live ESPN data outranks baked listings and projections alike
     const ids = [g.home&&g.home.id, g.away&&g.away.id];
     const hit = ids.some(id=>{
       const sp = spans[g.comp+"|"+id];
@@ -936,7 +930,166 @@ const LIVE_FIXTURES = [
   }
   built.forEach(g=>addGame(g));
   GAMES.sort((a,b)=>a.start-b.start);
+}
+(function mergeBaked(){
+  const built = [];
+  LIVE_FIXTURES.forEach(f=>{
+    const home=TEAMS[f.home], away=TEAMS[f.away];
+    if(!home||!away) return;
+    const dayMs = Date.parse(f.date+"T00:00:00Z");
+    const start = makeStart(dayMs, "ET", f.et[0], f.et[1]);
+    built.push({comp:f.comp, home, away, start, moved:null, real:true,
+      localDow:new Date(dayMs).getUTCDay(), slotHour:f.et[0], stage:"",
+      liveCarriers:f.carriers.map(c=>({name:c[0], kind:c[1]})), liveSrc:LIVE_SRC[f.src], listed:true});
+  });
+  mergeReal(built);
 })();
+
+/* ============================================================
+   LIVE DATA — real fixtures and real scores from ESPN's public
+   scoreboard API, called straight from the browser.
+
+   This only works where the page is allowed to make outside
+   requests. On GitHub Pages it works; inside the claude.ai
+   artifact viewer a strict CSP blocks it, and the page then says
+   scores are unavailable rather than showing a number it made up.
+   Nothing here ever invents a score.
+   ============================================================ */
+const PAGES_URL = "https://priddell3-jpg.github.io/game-day-north/";
+const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
+const ESPN_PATH = {
+  NHL:"hockey/nhl", NBA:"basketball/nba", NFL:"football/nfl", MLB:"baseball/mlb",
+  MLS:"soccer/usa.1", EPL:"soccer/eng.1", UCL:"soccer/uefa.champions",
+  EFL:"soccer/eng.league_cup", FAC:"soccer/eng.fa",
+  LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1"
+};
+// clubs whose ESPN name differs from city + name
+const ESPN_NAME = {
+  liv:"Liverpool", ars:"Arsenal", mci:"Manchester City", mun:"Manchester United",
+  che:"Chelsea", tot:"Tottenham Hotspur", new:"Newcastle United", nfo:"Nottingham Forest",
+  bou:"AFC Bournemouth", ips:"Ipswich Town", avl:"Aston Villa", bha:"Brighton & Hove Albion",
+  whu:"West Ham United", eve:"Everton", cry:"Crystal Palace", bre:"Brentford", ful:"Fulham",
+  rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Inter Milan",
+  "van-mls":"Vancouver Whitecaps FC", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
+  lafc:"Los Angeles FC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
+};
+const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+let liveMode = null;          // null = not tried, true = reachable, false = blocked
+let liveNote = "";
+
+async function jget(url, ms){
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(), ms||9000);
+  try{
+    const res = await fetch(url, {signal:ctl.signal, mode:"cors"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    return await res.json();
+  } finally { clearTimeout(timer); }
+}
+function espnTeamObj(e, comp){
+  if(!e) return null;
+  const disp = e.displayName || e.name || "";
+  for(const t of allTeams){
+    if(t.home!==comp && (t.comps||[]).indexOf(comp)<0) continue;
+    if(ESPN_NAME[t.id] && norm(ESPN_NAME[t.id])===norm(disp)) return t;
+    if(norm(t.city+" "+t.name)===norm(disp)) return t;
+    if(norm(t.name)===norm(disp)) return t;
+  }
+  const key = "espn:"+comp+":"+(e.id||e.abbreviation||norm(disp));
+  if(!TEAMS[key]){
+    TEAMS[key] = {id:key, home:comp, city:e.location||"", name:e.shortDisplayName||e.name||disp,
+      abbr:(e.abbreviation||norm(disp).slice(0,3)).toUpperCase().slice(0,4), tz:"ET",
+      color:e.color?("#"+String(e.color).replace("#","")):"#5A6478", ghost:true, comps:[comp]};
+    allTeams.push(TEAMS[key]);
+  }
+  return TEAMS[key];
+}
+function parseEvent(ev, comp){
+  const cp = (ev.competitions && ev.competitions[0]) || ev;
+  const cs = cp.competitors || [];
+  const H = cs.find(c=>c.homeAway==="home") || cs[0];
+  const A = cs.find(c=>c.homeAway==="away") || cs[1];
+  if(!H || !A) return null;
+  const home = espnTeamObj(H.team, comp), away = espnTeamObj(A.team, comp);
+  if(!home || !away) return null;
+  const start = Date.parse(ev.date || cp.date);
+  if(!start) return null;
+  const stt = (cp.status || ev.status || {});
+  const ty = stt.type || {};
+  const nm = ty.name || "";
+  const status = /FINAL|FULL_TIME|POST/.test(nm) ? "final"
+               : /IN_PROGRESS|HALFTIME|END_PERIOD|FIRST_HALF|SECOND_HALF|RAIN|DELAY/.test(nm) ? "live"
+               : "scheduled";
+  const num = v => { const n = parseInt(v==null?"":String(v).replace(/[^0-9-]/g,""),10); return isNaN(n)?null:n; };
+  const sh = num(H.score && H.score.displayValue!=null ? H.score.displayValue : H.score);
+  const sa = num(A.score && A.score.displayValue!=null ? A.score.displayValue : A.score);
+  const label = ty.shortDetail || ty.description || (status==="final"?"Final":"");
+  return {
+    comp, home, away, start, moved:null, real:true, espn:true, listed:true,
+    localDow:new Date(start).getUTCDay(), slotHour:new Date(start).getUTCHours(), stage:"",
+    result: (status==="scheduled" || sh===null || sa===null)
+      ? {status, label:label||"", score:null}
+      : {status, label:label||(status==="final"?"Final":""), score:[sh,sa]}
+  };
+}
+const espnCache = {};
+async function espnTeamsList(comp){
+  if(espnCache[comp]) return espnCache[comp];
+  const r = await jget(ESPN+ESPN_PATH[comp]+"/teams?limit=500", 9000);
+  const lg = r && r.sports && r.sports[0] && r.sports[0].leagues && r.sports[0].leagues[0];
+  const list = ((lg && lg.teams) || []).map(x=>x.team).filter(Boolean);
+  espnCache[comp] = list;
+  return list;
+}
+function findEspnTeam(t, list){
+  const want = norm(ESPN_NAME[t.id] || (t.city+" "+t.name));
+  return list.find(e=>norm(e.displayName)===want)
+      || list.find(e=>norm(e.displayName)===norm(t.city+" "+t.name))
+      || list.find(e=>norm(e.name)===norm(t.name) && norm(e.location)===norm(t.city))
+      || list.find(e=>norm(e.name)===norm(t.name))
+      || list.find(e=>norm(e.abbreviation)===norm(t.abbr));
+}
+const NA = {NHL:1, NBA:1, NFL:1, MLB:1};
+const yyyymmdd = d => d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate());
+
+async function loadLive(){
+  const mine = [...selected].map(id=>TEAMS[id]).filter(Boolean);
+  if(!mine.length){ return; }
+  const naJobs = [], soccerComps = new Set();
+  mine.forEach(t=>{
+    (t.comps || [t.home]).forEach(c=>{
+      if(!ESPN_PATH[c]) return;
+      if(NA[c]) { if(c===t.home) naJobs.push([t,c]); }
+      else soccerComps.add(c);
+    });
+  });
+  const built = [], errs = [];
+  // North American leagues: one call per team gives the whole season
+  await Promise.all(naJobs.map(async ([t,comp])=>{
+    try{
+      const list = await espnTeamsList(comp);
+      const e = findEspnTeam(t, list);
+      if(!e) { errs.push(t.abbr+" not matched"); return; }
+      const sched = await jget(ESPN+ESPN_PATH[comp]+"/teams/"+e.id+"/schedule", 12000);
+      (sched.events||[]).forEach(ev=>{ const g = parseEvent(ev, comp); if(g) built.push(g); });
+    }catch(err){ errs.push(comp+": "+err.message); throw err; }
+  }));
+  // Soccer: scoreboard by date range keeps each competition correctly tagged
+  const now = new Date();
+  const from = new Date(now.getTime()-3*DAY), to = new Date(now.getTime()+24*DAY);
+  await Promise.all([...soccerComps].map(async comp=>{
+    try{
+      const r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+yyyymmdd(from)+"-"+yyyymmdd(to)+"&limit=200", 12000);
+      (r.events||[]).forEach(ev=>{ const g = parseEvent(ev, comp); if(g) built.push(g); });
+    }catch(err){ errs.push(comp+": "+err.message); throw err; }
+  }));
+  // keep only fixtures that involve a team you follow
+  const keep = built.filter(g=>selected.has(g.home.id) || selected.has(g.away.id));
+  const seen = new Set();
+  const dedup = keep.filter(g=>{ const k=g.comp+g.start+g.home.id+g.away.id; if(seen.has(k)) return false; seen.add(k); return true; });
+  if(dedup.length) mergeReal(dedup);
+  liveNote = dedup.length+" fixture"+(dedup.length===1?"":"s")+" from ESPN"+(errs.length?" ("+errs.length+" source"+(errs.length===1?"":"s")+" unavailable)":"");
+}
 
 /* ---- what's actually known yet, and when it will be ---- */
 const TV_PICK_WINDOW = 42*DAY;   // Premier League selections land ~6 weeks out
@@ -952,31 +1105,19 @@ function timeState(g, now){
 /* ============================ live state ============================ */
 const DURATION = {NHL:9300000, NBA:8400000, NFL:11400000, MLB:11100000};
 const durOf = c => DURATION[c] || 6900000;
-function finalScore(g){
-  const r = rng(g.seed);
-  switch(g.comp){
-    case "NHL": return [1+Math.floor(r()*5), 1+Math.floor(r()*5)];
-    case "NBA": return [98+Math.floor(r()*32), 98+Math.floor(r()*32)];
-    case "NFL": return [Math.floor(r()*6)*3+Math.floor(r()*3)*4, Math.floor(r()*6)*3+Math.floor(r()*3)*4];
-    case "MLB": return [Math.floor(r()*9), Math.floor(r()*9)];
-    default: return [Math.floor(r()*4), Math.floor(r()*4)];
-  }
-}
-function periodLabel(g, p){
-  if(g.comp==="MLB"){ const i=Math.min(9,Math.max(1,Math.ceil(p*9))); return (p*9%1<0.5?"TOP ":"BOT ")+i+(i===1?"ST":i===2?"ND":i===3?"RD":"TH"); }
-  if(SOCCER[g.comp]){ if(p>0.47&&p<0.58) return "HALFTIME"; return Math.min(90,Math.max(1,Math.round(p<0.5?p*95:(p-0.08)*95)))+"'"; }
-  const n = g.comp==="NHL"?3:4, per=Math.min(n,Math.max(1,Math.ceil(p*n))), within=1-((p*n)%1), lenMin=g.comp==="NHL"?20:12;
-  const s = Math.max(0,Math.round(within*lenMin*60));
-  return per+(per===1?"ST":per===2?"ND":per===3?"RD":"TH")+" "+Math.floor(s/60)+":"+pad(s%60);
-}
+
+/* A game's state comes from real data or it comes from nothing.
+   There is deliberately no code here that invents a score. */
 function stateOf(g, now){
   if(g.away===null) return {status:"scheduled"};
-  const dur = durOf(g.comp);
+  if(g.result){
+    const r = g.result;
+    return {status:r.status, score:r.score, label:r.label || (r.status==="final"?"Final":""), real:true};
+  }
   if(now < g.start) return {status:"scheduled"};
-  const fin = finalScore(g);
-  if(now >= g.start+dur) return {status:"final", score:fin, label:"Final"};
-  const p = (now-g.start)/dur;
-  return {status:"live", score:[Math.round(fin[0]*Math.min(1,p*1.05)), Math.round(fin[1]*Math.min(1,p*1.05))], label:periodLabel(g,p)};
+  return now >= g.start + durOf(g.comp)
+    ? {status:"final", label:"Final", score:null}
+    : {status:"live", label:"In progress", score:null};
 }
 
 /* ============================ per-viewer state ============================
@@ -1121,15 +1262,21 @@ function gameRow(g, now){
   } else if(st.status==="scheduled"){
     scoreCell += '<span class="countdown" data-start="'+g.start+'">'+esc(countdownText(g.start,now))+'</span>'
       + '<span class="score-state">'+(ts.state==="tbc" ? "Confirmed by "+esc(fmtShortDate(ts.confirmBy)) : verbOf(g.comp))+'</span>';
+  } else if(!st.score){
+    scoreCell += '<span class="score-state'+(st.status==="live"?" live":"")+'">'
+      + (st.status==="live"?'<span class="dot-live"></span>':"")+esc(st.label||"")+'</span>'
+      + (liveMode===false
+          ? '<a class="conf-note warn" href="'+PAGES_URL+'" target="_blank" rel="noopener" style="text-decoration:underline">Score unavailable here</a>'
+          : '<span class="conf-note">No score yet</span>');
   } else if(reveal){
-    const s = scoreFor(g,st);
-    scoreCell += '<span class="score-line">'+s[0]+' &ndash; '+s[1]+'</span>'
+    const sc = scoreFor(g,st);
+    scoreCell += '<span class="score-line">'+sc[0]+' &ndash; '+sc[1]+'</span>'
       + (st.status==="live" ? '<span class="score-state live"><span class="dot-live"></span>'+esc(st.label)+'</span>'
                             : '<span class="score-state">'+esc(st.label)+'</span>');
   } else {
     scoreCell += '<button class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal</button>'
       + (st.status==="live" ? '<span class="score-state live"><span class="dot-live"></span>Live now</span>'
-                            : '<span class="score-state">Final &middot; hidden</span>');
+                            : '<span class="score-state">'+esc(st.label||"Final")+' &middot; hidden</span>');
   }
   scoreCell += '</div>';
 
@@ -1219,10 +1366,16 @@ function renderRights(){
 
 function noteBlock(){
   const n = alerts.size;
-  const listed = myGames().filter(g=>g.listed).length;
-  return '<div class="note"><b>Mixed data.</b> Fixtures marked <span class="pill confirmed">Listed</span> are real, pulled from published TV schedules'
+  const listed = myGames().filter(g=>g.listed||g.espn).length;
+  const liveLine = liveMode===true
+      ? '<b>Live scores on.</b> Fixtures and scores come from ESPN\'s public feed, refreshed while a game is on. '
+    : liveMode===false
+      ? '<b>Scores are unavailable in this view.</b> The claude.ai viewer blocks outside requests, so no score can be fetched &mdash; and none is invented. <a href="'+PAGES_URL+'" target="_blank" rel="noopener">Open the live version</a> for real scores. '
+      : '<b>Checking for live data&hellip;</b> ';
+  return '<div class="note">' + liveLine
+    + 'Fixtures marked <span class="pill confirmed">Listed</span> are real'
     + (listed?' &mdash; <b>'+listed+'</b> of your upcoming games right now':'')
-    + '. Everything else is projected from the rights table below, which is real and sourced. Scores are still simulated. '
+    + '. Everything else is projected from the rights table below, which is real and sourced. '
     + 'Your teams, services and score setting are stored in this browser only &mdash; anyone else opening the same link sets up their own. '
     + (n? '<b>'+n+'</b> alert'+(n===1?"":"s")+' set.' : 'Tap the bell on a game to mark it for a pre-game push.')
     + '</div>';
@@ -1292,7 +1445,7 @@ function renderRail(now, todayKey){
     const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
     const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
     const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
-      +(s.status==="scheduled"?"&nbsp;":reveal?(first?sc[0]:sc[1]):"&bull;")+'</span></div>';
+      +(s.status==="scheduled"?"&nbsp;":!sc?"&ndash;":reveal?(first?sc[0]:sc[1]):"&bull;")+'</span></div>';
     const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
     return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
       +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
@@ -1377,6 +1530,20 @@ document.getElementById("main").addEventListener("click",function(e){
 });
 setInterval(()=>{ const now=Date.now(); document.querySelectorAll(".countdown[data-start]").forEach(el=>{ el.textContent=countdownText(Number(el.getAttribute("data-start")),now); }); },1000);
 setInterval(render,30000);
+
+function refreshLive(){
+  return loadLive().then(()=>{ liveMode=true; render(); })
+    .catch(()=>{ liveMode=false; render(); });
+}
+refreshLive();
+setInterval(()=>{
+  if(liveMode===false) return;
+  const now=Date.now();
+  const busy = myGames().some(g=>{ const st=stateOf(g,now); return st.status==="live"; })
+            || myGames().some(g=>g.start>now && g.start-now < 2*3600000);
+  if(busy) refreshLive();
+}, 60000);
+setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
 if(!selected.size){ drawer.removeAttribute("hidden"); document.getElementById("teamsToggle").setAttribute("aria-pressed",true); }
 persist(); renderDrawer(); render();
 })();
