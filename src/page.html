@@ -862,7 +862,7 @@ async function fillScores(){
   // newest first: if the request budget runs out it must be the oldest
   // results that wait, never tonight's game
   const need = myGames().filter(g=>
-    g.away && g.start > now - 8*DAY && g.start < now + 2*3600000 &&
+    g.away && g.start > now - 4*DAY && g.start < now + 2*3600000 &&
     !(g.result && g.result.score) && ESPN_PATH[g.comp]).sort((a,b)=>b.start-a.start);
   if(!need.length) return 0;
   const todayKey = espnDate(now);
@@ -1226,7 +1226,7 @@ function renderCoverage(now){
 /* ---------- results that already happened ---------- */
 function renderResults(now, todayKey){
   const midnight = new Date(); midnight.setHours(0,0,0,0);
-  const from = midnight.getTime() - 7*DAY;
+  const from = midnight.getTime() - 3*DAY;   // whole calendar days, so a day never appears half-shown
   const all = myGames().filter(g=>g.start>=from && g.start<midnight.getTime());
   // A projected fixture is a guess at when a team plays, with a made-up
   // opponent. That is fine for a diary of what is coming; it is worthless
@@ -1236,8 +1236,8 @@ function renderResults(now, todayKey){
   if(!past.length){
     if(!guessed) return "";
     return '<details class="results"'+(resultsOpen?" open":"")+'>'
-      + '<summary>Recent results<span class="conf-note">last 7 days &middot; nothing confirmed</span></summary>'
-      + '<div class="results-in"><div class="note">No confirmed fixtures for your teams in the last week. '
+      + '<summary>Recent results<span class="conf-note">last 3 days &middot; nothing confirmed</span></summary>'
+      + '<div class="results-in"><div class="note">No confirmed fixtures for your teams in the last three days. '
       + '<b>'+guessed+'</b> projected fixture'+(guessed===1?"":"s")+' fell in this window and '+(guessed===1?"is":"are")+' deliberately not shown &mdash; '
       + 'a projection guesses when a team plays and invents the opponent, so it can never be a result. '
       + 'Real fixtures appear here as soon as the feed covers them.</div></div></details>';
@@ -1249,7 +1249,7 @@ function renderResults(now, todayKey){
   let inner = "";
   map.forEach((gs,k)=>{ inner += daySection(k, gs, now, todayKey); });
   return '<details class="results"'+(resultsOpen?" open":"")+'>'
-    + '<summary>Recent results<span class="conf-note">last 7 days &middot; '
+    + '<summary>Recent results<span class="conf-note">last 3 days &middot; '
     + past.length+' game'+(past.length===1?"":"s")
     + (scored?' &middot; '+scored+' final score'+(scored===1?"":"s"):' &middot; no scores available')
     + tail + '</span></summary><div class="results-in">'+inner+'</div></details>';
@@ -1428,7 +1428,8 @@ document.getElementById("teamsToggle").addEventListener("click",function(){
 document.getElementById("teamSearch").addEventListener("input",function(){search=this.value;renderDrawer();});
 document.getElementById("teamGroups").addEventListener("click",function(e){
   const b=e.target.closest("[data-team]");
-  if(b){ const id=b.getAttribute("data-team"); selected.has(id)?selected.delete(id):selected.add(id); persist(); renderDrawer(); render(); return; }
+  if(b){ const id=b.getAttribute("data-team"); selected.has(id)?selected.delete(id):selected.add(id);
+    persist(); renderDrawer(); render(); refreshAfterPicks(); return; }
   if(e.target.closest("#copyLink")){
     const box=document.getElementById("shareBox");
     box.select();
@@ -1458,6 +1459,14 @@ setInterval(render,30000);
 function refreshLive(){
   return loadLive().then(()=>{ liveMode=true; liveErr=""; render(); })
     .catch(e=>{ liveMode=false; liveErr=(e && e.message || String(e)).slice(0,120); render(); });
+}
+/* Picking a team should fill its fixtures in straight away rather than
+   leaving a blank until the next cycle. Debounced so working through
+   the picker fires one fetch, not one per click. */
+let pickTimer = null;
+function refreshAfterPicks(){
+  clearTimeout(pickTimer);
+  pickTimer = setTimeout(()=>{ if(selected.size) refreshLive(); }, 700);
 }
 refreshLive();
 setInterval(()=>{
