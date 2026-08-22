@@ -216,6 +216,8 @@ main{padding:22px 0 80px}
   transition:border-color .15s,color .15s;
 }
 .hidden-score:hover{border-color:var(--accent);color:var(--accent)}
+.podium{font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.conf-note.leader{color:var(--accent)}
 .countdown{font-family:var(--mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bell{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--muted);border:1px solid transparent;transition:color .15s,background .15s,border-color .15s}
 .bell:hover{background:var(--surface-2);border-color:var(--line)}
@@ -745,8 +747,8 @@ function rememberResults(){
       if(g.result.status !== "final") return;
       if(g.start < now - 8*DAY || g.start > now) return;
       rows.push({c:g.comp, t:g.start, s:g.result.score, l:g.result.label,
-        h:[g.home.id, fullName(g.home), g.home.abbr, g.home.color],
-        a:[g.away.id, fullName(g.away), g.away.abbr, g.away.color]});
+        h:[g.home.id, fullName(g.home), g.home.abbr, g.home.color, g.home.city || ""],
+        a:[g.away.id, fullName(g.away), g.away.abbr, g.away.color, g.away.city || ""]});
     });
     LS.set(RESULTS_KEY, rows.slice(-80));
   }catch(e){}
@@ -754,8 +756,10 @@ function rememberResults(){
 function recallResults(){
   const rows = LS.get(RESULTS_KEY, []), now = Date.now(), built = [];
   if(!rows || !rows.length) return;
-  const team = (r, comp) => TEAMS[r[0]] || {id:r[0], home:comp, city:"", name:r[1],
-    abbr:r[2] || "?", color:r[3] || "#5A6478", ghost:true, comps:[comp]};
+  // full:true — the stored name is already complete, so the renderer must
+  // not prepend the city to it a second time
+  const team = (r, comp) => TEAMS[r[0]] || {id:r[0], home:comp, city:r[4] || "", name:r[1],
+    abbr:r[2] || "?", color:r[3] || "#5A6478", ghost:true, full:true, comps:[comp]};
   rows.forEach(r=>{
     if(!r || !r.t || r.t < now - 8*DAY) return;
     built.push({comp:r.c, home:team(r.h, r.c), away:team(r.a, r.c), start:r.t, moved:null,
@@ -925,9 +929,39 @@ async function loadStatic(){
       result:{status:f.status || "scheduled", label:f.label || "", score:f.score || null}});
   });
   if(built.length) mergeReal(built);
+  if(Array.isArray(r.cycling)) attachCycling(r.cycling);
   staticAt = Date.parse(r.generated) || 0;
   staticCount = built.length;
   return built.length;
+}
+
+/* Stage podiums and the race lead are results: they arrive from the
+   committed file or they don't exist. Nothing here invents one. */
+function attachCycling(races){
+  const today = ymd(new Date());
+  // "Vuelta a España" must match "La Vuelta Ciclista a España" — plain
+  // substring fails on the word in the middle, so match on tokens: every
+  // significant word of the shorter name appearing in the longer one.
+  const tok = x => ((x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").match(/[a-z0-9]{4,}/g)) || [];
+  const raceMatch = (a, b) => {
+    const ta = tok(a), tb = tok(b), na = normName(a), nb = normName(b);
+    if(!ta.length || !tb.length) return false;
+    return ta.every(t=>nb.indexOf(t)>=0) || tb.every(t=>na.indexOf(t)>=0);
+  };
+  races.forEach(rc=>{
+    if(!rc.race) return;
+    const mine = GAMES.filter(g=>g.event && raceMatch(g.race, rc.race));
+    if(!mine.length) return;
+    (rc.stages||[]).forEach(st=>{
+      const g = mine.find(x=>localKey(x.start)===st.date);
+      if(g && Array.isArray(st.top3) && st.top3.length===3) g.podium = st.top3;
+    });
+    // the current lead belongs on the most recent stage that has happened
+    if(rc.leader && !rc.oneDay){
+      const past = mine.filter(x=>localKey(x.start)<=today).sort((a,b)=>b.start-a.start);
+      if(past[0]) past[0].leader = rc.leader;
+    }
+  });
 }
 
 const espnCache = {};
@@ -1326,10 +1360,20 @@ function eventRow(g, now){
       + cov + '</div>';
   }
 
+  const reveal = showScores || revealed.has(g.id);
   let right = '<div class="g-score">';
   if(state === "ahead"){
     right += '<span class="countdown" data-start="'+g.start+'">'+esc(countdownText(g.start, now))+'</span>'
       + '<span class="score-state">Race day</span>';
+  } else if(g.podium){
+    // the stage has a result — today or not, that beats a status line
+    if(reveal){
+      right += '<span class="podium">'+g.podium.map((n,i)=>(i+1)+'. '+esc(n)).join('<br>')+'</span>'
+        + (g.leader ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>' : '');
+    } else {
+      right += '<button class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal</button>'
+        + '<span class="score-state">Result &middot; hidden</span>';
+    }
   } else if(state === "today"){
     right += '<span class="score-state live"><span class="dot-live"></span>Racing today</span>'
       + '<span class="conf-note">Start times vary</span>';

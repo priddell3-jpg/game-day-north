@@ -227,6 +227,25 @@ for(const comp of [...comps].filter(c=>!NA.has(c))){
 
 fixtures.sort((a,b)=>a.start-b.start);
 
+/* ============================================================
+   CYCLING RESULTS — stage podiums and the current race lead.
+
+   The page renders these from data.json whenever they are present. No
+   automated source fills them in yet: ProCyclingStats, the obvious one,
+   sits behind a Cloudflare challenge that returns a 403 to any
+   programmatic client, so a scraper against it would report nothing on
+   every run.
+
+   Whatever cycling data data.json already holds is carried forward
+   untouched, so a hand-checked entry survives a rebuild and the page
+   picks it up as soon as it lands.
+   ============================================================ */
+let previous = null;
+try{ previous = JSON.parse(readFileSync(new URL("../data.json", import.meta.url), "utf8")); }catch(e){}
+
+/* Carried forward, not fetched — see the note above. */
+const cyclingOut = (previous && Array.isArray(previous.cycling)) ? previous.cycling : [];
+
 /* A roster entry that matched no fixture at all is almost always a name
    that drifted, not a team with an empty schedule. Say so loudly: this
    failure is invisible in the app, where it just looks like a team that
@@ -247,9 +266,6 @@ if(!fixtures.length){
   console.error("No fixtures built — refusing to overwrite data.json with an empty file.");
   process.exit(1);
 }
-let previous = null;
-try{ previous = JSON.parse(readFileSync(new URL("../data.json", import.meta.url), "utf8")); }catch(e){}
-
 // Never replace a healthy file with a much thinner one: a partial outage
 // upstream should leave yesterday's good data in place.
 if(previous && previous.fixtures && previous.fixtures.length > 20 &&
@@ -266,7 +282,8 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
    actually changed, or when the stamp is old enough that the page would
    otherwise start treating the file as stale. */
 const MAX_AGE = 6*3600000;
-if(previous && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
+const cyclingSame = previous && JSON.stringify(previous.cycling || []) === JSON.stringify(cyclingOut);
+if(previous && cyclingSame && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
     console.log("No fixture changed and the file is " + Math.round(age/60000) +
@@ -282,8 +299,9 @@ const out = {
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
   counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
-            unmatchedTeams: unmatched },
-  fixtures
+            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+((r&&r.stages||[]).length),0) },
+  fixtures,
+  cycling: cyclingOut
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +
