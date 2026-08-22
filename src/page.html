@@ -973,7 +973,7 @@ const ESPN_NAME = {
 };
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 let liveMode = null;          // null = not tried, true = reachable, false = blocked
-let liveNote = "";
+let liveNote = "", liveErr = "";
 
 async function jget(url, ms){
   const ctl = new AbortController();
@@ -1061,17 +1061,25 @@ function espnDate(ms){
    only answers one day at a time. So: fetch schedules for the fixtures,
    then top up scores from the scoreboard for just the handful of days
    that actually need one. */
+const scoredDays = new Set();   // competition|date pairs already asked about
 async function fillScores(){
   const now = Date.now();
+  // newest first: if the request budget runs out it must be the oldest
+  // results that wait, never tonight's game
   const need = myGames().filter(g=>
     g.away && g.start > now - 8*DAY && g.start < now + 2*3600000 &&
-    !(g.result && g.result.score) && ESPN_PATH[g.comp]);
+    !(g.result && g.result.score) && ESPN_PATH[g.comp]).sort((a,b)=>b.start-a.start);
   if(!need.length) return 0;
+  const todayKey = espnDate(now);
   const days = [];
   need.forEach(g=>{
-    const k = g.comp+"|"+espnDate(g.start);
-    if(days.indexOf(k)<0 && days.length<10) days.push(k);
+    const d = espnDate(g.start), k = g.comp+"|"+d;
+    if(days.indexOf(k)>=0) return;
+    // a day already tried stays skipped unless it is today, where scores move
+    if(scoredDays.has(k) && d !== todayKey) return;
+    if(days.length < 12) days.push(k);
   });
+  if(!days.length) return 0;
   let filled = 0;
   await Promise.all(days.map(async k=>{
     const [comp, d] = k.split("|");
@@ -1097,6 +1105,7 @@ async function fillScores(){
       filled++;
     });
   }));
+  days.forEach(k=>scoredDays.add(k));
   if(filled) GAMES.sort((a,b)=>a.start-b.start);
   return filled;
 }
@@ -1113,34 +1122,40 @@ async function loadLive(){
     });
   });
   const built = [], errs = [];
-  // North American leagues: one call per team gives the whole season
+  let ok = 0;
+  // Out-of-season cups and the odd bad endpoint fail routinely. Each source
+  // stands or falls on its own — one failure used to take the whole feed
+  // down and leave every score reading "unavailable".
   await Promise.all(naJobs.map(async ([t,comp])=>{
     try{
       const list = await espnTeamsList(comp);
       const e = findEspnTeam(t, list);
-      if(!e) { errs.push(t.abbr+" not matched"); return; }
+      if(!e) { errs.push(comp+": "+t.abbr+" not matched"); return; }
       const sched = await jget(ESPN+ESPN_PATH[comp]+"/teams/"+e.id+"/schedule", 12000);
       (sched.events||[]).forEach(ev=>{ const g = parseEvent(ev, comp); if(g) built.push(g); });
-    }catch(err){ errs.push(comp+": "+err.message); throw err; }
+      ok++;
+    }catch(err){ errs.push(comp+": "+(err && err.message || err)); }
   }));
-  // Soccer: scoreboard by date range keeps each competition correctly tagged
   const now = new Date();
   const from = new Date(now.getTime()-8*DAY), to = new Date(now.getTime()+24*DAY);
   await Promise.all([...soccerComps].map(async comp=>{
     try{
       const r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+yyyymmdd(from)+"-"+yyyymmdd(to)+"&limit=200", 12000);
       (r.events||[]).forEach(ev=>{ const g = parseEvent(ev, comp); if(g) built.push(g); });
-    }catch(err){ errs.push(comp+": "+err.message); throw err; }
+      ok++;
+    }catch(err){ errs.push(comp+": "+(err && err.message || err)); }
   }));
+  if(!ok) throw new Error(errs[0] || "no source reachable");
   // keep only fixtures that involve a team you follow
   const keep = built.filter(g=>selected.has(g.home.id) || selected.has(g.away.id));
   const seen = new Set();
   const dedup = keep.filter(g=>{ const k=g.comp+g.start+g.home.id+g.away.id; if(seen.has(k)) return false; seen.add(k); return true; });
   if(dedup.length) mergeReal(dedup);
-  const filled = await fillScores();
-  liveNote = dedup.length+" fixture"+(dedup.length===1?"":"s")+" from ESPN"
-    + (filled?", "+filled+" score"+(filled===1?"":"s")+" updated":"")
-    + (errs.length?" ("+errs.length+" source"+(errs.length===1?"":"s")+" unavailable)":"");
+  let filled = 0;
+  try{ filled = await fillScores(); }catch(e){ errs.push("scores: "+(e && e.message || e)); }
+  liveNote = dedup.length+" fixture"+(dedup.length===1?"":"s")+" from ESPN, "
+    + filled+" score"+(filled===1?"":"s")+" updated"
+    + (errs.length?" &middot; skipped: "+errs.slice(0,4).map(esc).join("; "):"");
 }
 
 /* ---- what's actually known yet, and when it will be ---- */
@@ -1442,8 +1457,10 @@ function noteBlock(){
   const listed = myGames().filter(g=>g.listed||g.espn).length;
   const liveLine = liveMode===true
       ? '<b>Live scores on.</b> Fixtures and scores come from ESPN\'s public feed, refreshed while a game is on. '
+        + (liveNote?'<span class="conf-note">'+liveNote+'</span> ':'')
     : liveMode===false
-      ? '<b>Scores are unavailable in this view.</b> The claude.ai viewer blocks outside requests, so no score can be fetched &mdash; and none is invented. <a href="'+PAGES_URL+'" target="_blank" rel="noopener">Open the live version</a> for real scores. '
+      ? '<b>Scores are unavailable in this view.</b> Nothing could be fetched, so no score is shown &mdash; and none is invented. Inside the claude.ai viewer that is expected, because it blocks outside requests; <a href="'+PAGES_URL+'" target="_blank" rel="noopener">open the live version</a> instead. '
+        + (liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
       : '<b>Checking for live data&hellip;</b> ';
   return '<div class="note">' + liveLine
     + 'Fixtures marked <span class="pill confirmed">Listed</span> are real'
@@ -1607,8 +1624,8 @@ setInterval(()=>{ const now=Date.now(); document.querySelectorAll(".countdown[da
 setInterval(render,30000);
 
 function refreshLive(){
-  return loadLive().then(()=>{ liveMode=true; render(); })
-    .catch(()=>{ liveMode=false; render(); });
+  return loadLive().then(()=>{ liveMode=true; liveErr=""; render(); })
+    .catch(e=>{ liveMode=false; liveErr=(e && e.message || String(e)).slice(0,120); render(); });
 }
 refreshLive();
 setInterval(()=>{
