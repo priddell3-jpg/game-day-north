@@ -1060,6 +1060,57 @@ function findEspnTeam(t, list){
 }
 const NA = {NHL:1, NBA:1, NFL:1, MLB:1};
 const yyyymmdd = d => d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate());
+/* ESPN files a game under its US Eastern date — a 7:05pm EDT game is
+   the 21st there and the 22nd in UTC. Ask for the wrong one and you get
+   an empty day. */
+function espnDate(ms){
+  const shifted = new Date(ms + offsetFor("ET", ms)*3600000);
+  return yyyymmdd(shifted);
+}
+
+/* Season schedules do not carry a reliable live score, and the scoreboard
+   only answers one day at a time. So: fetch schedules for the fixtures,
+   then top up scores from the scoreboard for just the handful of days
+   that actually need one. */
+async function fillScores(){
+  const now = Date.now();
+  const need = myGames().filter(g=>
+    g.away && g.start > now - 8*DAY && g.start < now + 2*3600000 &&
+    !(g.result && g.result.score) && ESPN_PATH[g.comp]);
+  if(!need.length) return 0;
+  const days = [];
+  need.forEach(g=>{
+    const k = g.comp+"|"+espnDate(g.start);
+    if(days.indexOf(k)<0 && days.length<10) days.push(k);
+  });
+  let filled = 0;
+  await Promise.all(days.map(async k=>{
+    const [comp, d] = k.split("|");
+    let r;
+    try{ r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+d, 9000); }catch(e){ return; }
+    (r.events||[]).forEach(ev=>{
+      const parsed = parseEvent(ev, comp);
+      if(!parsed || !parsed.result) return;
+      const match = GAMES.find(g=>g.comp===comp && g.away &&
+        Math.abs(g.start-parsed.start) < 6*3600000 &&
+        ((g.home.id===parsed.home.id && g.away.id===parsed.away.id) ||
+         (g.home.id===parsed.away.id && g.away.id===parsed.home.id)));
+      if(!match) return;
+      const flipped = match.home.id === parsed.away.id;
+      const sc = parsed.result.score;
+      match.result = {
+        status: parsed.result.status,
+        label: parsed.result.label,
+        score: sc ? (flipped ? [sc[1], sc[0]] : sc) : null
+      };
+      match.start = parsed.start;
+      match.listed = true;
+      filled++;
+    });
+  }));
+  if(filled) GAMES.sort((a,b)=>a.start-b.start);
+  return filled;
+}
 
 async function loadLive(){
   const mine = [...selected].map(id=>TEAMS[id]).filter(Boolean);
@@ -1097,7 +1148,10 @@ async function loadLive(){
   const seen = new Set();
   const dedup = keep.filter(g=>{ const k=g.comp+g.start+g.home.id+g.away.id; if(seen.has(k)) return false; seen.add(k); return true; });
   if(dedup.length) mergeReal(dedup);
-  liveNote = dedup.length+" fixture"+(dedup.length===1?"":"s")+" from ESPN"+(errs.length?" ("+errs.length+" source"+(errs.length===1?"":"s")+" unavailable)":"");
+  const filled = await fillScores();
+  liveNote = dedup.length+" fixture"+(dedup.length===1?"":"s")+" from ESPN"
+    + (filled?", "+filled+" score"+(filled===1?"":"s")+" updated":"")
+    + (errs.length?" ("+errs.length+" source"+(errs.length===1?"":"s")+" unavailable)":"");
 }
 
 /* ---- what's actually known yet, and when it will be ---- */
