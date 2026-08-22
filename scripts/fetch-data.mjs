@@ -258,7 +258,11 @@ try{ previous = JSON.parse(readFileSync(new URL("../data.json", import.meta.url)
 const WIKI_API = "https://en.wikipedia.org/w/api.php";
 const WIKI_UA = "GameDayNorth/1.0 (personal sports schedule; github.com/priddell3-jpg/game-day-north)";
 const CYCLING_SOURCES = [
-  {name:"Vuelta a España", dates:[
+  {name:"Vuelta a España",
+   /* the race's own promotional site publishes the day's timetable —
+      the one source whose whole purpose is telling people when to watch */
+   official:{base:"https://www.lavuelta.es/en/stage-", tz:"+02:00"},
+   dates:[
     "2026-08-22","2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27",
     "2026-08-28","2026-08-29","2026-08-30","2026-09-01","2026-09-02","2026-09-03",
     "2026-09-04","2026-09-05","2026-09-06","2026-09-08","2026-09-09","2026-09-10",
@@ -371,6 +375,9 @@ function stageSections(text){
 const todayISO = new Date(now).toISOString().slice(0,10);
 const prevCycling = (previous && Array.isArray(previous.cycling)) ? previous.cycling : [];
 const cyclingOut = [];
+/* A stage entry may exist only to carry a timetable, so a podium is a
+   stage that actually has three riders, not merely a stage present. */
+const podiumCount = r => (r && r.stages || []).filter(x=>x && Array.isArray(x.top3) && x.top3.length===3).length;
 try{
   for(const rc of CYCLING_SOURCES){
     if(rc.dates[0] > todayISO) continue;                       // hasn't started
@@ -424,9 +431,45 @@ try{
         }
       }
     }
+    /* Start and expected-finish times from the official race site, for
+       today's stage and tomorrow's. Fetched fresh each run because
+       timetables shift; at most two small requests per race per run.
+       Times are the site's local clock, made absolute via the race's
+       fixed UTC offset. */
+    if(rc.official){
+      for(let i = 0; i < rc.dates.length; i++){
+        const date = rc.dates[i];
+        if(date < todayISO) continue;
+        if(Date.parse(date) - Date.parse(todayISO) > 2*86400000) break;
+        try{
+          const res = await fetch(rc.official.base + (i+1), {headers:{
+            "user-agent":WIKI_UA, "accept":"text/html"}, signal:AbortSignal.timeout(15000)});
+          if(!res.ok) continue;
+          /* Scripts first: their contents are not page text and can
+             carry digits that look like a clock. */
+          const text = (await res.text())
+            .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
+            .replace(/<[^>]+>/g, " ");
+          /* The label depends on the stage type, and the site puts a
+             space before the colon: a mass-start stage is neutralised
+             and has an expected arrival, while a time trial has a first
+             start and a last arrival. */
+          const st  = text.match(/(?:Neutrali[sz]ed|First)\s+start\s*:?\s*(\d{1,2})[:h.](\d{2})/i);
+          const fin = text.match(/(?:Expected|Last)\s+arrival\s*:?\s*(\d{1,2})[:h.](\d{2})/i);
+          if(!st) continue;
+          const p2 = x => String(x).padStart(2, "0");
+          const at = m => Date.parse(date + "T" + p2(m[1]) + ":" + m[2] + ":00" + rc.official.tz);
+          let entry = stages.find(x=>x.date===date);
+          if(!entry){ entry = {date}; stages.push(entry); }
+          entry.start = p2(st[1]) + ":" + st[2];
+          entry.startUtc = at(st);
+          if(fin){ entry.finish = p2(fin[1]) + ":" + fin[2]; entry.finishUtc = at(fin); }
+        }catch(e){ /* timetable is a nicety — never let it cost a run */ }
+      }
+    }
     if(stages.length || leader) cyclingOut.push({race:rc.name, oneDay:!!rc.oneDay, leader, stages});
   }
-  const podiums = cyclingOut.reduce((a,r)=>a+r.stages.length, 0);
+  const podiums = cyclingOut.reduce((a,r)=>a+podiumCount(r), 0);
   console.log("Cycling (Wikipedia): " + podiums + " stage podium" + (podiums===1?"":"s")
     + " across " + cyclingOut.length + " race(s)");
 }catch(e){
@@ -487,7 +530,7 @@ const out = {
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
   counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
-            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+((r&&r.stages||[]).length),0) },
+            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0) },
   fixtures,
   cycling: cyclingOut
 };

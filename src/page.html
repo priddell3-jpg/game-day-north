@@ -952,10 +952,18 @@ function attachCycling(races){
     if(!rc.race) return;
     const mine = GAMES.filter(g=>g.event && raceMatch(g.race, rc.race));
     if(!mine.length) return;
+    let moved = false;
     (rc.stages||[]).forEach(st=>{
       const g = mine.find(x=>localKey(x.start)===st.date);
-      if(g && Array.isArray(st.top3) && st.top3.length===3) g.podium = st.top3;
+      if(!g) return;
+      if(Array.isArray(st.top3) && st.top3.length===3) g.podium = st.top3;
+      // a published timetable upgrades "All day" to a real clock
+      if(st.startUtc && localKey(st.startUtc)===st.date){
+        g.start = st.startUtc; g.timeKnown = true; moved = true;
+      }
+      if(st.finishUtc) g.finishUtc = st.finishUtc;
     });
+    if(moved) GAMES.sort((a,b)=>a.start-b.start);
     // the current lead belongs on the most recent stage that has happened
     if(rc.leader && !rc.oneDay){
       const past = mine.filter(x=>localKey(x.start)<=today).sort((a,b)=>b.start-a.start);
@@ -1338,7 +1346,9 @@ function eventRow(g, now){
   const day = localKey(g.start), today = ymd(new Date(now));
   const state = day < today ? "done" : day > today ? "ahead" : "today";
 
-  const timeCell = '<div class="g-time"><span class="tbd">All day</span></div>';
+  const timeCell = g.timeKnown
+    ? '<div class="g-time">'+esc(fmtTime(g.start))+'</div>'
+    : '<div class="g-time"><span class="tbd">All day</span></div>';
   const title = '<div class="g-teams"><span class="g-team">'+crest(g.home)+esc(g.race)+'</span></div>';
   const meta = '<div class="g-meta">'
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
@@ -1375,10 +1385,22 @@ function eventRow(g, now){
         + '<span class="score-state">Result &middot; hidden</span>';
     }
   } else if(state === "today"){
-    right += '<span class="score-state live"><span class="dot-live"></span>Racing today</span>'
-      + '<span class="conf-note">Start times vary</span>';
+    if(g.timeKnown && now < g.start){
+      right += '<span class="countdown" data-start="'+g.start+'">'+esc(countdownText(g.start, now))+'</span>'
+        + '<span class="score-state">'+(g.finishUtc ? 'Est. finish '+esc(fmtTime(g.finishUtc)) : 'Race day')+'</span>';
+    } else if(g.finishUtc && now > g.finishUtc){
+      right += '<span class="score-state">Finished</span>'
+        + (g.leader && reveal ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>'
+                              : '<span class="conf-note">Awaiting result</span>');
+    } else {
+      right += '<span class="score-state live"><span class="dot-live"></span>Racing now</span>'
+        + (g.leader && reveal ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>'
+          : g.finishUtc ? '<span class="conf-note">Est. finish '+esc(fmtTime(g.finishUtc))+'</span>'
+          : '<span class="conf-note">Start times vary</span>');
+    }
   } else {
-    right += '<span class="score-state">Finished</span>';
+    right += '<span class="score-state">Finished</span>'
+      + (g.leader && reveal ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>' : '');
   }
   right += '</div>';
 
