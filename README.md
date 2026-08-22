@@ -31,19 +31,26 @@ When sources disagree, the primary release wins and the disagreement goes in the
 
 ## Data
 
-Three layers, in precedence order:
+**Every fixture on this page is a real one.** There is no schedule generator: what you see came from a published feed, and where the feed has nothing, the page shows nothing.
 
-1. **ESPN's public scoreboard API**, called from the browser on load and refreshed while a game is on. Gives real fixtures, real opponents, real scores and real game state. Rendered with a **Listed** badge.
-2. **`LIVE_FIXTURES`** — a small set of hand-checked fixtures with Canadian listings, used as a fallback where the API can't be reached.
-3. **Projections** — everything beyond that, generated from season shapes and resolved against the rights table.
+Two sources, in precedence order:
+
+1. **ESPN's public API**, called from the browser on load and again while a game is on. North American leagues come from the per-team season schedule; soccer competitions answer a whole month at a time. Scores are topped up from the scoreboard, which is the only endpoint that reflects a game in progress.
+2. **`LIVE_FIXTURES`** — a small hand-checked set with Canadian listings, used where the API can't be reached.
 
 Canadian carriage always comes from the rights table, never from ESPN, whose broadcast data is US-facing.
 
-**There is no code that invents a score.** Where a score can't be fetched, the page says so and links to the version that can. That matters because the page runs in two places: on GitHub Pages it can reach the API, while inside the claude.ai artifact viewer a strict CSP blocks all outside requests. The same file feature-detects and degrades honestly rather than filling the gap with a plausible number.
+**No code path invents a score or a fixture.** Where something can't be fetched the page says so and links to the deployment that can. That matters because it runs in two places: on GitHub Pages it reaches the API, while inside the claude.ai artifact viewer a strict CSP blocks all outside requests. The same file feature-detects and degrades honestly.
 
-### Why the split
+### Endpoint quirks worth knowing
 
-Carrier and kickoff time resolve on completely different timelines. Most Canadian deals are all-or-nothing exclusives, so *where* a January fixture lands is knowable in August. *When* is not: Premier League TV picks land about six weeks out, and NFL flex moves come with 12 days' notice, dropping to 6 late in the season. The page shows a confident carrier next to an honest `Time TBC`.
+Three of these cost real debugging time:
+
+- A game is filed under its **US Eastern date**. A 7:05pm EDT game is the 21st to ESPN and the 22nd in UTC; ask for the wrong one and the day comes back empty.
+- The **season schedule carries no live score**. A finished game can still read `STATUS_SCHEDULED` 0-0 there. Only the scoreboard endpoint has the result.
+- A **`YYYYMMDD-YYYYMMDD` range looks like it works and silently returns only the first day.** Soccer accepts `YYYYMM` for a whole month; the North American leagues do not, so they use per-team season schedules instead.
+
+Sources fail independently. Out-of-season cup competitions 404 as a matter of course, and one of those must never be able to blank the rest of the page.
 
 ## Running it
 

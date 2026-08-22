@@ -618,44 +618,14 @@ const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:
 const fullName = t => t ? (CLUB_NAMES[t.id] || (SOCCER[t.home] ? t.name : t.city+" "+t.name)) : "TBD";
 
 /* ---- filler opponents: real clubs you can't select, so schedules look real ---- */
+/* Opponents referenced by the baked fallback below. Everything else
+   arrives from the live feed with its own name and colours. */
 const GHOSTS = [
-["nj","NHL","New Jersey","Devils","NJD","ET","#CE1126"],["nyi","NHL","New York","Islanders","NYI","ET","#00539B"],
-["pit","NHL","Pittsburgh","Penguins","PIT","ET","#FCB514"],["wsh","NHL","Washington","Capitals","WSH","ET","#C8102E"],
-["fla","NHL","Florida","Panthers","FLA","ET","#C8102E"],["tbl","NHL","Tampa Bay","Lightning","TBL","ET","#002868"],
-["dal","NHL","Dallas","Stars","DAL","CT","#006847"],["min","NHL","Minnesota","Wild","MIN","CT","#154734"],
-["stl","NHL","St. Louis","Blues","STL","CT","#002F87"],["nsh","NHL","Nashville","Predators","NSH","CT","#FFB81C"],
-["ana","NHL","Anaheim","Ducks","ANA","PT","#F47A38"],["sjs","NHL","San Jose","Sharks","SJS","PT","#006D75"],
-["lak","NHL","Los Angeles","Kings","LAK","PT","#111111"],["chi","NHL","Chicago","Blackhawks","CHI","CT","#CF0A2C"],
-["det","NHL","Detroit","Red Wings","DET","ET","#CE1126"],["buf","NHL","Buffalo","Sabres","BUF","ET","#003087"],
-["phi-nba","NBA","Philadelphia","76ers","PHI","ET","#006BB6"],["mil","NBA","Milwaukee","Bucks","MIL","CT","#00471B"],
-["mia-nba","NBA","Miami","Heat","MIA","ET","#98002E"],["phx","NBA","Phoenix","Suns","PHX","MT","#1D1160"],
-["dal-nba","NBA","Dallas","Mavericks","DAL","CT","#00538C"],["cle-nba","NBA","Cleveland","Cavaliers","CLE","ET","#6F263D"],
-["gb","NFL","Green Bay","Packers","GB","CT","#203731"],["bal","NFL","Baltimore","Ravens","BAL","ET","#241773"],
-["cin","NFL","Cincinnati","Bengals","CIN","ET","#FB4F14"],["min-nfl","NFL","Minnesota","Vikings","MIN","CT","#4F2683"],
-["lar","NFL","Los Angeles","Rams","LAR","PT","#003594"],["pit-nfl","NFL","Pittsburgh","Steelers","PIT","ET","#101820"],
-["nyj","NFL","New York","Jets","NYJ","ET","#125740"],["den-nfl","NFL","Denver","Broncos","DEN","MT","#FB4F14"],
-["bal-mlb","MLB","Baltimore","Orioles","BAL","ET","#DF4601"],["tb","MLB","Tampa Bay","Rays","TB","ET","#092C5C"],
-["hou","MLB","Houston","Astros","HOU","CT","#002D62"],["tex","MLB","Texas","Rangers","TEX","CT","#003278"],
-["min-mlb","MLB","Minnesota","Twins","MIN","CT","#002B5C"],["atl","MLB","Atlanta","Braves","ATL","ET","#CE1141"],
-["avl","EPL","Birmingham","Aston Villa","AVL","UK","#670E36"],["bha","EPL","Brighton","Brighton","BHA","UK","#0057B8"],
-["whu","EPL","London","West Ham","WHU","UK","#7A263A"],["eve","EPL","Liverpool","Everton","EVE","UK","#003399"],
-["cry","EPL","London","Crystal Palace","CRY","UK","#1B458F"],["nfo","EPL","Nottingham","Nottm Forest","NFO","UK","#DD0000"],
-["bre","EPL","London","Brentford","BRE","UK","#C8102E"],["ful","EPL","London","Fulham","FUL","UK","#1B1B1B"],
-["atm","LALIGA","Madrid","Atlético Madrid","ATM","CET","#CB3524"],["sev","LALIGA","Sevilla","Sevilla","SEV","CET","#B6091E"],
-["rso","LALIGA","San Sebastián","Real Sociedad","RSO","CET","#0C4C9E"],["vil","LALIGA","Villarreal","Villarreal","VIL","CET","#C9A500"],
-["juv","SERIEA","Turin","Juventus","JUV","CET","#1B1B1B"],["mil-s","SERIEA","Milan","AC Milan","MIL","CET","#A61B29"],
-["nap","SERIEA","Naples","Napoli","NAP","CET","#12A0D7"],["rom","SERIEA","Rome","Roma","ROM","CET","#8E1F2F"],
-["bvb","BUNDES","Dortmund","Dortmund","BVB","CET","#B5A400"],["b04","BUNDES","Leverkusen","Leverkusen","B04","CET","#C8102E"],
-["rbl","BUNDES","Leipzig","RB Leipzig","RBL","CET","#0C1F3F"],["sge","BUNDES","Frankfurt","Frankfurt","SGE","CET","#1B1B1B"],
-["om","LIGUE1","Marseille","Marseille","OM","CET","#2FAEE0"],["asm","LIGUE1","Monaco","Monaco","ASM","CET","#CE1126"],
-["losc","LIGUE1","Lille","Lille","LOSC","CET","#C8102E"],["ol","LIGUE1","Lyon","Lyon","OL","CET","#1B3C87"],
-["atx","MLS","Austin","Austin FC","ATX","CT","#00B140"],["dal-mls","MLS","Dallas","FC Dallas","DAL","CT","#C8102E"],
-["por","MLS","Portland","Timbers","POR","PT","#00482B"],["rsl","MLS","Salt Lake","Real Salt Lake","RSL","MT","#B30838"],
-["clb","MLS","Columbus","Columbus Crew","CLB","ET","#FFF200"],["nyc","MLS","New York","NYCFC","NYC","ET","#6CACE4"],
 ["kcr","MLB","Kansas City","Royals","KC","CT","#004687"],
 ["ips","EPL","Ipswich","Ipswich Town","IPS","UK","#3A64A3"],
 ["bou","EPL","Bournemouth","Bournemouth","BOU","UK","#B50E12"],
-["ben","UCL","Lisbon","Benfica","BEN","UK","#C8102E"],["aja","UCL","Amsterdam","Ajax","AJA","CET","#C8102E"]
+["nfo","EPL","Nottingham","Nottm Forest","NFO","UK","#DD0000"],
+["ful","EPL","London","Fulham","FUL","UK","#1B1B1B"]
 ];
 GHOSTS.forEach(r=>{ TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ghost:true, comps:[r[1]]}; });
 const allTeams = Object.values(TEAMS);
@@ -689,63 +659,12 @@ function rng(seed){ let a=seed>>>0; return function(){ a|=0;a=a+0x6D2B79F5|0; le
 function shuffled(arr, seed){ const a=arr.slice(), r=rng(seed); for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const pick = (arr,r)=>arr[Math.floor(r()*arr.length)];
 
-/* ============================ schedule ============================ */
+/* ============================ fixtures ============================
+   Every fixture on this page is a real one. There is no generator any
+   more: what you see came from a published feed, and where the feed has
+   nothing, the page shows nothing rather than a plausible guess.
+   ================================================================== */
 const DAY = 86400000;
-const RANGE_START = Date.UTC(2026,7,1);
-const RANGE_END   = Date.UTC(2027,0,31);
-const POOLS = {};
-["NHL","NBA","NFL","MLB","MLS","EPL","LALIGA","SERIEA","BUNDES","LIGUE1"].forEach(c=>{ POOLS[c]=allTeams.filter(t=>t.home===c); });
-POOLS.UCL = allTeams.filter(t=>t.ucl || t.home==="UCL");
-const UCL_DATES = ["2026-09-15","2026-09-16","2026-09-29","2026-09-30","2026-10-20","2026-10-21","2026-11-03","2026-11-04","2026-11-24","2026-11-25","2026-12-08","2026-12-09","2027-01-20","2027-01-21"];
-
-function densityFor(comp, dow, key, ms){
-  switch(comp){
-    case "MLB": return ms <= Date.UTC(2026,9,4) ? 0.85 : 0;
-    case "MLS": return ms > Date.UTC(2026,9,25) ? 0 : (dow===6?0.85:dow===3?0.4:0);
-    case "EPL": case "LALIGA": case "SERIEA": case "BUNDES": case "LIGUE1":
-      if(ms < Date.UTC(2026,7,15)) return 0;
-      if(ms > Date.UTC(2026,11,20) && ms < Date.UTC(2027,0,2)) return dow===6?0.5:0;
-      return dow===6?0.6:dow===0?0.45:0;
-    case "UCL": return UCL_DATES.indexOf(key)>=0 ? 0.9 : 0;
-    case "NFL":
-      if(ms > Date.UTC(2026,7,29) && ms < Date.UTC(2026,8,10)) return 0;
-      return dow===0?1:(dow===4||dow===1)?0.3:0;
-    case "NHL":
-      if(ms < Date.UTC(2026,8,20)) return 0;
-      if(ms > Date.UTC(2026,9,4) && ms < Date.UTC(2026,9,7)) return 0;
-      return dow===6?0.7:(dow===0||dow===2||dow===4)?0.5:(dow===1||dow===3)?0.35:0;
-    case "NBA":
-      if(ms < Date.UTC(2026,9,5)) return 0;
-      if(ms > Date.UTC(2026,9,16) && ms < Date.UTC(2026,9,20)) return 0;
-      return (dow===5||dow===6||dow===0)?0.55:(dow===1||dow===3)?0.4:0;
-  }
-  return 0;
-}
-function stageFor(comp, ms, r){
-  if(comp==="NFL" && ms <= Date.UTC(2026,7,29)) return "Preseason";
-  if(comp==="NHL" && ms <= Date.UTC(2026,9,4)) return "Preseason";
-  if(comp==="NBA" && ms <= Date.UTC(2026,9,16)) return "Preseason";
-  if(comp==="NBA" && ms > Date.UTC(2026,10,2) && ms < Date.UTC(2026,11,3) && r()<0.35) return "NBA Cup group play";
-  if(comp==="UCL") return "League phase";
-  return "";
-}
-function slotFor(comp, dow, home, r){
-  switch(comp){
-    case "NHL": return dow===0?[17,0]:pick([[19,0],[19,0],[19,30],[18,0]],r);
-    case "NBA": return dow===0?[18,0]:pick([[19,30],[19,0],[20,0]],r);
-    case "NFL": return (dow===4||dow===1)?[20,15]:pick([[13,0],[13,0],[13,0],[16,5],[16,25],[20,20]],r);
-    case "MLB": return dow===6?[16,7]:dow===0?[13,7]:pick([[19,7],[18,40],[19,10]],r);
-    case "MLS": return [19,30];
-    case "UCL": return home.tz==="UK"?[20,0]:[21,0];
-    case "EFL": return [19,45];
-    case "FAC": return [15,0];
-    default:
-      if(dow===6) return pick([[12,30],[15,0],[15,0],[17,30]],r);
-      if(dow===0) return pick([[14,0],[16,30]],r);
-      return [19,45];
-  }
-}
-
 const GAMES = [];
 let gid = 0;
 function addGame(o){
@@ -755,140 +674,29 @@ function addGame(o){
   GAMES.push(o);
   return o;
 }
-/* Round-based sports (one fixture per club per week) are built a WEEK at a
-   time and then spread across the matchweek's days — building them day by day
-   let a club turn up twice in the same weekend. NHL/NBA/MLB really do play
-   several times a week, so those stay daily. */
-const WEEKLY = {
-  EPL:   {start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[6,0.55],[0,0.33],[1,0.12]]},
-  LALIGA:{start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[6,0.5],[0,0.4],[5,0.1]]},
-  SERIEA:{start:Date.UTC(2026,7,22), end:RANGE_END,          days:[[6,0.45],[0,0.45],[1,0.1]]},
-  BUNDES:{start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[6,0.6],[0,0.3],[5,0.1]]},
-  LIGUE1:{start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[0,0.55],[6,0.35],[5,0.1]]},
-  MLS:   {start:RANGE_START,         end:Date.UTC(2026,9,25), days:[[6,0.7],[3,0.2],[0,0.1]]},
-  NFL:   {start:RANGE_START,         end:RANGE_END,           days:[[0,0.8],[4,0.1],[1,0.1]]}
-};
-const DOW_OFFSET = {1:0, 2:1, 3:2, 4:3, 5:4, 6:5, 0:6};   // from the Monday that starts the week
-(function buildWeekly(){
-  for(const comp of Object.keys(WEEKLY)){
-    const cfg = WEEKLY[comp], pool = POOLS[comp];
-    if(!pool || pool.length<2) continue;
-    let monday = RANGE_START;
-    while(new Date(monday).getUTCDay()!==1) monday += DAY;
-    for(; monday<=RANGE_END; monday+=7*DAY){
-      if(monday < cfg.start || monday > cfg.end) continue;
-      if(comp==="NFL" && monday > Date.UTC(2026,7,29) && monday < Date.UTC(2026,8,7)) continue;
-      if(comp!=="NFL" && monday > Date.UTC(2026,11,21) && monday < Date.UTC(2026,11,28)) continue;
-      const wkKey = new Date(monday).toISOString().slice(0,10);
-      const order = shuffled(pool, hash(comp+"wk"+wkKey));
-      const r = rng(hash(comp+"wk"+wkKey+"s"));
-      for(let i=0;i+1<order.length;i+=2){
-        const home = order[i], away = order[i+1];
-        let roll = r(), dow = cfg.days[cfg.days.length-1][0];
-        for(const [d,w] of cfg.days){ if(roll < w){ dow = d; break; } roll -= w; }
-        const dayMs = monday + DOW_OFFSET[dow]*DAY;
-        if(dayMs < cfg.start || dayMs > RANGE_END) continue;
-        if(comp==="NFL" && dayMs > Date.UTC(2026,7,29) && dayMs < Date.UTC(2026,8,10)) continue;
-        const [hh,mm] = slotFor(comp, dow, home, r);
-        let startMs = makeStart(dayMs, home.tz, hh, mm), moved = null;
-        if(r() < 0.07){ moved = startMs; startMs += (r()<0.5?-1:1)*(r()<0.5?1800000:5400000); }
-        addGame({comp, home, away, start:startMs, moved, localDow:dow, slotHour:hh, stage:stageFor(comp, dayMs, r)});
-      }
-    }
-  }
-})();
-/* UEFA matchdays run across two nights — split the field, don't play twice */
-(function buildUCL(){
-  const pool = POOLS.UCL;
-  for(let i=0;i<UCL_DATES.length;i++){
-    const md = Math.floor(i/2), half = i%2;
-    const order = shuffled(pool, hash("UCLMD"+md));
-    let per = Math.floor(pool.length/2); if(per%2) per--;
-    const slice = order.slice(half*per, half*per+per);
-    const dayMs = Date.parse(UCL_DATES[i]+"T00:00:00Z");
-    const dow = new Date(dayMs).getUTCDay();
-    const r = rng(hash("UCLMD"+md+half));
-    for(let j=0;j+1<slice.length;j+=2){
-      const home = slice[j], away = slice[j+1];
-      const [hh,mm] = slotFor("UCL", dow, home, r);
-      addGame({comp:"UCL", home, away, start:makeStart(dayMs, home.tz, hh, mm), moved:null,
-               localDow:dow, slotHour:hh, stage:"League phase"});
-    }
-  }
-})();
-(function buildDaily(){
-  for(let ms=RANGE_START; ms<=RANGE_END; ms+=DAY){
-    const key = new Date(ms).toISOString().slice(0,10);
-    const dow = new Date(ms).getUTCDay();
-    for(const comp of ["NHL","NBA","MLB"]){
-      const dens = densityFor(comp, dow, key, ms);
-      if(dens<=0) continue;
-      const pool = POOLS[comp];
-      let n = Math.floor(pool.length*dens); if(n%2) n--; if(n<2) continue;
-      const order = shuffled(pool, hash(comp+key));
-      const r = rng(hash(comp+key+"s"));
-      for(let i=0;i<n;i+=2){
-        const home = order[i], away = order[i+1];
-        const [hh,mm] = slotFor(comp, dow, home, r);
-        let startMs = makeStart(ms, home.tz, hh, mm), moved = null;
-        if(r() < 0.06){ moved = startMs; startMs += (r()<0.5?-1:1)*(r()<0.5?1800000:5400000); }
-        addGame({comp, home, away, start:startMs, moved, localDow:dow, slotHour:hh, stage:stageFor(comp, ms, r)});
-      }
-    }
-  }
-})();
-/* ---- knockout cups: the round dates are known long before the opponents are ---- */
-const EFL_ROUNDS = [
-  {date:"2026-09-23", label:"Third round",   draw:"2026-09-01"},
-  {date:"2026-10-28", label:"Fourth round",  draw:"2026-09-24"},
-  {date:"2026-12-16", label:"Quarter-final", draw:"2026-10-29"}
-];
-const FAC_ROUNDS = [{date:"2027-01-09", label:"Third round", draw:"2026-12-07"}];
-function buildCup(comp, rounds, survive){
-  const pool = POOLS.EPL;
-  rounds.forEach((rd, ri)=>{
-    const dayMs = Date.parse(rd.date+"T00:00:00Z");
-    const dow = new Date(dayMs).getUTCDay();
-    const drawMs = Date.parse(rd.draw+"T12:00:00Z");
-    const order = shuffled(pool, hash(comp+rd.date));
-    const keep = order.filter((t,i)=> rng(hash(comp+rd.date+t.id))() < (survive[ri]||1));
-    for(let i=0;i<keep.length;i+=2){
-      const home = keep[i], away = keep[i+1] || null;
-      const r = rng(hash(comp+rd.date+home.id));
-      const [hh,mm] = slotFor(comp, dow, home, r);
-      addGame({comp, home, away, start:makeStart(dayMs, home.tz, hh, mm), moved:null,
-               localDow:dow, slotHour:hh, stage:rd.label, drawAt:drawMs});
-    }
-  });
-}
-buildCup("EFL", EFL_ROUNDS, [1,0.62,0.4]);
-buildCup("FAC", FAC_ROUNDS, [1]);
-
-/* ---- postseason: carriage can change with the stage ---- */
-(function buildPost(){
-  const mlb = shuffled(POOLS.MLB.filter(t=>!t.ghost), 991).slice(0,4);
-  [["Wild Card Series",[[2026,9,6],[2026,9,7],[2026,9,9]]],
-   ["Division Series",[[2026,9,12],[2026,9,14],[2026,9,16]]],
-   ["Championship Series",[[2026,9,19],[2026,9,21]]]].forEach((rd,ri)=>{
-    const a = mlb[0], b = ri===0 ? mlb[1] : mlb[1+ri];
-    if(!a||!b) return;
-    rd[1].forEach((d,i)=>{
-      const dayMs = Date.UTC(d[0],d[1],d[2]);
-      const home = i%2 ? b : a, away = i%2 ? a : b;
-      addGame({comp:"MLB", home, away, start:makeStart(dayMs, home.tz, 20, 8), moved:null,
-               localDow:new Date(dayMs).getUTCDay(), slotHour:20, stage:rd[0]});
+function mergeReal(built){
+  const spans = {};
+  built.forEach(g=>{
+    [g.home&&g.home.id, g.away&&g.away.id].forEach(id=>{
+      if(!id) return;
+      const k = g.comp+"|"+id, sp = spans[k];
+      spans[k] = sp ? [Math.min(sp[0],g.start), Math.max(sp[1],g.start)] : [g.start,g.start];
     });
   });
-  const mls = shuffled(POOLS.MLS.filter(t=>!t.ghost), 771).slice(0,4);
-  [[2026,9,28],[2026,10,4],[2026,10,22],[2026,11,6]].forEach((d,i)=>{
-    const dayMs = Date.UTC(d[0],d[1],d[2]);
-    const home = mls[i%2], away = mls[2+(i%2)];
-    if(!home||!away) return;
-    addGame({comp:"MLS", home, away, start:makeStart(dayMs, home.tz, 18, 0), moved:null,
-             localDow:new Date(dayMs).getUTCDay(), slotHour:18, stage: i===3 ? "MLS Cup" : "Audi MLS Cup Playoffs"});
-  });
-})();
-GAMES.sort((a,b)=>a.start-b.start);
+  for(let i=GAMES.length-1;i>=0;i--){
+    const g = GAMES[i];
+    if(g.espn) continue;   // live feed data outranks the baked fallback
+    const ids = [g.home&&g.home.id, g.away&&g.away.id];
+    const hit = ids.some(id=>{
+      const sp = spans[g.comp+"|"+id];
+      return sp && g.start >= sp[0]-12*3600000 && g.start <= sp[1]+12*3600000;
+    });
+    if(hit) GAMES.splice(i,1);
+  }
+  built.forEach(g=>addGame(g));
+  GAMES.sort((a,b)=>a.start-b.start);
+}
+
 
 /* ============================================================
    LIVE_FIXTURES — real fixtures and real Canadian listings, pulled
@@ -917,29 +725,6 @@ const LIVE_FIXTURES = [
   {comp:"NHL", date:"2026-09-29", et:[19, 0], home:"tor-nhl", away:"mtl-nhl", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"},
   {comp:"NHL", date:"2026-09-29", et:[22, 0], home:"edm",     away:"van-nhl", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"}
 ];
-function mergeReal(built){
-  // drop projections inside any window that real data already covers
-  const spans = {};
-  built.forEach(g=>{
-    [g.home&&g.home.id, g.away&&g.away.id].forEach(id=>{
-      if(!id) return;
-      const k = g.comp+"|"+id, sp = spans[k];
-      spans[k] = sp ? [Math.min(sp[0],g.start), Math.max(sp[1],g.start)] : [g.start,g.start];
-    });
-  });
-  for(let i=GAMES.length-1;i>=0;i--){
-    const g = GAMES[i];
-    if(g.espn) continue;   // live ESPN data outranks baked listings and projections alike
-    const ids = [g.home&&g.home.id, g.away&&g.away.id];
-    const hit = ids.some(id=>{
-      const sp = spans[g.comp+"|"+id];
-      return sp && g.start >= sp[0]-12*3600000 && g.start <= sp[1]+12*3600000;
-    });
-    if(hit) GAMES.splice(i,1);
-  }
-  built.forEach(g=>addGame(g));
-  GAMES.sort((a,b)=>a.start-b.start);
-}
 (function mergeBaked(){
   const built = [];
   LIVE_FIXTURES.forEach(f=>{
@@ -1063,6 +848,16 @@ const yyyymmdd = d => d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate
 /* ESPN files a game under its US Eastern date — a 7:05pm EDT game is
    the 21st there and the 22nd in UTC. Ask for the wrong one and you get
    an empty day. */
+/* Soccer answers a whole month at a time — YYYYMM. A YYYYMMDD-YYYYMMDD
+   range looks like it works and silently returns only the first day. */
+function monthKeys(a, b){
+  const out = [], d = new Date(Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), 1));
+  while(d <= b && out.length < 6){
+    out.push(d.getUTCFullYear()+pad(d.getUTCMonth()+1));
+    d.setUTCMonth(d.getUTCMonth()+1);
+  }
+  return out;
+}
 function espnDate(ms){
   const shifted = new Date(ms + offsetFor("ET", ms)*3600000);
   return yyyymmdd(shifted);
@@ -1152,13 +947,22 @@ async function loadLive(){
     }catch(err){ errs.push(comp+": "+(err && err.message || err)); }
   }));
   const now = new Date();
-  const from = new Date(now.getTime()-8*DAY), to = new Date(now.getTime()+24*DAY);
+  const months = monthKeys(new Date(now.getTime()-10*DAY), new Date(now.getTime()+60*DAY));
   await Promise.all([...soccerComps].map(async comp=>{
-    try{
-      const r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+yyyymmdd(from)+"-"+yyyymmdd(to)+"&limit=200", 12000);
-      (r.events||[]).forEach(ev=>{ const g = parseEvent(ev, comp); if(g) built.push(g); });
-      ok++;
-    }catch(err){ errs.push(comp+": "+(err && err.message || err)); }
+    let got = 0, found = 0;
+    const take = async m => {
+      try{
+        const r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+m+"&limit=300", 12000);
+        const evs = r.events || [];
+        evs.forEach(ev=>{ const g = parseEvent(ev, comp); if(g) built.push(g); });
+        got++; found += evs.length;
+      }catch(err){ /* out of season for that month — not fatal */ }
+    };
+    // probe the near months first; only keep paging for a competition
+    // that is actually running, so dormant cups cost two calls, not five
+    await Promise.all(months.slice(0,2).map(take));
+    if(found) await Promise.all(months.slice(2).map(take));
+    if(got) ok++; else errs.push(comp+": no fixtures published");
   }));
   if(!ok) throw new Error(errs[0] || "no source reachable");
   // keep only fixtures that involve a team you follow
@@ -1174,13 +978,11 @@ async function loadLive(){
 }
 
 /* ---- what's actually known yet, and when it will be ---- */
-const TV_PICK_WINDOW = 42*DAY;   // Premier League selections land ~6 weeks out
+/* Kick-off times now come from the feed, so there is nothing to hedge
+   about. A fixture without an opponent can still appear if a feed lists
+   one that way. */
 function timeState(g, now){
-  if(g.away===null || (g.drawAt && now < g.drawAt)) return {state:"tbd", drawAt:g.drawAt};
-  if(SOCCER[g.comp] && g.comp!=="MLS" && g.start-now > TV_PICK_WINDOW)
-    return {state:"tbc", confirmBy:g.start-TV_PICK_WINDOW};
-  if(g.comp==="NFL" && g.localDow===0 && g.start-now > 12*DAY && g.start > Date.UTC(2026,9,5))
-    return {state:"flex"};
+  if(g.away===null) return {state:"tbd", drawAt:g.drawAt};
   return {state:"set"};
 }
 
@@ -1500,7 +1302,18 @@ function noteBlock(){
     + '</div>';
 }
 function emptyState(){
-  return '<div class="empty"><b>No games on the board</b>Pick at least one team and their schedule fills in here.<div><button class="icon-btn" id="emptyPick">Choose teams</button></div></div>';
+  if(!selected.size)
+    return '<div class="empty"><b>No teams picked yet</b>Choose your teams and their real fixtures fill in here.'
+      + '<div><button class="icon-btn" id="emptyPick">Choose teams</button></div></div>';
+  if(liveMode===false)
+    return '<div class="empty"><b>No fixtures available in this view</b>'
+      + 'This copy cannot reach the schedule feed, so it has nothing real to show &mdash; and it will not invent fixtures to fill the space.'
+      + '<div><a class="icon-btn" href="'+PAGES_URL+'" target="_blank" rel="noopener">Open the live version</a></div></div>';
+  if(liveMode===null)
+    return '<div class="empty"><b>Loading fixtures&hellip;</b>Fetching real schedules for your teams.</div>';
+  return '<div class="empty"><b>Nothing scheduled</b>'
+    + 'No published fixtures for your teams in the window we look at. Leagues out of season have none yet &mdash; they appear as soon as the schedule is released.'
+    + '<div><button class="icon-btn" id="emptyPick">Change teams</button></div></div>';
 }
 
 function renderList(now, todayKey){
