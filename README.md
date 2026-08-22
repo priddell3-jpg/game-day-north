@@ -67,7 +67,7 @@ node build.js        # wraps src/page.html into a standalone index.html
 python3 -m http.server 8000
 ```
 
-`src/page.html` is the source of truth. It has no `<!doctype>`, `<head>` or `<body>` because the claude.ai artifact host supplies them; `build.js` wraps it for anywhere else. No dependencies, no build step beyond that, no backend.
+`src/page.html` is the source of truth: a fragment with no `<!doctype>`, `<head>` or `<body>` of its own. `build.js` wraps it into the standalone `index.html` that GitHub Pages serves. No dependencies, no build step beyond that, no backend.
 
 ### GitHub Pages
 
