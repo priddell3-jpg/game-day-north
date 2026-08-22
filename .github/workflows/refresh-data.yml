@@ -5,7 +5,10 @@ name: Refresh fixtures
 # calling an undocumented endpoint from their own browser.
 on:
   schedule:
-    - cron: "*/30 * * * *"      # every 30 minutes (GitHub may delay under load)
+    # Every three hours. The file carries fixtures, which barely move;
+    # anything in progress is read live by the page itself, so a tighter
+    # schedule would buy nothing but bot commits.
+    - cron: "20 */3 * * *"
   workflow_dispatch:             # and on demand from the Actions tab
   push:
     paths:
@@ -35,9 +38,6 @@ jobs:
 
       - name: Commit if anything changed
         run: |
-          # a brand-new data.json is untracked, and git diff ignores untracked
-          # files — record the intent to add so the first run is seen as a change
-          git add -N data.json
           if git diff --quiet -- data.json; then
             echo "No fixture changes."
             exit 0

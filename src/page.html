@@ -787,11 +787,9 @@ const LIVE_FIXTURES = [
    LIVE DATA — real fixtures and real scores from ESPN's public
    scoreboard API, called straight from the browser.
 
-   This only works where the page is allowed to make outside
-   requests. On GitHub Pages it works; inside the claude.ai
-   artifact viewer a strict CSP blocks it, and the page then says
-   scores are unavailable rather than showing a number it made up.
-   Nothing here ever invents a score.
+   Used for anything in progress, and as the fallback when the
+   committed schedule file is missing or stale. Where nothing can be
+   reached the page says so; it never invents a score.
    ============================================================ */
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const ESPN_PATH = {
@@ -1572,7 +1570,10 @@ setInterval(render,30000);
 /* Prefer the committed file; fall back to talking to the API directly
    when it is missing or has gone stale, so a stalled job degrades into
    the old behaviour rather than an empty page. */
-const STALE_AFTER = 90*60*1000;
+// Generous, because the file carries fixtures rather than scores: those
+// barely move, and anything in progress is topped up live regardless. A
+// short window would only push every visitor back to fetching directly.
+const STALE_AFTER = 12*60*60*1000;
 async function refreshLive(){
   try{
     const n = await loadStatic();

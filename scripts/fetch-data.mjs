@@ -197,16 +197,35 @@ if(!fixtures.length){
   console.error("No fixtures built — refusing to overwrite data.json with an empty file.");
   process.exit(1);
 }
+let previous = null;
+try{ previous = JSON.parse(readFileSync(new URL("../data.json", import.meta.url), "utf8")); }catch(e){}
+
 // Never replace a healthy file with a much thinner one: a partial outage
 // upstream should leave yesterday's good data in place.
-try{
-  const prev = JSON.parse(readFileSync(new URL("../data.json", import.meta.url), "utf8"));
-  if(prev.fixtures && prev.fixtures.length > 20 && fixtures.length < prev.fixtures.length * 0.5){
-    console.error("Built " + fixtures.length + " fixtures against " + prev.fixtures.length +
-      " previously — looks like an upstream outage. Keeping the existing file.");
-    process.exit(1);
+if(previous && previous.fixtures && previous.fixtures.length > 20 &&
+   fixtures.length < previous.fixtures.length * 0.5){
+  console.error("Built " + fixtures.length + " fixtures against " + previous.fixtures.length +
+    " previously — looks like an upstream outage. Keeping the existing file.");
+  process.exit(1);
+}
+
+/* Don't rewrite the file just to move a timestamp. The build stamps
+   `generated`, which differs on every run, so writing unconditionally
+   meant a commit and a site rebuild every time — including all through
+   the off-season when nothing had moved. Write when the fixtures
+   actually changed, or when the stamp is old enough that the page would
+   otherwise start treating the file as stale. */
+const MAX_AGE = 6*3600000;
+if(previous && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
+  const age = now - (Date.parse(previous.generated) || 0);
+  if(age < MAX_AGE){
+    console.log("No fixture changed and the file is " + Math.round(age/60000) +
+      " min old — leaving it alone.");
+    process.exit(0);
   }
-}catch(e){ /* no previous file */ }
+  console.log("No fixture changed, but the file is " + Math.round(age/3600000) +
+    "h old — refreshing the stamp.");
+}
 
 const out = {
   generated: new Date(now).toISOString(),
