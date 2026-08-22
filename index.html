@@ -333,6 +333,15 @@ main{padding:22px 0 80px}
 .crest.tbd-crest{background:var(--surface-2);color:var(--muted);border:1px dashed var(--line-strong)}
 .g-time .tbc{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);margin-top:2px}
 
+.results{margin:0 0 24px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.results summary{padding:13px 16px;cursor:pointer;font-weight:800;font-stretch:112%;font-size:14px;list-style:none;display:flex;gap:10px;align-items:baseline}
+.results summary::-webkit-details-marker{display:none}
+.results summary::after{content:"\25BE";margin-left:auto;color:var(--muted);font-size:11px;align-self:center}
+.results[open] summary{border-bottom:1px solid var(--line)}
+.results[open] summary::after{content:"\25B4"}
+.results-in{padding:14px 14px 2px}
+.results-in .day{margin-bottom:16px}
+.results-in .day:last-child{margin-bottom:6px}
 .rights{margin-top:30px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
 .rights summary{padding:13px 16px;cursor:pointer;font-weight:800;font-stretch:112%;font-size:14px;display:flex;align-items:center;gap:10px;list-style:none}
 .rights summary::-webkit-details-marker{display:none}
@@ -1076,7 +1085,7 @@ async function loadLive(){
   }));
   // Soccer: scoreboard by date range keeps each competition correctly tagged
   const now = new Date();
-  const from = new Date(now.getTime()-3*DAY), to = new Date(now.getTime()+24*DAY);
+  const from = new Date(now.getTime()-8*DAY), to = new Date(now.getTime()+24*DAY);
   await Promise.all([...soccerComps].map(async comp=>{
     try{
       const r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+yyyymmdd(from)+"-"+yyyymmdd(to)+"&limit=200", 12000);
@@ -1138,6 +1147,7 @@ let selected, services, hiddenComps, showScores;
     if(raw) raw.split("&").forEach(kv=>{ const [k,v]=kv.split("="); if(k) h[k]=decodeURIComponent(v||""); });
   }catch(e){}
   const listOf = s => s ? s.split(".").filter(Boolean) : null;
+  if(location.hash){ try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){} }
   selected    = new Set(listOf(h.t) || LS.get("gdn.teams", DEFAULT_TEAMS));
   services    = new Set(listOf(h.s) || LS.get("gdn.services", []));
   hiddenComps = new Set(listOf(h.x) || LS.get("gdn.hidden", []));
@@ -1145,21 +1155,23 @@ let selected, services, hiddenComps, showScores;
 })();
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
-let covOpen = null, rightsOpen = false;
+let covOpen = null, rightsOpen = false, resultsOpen = false;
 let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the sample set   // panels keep their open/closed state across re-renders
 
 function persist(){
   LS.set("gdn.teams",[...selected]); LS.set("gdn.services",[...services]);
   LS.set("gdn.hidden",[...hiddenComps]); LS.set("gdn.scores",showScores); LS.set("gdn.alerts",[...alerts]);
+}
+/* Built only when you ask for it, so the address bar stays clean. */
+function shareLink(){
   try{
     const parts = ["t="+[...selected].join(".")];
     if(services.size) parts.push("s="+[...services].join("."));
     if(hiddenComps.size) parts.push("x="+[...hiddenComps].join("."));
     if(!showScores) parts.push("sc=0");
-    history.replaceState(null,"","#"+parts.join("&"));
-  }catch(e){}
+    return location.origin + location.pathname + "#" + parts.join("&");
+  }catch(e){ return ""; }
 }
-const shareLink = () => { try{ return location.href; }catch(e){ return ""; } };
 
 const isMine = g => (g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
@@ -1267,7 +1279,7 @@ function gameRow(g, now){
       + (st.status==="live"?'<span class="dot-live"></span>':"")+esc(st.label||"")+'</span>'
       + (liveMode===false
           ? '<a class="conf-note warn" href="'+PAGES_URL+'" target="_blank" rel="noopener" style="text-decoration:underline">Score unavailable here</a>'
-          : '<span class="conf-note">No score yet</span>');
+          : '<span class="conf-note">'+(st.status==="final"?"No score available":"No score yet")+'</span>');
   } else if(reveal){
     const sc = scoreFor(g,st);
     scoreCell += '<span class="score-line">'+sc[0]+' &ndash; '+sc[1]+'</span>'
@@ -1347,6 +1359,24 @@ function renderCoverage(now){
     + '</details>';
 }
 
+/* ---------- results that already happened ---------- */
+function renderResults(now, todayKey){
+  const midnight = new Date(); midnight.setHours(0,0,0,0);
+  const from = midnight.getTime() - 7*DAY;
+  const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime()).sort((a,b)=>b.start-a.start);
+  if(!past.length) return "";
+  const scored = past.filter(g=>{ const st=stateOf(g,now); return st.score; }).length;
+  const map = new Map();
+  past.forEach(g=>{ const k=localKey(g.start); if(!map.has(k)) map.set(k,[]); map.get(k).push(g); });
+  let inner = "";
+  map.forEach((gs,k)=>{ inner += daySection(k, gs, now, todayKey); });
+  return '<details class="results"'+(resultsOpen?" open":"")+'>'
+    + '<summary>Recent results<span class="conf-note">last 7 days &middot; '
+    + past.length+' game'+(past.length===1?"":"s")
+    + (scored?' &middot; '+scored+' final score'+(scored===1?"":"s"):' &middot; no scores available')
+    + '</span></summary><div class="results-in">'+inner+'</div></details>';
+}
+
 /* ---------- rights table ---------- */
 function renderRights(){
   const comps = myComps();
@@ -1387,8 +1417,8 @@ function emptyState(){
 function renderList(now, todayKey){
   const start = new Date(); start.setHours(0,0,0,0);
   const games = myGames().filter(g=>g.start>=start.getTime() && g.start<start.getTime()+DAY*160);
-  if(!games.length) return welcomeBanner()+renderFilters()+emptyState();
-  let out = welcomeBanner() + renderFilters() + renderCoverage(now);
+  if(!games.length) return welcomeBanner()+renderFilters()+renderResults(now,todayKey)+emptyState();
+  let out = welcomeBanner() + renderFilters() + renderCoverage(now) + renderResults(now, todayKey);
   groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
   return out + renderRights() + noteBlock();
 }
@@ -1468,7 +1498,7 @@ function renderDrawer(){
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
     + '<button class="icon-btn" id="copyLink">Copy</button>'
-    + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked. Everyone else keeps their own.</span></div></div>';
+    + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></div>';
   document.getElementById("drawerCount").textContent = selected.size+" selected";
 }
 
@@ -1487,6 +1517,8 @@ function render(){
   if(cov) cov.addEventListener("toggle",()=>{ covOpen=cov.open; });
   const rt=document.querySelector(".rights");
   if(rt) rt.addEventListener("toggle",()=>{ rightsOpen=rt.open; });
+  const rs=document.querySelector(".results");
+  if(rs) rs.addEventListener("toggle",()=>{ resultsOpen=rs.open; });
   stg.querySelector("svg").innerHTML = showScores
     ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'
     : '<path d="M3 3l18 18"/><path d="M10.6 5.2A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4"/><path d="M6.3 6.4A16.7 16.7 0 0 0 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
