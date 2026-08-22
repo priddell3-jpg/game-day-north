@@ -33,24 +33,32 @@ When sources disagree, the primary release wins and the disagreement goes in the
 
 **Every fixture on this page is a real one.** There is no schedule generator: what you see came from a published feed, and where the feed has nothing, the page shows nothing.
 
-Two sources, in precedence order:
+Sources, in precedence order:
 
-1. **ESPN's public API**, called from the browser on load and again while a game is on. North American leagues come from the per-team season schedule; soccer competitions answer a whole month at a time. Scores are topped up from the scoreboard, which is the only endpoint that reflects a game in progress.
-2. **`LIVE_FIXTURES`** — a small hand-checked set with Canadian listings, used where the API can't be reached.
+1. **`data.json`, built by a scheduled GitHub Action.** One machine talks to the sports API every half hour and commits the result, so an ordinary visit is a single request to this repo's own domain. See `scripts/fetch-data.mjs`.
+2. **Live top-up.** Anything in progress is read straight from ESPN, because a file rebuilt every thirty minutes cannot follow a game.
+3. **Direct fetch**, if `data.json` is missing or more than 90 minutes old — a stalled job degrades to the old behaviour rather than an empty page.
+4. **`LIVE_FIXTURES`** — a small hand-checked set with Canadian listings, for when nothing can be reached.
+5. **Remembered results** — a final score, once seen, is kept in that browser for a week, so a game you missed still shows its score when the feed is down.
 
 Canadian carriage always comes from the rights table, never from ESPN, whose broadcast data is US-facing.
 
-**No code path invents a score or a fixture.** Where something can't be fetched the page says so and links to the deployment that can. That matters because it runs in two places: on GitHub Pages it reaches the API, while inside the claude.ai artifact viewer a strict CSP blocks all outside requests. The same file feature-detects and degrades honestly.
+**No code path invents a score or a fixture.** Where something can't be fetched, the page says so.
 
 ### Endpoint quirks worth knowing
 
-Three of these cost real debugging time:
+Each of these cost real debugging time and is handled in both the client and the build script:
 
 - A game is filed under its **US Eastern date**. A 7:05pm EDT game is the 21st to ESPN and the 22nd in UTC; ask for the wrong one and the day comes back empty.
-- The **season schedule carries no live score**. A finished game can still read `STATUS_SCHEDULED` 0-0 there. Only the scoreboard endpoint has the result.
-- A **`YYYYMMDD-YYYYMMDD` range looks like it works and silently returns only the first day.** Soccer accepts `YYYYMM` for a whole month; the North American leagues do not, so they use per-team season schedules instead.
+- The **season schedule carries no live score**, and omits games entirely. A finished game can read `STATUS_SCHEDULED` 0-0 there. Only the scoreboard has the result, so both are queried and the copy carrying a score wins.
+- A **`YYYYMMDD-YYYYMMDD` range looks like it works and silently returns only the first day.** Soccer accepts `YYYYMM` for a whole month; the North American leagues do not, so they use per-team season schedules plus per-date scoreboards.
+- Sources fail independently. Out-of-season cup competitions 404 as a matter of course, and one of those must never be able to blank the rest of the page.
 
-Sources fail independently. Out-of-season cup competitions 404 as a matter of course, and one of those must never be able to blank the rest of the page.
+Two fixtures count as the same game only when both clubs match **and** they start within four hours — not merely on the same date, or a baseball doubleheader would collapse into one game.
+
+### Keeping the roster in step
+
+`ROSTER` in `scripts/fetch-data.mjs` mirrors `TEAM_ROWS` in `src/page.html`. Add a team to one and add it to the other, or the picker will offer a team the build never fetches.
 
 ## Running it
 

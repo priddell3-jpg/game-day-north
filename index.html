@@ -804,7 +804,6 @@ const LIVE_FIXTURES = [
    scores are unavailable rather than showing a number it made up.
    Nothing here ever invents a score.
    ============================================================ */
-const PAGES_URL = "https://priddell3-jpg.github.io/game-day-north/";
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const ESPN_PATH = {
   NHL:"hockey/nhl", NBA:"basketball/nba", NFL:"football/nfl", MLB:"baseball/mlb",
@@ -881,6 +880,44 @@ function parseEvent(ev, comp){
       : {status, label:label||(status==="final"?"Final":""), score:[sh,sa]}
   };
 }
+/* ---- the repo's own prebuilt fixtures ----------------------------
+   A scheduled job commits data.json next to this page, so the ordinary
+   visit is one request to our own domain instead of a dozen to an
+   undocumented API. Live scores still come straight from the source,
+   because a file refreshed every half hour cannot follow a game.
+   ------------------------------------------------------------------ */
+let staticAt = 0, staticCount = 0;
+function staticTeam(t, comp){
+  if(t.id && TEAMS[t.id]) return TEAMS[t.id];
+  const key = "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
+  if(!TEAMS[key]){
+    TEAMS[key] = {id:key, home:comp, city:"", name:t.name || "?", abbr:(t.abbr||"?").slice(0,4),
+      color:t.color || "#5A6478", ghost:true, comps:[comp]};
+    allTeams.push(TEAMS[key]);
+  }
+  return TEAMS[key];
+}
+async function loadStatic(){
+  let r;
+  try{ r = await jget(new URL("data.json", location.href).href, 12000); }
+  catch(e){ return 0; }
+  if(!r || !Array.isArray(r.fixtures)) return 0;
+  const built = [];
+  r.fixtures.forEach(f=>{
+    if(!f || !f.home || !f.away || !f.start) return;
+    const home = staticTeam(f.home, f.comp), away = staticTeam(f.away, f.comp);
+    if(!selected.has(home.id) && !selected.has(away.id)) return;
+    built.push({comp:f.comp, home, away, start:f.start, moved:null,
+      real:true, espn:true, listed:true, fromFeed:true,
+      localDow:new Date(f.start).getUTCDay(), slotHour:new Date(f.start).getUTCHours(), stage:"",
+      result:{status:f.status || "scheduled", label:f.label || "", score:f.score || null}});
+  });
+  if(built.length) mergeReal(built);
+  staticAt = Date.parse(r.generated) || 0;
+  staticCount = built.length;
+  return built.length;
+}
+
 const espnCache = {};
 async function espnTeamsList(comp){
   if(espnCache[comp]) return espnCache[comp];
@@ -1230,7 +1267,7 @@ function gameRow(g, now){
     scoreCell += '<span class="score-state'+(st.status==="live"?" live":"")+'">'
       + (st.status==="live"?'<span class="dot-live"></span>':"")+esc(st.label||"")+'</span>'
       + (liveMode===false
-          ? '<a class="conf-note warn" href="'+PAGES_URL+'" target="_blank" rel="noopener" style="text-decoration:underline">Score unavailable here</a>'
+          ? '<span class="conf-note warn">Score unavailable</span>'
           : '<span class="conf-note">'+(st.status==="final"?"No score available":"No score yet")+'</span>');
   } else if(reveal){
     const sc = scoreFor(g,st);
@@ -1359,13 +1396,15 @@ function noteBlock(){
   const n = alerts.size;
   const listed = myGames().filter(g=>g.listed||g.espn).length;
   const liveLine = liveMode===true
-      ? '<b>Live scores on.</b> Fixtures and scores come from ESPN\'s public feed, refreshed while a game is on. '
+      ? (staticCount
+          ? '<b>Live scores on.</b> Fixtures come from this site\'s own schedule file, rebuilt on a schedule; anything in progress is read live. '
+          : '<b>Live scores on.</b> Fixtures and scores are read live from ESPN\'s public feed. ')
         + (liveNote?'<span class="conf-note">'+liveNote+'</span> ':'')
     : liveMode===false
       ? (myGames().some(g=>g.remembered)
           ? '<b>Showing remembered results.</b> The feed can\'t be reached right now, so scores you have already seen are being read from this browser; anything newer has no score rather than a guessed one. '
           : '<b>Scores are unavailable in this view.</b> Nothing could be fetched, so no score is shown &mdash; and none is invented. ')
-        + 'Inside the claude.ai viewer that is expected, because it blocks outside requests; <a href="'+PAGES_URL+'" target="_blank" rel="noopener">open the live version</a> instead. '
+        + 'Check your connection and reload; scores fill in as soon as the schedule file or the live feed can be reached. '
         + (liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
       : '<b>Checking for live data&hellip;</b> ';
   return '<div class="note">' + liveLine
@@ -1381,9 +1420,8 @@ function emptyState(){
     return '<div class="empty"><b>No teams picked yet</b>Choose your teams and their real fixtures fill in here.'
       + '<div><button class="icon-btn" id="emptyPick">Choose teams</button></div></div>';
   if(liveMode===false)
-    return '<div class="empty"><b>No fixtures available in this view</b>'
-      + 'This copy cannot reach the schedule feed, so it has nothing real to show &mdash; and it will not invent fixtures to fill the space.'
-      + '<div><a class="icon-btn" href="'+PAGES_URL+'" target="_blank" rel="noopener">Open the live version</a></div></div>';
+    return '<div class="empty"><b>Can\'t reach the schedule right now</b>'
+      + 'Nothing real to show, and it will not invent fixtures to fill the space. Reload once you are back online.</div>';
   if(liveMode===null)
     return '<div class="empty"><b>Loading fixtures&hellip;</b>Fetching real schedules for your teams.</div>';
   return '<div class="empty"><b>Nothing scheduled</b>'
@@ -1542,9 +1580,40 @@ document.getElementById("main").addEventListener("click",function(e){
 setInterval(()=>{ const now=Date.now(); document.querySelectorAll(".countdown[data-start]").forEach(el=>{ el.textContent=countdownText(Number(el.getAttribute("data-start")),now); }); },1000);
 setInterval(render,30000);
 
-function refreshLive(){
-  return loadLive().then(()=>{ liveMode=true; liveErr=""; render(); })
-    .catch(e=>{ liveMode=false; liveErr=(e && e.message || String(e)).slice(0,120); render(); });
+/* Prefer the committed file; fall back to talking to the API directly
+   when it is missing or has gone stale, so a stalled job degrades into
+   the old behaviour rather than an empty page. */
+const STALE_AFTER = 90*60*1000;
+async function refreshLive(){
+  try{
+    const n = await loadStatic();
+    const fresh = n > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
+    if(n > 0){ liveMode = true; liveErr = ""; rememberResults(); render(); }
+    if(fresh){
+      // one cheap top-up for anything in progress, then done
+      let filled = 0;
+      try{ filled = await fillScores(); }catch(e){}
+      if(filled){ rememberResults(); }
+      liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from the schedule file"
+        + (filled ? ", " + filled + " score" + (filled===1?"":"s") + " live" : "")
+        + " &middot; updated " + agoText(staticAt);
+      render();
+      return;
+    }
+    await loadLive();
+    liveMode = true; liveErr = ""; rememberResults(); render();
+  }catch(e){
+    liveMode = false;
+    liveErr = (e && e.message || String(e)).slice(0,120);
+    render();
+  }
+}
+function agoText(ms){
+  const m = Math.max(0, Math.round((Date.now()-ms)/60000));
+  if(m < 1) return "just now";
+  if(m < 60) return m + " min ago";
+  const h = Math.round(m/60);
+  return h + (h===1?" hour ago":" hours ago");
 }
 /* Picking a team should fill its fixtures in straight away rather than
    leaving a blank until the next cycle. Debounced so working through
