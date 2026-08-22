@@ -118,6 +118,9 @@ function parseEvent(ev, comp){
     const t = c.team;
     return { id: NAME_TO_ID.get(norm(t.displayName)) || null,
              name: t.displayName || t.name || "", abbr: (t.abbreviation||"?").slice(0,4),
+             // the home club's city is what names the venue in the UI, so it
+             // has to survive for clubs outside the followable roster too
+             city: t.location || "",
              color: t.color ? "#"+String(t.color).replace("#","") : null };
   };
   const sh = num(H.score && H.score.displayValue != null ? H.score.displayValue : H.score);

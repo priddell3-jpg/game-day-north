@@ -878,7 +878,7 @@ function staticTeam(t, comp){
   if(t.id && TEAMS[t.id]) return TEAMS[t.id];
   const key = "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
   if(!TEAMS[key]){
-    TEAMS[key] = {id:key, home:comp, city:"", name:t.name || "?", abbr:(t.abbr||"?").slice(0,4),
+    TEAMS[key] = {id:key, home:comp, city:t.city || "", name:t.name || "?", abbr:(t.abbr||"?").slice(0,4),
       color:t.color || "#5A6478", ghost:true, comps:[comp]};
     allTeams.push(TEAMS[key]);
   }
@@ -1227,7 +1227,7 @@ function gameRow(g, now){
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
     + (g.listed?'<span class="pill confirmed" title="Real fixture from a published TV listing">Listed</span>':"")
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
-    + (g.home?'<span>in '+esc(g.home.city)+'</span>':'')
+    + (g.home && g.home.city ? '<span>in '+esc(g.home.city)+'</span>' : '')
     + '</div>';
 
   let watch;
