@@ -946,6 +946,21 @@ async function loadLive(){
       ok++;
     }catch(err){ errs.push(comp+": "+(err && err.message || err)); }
   }));
+  // The season-schedule endpoint lags and omits: it can miss a game that
+  // is on tonight, and reports finished ones as 0-0 scheduled. The
+  // scoreboard is authoritative for what is actually happening, so the
+  // near days get fetched there as a source of fixtures in their own
+  // right, not merely as a score top-up.
+  const naComps = [...new Set(naJobs.map(j=>j[1]))];
+  const nearDates = [-2,-1,0,1].map(d=>espnDate(Date.now()+d*DAY));
+  await Promise.all(naComps.map(comp=>Promise.all(nearDates.map(async d=>{
+    try{
+      const r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+d, 9000);
+      (r.events||[]).forEach(ev=>{ const g = parseEvent(ev, comp); if(g) built.push(g); });
+      ok++;
+    }catch(err){ /* nothing that day, or out of season */ }
+  }))));
+
   const now = new Date();
   const months = monthKeys(new Date(now.getTime()-10*DAY), new Date(now.getTime()+60*DAY));
   await Promise.all([...soccerComps].map(async comp=>{
@@ -967,8 +982,14 @@ async function loadLive(){
   if(!ok) throw new Error(errs[0] || "no source reachable");
   // keep only fixtures that involve a team you follow
   const keep = built.filter(g=>selected.has(g.home.id) || selected.has(g.away.id));
-  const seen = new Set();
-  const dedup = keep.filter(g=>{ const k=g.comp+g.start+g.home.id+g.away.id; if(seen.has(k)) return false; seen.add(k); return true; });
+  const byKey = new Map();
+  keep.forEach(g=>{
+    const k = g.comp+"|"+localKey(g.start)+"|"+g.home.id+"|"+g.away.id;
+    const prev = byKey.get(k);
+    const better = g.result && g.result.score, had = prev && prev.result && prev.result.score;
+    if(!prev || (better && !had)) byKey.set(k, g);
+  });
+  const dedup = [...byKey.values()];
   if(dedup.length) mergeReal(dedup);
   let filled = 0;
   try{ filled = await fillScores(); }catch(e){ errs.push("scores: "+(e && e.message || e)); }
