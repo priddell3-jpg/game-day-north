@@ -1,0 +1,1372 @@
+<title>Game Day North</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F1F3F8;
+  --surface:#FFFFFF;
+  --surface-2:#F7F8FC;
+  --ink:#0C1120;
+  --ink-2:#2A3346;
+  --muted:#68738C;
+  --line:#DCE2EE;
+  --line-strong:#C3CBDC;
+  --accent:#1F3BE0;
+  --accent-soft:#E5E9FD;
+  --live:#DC1B33;
+  --live-soft:#FCE7EA;
+  --panel:#0C1120;
+  --panel-ink:#EEF1F8;
+  --panel-muted:#7C88A3;
+  --panel-line:#232C42;
+  --shadow:0 1px 2px rgba(12,17,32,.06), 0 8px 24px -16px rgba(12,17,32,.28);
+  --radius:10px;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#080B14;
+    --surface:#121828;
+    --surface-2:#0E1421;
+    --ink:#E8ECF7;
+    --ink-2:#C3CBDC;
+    --muted:#8590A9;
+    --line:#212A3D;
+    --line-strong:#2E3950;
+    --accent:#7B90FF;
+    --accent-soft:#1A2247;
+    --live:#FF5E72;
+    --live-soft:#3A1520;
+    --panel:#03060E;
+    --panel-ink:#E8ECF7;
+    --panel-muted:#78849E;
+    --panel-line:#1A2233;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#080B14;
+  --surface:#121828;
+  --surface-2:#0E1421;
+  --ink:#E8ECF7;
+  --ink-2:#C3CBDC;
+  --muted:#8590A9;
+  --line:#212A3D;
+  --line-strong:#2E3950;
+  --accent:#7B90FF;
+  --accent-soft:#1A2247;
+  --live:#FF5E72;
+  --live-soft:#3A1520;
+  --panel:#03060E;
+  --panel-ink:#E8ECF7;
+  --panel-muted:#78849E;
+  --panel-line:#1A2233;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--display);
+  font-size:15px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter:saturate(1.4) blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-in{display:flex;align-items:center;gap:14px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.brand-mark{
+  width:28px;height:28px;flex:none;border-radius:7px;background:var(--accent);
+  display:grid;place-items:center;color:#fff;font-family:var(--mono);
+  font-size:12px;font-weight:600;letter-spacing:-.5px;
+}
+.brand-name{font-weight:800;font-stretch:118%;letter-spacing:-.2px;font-size:16px;white-space:nowrap}
+.brand-sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
+.seg button{
+  padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--muted);
+  transition:background .15s,color .15s;white-space:nowrap;
+}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.icon-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);
+  transition:border-color .15s,background .15s;
+}
+.icon-btn:hover{border-color:var(--line-strong)}
+.icon-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.eye{width:15px;height:15px;flex:none}
+
+/* ---------- scoreboard rail ---------- */
+.rail{background:var(--panel);color:var(--panel-ink);border-bottom:1px solid var(--line-strong);box-shadow:inset 0 -1px 0 var(--panel-line)}
+.rail-in{display:flex;align-items:stretch;gap:0;min-height:64px}
+.rail-label{
+  flex:none;display:flex;flex-direction:column;justify-content:center;padding:10px 18px 10px 0;
+  border-right:1px solid var(--panel-line);margin-right:16px;
+}
+.rail-label b{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--panel-muted);font-weight:500}
+.rail-label span{font-weight:800;font-stretch:118%;font-size:15px;letter-spacing:-.2px}
+.rail-scroll{display:flex;gap:0;overflow-x:auto;flex:1;scrollbar-width:thin}
+.rail-card{
+  flex:none;min-width:186px;padding:11px 18px 11px 0;margin-right:18px;
+  border-right:1px solid var(--panel-line);display:flex;flex-direction:column;gap:3px;justify-content:center;
+}
+.rail-card:last-child{border-right:none}
+.rail-row{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:12.5px}
+.rail-row .t{flex:1;color:var(--panel-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-row .s{font-weight:600;font-variant-numeric:tabular-nums}
+.rail-meta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--panel-muted);display:flex;gap:7px;align-items:center}
+.rail-empty{display:flex;align-items:center;color:var(--panel-muted);font-size:13.5px;padding:12px 0}
+.rail-empty b{color:var(--panel-ink);font-weight:700}
+
+/* ---------- live dot ---------- */
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--live);display:inline-block;flex:none;animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.dot-live{animation:none}}
+
+/* ---------- teams drawer ---------- */
+.drawer{border-bottom:1px solid var(--line);background:var(--surface)}
+.drawer-in{padding:18px 0 20px}
+.drawer[hidden]{display:none}
+.drawer-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.drawer-head h2{margin:0;font-size:14px;font-weight:800;font-stretch:118%;letter-spacing:-.1px}
+.drawer-head .count{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.search{
+  margin-left:auto;padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);
+  font:inherit;font-size:13px;color:var(--ink);min-width:180px;
+}
+.search::placeholder{color:var(--muted)}
+.lg-group{margin-bottom:14px}
+.lg-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.lg-title b{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.lg-title .bar{height:1px;flex:1;background:var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 6px;border-radius:99px;
+  border:1px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);
+  transition:border-color .15s,background .15s,color .15s;
+}
+.chip:hover{border-color:var(--line-strong)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.crest{
+  width:20px;height:20px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-family:var(--mono);font-size:8.5px;font-weight:600;color:#fff;letter-spacing:-.3px;
+}
+
+/* ---------- day sections ---------- */
+main{padding:22px 0 80px}
+.day{margin-bottom:26px}
+.day-head{display:flex;align-items:baseline;gap:12px;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:2px}
+.day-head h3{margin:0;font-size:17px;font-weight:800;font-stretch:120%;letter-spacing:-.3px;text-transform:uppercase}
+.day-head .rel{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.day-head .n{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* ---------- game row ---------- */
+.game{
+  display:grid;
+  grid-template-columns:74px 1fr auto auto 34px;
+  gap:16px;align-items:center;
+  padding:13px 14px 13px 12px;
+  border-bottom:1px solid var(--line);
+  background:var(--surface);
+  border-left:3px solid transparent;
+  transition:background .15s;
+}
+.day-games{border:1px solid var(--line);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden;background:var(--surface)}
+.game:last-child{border-bottom:none}
+.game:hover{background:var(--surface-2)}
+.game.is-live{border-left-color:var(--live);background:linear-gradient(90deg,var(--live-soft),var(--surface) 55%)}
+.g-time{font-family:var(--mono);font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.25}
+.g-time .ap{font-size:10px;color:var(--muted);margin-left:2px}
+.g-time .moved{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--live);margin-top:2px}
+.g-time .was{display:block;font-size:10px;color:var(--muted);text-decoration:line-through}
+.g-match{min-width:0;display:flex;flex-direction:column;gap:4px}
+.g-teams{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.g-team{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px;letter-spacing:-.15px;white-space:nowrap}
+.g-team.dim{font-weight:500;color:var(--ink-2)}
+.at{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.g-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.lg-tag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 6px;border-radius:4px;color:#fff}
+.g-watch{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
+.svc{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.svc .pip{width:5px;height:5px;border-radius:1px;background:var(--muted);flex:none}
+.svc.tv .pip{background:var(--accent);border-radius:1px}
+.svc.stream .pip{background:var(--ink-2);border-radius:50%}
+.svc-note{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.g-score{min-width:88px;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.score-line{font-family:var(--mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.1}
+.score-state{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.score-state.live{color:var(--live);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.hidden-score{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px dashed var(--line-strong);border-radius:6px;padding:4px 9px;color:var(--muted);
+  transition:border-color .15s,color .15s;
+}
+.hidden-score:hover{border-color:var(--accent);color:var(--accent)}
+.countdown{font-family:var(--mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bell{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--muted);border:1px solid transparent;transition:color .15s,background .15s,border-color .15s}
+.bell:hover{background:var(--surface-2);border-color:var(--line)}
+.bell[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
+.bell svg{width:15px;height:15px}
+
+/* ---------- empty ---------- */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty b{display:block;font-size:18px;font-weight:800;font-stretch:115%;color:var(--ink);margin-bottom:6px}
+.empty button{margin-top:14px}
+
+/* ---------- calendar ---------- */
+.cal-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cal-head h3{margin:0;font-size:19px;font-weight:800;font-stretch:120%;letter-spacing:-.4px;text-transform:uppercase}
+.nav-btn{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;background:var(--surface);color:var(--ink-2)}
+.nav-btn:hover{border-color:var(--line-strong)}
+.cal-legend{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cal-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cal-dow{background:var(--surface-2);padding:7px 8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center}
+.cal-cell{background:var(--surface);min-height:96px;padding:6px 7px;display:flex;flex-direction:column;gap:3px;text-align:left;align-items:stretch;border:none;border-radius:0}
+.cal-cell.out{background:var(--surface-2);color:var(--muted)}
+.cal-cell:hover{background:var(--accent-soft)}
+.cal-cell.sel{outline:2px solid var(--accent);outline-offset:-2px;z-index:2}
+.cal-num{font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--muted);display:flex;align-items:center;gap:5px}
+.cal-cell.today .cal-num b{background:var(--live);color:#fff;border-radius:4px;padding:0 4px}
+.cal-num b{font-weight:600;color:var(--ink)}
+.cal-cell.out .cal-num b{color:var(--muted)}
+.cal-ev{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.cal-ev i{width:6px;height:6px;border-radius:50%;flex:none}
+.cal-ev .tm{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:9.5px}
+.cal-more{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:auto}
+.cal-detail{margin-top:20px}
+.cal-detail .day-head{border-bottom-width:2px}
+
+/* ---------- footer note ---------- */
+.note{
+  margin-top:26px;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:var(--radius);background:var(--surface);font-size:13px;color:var(--ink-2);
+}
+.note b{font-weight:800;font-stretch:112%}
+.note code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+
+@media (max-width:760px){
+  .wrap{padding:0 14px}
+  .brand-sub{display:none}
+  .topbar-in{height:auto;padding:10px 0;flex-wrap:wrap;gap:8px}
+  .game{grid-template-columns:64px 1fr auto;gap:10px;padding:12px 8px 12px 10px}
+  .g-watch{grid-column:2/4;align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:10px}
+  .g-score{grid-column:3;grid-row:1;min-width:0}
+  .bell{grid-column:3;grid-row:1;justify-self:end;display:none}
+  .cal-cell{min-height:70px}
+  .cal-ev .tm{display:none}
+  .rail-label{display:none}
+}
+
+/* ---------- v2: coverage, confidence, competitions ---------- */
+:root{ --ok:#0F7A52; --ok-soft:#E3F3EC; --warn:#9A5B00; --warn-soft:#FBF0DC; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ok:#4FD1A0; --ok-soft:#0E2C22; --warn:#E8B45E; --warn-soft:#2E2210; } }
+:root[data-theme="dark"]{ --ok:#4FD1A0; --ok-soft:#0E2C22; --warn:#E8B45E; --warn-soft:#2E2210; }
+
+.welcome{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;margin:18px 0 4px;
+  border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--radius)}
+.welcome b{display:block;font-size:14px;font-weight:800;font-stretch:115%;margin-bottom:2px}
+.welcome p{margin:0;font-size:13px;color:var(--ink-2);max-width:62ch}
+.welcome .acts{margin-left:auto;display:flex;gap:8px;align-items:center;flex:none}
+.welcome .x{color:var(--muted);font-size:16px;line-height:1;padding:4px 6px}
+@media (max-width:760px){ .welcome{flex-wrap:wrap} .welcome .acts{margin-left:0;width:100%} }
+.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 4px}
+.filters .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.fchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
+.fchip i{width:7px;height:7px;border-radius:50%;flex:none;opacity:.35}
+.fchip[aria-pressed="true"]{color:var(--ink);border-color:var(--line-strong)}
+.fchip[aria-pressed="true"] i{opacity:1}
+
+.coverage{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:16px 18px;margin-bottom:22px}
+.coverage summary{list-style:none;cursor:pointer;display:flex;align-items:flex-start;gap:10px}
+.coverage summary::-webkit-details-marker{display:none}
+.coverage summary::after{content:"\25BE";margin-left:auto;color:var(--muted);font-size:11px;transition:transform .15s;padding-left:10px}
+.coverage[open] summary::after{transform:rotate(180deg)}
+.cov-h{display:block;font-size:15px;font-weight:800;font-stretch:118%;letter-spacing:-.2px;margin-bottom:3px}
+.coverage .sub{display:block;font-size:12.5px;color:var(--muted)}
+.coverage[open] summary{margin-bottom:14px}
+.cov-bar{display:flex;height:7px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-bottom:14px;gap:2px}
+.cov-bar i{display:block;height:100%}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.svc-card{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);text-align:left;width:100%}
+.svc-card[aria-pressed="true"]{border-color:var(--ok);background:var(--ok-soft)}
+.svc-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line-strong);flex:none;display:grid;place-items:center;font-size:10px;color:transparent}
+.svc-card[aria-pressed="true"] .svc-box{background:var(--ok);border-color:var(--ok);color:#fff}
+.svc-name{font-weight:700;font-size:13px;line-height:1.2}
+.svc-games{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.04em}
+.cov-note{margin-top:12px;font-size:12.5px;color:var(--ink-2);display:flex;gap:8px;align-items:flex-start}
+
+.tag-cov{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:4px;font-weight:600}
+.tag-cov.have{background:var(--ok-soft);color:var(--ok)}
+.tag-cov.need{background:var(--warn-soft);color:var(--warn)}
+.svc.unconfirmed{color:var(--warn)}
+.svc.unconfirmed .pip{background:var(--warn)}
+.svc.expected{border-bottom:1px dashed var(--line-strong)}
+.conf-note{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.conf-note.warn{color:var(--warn)}
+.tbd{opacity:.75;font-style:normal}
+.crest.tbd-crest{background:var(--surface-2);color:var(--muted);border:1px dashed var(--line-strong)}
+.g-time .tbc{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);margin-top:2px}
+
+.rights{margin-top:30px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.rights summary{padding:13px 16px;cursor:pointer;font-weight:800;font-stretch:112%;font-size:14px;display:flex;align-items:center;gap:10px;list-style:none}
+.rights summary::-webkit-details-marker{display:none}
+.rights summary::after{content:"";margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400}
+.rights[open] summary{border-bottom:1px solid var(--line)}
+.rights-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.rights-tbl th{text-align:left;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;padding:9px 16px;background:var(--surface-2)}
+.rights-tbl td{padding:10px 16px;border-top:1px solid var(--line);vertical-align:top}
+.rights-tbl a{color:var(--accent)}
+.rights-wrap{overflow-x:auto}
+.pill{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:4px;font-weight:600}
+.pill.confirmed{background:var(--ok-soft);color:var(--ok)}
+.pill.expected{background:var(--accent-soft);color:var(--accent)}
+.pill.unknown{background:var(--warn-soft);color:var(--warn)}
+@media (max-width:760px){
+  .coverage{padding:14px}
+  .svc-grid{grid-template-columns:repeat(2,1fr)}
+  .svc-card{padding:8px 9px}
+  .svc-name{font-size:12px}
+  .rights-tbl th,.rights-tbl td{padding:8px 12px}
+}
+</style>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <div class="brand-mark">GD</div>
+      <div>
+        <div class="brand-name">Game Day North</div>
+        <div class="brand-sub">Where to watch, coast to coast</div>
+      </div>
+    </div>
+    <div class="seg" role="group" aria-label="View">
+      <button id="v-list" aria-pressed="true">List</button>
+      <button id="v-cal" aria-pressed="false">Calendar</button>
+    </div>
+    <button class="icon-btn" id="scoreToggle" aria-pressed="true" title="Show or hide scores everywhere">
+      <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span id="scoreToggleLabel">Scores on</span>
+    </button>
+    <button class="icon-btn" id="teamsToggle" aria-pressed="false">My teams <span id="teamCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
+  </div>
+</header>
+
+<div class="rail"><div class="wrap rail-in" id="rail"></div></div>
+
+<section class="drawer" id="drawer" hidden>
+  <div class="wrap drawer-in">
+    <div class="drawer-head">
+      <h2>Pick your teams</h2>
+      <span class="count" id="drawerCount"></span>
+      <input class="search" id="teamSearch" type="search" placeholder="Search teams…" aria-label="Search teams">
+    </div>
+    <div id="teamGroups"></div>
+  </div>
+</section>
+
+<main class="wrap" id="main"></main>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   COMPETITIONS — the rights-bearing entity, not the team.
+   A club like Liverpool enters several of these in one season
+   and lands on a different Canadian service in each.
+   ============================================================ */
+const COMPS = {
+  NHL:   {name:"NHL",               short:"NHL",        color:"#3D6FE0"},
+  NBA:   {name:"NBA",               short:"NBA",        color:"#E2761F"},
+  NFL:   {name:"NFL",               short:"NFL",        color:"#1F7A5C"},
+  MLB:   {name:"MLB",               short:"MLB",        color:"#7A5AF0"},
+  MLS:   {name:"MLS",               short:"MLS",        color:"#12958C"},
+  EPL:   {name:"Premier League",    short:"EPL",        color:"#B0367A"},
+  UCL:   {name:"Champions League",  short:"UCL",        color:"#2B3A8F"},
+  EFL:   {name:"League Cup",        short:"EFL Cup",    color:"#7C4DBE"},
+  FAC:   {name:"FA Cup",            short:"FA Cup",     color:"#C2185B"},
+  LALIGA:{name:"LaLiga",            short:"LaLiga",     color:"#D9822B"},
+  SERIEA:{name:"Serie A",           short:"Serie A",    color:"#2E7D8F"},
+  BUNDES:{name:"Bundesliga",        short:"Bundesliga", color:"#9E2A2B"},
+  LIGUE1:{name:"Ligue 1",           short:"Ligue 1",    color:"#1B6E8C"}
+};
+
+/* ============================================================
+   SERVICES — carriers roll up to the subscription you'd buy.
+   Sportsnet Pacific / One / + are all "a Sportsnet sub".
+   ============================================================ */
+const SERVICES = {
+  sportsnet:{label:"Sportsnet", kind:"tv"},
+  tsn:      {label:"TSN",       kind:"tv"},
+  rds:      {label:"RDS",       kind:"tv"},
+  tva:      {label:"TVA Sports",kind:"tv"},
+  ctv:      {label:"CTV",       kind:"tv"},
+  prime:    {label:"Prime Video",kind:"stream"},
+  fubo:     {label:"Fubo",      kind:"stream"},
+  dazn:     {label:"DAZN",      kind:"stream"},
+  apple:    {label:"Apple TV",  kind:"stream"},
+  mlbtv:    {label:"MLB.TV",    kind:"stream"},
+  nbalp:    {label:"NBA League Pass", kind:"stream"}
+};
+const CARRIER_SERVICE = {
+  "Sportsnet":"sportsnet","Sportsnet One":"sportsnet","Sportsnet Pacific":"sportsnet",
+  "Sportsnet West":"sportsnet","Sportsnet Ontario":"sportsnet","Sportsnet+":"sportsnet",
+  "TSN":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
+  "RDS":"rds","TVA Sports":"tva","CTV":"ctv","CTV2":"ctv",
+  "Prime Video":"prime","Fubo Canada":"fubo","DAZN Canada":"dazn",
+  "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp"
+};
+
+/* ============================================================
+   RIGHTS TABLE — ordered rules, first match wins.
+   Every row carries its confidence and its source, so a listing
+   can say how much it should be trusted. Editing a rights change
+   is a data edit here, not a code change.
+   ============================================================ */
+const CHECKED = "2026-08-22";
+const SRC = {
+  fubo:    {label:"Fubo press release", url:"https://www.businesswire.com/news/home/20250417021019/en/Fubo-Retains-Exclusive-Rights-to-Premier-League-in-Canada-With-Multi-Year-Agreement-Beginning-With-20252026-Season"},
+  dazn:    {label:"DAZN press room", url:"https://dazngroup.com/press-room/dazn-canada-retains-exclusive-rights-to-uefa-club-competitions/"},
+  daznlist:{label:"DAZN Canada rights list", url:"https://www.livesoccertv.com/channels/dazn-canada/"},
+  rogers:  {label:"Rogers / Prime Video", url:"https://about.rogers.com/news-ideas/rogers-and-prime-video-announce-12-year-sublicensing-agreement-for-nhl-rights-in-canada/"},
+  cbc:     {label:"CBC sublicence ended", url:"https://www.sportsvideo.org/2026/06/16/nhl-games-leaving-cbc-in-canada-as-sublicense-rogers-sportsnet-ends/"},
+  tsnreg:  {label:"TSN/RDS regional extension", url:"https://www.tsn.ca/nhl/article/montreal-canadiens-tsn-and-rds-announce-landmark-long-term-rights-extension/"},
+  nflca:   {label:"NFL.com — ways to watch in Canada", url:"https://www.nfl.com/international/ways-to-watch/canada"},
+  wikica:  {label:"Sports broadcasting contracts in Canada", url:"https://en.wikipedia.org/wiki/Sports_broadcasting_contracts_in_Canada"},
+  raptors: {label:"Rogers–MLSE: TSN/Sportsnet split holds", url:"https://www.si.com/nba/raptors/changes-for-toronto-raptors-fans-after-rogers-purchase-of-mlse"},
+  jays:    {label:"Sportsnet+ carries the MLB postseason", url:"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},
+  none:    {label:"No Canadian rights holder found", url:""}
+};
+const tv = n => ({name:n, kind:"tv"});
+const st = n => ({name:n, kind:"stream"});
+const CDN_MLS = ["van-mls","tfc","mtl-mls"];
+
+const RIGHTS = [
+  /* ---------------- soccer ---------------- */
+  {comp:"EPL", carriers:[st("Fubo Canada")], confidence:"confirmed",
+   note:"Exclusive — every match, through 2027-28. Note: LiveSoccerTV also lists DAZN Canada for EPL fixtures; Fubo's own release says exclusive, so Fubo is used here", src:SRC.fubo, checked:CHECKED},
+  {comp:"UCL", carriers:[st("DAZN Canada")], confidence:"confirmed",
+   note:"Exclusive UEFA club competitions", src:SRC.dazn, checked:CHECKED},
+  {comp:"EFL", carriers:[st("DAZN Canada")], confidence:"confirmed",
+   note:"League Cup, 2024–2028", src:SRC.daznlist, checked:CHECKED},
+  {comp:"FAC", carriers:[], confidence:"unknown",
+   note:"No Canadian rights holder found — re-check before the third round in January", src:SRC.none, checked:CHECKED},
+  {comp:"SERIEA", carriers:[st("DAZN Canada")], confidence:"confirmed", note:"2024–2027", src:SRC.daznlist, checked:CHECKED},
+  {comp:"BUNDES", carriers:[st("DAZN Canada")], confidence:"confirmed", note:"2025–2028", src:SRC.daznlist, checked:CHECKED},
+  {comp:"LALIGA", carriers:[], confidence:"unknown", note:"Canadian carrier not confirmed", src:SRC.none, checked:CHECKED},
+  {comp:"LIGUE1", carriers:[], confidence:"unknown", note:"Canadian carrier not confirmed", src:SRC.none, checked:CHECKED},
+
+  /* ---------------- MLS ---------------- */
+  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)), carriers:[st("MLS Season Pass"), tv("TSN")], confidence:"expected",
+   note:"Apple carries every match; TSN/RDS simulcast at least one Canadian club match a week — that simulcast window runs to 2026", src:SRC.wikica, checked:CHECKED},
+  {comp:"MLS", carriers:[st("MLS Season Pass")], confidence:"confirmed",
+   note:"Apple is global rightsholder, every match, through 2032", src:SRC.wikica, checked:CHECKED},
+
+  /* ---------------- NHL: first year of the new Rogers deal ---------------- */
+  {comp:"NHL", when:g=>g.dow===3, carriers:[st("Prime Video")], confidence:"confirmed",
+   note:"Wednesday national exclusive — 26+ games, from 2026-27", src:SRC.rogers, checked:CHECKED},
+  {comp:"NHL", when:g=>g.dow===6||g.dow===1, carriers:[tv("Sportsnet"), st("Sportsnet+")], confidence:"confirmed",
+   note:"Sportsnet national window (Sat + Mon). Hockey Night in Canada is no longer on CBC", src:SRC.cbc, checked:CHECKED},
+  {comp:"NHL", when:g=>g.has("mtl-nhl"), carriers:[tv("TSN5"), tv("RDS"), st("TSN+")], confidence:"confirmed",
+   note:"Bell Media holds Canadiens regional rights under a long-term extension", src:SRC.tsnreg, checked:CHECKED},
+  {comp:"NHL", when:g=>g.has("ott"), carriers:[tv("TSN5"), st("TSN+")], confidence:"expected", note:"Senators regional — Bell Media", src:SRC.tsnreg, checked:CHECKED},
+  {comp:"NHL", when:g=>g.has("wpg"), carriers:[tv("TSN3"), st("TSN+")], confidence:"expected", note:"Jets regional — TSN", src:SRC.tsnreg, checked:CHECKED},
+  {comp:"NHL", when:g=>g.has("van-nhl"), carriers:[tv("Sportsnet Pacific"), st("Sportsnet+")], confidence:"expected", note:"Canucks regional — Sportsnet", src:SRC.rogers, checked:CHECKED},
+  {comp:"NHL", when:g=>g.has("tor-nhl"), carriers:[tv("Sportsnet Ontario"), st("Sportsnet+")], confidence:"expected", note:"Leafs regional — Rogers-owned", src:SRC.rogers, checked:CHECKED},
+  {comp:"NHL", when:g=>g.has("edm")||g.has("cgy"), carriers:[tv("Sportsnet West"), st("Sportsnet+")], confidence:"expected", note:"Oilers/Flames regional", src:SRC.rogers, checked:CHECKED},
+  {comp:"NHL", carriers:[tv("Sportsnet One"), st("Sportsnet+")], confidence:"expected",
+   note:"Sportsnet is national rightsholder for all other games", src:SRC.rogers, checked:CHECKED},
+
+  /* ---------------- MLB ---------------- */
+  {comp:"MLB", when:g=>g.stage!=="", carriers:[tv("Sportsnet"), st("Sportsnet+")], confidence:"confirmed",
+   note:"Sportsnet holds national MLB rights in Canada; Sportsnet+ carries the entire postseason", src:SRC.jays, checked:CHECKED},
+  {comp:"MLB", when:g=>g.has("tor-mlb"), carriers:[tv("Sportsnet"), st("Sportsnet+")], confidence:"confirmed",
+   note:"Rogers owns the Blue Jays — every game on Sportsnet", src:SRC.wikica, checked:CHECKED},
+  {comp:"MLB", carriers:[st("MLB.TV")], confidence:"expected",
+   note:"Out-of-market. Some national US games also appear on TSN or RDS", src:SRC.wikica, checked:CHECKED},
+
+  /* ---------------- NBA ---------------- */
+  {comp:"NBA", when:g=>g.has("tor-nba"), carriers:[tv("TSN"), tv("Sportsnet")], confidence:"confirmed",
+   note:"TSN and Sportsnet split Raptors games 50-50; unchanged by the Rogers–MLSE deal", src:SRC.raptors, checked:CHECKED},
+  {comp:"NBA", carriers:[tv("TSN"), st("NBA League Pass")], confidence:"expected",
+   note:"Coverage shared between TSN, Sportsnet and NBA TV Canada; rest on League Pass", src:SRC.wikica, checked:CHECKED},
+
+  /* ---------------- NFL ---------------- */
+  {comp:"NFL", when:g=>g.dow===4||g.dow===1, carriers:[tv("TSN"), tv("RDS"), st("DAZN")], confidence:"confirmed",
+   note:"TSN carries all primetime games — Thursday, Sunday and Monday night", src:SRC.nflca, checked:CHECKED},
+  {comp:"NFL", when:g=>g.dow===0&&g.hour>=19, carriers:[tv("TSN"), st("DAZN")], confidence:"confirmed",
+   note:"Sunday Night Football — TSN", src:SRC.nflca, checked:CHECKED},
+  {comp:"NFL", carriers:[tv("CTV"), tv("RDS"), st("DAZN")], confidence:"confirmed",
+   note:"CTV is the free-to-air home of Sunday afternoon games; DAZN carries every game via Game Pass", src:SRC.nflca, checked:CHECKED}
+];
+
+function resolveRights(g){
+  const ids = [g.home&&g.home.id, g.away&&g.away.id];
+  const ctx = {stage:g.stage||"", has:id=>ids.indexOf(id)>=0, comp:g.comp, hour:g.slotHour||0};
+  // day-of-week must be the HOME team's local day, not UTC
+  ctx.dow = g.localDow;
+  if(g.liveCarriers) return {carriers:g.liveCarriers, confidence:"confirmed", listed:true,
+    note:"Taken from a published TV listing, not inferred", src:g.liveSrc, checked:CHECKED};
+  for(const r of RIGHTS){
+    if(r.comp!==g.comp) continue;
+    if(r.when && !r.when(ctx)) continue;
+    return r;
+  }
+  return {carriers:[], confidence:"unknown", note:"No rule matched", src:SRC.none};
+}
+
+// id | league | city | name | abbr | tz | colour | ucl
+const TEAM_ROWS = [
+["tor-nhl","NHL","Toronto","Maple Leafs","TOR","ET","#00205B"],
+["van-nhl","NHL","Vancouver","Canucks","VAN","PT","#00205B"],
+["edm","NHL","Edmonton","Oilers","EDM","MT","#FF4C00"],
+["cgy","NHL","Calgary","Flames","CGY","MT","#C8102E"],
+["ott","NHL","Ottawa","Senators","OTT","ET","#B01034"],
+["mtl-nhl","NHL","Montréal","Canadiens","MTL","ET","#AF1E2D"],
+["wpg","NHL","Winnipeg","Jets","WPG","CT","#041E42"],
+["bos-nhl","NHL","Boston","Bruins","BOS","ET","#1B1B1B"],
+["nyr","NHL","New York","Rangers","NYR","ET","#0038A8"],
+["vgk","NHL","Vegas","Golden Knights","VGK","PT","#8C7443"],
+["sea-nhl","NHL","Seattle","Kraken","SEA","PT","#001628"],
+["col","NHL","Colorado","Avalanche","COL","MT","#6F263D"],
+["tor-nba","NBA","Toronto","Raptors","TOR","ET","#CE1141"],
+["gsw","NBA","Golden State","Warriors","GSW","PT","#1D428A"],
+["lal","NBA","Los Angeles","Lakers","LAL","PT","#552583"],
+["bos-nba","NBA","Boston","Celtics","BOS","ET","#007A33"],
+["den","NBA","Denver","Nuggets","DEN","MT","#0E2240"],
+["okc","NBA","Oklahoma City","Thunder","OKC","CT","#0F5E96"],
+["nyk","NBA","New York","Knicks","NYK","ET","#D55118"],
+["sea-nfl","NFL","Seattle","Seahawks","SEA","PT","#002244"],
+["buf","NFL","Buffalo","Bills","BUF","ET","#00338D"],
+["sf","NFL","San Francisco","49ers","SF","PT","#8E0000"],
+["kc","NFL","Kansas City","Chiefs","KC","CT","#C41230"],
+["dal","NFL","Dallas","Cowboys","DAL","CT","#041E42"],
+["phi","NFL","Philadelphia","Eagles","PHI","ET","#004C54"],
+["det","NFL","Detroit","Lions","DET","ET","#0076B6"],
+["tor-mlb","MLB","Toronto","Blue Jays","TOR","ET","#134A8E"],
+["sea-mlb","MLB","Seattle","Mariners","SEA","PT","#0C2C56"],
+["lad","MLB","Los Angeles","Dodgers","LAD","PT","#005A9C"],
+["nyy","MLB","New York","Yankees","NYY","ET","#132448"],
+["bos-mlb","MLB","Boston","Red Sox","BOS","ET","#A72A38"],
+["cle","MLB","Cleveland","Guardians","CLE","ET","#00385D"],
+["liv","EPL","Liverpool","Liverpool","LIV","UK","#B3122B",1],
+["ars","EPL","London","Arsenal","ARS","UK","#C60912",1],
+["mci","EPL","Manchester","Man City","MCI","UK","#2A87C8",1],
+["mun","EPL","Manchester","Man United","MUN","UK","#C42318",1],
+["che","EPL","London","Chelsea","CHE","UK","#034694",1],
+["tot","EPL","London","Tottenham","TOT","UK","#132257",1],
+["new","EPL","Newcastle","Newcastle","NEW","UK","#241F20"],
+["rma","LALIGA","Madrid","Real Madrid","RMA","CET","#123A78",1],
+["bar","LALIGA","Barcelona","Barcelona","BAR","CET","#8A0038",1],
+["bay","BUNDES","Munich","Bayern Munich","BAY","CET","#C6052D",1],
+["psg","LIGUE1","Paris","Paris SG","PSG","CET","#004170",1],
+["int","SERIEA","Milan","Inter Milan","INT","CET","#0B1560",1],
+["van-mls","MLS","Vancouver","Whitecaps FC","VAN","PT","#00245E"],
+["tfc","MLS","Toronto","Toronto FC","TOR","ET","#A5122B"],
+["mtl-mls","MLS","Montréal","CF Montréal","MTL","ET","#00214E"],
+["lafc","MLS","Los Angeles","LAFC","LAFC","PT","#1B1B1B"],
+["mia","MLS","Miami","Inter Miami","MIA","ET","#B23A6E"],
+["sou","MLS","Seattle","Sounders","SEA","PT","#005595"]
+];
+const TEAMS = {};
+TEAM_ROWS.forEach(r=>{
+  const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
+  // which competitions this club actually enters
+  t.comps = [r[1]];
+  if(r[1]==="EPL") t.comps = ["EPL","EFL","FAC"];
+  if(t.ucl) t.comps = t.comps.concat(["UCL"]);
+  TEAMS[t.id] = t;
+});
+const teamList = Object.values(TEAMS);
+const CLUB_NAMES = {"van-mls":"Vancouver Whitecaps","tfc":"Toronto FC","mtl-mls":"CF Montréal","lafc":"LAFC","mia":"Inter Miami","sou":"Seattle Sounders"};
+const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1};
+const fullName = t => t ? (CLUB_NAMES[t.id] || (SOCCER[t.home] ? t.name : t.city+" "+t.name)) : "TBD";
+
+/* ---- filler opponents: real clubs you can't select, so schedules look real ---- */
+const GHOSTS = [
+["nj","NHL","New Jersey","Devils","NJD","ET","#CE1126"],["nyi","NHL","New York","Islanders","NYI","ET","#00539B"],
+["pit","NHL","Pittsburgh","Penguins","PIT","ET","#FCB514"],["wsh","NHL","Washington","Capitals","WSH","ET","#C8102E"],
+["fla","NHL","Florida","Panthers","FLA","ET","#C8102E"],["tbl","NHL","Tampa Bay","Lightning","TBL","ET","#002868"],
+["dal","NHL","Dallas","Stars","DAL","CT","#006847"],["min","NHL","Minnesota","Wild","MIN","CT","#154734"],
+["stl","NHL","St. Louis","Blues","STL","CT","#002F87"],["nsh","NHL","Nashville","Predators","NSH","CT","#FFB81C"],
+["ana","NHL","Anaheim","Ducks","ANA","PT","#F47A38"],["sjs","NHL","San Jose","Sharks","SJS","PT","#006D75"],
+["lak","NHL","Los Angeles","Kings","LAK","PT","#111111"],["chi","NHL","Chicago","Blackhawks","CHI","CT","#CF0A2C"],
+["det","NHL","Detroit","Red Wings","DET","ET","#CE1126"],["buf","NHL","Buffalo","Sabres","BUF","ET","#003087"],
+["phi-nba","NBA","Philadelphia","76ers","PHI","ET","#006BB6"],["mil","NBA","Milwaukee","Bucks","MIL","CT","#00471B"],
+["mia-nba","NBA","Miami","Heat","MIA","ET","#98002E"],["phx","NBA","Phoenix","Suns","PHX","MT","#1D1160"],
+["dal-nba","NBA","Dallas","Mavericks","DAL","CT","#00538C"],["cle-nba","NBA","Cleveland","Cavaliers","CLE","ET","#6F263D"],
+["gb","NFL","Green Bay","Packers","GB","CT","#203731"],["bal","NFL","Baltimore","Ravens","BAL","ET","#241773"],
+["cin","NFL","Cincinnati","Bengals","CIN","ET","#FB4F14"],["min-nfl","NFL","Minnesota","Vikings","MIN","CT","#4F2683"],
+["lar","NFL","Los Angeles","Rams","LAR","PT","#003594"],["pit-nfl","NFL","Pittsburgh","Steelers","PIT","ET","#101820"],
+["nyj","NFL","New York","Jets","NYJ","ET","#125740"],["den-nfl","NFL","Denver","Broncos","DEN","MT","#FB4F14"],
+["bal-mlb","MLB","Baltimore","Orioles","BAL","ET","#DF4601"],["tb","MLB","Tampa Bay","Rays","TB","ET","#092C5C"],
+["hou","MLB","Houston","Astros","HOU","CT","#002D62"],["tex","MLB","Texas","Rangers","TEX","CT","#003278"],
+["min-mlb","MLB","Minnesota","Twins","MIN","CT","#002B5C"],["atl","MLB","Atlanta","Braves","ATL","ET","#CE1141"],
+["avl","EPL","Birmingham","Aston Villa","AVL","UK","#670E36"],["bha","EPL","Brighton","Brighton","BHA","UK","#0057B8"],
+["whu","EPL","London","West Ham","WHU","UK","#7A263A"],["eve","EPL","Liverpool","Everton","EVE","UK","#003399"],
+["cry","EPL","London","Crystal Palace","CRY","UK","#1B458F"],["nfo","EPL","Nottingham","Nottm Forest","NFO","UK","#DD0000"],
+["bre","EPL","London","Brentford","BRE","UK","#C8102E"],["ful","EPL","London","Fulham","FUL","UK","#1B1B1B"],
+["atm","LALIGA","Madrid","Atlético Madrid","ATM","CET","#CB3524"],["sev","LALIGA","Sevilla","Sevilla","SEV","CET","#B6091E"],
+["rso","LALIGA","San Sebastián","Real Sociedad","RSO","CET","#0C4C9E"],["vil","LALIGA","Villarreal","Villarreal","VIL","CET","#C9A500"],
+["juv","SERIEA","Turin","Juventus","JUV","CET","#1B1B1B"],["mil-s","SERIEA","Milan","AC Milan","MIL","CET","#A61B29"],
+["nap","SERIEA","Naples","Napoli","NAP","CET","#12A0D7"],["rom","SERIEA","Rome","Roma","ROM","CET","#8E1F2F"],
+["bvb","BUNDES","Dortmund","Dortmund","BVB","CET","#B5A400"],["b04","BUNDES","Leverkusen","Leverkusen","B04","CET","#C8102E"],
+["rbl","BUNDES","Leipzig","RB Leipzig","RBL","CET","#0C1F3F"],["sge","BUNDES","Frankfurt","Frankfurt","SGE","CET","#1B1B1B"],
+["om","LIGUE1","Marseille","Marseille","OM","CET","#2FAEE0"],["asm","LIGUE1","Monaco","Monaco","ASM","CET","#CE1126"],
+["losc","LIGUE1","Lille","Lille","LOSC","CET","#C8102E"],["ol","LIGUE1","Lyon","Lyon","OL","CET","#1B3C87"],
+["atx","MLS","Austin","Austin FC","ATX","CT","#00B140"],["dal-mls","MLS","Dallas","FC Dallas","DAL","CT","#C8102E"],
+["por","MLS","Portland","Timbers","POR","PT","#00482B"],["rsl","MLS","Salt Lake","Real Salt Lake","RSL","MT","#B30838"],
+["clb","MLS","Columbus","Columbus Crew","CLB","ET","#FFF200"],["nyc","MLS","New York","NYCFC","NYC","ET","#6CACE4"],
+["kcr","MLB","Kansas City","Royals","KC","CT","#004687"],
+["ips","EPL","Ipswich","Ipswich Town","IPS","UK","#3A64A3"],
+["bou","EPL","Bournemouth","Bournemouth","BOU","UK","#B50E12"],
+["ben","UCL","Lisbon","Benfica","BEN","UK","#C8102E"],["aja","UCL","Amsterdam","Ajax","AJA","CET","#C8102E"]
+];
+GHOSTS.forEach(r=>{ TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ghost:true, comps:[r[1]]}; });
+const allTeams = Object.values(TEAMS);
+const pickable = allTeams.filter(t=>!t.ghost);
+
+/* ============================ time helpers ============================ */
+const US_DST_END = Date.UTC(2026,10,1,9);
+const EU_DST_END = Date.UTC(2026,9,25,1);
+const US_DST_START_27 = Date.UTC(2027,2,14,7);
+const EU_DST_START_27 = Date.UTC(2027,2,28,1);
+function offsetFor(tz, ms){
+  const us = ms < US_DST_END || ms >= US_DST_START_27;
+  const eu = ms < EU_DST_END || ms >= EU_DST_START_27;
+  switch(tz){
+    case "ET": return us?-4:-5;  case "CT": return us?-5:-6;
+    case "MT": return us?-6:-7;  case "PT": return us?-7:-8;
+    case "UK": return eu?1:0;    case "CET": return eu?2:1;
+    default: return 0;
+  }
+}
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const makeStart = (dayMs, tz, hh, mm) => dayMs + (hh-offsetFor(tz,dayMs))*3600000 + mm*60000;
+const localKey = ms => ymd(new Date(ms));
+const fmtTime = ms => new Intl.DateTimeFormat(undefined,{hour:"numeric",minute:"2-digit"}).format(new Date(ms));
+const fmtDayLong = key => { const [y,m,d]=key.split("-").map(Number); return new Intl.DateTimeFormat(undefined,{weekday:"short",month:"short",day:"numeric"}).format(new Date(y,m-1,d)); };
+const fmtShortDate = ms => new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric"}).format(new Date(ms));
+
+function hash(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
+function rng(seed){ let a=seed>>>0; return function(){ a|=0;a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function shuffled(arr, seed){ const a=arr.slice(), r=rng(seed); for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const pick = (arr,r)=>arr[Math.floor(r()*arr.length)];
+
+/* ============================ schedule ============================ */
+const DAY = 86400000;
+const RANGE_START = Date.UTC(2026,7,1);
+const RANGE_END   = Date.UTC(2027,0,31);
+const POOLS = {};
+["NHL","NBA","NFL","MLB","MLS","EPL","LALIGA","SERIEA","BUNDES","LIGUE1"].forEach(c=>{ POOLS[c]=allTeams.filter(t=>t.home===c); });
+POOLS.UCL = allTeams.filter(t=>t.ucl || t.home==="UCL");
+const UCL_DATES = ["2026-09-15","2026-09-16","2026-09-29","2026-09-30","2026-10-20","2026-10-21","2026-11-03","2026-11-04","2026-11-24","2026-11-25","2026-12-08","2026-12-09","2027-01-20","2027-01-21"];
+
+function densityFor(comp, dow, key, ms){
+  switch(comp){
+    case "MLB": return ms <= Date.UTC(2026,9,4) ? 0.85 : 0;
+    case "MLS": return ms > Date.UTC(2026,9,25) ? 0 : (dow===6?0.85:dow===3?0.4:0);
+    case "EPL": case "LALIGA": case "SERIEA": case "BUNDES": case "LIGUE1":
+      if(ms < Date.UTC(2026,7,15)) return 0;
+      if(ms > Date.UTC(2026,11,20) && ms < Date.UTC(2027,0,2)) return dow===6?0.5:0;
+      return dow===6?0.6:dow===0?0.45:0;
+    case "UCL": return UCL_DATES.indexOf(key)>=0 ? 0.9 : 0;
+    case "NFL":
+      if(ms > Date.UTC(2026,7,29) && ms < Date.UTC(2026,8,10)) return 0;
+      return dow===0?1:(dow===4||dow===1)?0.3:0;
+    case "NHL":
+      if(ms < Date.UTC(2026,8,20)) return 0;
+      if(ms > Date.UTC(2026,9,4) && ms < Date.UTC(2026,9,7)) return 0;
+      return dow===6?0.7:(dow===0||dow===2||dow===4)?0.5:(dow===1||dow===3)?0.35:0;
+    case "NBA":
+      if(ms < Date.UTC(2026,9,5)) return 0;
+      if(ms > Date.UTC(2026,9,16) && ms < Date.UTC(2026,9,20)) return 0;
+      return (dow===5||dow===6||dow===0)?0.55:(dow===1||dow===3)?0.4:0;
+  }
+  return 0;
+}
+function stageFor(comp, ms, r){
+  if(comp==="NFL" && ms <= Date.UTC(2026,7,29)) return "Preseason";
+  if(comp==="NHL" && ms <= Date.UTC(2026,9,4)) return "Preseason";
+  if(comp==="NBA" && ms <= Date.UTC(2026,9,16)) return "Preseason";
+  if(comp==="NBA" && ms > Date.UTC(2026,10,2) && ms < Date.UTC(2026,11,3) && r()<0.35) return "NBA Cup group play";
+  if(comp==="UCL") return "League phase";
+  return "";
+}
+function slotFor(comp, dow, home, r){
+  switch(comp){
+    case "NHL": return dow===0?[17,0]:pick([[19,0],[19,0],[19,30],[18,0]],r);
+    case "NBA": return dow===0?[18,0]:pick([[19,30],[19,0],[20,0]],r);
+    case "NFL": return (dow===4||dow===1)?[20,15]:pick([[13,0],[13,0],[13,0],[16,5],[16,25],[20,20]],r);
+    case "MLB": return dow===6?[16,7]:dow===0?[13,7]:pick([[19,7],[18,40],[19,10]],r);
+    case "MLS": return [19,30];
+    case "UCL": return home.tz==="UK"?[20,0]:[21,0];
+    case "EFL": return [19,45];
+    case "FAC": return [15,0];
+    default:
+      if(dow===6) return pick([[12,30],[15,0],[15,0],[17,30]],r);
+      if(dow===0) return pick([[14,0],[16,30]],r);
+      return [19,45];
+  }
+}
+
+const GAMES = [];
+let gid = 0;
+function addGame(o){
+  o.id = o.comp+"-"+(++gid)+"-"+(o.home?o.home.id:"x")+"-"+(o.away?o.away.id:"tbd");
+  o.seed = hash(o.id);
+  o.stage = o.stage || "";
+  GAMES.push(o);
+  return o;
+}
+/* Round-based sports (one fixture per club per week) are built a WEEK at a
+   time and then spread across the matchweek's days — building them day by day
+   let a club turn up twice in the same weekend. NHL/NBA/MLB really do play
+   several times a week, so those stay daily. */
+const WEEKLY = {
+  EPL:   {start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[6,0.55],[0,0.33],[1,0.12]]},
+  LALIGA:{start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[6,0.5],[0,0.4],[5,0.1]]},
+  SERIEA:{start:Date.UTC(2026,7,22), end:RANGE_END,          days:[[6,0.45],[0,0.45],[1,0.1]]},
+  BUNDES:{start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[6,0.6],[0,0.3],[5,0.1]]},
+  LIGUE1:{start:Date.UTC(2026,7,15), end:RANGE_END,          days:[[0,0.55],[6,0.35],[5,0.1]]},
+  MLS:   {start:RANGE_START,         end:Date.UTC(2026,9,25), days:[[6,0.7],[3,0.2],[0,0.1]]},
+  NFL:   {start:RANGE_START,         end:RANGE_END,           days:[[0,0.8],[4,0.1],[1,0.1]]}
+};
+const DOW_OFFSET = {1:0, 2:1, 3:2, 4:3, 5:4, 6:5, 0:6};   // from the Monday that starts the week
+(function buildWeekly(){
+  for(const comp of Object.keys(WEEKLY)){
+    const cfg = WEEKLY[comp], pool = POOLS[comp];
+    if(!pool || pool.length<2) continue;
+    let monday = RANGE_START;
+    while(new Date(monday).getUTCDay()!==1) monday += DAY;
+    for(; monday<=RANGE_END; monday+=7*DAY){
+      if(monday < cfg.start || monday > cfg.end) continue;
+      if(comp==="NFL" && monday > Date.UTC(2026,7,29) && monday < Date.UTC(2026,8,7)) continue;
+      if(comp!=="NFL" && monday > Date.UTC(2026,11,21) && monday < Date.UTC(2026,11,28)) continue;
+      const wkKey = new Date(monday).toISOString().slice(0,10);
+      const order = shuffled(pool, hash(comp+"wk"+wkKey));
+      const r = rng(hash(comp+"wk"+wkKey+"s"));
+      for(let i=0;i+1<order.length;i+=2){
+        const home = order[i], away = order[i+1];
+        let roll = r(), dow = cfg.days[cfg.days.length-1][0];
+        for(const [d,w] of cfg.days){ if(roll < w){ dow = d; break; } roll -= w; }
+        const dayMs = monday + DOW_OFFSET[dow]*DAY;
+        if(dayMs < cfg.start || dayMs > RANGE_END) continue;
+        if(comp==="NFL" && dayMs > Date.UTC(2026,7,29) && dayMs < Date.UTC(2026,8,10)) continue;
+        const [hh,mm] = slotFor(comp, dow, home, r);
+        let startMs = makeStart(dayMs, home.tz, hh, mm), moved = null;
+        if(r() < 0.07){ moved = startMs; startMs += (r()<0.5?-1:1)*(r()<0.5?1800000:5400000); }
+        addGame({comp, home, away, start:startMs, moved, localDow:dow, slotHour:hh, stage:stageFor(comp, dayMs, r)});
+      }
+    }
+  }
+})();
+/* UEFA matchdays run across two nights — split the field, don't play twice */
+(function buildUCL(){
+  const pool = POOLS.UCL;
+  for(let i=0;i<UCL_DATES.length;i++){
+    const md = Math.floor(i/2), half = i%2;
+    const order = shuffled(pool, hash("UCLMD"+md));
+    let per = Math.floor(pool.length/2); if(per%2) per--;
+    const slice = order.slice(half*per, half*per+per);
+    const dayMs = Date.parse(UCL_DATES[i]+"T00:00:00Z");
+    const dow = new Date(dayMs).getUTCDay();
+    const r = rng(hash("UCLMD"+md+half));
+    for(let j=0;j+1<slice.length;j+=2){
+      const home = slice[j], away = slice[j+1];
+      const [hh,mm] = slotFor("UCL", dow, home, r);
+      addGame({comp:"UCL", home, away, start:makeStart(dayMs, home.tz, hh, mm), moved:null,
+               localDow:dow, slotHour:hh, stage:"League phase"});
+    }
+  }
+})();
+(function buildDaily(){
+  for(let ms=RANGE_START; ms<=RANGE_END; ms+=DAY){
+    const key = new Date(ms).toISOString().slice(0,10);
+    const dow = new Date(ms).getUTCDay();
+    for(const comp of ["NHL","NBA","MLB"]){
+      const dens = densityFor(comp, dow, key, ms);
+      if(dens<=0) continue;
+      const pool = POOLS[comp];
+      let n = Math.floor(pool.length*dens); if(n%2) n--; if(n<2) continue;
+      const order = shuffled(pool, hash(comp+key));
+      const r = rng(hash(comp+key+"s"));
+      for(let i=0;i<n;i+=2){
+        const home = order[i], away = order[i+1];
+        const [hh,mm] = slotFor(comp, dow, home, r);
+        let startMs = makeStart(ms, home.tz, hh, mm), moved = null;
+        if(r() < 0.06){ moved = startMs; startMs += (r()<0.5?-1:1)*(r()<0.5?1800000:5400000); }
+        addGame({comp, home, away, start:startMs, moved, localDow:dow, slotHour:hh, stage:stageFor(comp, ms, r)});
+      }
+    }
+  }
+})();
+/* ---- knockout cups: the round dates are known long before the opponents are ---- */
+const EFL_ROUNDS = [
+  {date:"2026-09-23", label:"Third round",   draw:"2026-09-01"},
+  {date:"2026-10-28", label:"Fourth round",  draw:"2026-09-24"},
+  {date:"2026-12-16", label:"Quarter-final", draw:"2026-10-29"}
+];
+const FAC_ROUNDS = [{date:"2027-01-09", label:"Third round", draw:"2026-12-07"}];
+function buildCup(comp, rounds, survive){
+  const pool = POOLS.EPL;
+  rounds.forEach((rd, ri)=>{
+    const dayMs = Date.parse(rd.date+"T00:00:00Z");
+    const dow = new Date(dayMs).getUTCDay();
+    const drawMs = Date.parse(rd.draw+"T12:00:00Z");
+    const order = shuffled(pool, hash(comp+rd.date));
+    const keep = order.filter((t,i)=> rng(hash(comp+rd.date+t.id))() < (survive[ri]||1));
+    for(let i=0;i<keep.length;i+=2){
+      const home = keep[i], away = keep[i+1] || null;
+      const r = rng(hash(comp+rd.date+home.id));
+      const [hh,mm] = slotFor(comp, dow, home, r);
+      addGame({comp, home, away, start:makeStart(dayMs, home.tz, hh, mm), moved:null,
+               localDow:dow, slotHour:hh, stage:rd.label, drawAt:drawMs});
+    }
+  });
+}
+buildCup("EFL", EFL_ROUNDS, [1,0.62,0.4]);
+buildCup("FAC", FAC_ROUNDS, [1]);
+
+/* ---- postseason: carriage can change with the stage ---- */
+(function buildPost(){
+  const mlb = shuffled(POOLS.MLB.filter(t=>!t.ghost), 991).slice(0,4);
+  [["Wild Card Series",[[2026,9,6],[2026,9,7],[2026,9,9]]],
+   ["Division Series",[[2026,9,12],[2026,9,14],[2026,9,16]]],
+   ["Championship Series",[[2026,9,19],[2026,9,21]]]].forEach((rd,ri)=>{
+    const a = mlb[0], b = ri===0 ? mlb[1] : mlb[1+ri];
+    if(!a||!b) return;
+    rd[1].forEach((d,i)=>{
+      const dayMs = Date.UTC(d[0],d[1],d[2]);
+      const home = i%2 ? b : a, away = i%2 ? a : b;
+      addGame({comp:"MLB", home, away, start:makeStart(dayMs, home.tz, 20, 8), moved:null,
+               localDow:new Date(dayMs).getUTCDay(), slotHour:20, stage:rd[0]});
+    });
+  });
+  const mls = shuffled(POOLS.MLS.filter(t=>!t.ghost), 771).slice(0,4);
+  [[2026,9,28],[2026,10,4],[2026,10,22],[2026,11,6]].forEach((d,i)=>{
+    const dayMs = Date.UTC(d[0],d[1],d[2]);
+    const home = mls[i%2], away = mls[2+(i%2)];
+    if(!home||!away) return;
+    addGame({comp:"MLS", home, away, start:makeStart(dayMs, home.tz, 18, 0), moved:null,
+             localDow:new Date(dayMs).getUTCDay(), slotHour:18, stage: i===3 ? "MLS Cup" : "Audi MLS Cup Playoffs"});
+  });
+})();
+GAMES.sort((a,b)=>a.start-b.start);
+
+/* ============================================================
+   LIVE_FIXTURES — real fixtures and real Canadian listings, pulled
+   from published TV schedules. The daily refresh task rewrites this
+   block; everything outside it stays projected from the rules table.
+   ============================================================ */
+const LIVE_SRC = {
+  smw:  {label:"Sports Media Watch TV schedules", url:"https://www.sportsmediawatch.com/tv-schedules/"},
+  lstv: {label:"LiveSoccerTV — Canada listings", url:"https://www.livesoccertv.com/teams/england/liverpool/"}
+};
+const LIVE_FIXTURES = [
+  // Blue Jays — Sports Media Watch, checked 22 Aug 2026
+  {comp:"MLB", date:"2026-08-22", et:[13,35], home:"tor-mlb", away:"nyy",  carriers:[["Sportsnet","tv"],["Sportsnet+","stream"],["TVA Sports","tv"]], src:"smw"},
+  {comp:"MLB", date:"2026-08-23", et:[13,35], home:"tor-mlb", away:"nyy",  carriers:[["Sportsnet","tv"],["Sportsnet+","stream"],["TVA Sports","tv"]], src:"smw"},
+  {comp:"MLB", date:"2026-08-25", et:[19, 7], home:"kcr",     away:"tor-mlb", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"},
+  {comp:"MLB", date:"2026-08-26", et:[19, 7], home:"kcr",     away:"tor-mlb", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"},
+  {comp:"MLB", date:"2026-08-27", et:[19, 7], home:"kcr",     away:"tor-mlb", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"},
+  {comp:"MLB", date:"2026-08-28", et:[22,10], home:"sea-mlb", away:"tor-mlb", carriers:[["Apple TV","stream"]], src:"smw"},
+  // Liverpool — LiveSoccerTV Canada listings, checked 22 Aug 2026
+  {comp:"EPL", date:"2026-08-23", et:[11,30], home:"new", away:"liv", carriers:[["Fubo Canada","stream"]], src:"lstv"},
+  {comp:"EPL", date:"2026-08-29", et:[ 7,30], home:"liv", away:"nfo", carriers:[["Fubo Canada","stream"]], src:"lstv"},
+  {comp:"EPL", date:"2026-09-04", et:[15, 0], home:"ips", away:"liv", carriers:[["Fubo Canada","stream"]], src:"lstv"},
+  {comp:"EPL", date:"2026-09-12", et:[10, 0], home:"liv", away:"ful", carriers:[["Fubo Canada","stream"]], src:"lstv"},
+  {comp:"EPL", date:"2026-09-20", et:[ 9, 0], home:"bou", away:"liv", carriers:[["Fubo Canada","stream"]], src:"lstv"},
+  // NHL opening week — Sports Media Watch, checked 22 Aug 2026
+  {comp:"NHL", date:"2026-09-29", et:[19, 0], home:"tor-nhl", away:"mtl-nhl", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"},
+  {comp:"NHL", date:"2026-09-29", et:[22, 0], home:"edm",     away:"van-nhl", carriers:[["Sportsnet","tv"],["Sportsnet+","stream"]], src:"smw"}
+];
+(function mergeLive(){
+  const spans = {};   // team+comp -> [earliest, latest] covered by real listings
+  const built = [];
+  LIVE_FIXTURES.forEach(f=>{
+    const home=TEAMS[f.home], away=TEAMS[f.away];
+    if(!home||!away) return;
+    const dayMs = Date.parse(f.date+"T00:00:00Z");
+    const start = makeStart(dayMs, "ET", f.et[0], f.et[1]);
+    [f.home,f.away].forEach(id=>{
+      const k = f.comp+"|"+id, sp = spans[k];
+      spans[k] = sp ? [Math.min(sp[0],start), Math.max(sp[1],start)] : [start,start];
+    });
+    built.push({comp:f.comp, home, away, start, moved:null,
+      localDow:new Date(dayMs).getUTCDay(), slotHour:f.et[0], stage:"",
+      liveCarriers:f.carriers.map(c=>({name:c[0], kind:c[1]})), liveSrc:LIVE_SRC[f.src], listed:true});
+  });
+  // drop projections inside a window that real listings already cover
+  for(let i=GAMES.length-1;i>=0;i--){
+    const g = GAMES[i];
+    const ids = [g.home&&g.home.id, g.away&&g.away.id];
+    const hit = ids.some(id=>{
+      const sp = spans[g.comp+"|"+id];
+      return sp && g.start >= sp[0]-12*3600000 && g.start <= sp[1]+12*3600000;
+    });
+    if(hit) GAMES.splice(i,1);
+  }
+  built.forEach(g=>addGame(g));
+  GAMES.sort((a,b)=>a.start-b.start);
+})();
+
+/* ---- what's actually known yet, and when it will be ---- */
+const TV_PICK_WINDOW = 42*DAY;   // Premier League selections land ~6 weeks out
+function timeState(g, now){
+  if(g.away===null || (g.drawAt && now < g.drawAt)) return {state:"tbd", drawAt:g.drawAt};
+  if(SOCCER[g.comp] && g.comp!=="MLS" && g.start-now > TV_PICK_WINDOW)
+    return {state:"tbc", confirmBy:g.start-TV_PICK_WINDOW};
+  if(g.comp==="NFL" && g.localDow===0 && g.start-now > 12*DAY && g.start > Date.UTC(2026,9,5))
+    return {state:"flex"};
+  return {state:"set"};
+}
+
+/* ============================ live state ============================ */
+const DURATION = {NHL:9300000, NBA:8400000, NFL:11400000, MLB:11100000};
+const durOf = c => DURATION[c] || 6900000;
+function finalScore(g){
+  const r = rng(g.seed);
+  switch(g.comp){
+    case "NHL": return [1+Math.floor(r()*5), 1+Math.floor(r()*5)];
+    case "NBA": return [98+Math.floor(r()*32), 98+Math.floor(r()*32)];
+    case "NFL": return [Math.floor(r()*6)*3+Math.floor(r()*3)*4, Math.floor(r()*6)*3+Math.floor(r()*3)*4];
+    case "MLB": return [Math.floor(r()*9), Math.floor(r()*9)];
+    default: return [Math.floor(r()*4), Math.floor(r()*4)];
+  }
+}
+function periodLabel(g, p){
+  if(g.comp==="MLB"){ const i=Math.min(9,Math.max(1,Math.ceil(p*9))); return (p*9%1<0.5?"TOP ":"BOT ")+i+(i===1?"ST":i===2?"ND":i===3?"RD":"TH"); }
+  if(SOCCER[g.comp]){ if(p>0.47&&p<0.58) return "HALFTIME"; return Math.min(90,Math.max(1,Math.round(p<0.5?p*95:(p-0.08)*95)))+"'"; }
+  const n = g.comp==="NHL"?3:4, per=Math.min(n,Math.max(1,Math.ceil(p*n))), within=1-((p*n)%1), lenMin=g.comp==="NHL"?20:12;
+  const s = Math.max(0,Math.round(within*lenMin*60));
+  return per+(per===1?"ST":per===2?"ND":per===3?"RD":"TH")+" "+Math.floor(s/60)+":"+pad(s%60);
+}
+function stateOf(g, now){
+  if(g.away===null) return {status:"scheduled"};
+  const dur = durOf(g.comp);
+  if(now < g.start) return {status:"scheduled"};
+  const fin = finalScore(g);
+  if(now >= g.start+dur) return {status:"final", score:fin, label:"Final"};
+  const p = (now-g.start)/dur;
+  return {status:"live", score:[Math.round(fin[0]*Math.min(1,p*1.05)), Math.round(fin[1]*Math.min(1,p*1.05))], label:periodLabel(g,p)};
+}
+
+/* ============================ per-viewer state ============================
+   Everything below lives in this browser only. Two people with the same
+   link see their own teams, their own services, their own score setting.
+   The link carries a starting set so a setup can move between devices.
+   ========================================================================= */
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const DEFAULT_TEAMS = ["van-nhl","van-mls","tor-mlb","tor-nba","liv"];
+let selected, services, hiddenComps, showScores;
+(function initState(){
+  let h = {};
+  try{
+    const raw = location.hash.replace(/^#/,"");
+    if(raw) raw.split("&").forEach(kv=>{ const [k,v]=kv.split("="); if(k) h[k]=decodeURIComponent(v||""); });
+  }catch(e){}
+  const listOf = s => s ? s.split(".").filter(Boolean) : null;
+  selected    = new Set(listOf(h.t) || LS.get("gdn.teams", DEFAULT_TEAMS));
+  services    = new Set(listOf(h.s) || LS.get("gdn.services", []));
+  hiddenComps = new Set(listOf(h.x) || LS.get("gdn.hidden", []));
+  showScores  = h.sc!=null ? h.sc==="1" : LS.get("gdn.scores", true);
+})();
+let alerts = new Set(LS.get("gdn.alerts", []));
+let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
+let covOpen = null, rightsOpen = false;
+let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the sample set   // panels keep their open/closed state across re-renders
+
+function persist(){
+  LS.set("gdn.teams",[...selected]); LS.set("gdn.services",[...services]);
+  LS.set("gdn.hidden",[...hiddenComps]); LS.set("gdn.scores",showScores); LS.set("gdn.alerts",[...alerts]);
+  try{
+    const parts = ["t="+[...selected].join(".")];
+    if(services.size) parts.push("s="+[...services].join("."));
+    if(hiddenComps.size) parts.push("x="+[...hiddenComps].join("."));
+    if(!showScores) parts.push("sc=0");
+    history.replaceState(null,"","#"+parts.join("&"));
+  }catch(e){}
+}
+const shareLink = () => { try{ return location.href; }catch(e){ return ""; } };
+
+const isMine = g => (g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id));
+const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
+const myComps = () => { const s=new Set(); GAMES.forEach(g=>{ if(isMine(g)) s.add(g.comp); }); return Object.keys(COMPS).filter(c=>s.has(c)); };
+
+/* ============================ coverage ============================ */
+function servicesFor(g){
+  const r = resolveRights(g);
+  const ids = [];
+  r.carriers.forEach(c=>{ const s = CARRIER_SERVICE[c.name]; if(s && ids.indexOf(s)<0) ids.push(s); });
+  return ids;
+}
+const covered = g => { const ids = servicesFor(g); return ids.length ? ids.some(s=>services.has(s)) : false; };
+function coverageReport(now){
+  const window = myGames().filter(g=>g.start>=now && g.start<now+90*DAY);
+  const need = {}, out = {total:window.length, have:0, unknown:0};
+  window.forEach(g=>{
+    const ids = servicesFor(g);
+    if(!ids.length){ out.unknown++; return; }
+    ids.forEach(s=>{ need[s]=(need[s]||0)+1; });
+    if(ids.some(s=>services.has(s))) out.have++;
+  });
+  out.services = Object.keys(need).sort((a,b)=>need[b]-need[a]).map(id=>({id, label:SERVICES[id]?SERVICES[id].label:id, n:need[id], owned:services.has(id)}));
+  out.missing = out.total - out.have - out.unknown;
+  return out;
+}
+
+/* ============================ render helpers ============================ */
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function inkOn(hex){
+  const h = hex.replace("#",""); 
+  const f = c => { c/=255; return c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+  const L = 0.2126*f(parseInt(h.slice(0,2),16)) + 0.7152*f(parseInt(h.slice(2,4),16)) + 0.0722*f(parseInt(h.slice(4,6),16));
+  return L > 0.45 ? "#10141F" : "#fff";
+}
+const crest = t => t
+  ? '<span class="crest" style="background:'+t.color+';color:'+inkOn(t.color)+'">'+esc(t.abbr)+'</span>'
+  : '<span class="crest tbd-crest">?</span>';
+const START_VERB = {NHL:"Puck drop",NBA:"Tip-off",NFL:"Kickoff",MLB:"First pitch"};
+const verbOf = c => START_VERB[c] || "Kick-off";
+function countdownText(ms, now){
+  let s = Math.max(0, Math.floor((ms-now)/1000));
+  const d=Math.floor(s/86400); s-=d*86400;
+  const h=Math.floor(s/3600); s-=h*3600;
+  const m=Math.floor(s/60); s-=m*60;
+  if(d>0) return "in "+d+"d "+h+"h";
+  if(h>0) return "in "+h+"h "+pad(m)+"m";
+  if(m>0) return "in "+m+"m "+pad(s)+"s";
+  return "starting now";
+}
+const BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>';
+function orderedTeams(g){
+  return SOCCER[g.comp] ? {a:g.home,b:g.away,sep:"vs",flip:false} : {a:g.away,b:g.home,sep:"at",flip:true};
+}
+const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
+
+function gameRow(g, now){
+  const st = stateOf(g, now), ts = timeState(g, now), c = COMPS[g.comp];
+  const o = orderedTeams(g);
+  if(ts.state==="tbd"){ if(o.flip) o.a = null; else o.b = null; }
+  const rights = resolveRights(g);
+  const reveal = showScores || revealed.has(g.id);
+  const mineA = o.a && selected.has(o.a.id), mineB = o.b && selected.has(o.b.id);
+
+  let timeCell = '<div class="g-time">'+(ts.state==="tbd"||ts.state==="tbc" ? '<span class="tbd">'+esc(fmtTime(g.start))+'</span>' : esc(fmtTime(g.start)));
+  if(g.moved) timeCell += '<span class="was">'+esc(fmtTime(g.moved))+'</span><span class="moved">Time moved</span>';
+  if(ts.state==="tbc") timeCell += '<span class="tbc">Time TBC</span>';
+  if(ts.state==="flex") timeCell += '<span class="tbc">Flex window</span>';
+  timeCell += '</div>';
+
+  const teams = '<div class="g-teams">'
+    + '<span class="g-team'+(mineA?"":" dim")+'">'+crest(o.a)+esc(fullName(o.a))+'</span>'
+    + '<span class="at">'+o.sep+'</span>'
+    + '<span class="g-team'+(mineB?"":" dim")+(o.b?"":" tbd")+'">'+crest(o.b)+esc(fullName(o.b))+'</span></div>';
+
+  const meta = '<div class="g-meta">'
+    + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
+    + (g.listed?'<span class="pill confirmed" title="Real fixture from a published TV listing">Listed</span>':"")
+    + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
+    + (g.home?'<span>in '+esc(g.home.city)+'</span>':'')
+    + '</div>';
+
+  let watch;
+  if(!rights.carriers.length){
+    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Carrier TBC</span>'
+      + '<span class="conf-note warn" title="'+esc(rights.note)+'">Not confirmed in Canada</span></div>';
+  } else {
+    const cov = services.size ? (covered(g)
+      ? '<span class="tag-cov have">You have it</span>'
+      : '<span class="tag-cov need">Needs '+esc(SERVICES[servicesFor(g)[0]]?SERVICES[servicesFor(g)[0]].label:"a sub")+'</span>') : "";
+    watch = '<div class="g-watch">'
+      + rights.carriers.map(w=>'<span class="svc '+w.kind+(rights.confidence==="expected"?" expected":"")+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
+      + (rights.confidence==="expected"?'<span class="conf-note">Expected</span>':"")
+      + cov + '</div>';
+  }
+
+  let scoreCell = '<div class="g-score">';
+  if(ts.state==="tbd"){
+    scoreCell += '<span class="countdown">Opponent TBD</span><span class="score-state">Draw ~'+esc(fmtShortDate(g.drawAt))+'</span>';
+  } else if(st.status==="scheduled"){
+    scoreCell += '<span class="countdown" data-start="'+g.start+'">'+esc(countdownText(g.start,now))+'</span>'
+      + '<span class="score-state">'+(ts.state==="tbc" ? "Confirmed by "+esc(fmtShortDate(ts.confirmBy)) : verbOf(g.comp))+'</span>';
+  } else if(reveal){
+    const s = scoreFor(g,st);
+    scoreCell += '<span class="score-line">'+s[0]+' &ndash; '+s[1]+'</span>'
+      + (st.status==="live" ? '<span class="score-state live"><span class="dot-live"></span>'+esc(st.label)+'</span>'
+                            : '<span class="score-state">'+esc(st.label)+'</span>');
+  } else {
+    scoreCell += '<button class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal</button>'
+      + (st.status==="live" ? '<span class="score-state live"><span class="dot-live"></span>Live now</span>'
+                            : '<span class="score-state">Final &middot; hidden</span>');
+  }
+  scoreCell += '</div>';
+
+  const on = alerts.has(g.id);
+  const bell = '<button class="bell" data-alert="'+esc(g.id)+'" aria-pressed="'+on+'" aria-label="'+(on?"Remove alert":"Set alert")+'">'+BELL+'</button>';
+  return '<div class="game'+(st.status==="live"?" is-live":"")+'">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
+}
+
+function daySection(key, games, now, todayKey){
+  const [y,m,d] = key.split("-").map(Number);
+  const diff = Math.round((new Date(y,m-1,d) - new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()))/DAY);
+  let rel = key===todayKey ? "Today" : diff===1 ? "Tomorrow" : (diff>1&&diff<7) ? "In "+diff+" days" : "";
+  const liveN = games.filter(g=>stateOf(g,now).status==="live").length;
+  return '<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(key))+'</h3>'
+    + (rel?'<span class="rel">'+esc(rel)+'</span>':'')
+    + '<span class="n">'+games.length+(games.length===1?" game":" games")+(liveN?" &middot; "+liveN+" live":"")+'</span></div>'
+    + '<div class="day-games">'+games.map(g=>gameRow(g,now)).join("")+'</div></section>';
+}
+function groupByDay(games){
+  const map = new Map();
+  games.forEach(g=>{ const k=localKey(g.start); if(!map.has(k)) map.set(k,[]); map.get(k).push(g); });
+  return map;
+}
+
+function welcomeBanner(){
+  if(!firstRun) return "";
+  return '<div class="welcome"><div><b>New here? These are starter teams.</b>'
+    + '<p>Vancouver, Toronto and Liverpool are loaded as an example. Swap them for your own &mdash; your picks, your services and your score setting are saved in this browser only, so they will not change anyone else\'s view.</p></div>'
+    + '<div class="acts"><button class="icon-btn" id="wPick">Pick my teams</button>'
+    + '<button class="x" id="wClose" aria-label="Dismiss">&times;</button></div></div>';
+}
+
+/* ---------- competition filter ---------- */
+function renderFilters(){
+  const comps = myComps();
+  if(comps.length<2) return "";
+  return '<div class="filters"><span class="lbl">Competitions</span>'
+    + comps.map(c=>'<button class="fchip" data-comp="'+c+'" aria-pressed="'+(!hiddenComps.has(c))+'">'
+        + '<i style="background:'+COMPS[c].color+'"></i>'+esc(COMPS[c].short)+'</button>').join("")
+    + '</div>';
+}
+
+/* ---------- coverage panel ---------- */
+function renderCoverage(now){
+  const rep = coverageReport(now);
+  if(!rep.total) return "";
+  const anySet = services.size>0;
+  const pctHave = rep.total ? (rep.have/rep.total*100) : 0;
+  const pctMiss = rep.total ? (rep.missing/rep.total*100) : 0;
+  const pctUnk  = rep.total ? (rep.unknown/rep.total*100) : 0;
+  const bar = anySet
+    ? '<div class="cov-bar"><i style="width:'+pctHave+'%;background:var(--ok)"></i><i style="width:'+pctMiss+'%;background:var(--warn)"></i><i style="width:'+pctUnk+'%;background:var(--line-strong)"></i></div>'
+    : "";
+  const sub = anySet
+    ? '<b>'+rep.have+'</b> of '+rep.total+' games in the next 90 days are covered by what you have'
+      + (rep.missing?' &middot; <b>'+rep.missing+'</b> need something else':'')
+      + (rep.unknown?' &middot; '+rep.unknown+' with no confirmed Canadian carrier':'')
+    : 'Mark what you subscribe to and every game gets flagged as watchable or not.';
+  const isOpen = covOpen===null ? !anySet : covOpen;
+  return '<details class="coverage"'+(isOpen?" open":"")+'><summary><span><b class="cov-h">Where your teams actually are</b>'
+    + '<span class="sub">'+sub+'</span></span></summary>' + bar
+    + '<div class="svc-grid">'
+    + rep.services.map(s=>'<button class="svc-card" data-service="'+s.id+'" aria-pressed="'+s.owned+'">'
+        + '<span class="svc-box">&#10003;</span><span><span class="svc-name">'+esc(s.label)+'</span><br>'
+        + '<span class="svc-games">'+s.n+' game'+(s.n===1?"":"s")+'</span></span></button>').join("")
+    + '</div>'
+    + (rep.unknown ? '<div class="cov-note"><span class="pill unknown">Unconfirmed</span><span>'+rep.unknown+' fixture'+(rep.unknown===1?" has":"s have")+' no confirmed Canadian rights holder. They stay listed rather than hidden, so you know to check.</span></div>' : "")
+    + '</details>';
+}
+
+/* ---------- rights table ---------- */
+function renderRights(){
+  const comps = myComps();
+  const rows = RIGHTS.filter(r=>comps.indexOf(r.comp)>=0);
+  if(!rows.length) return "";
+  return '<details class="rights"'+(rightsOpen?" open":"")+'><summary>Rights table &mdash; who carries what, and how sure we are</summary>'
+    + '<div class="rights-wrap"><table class="rights-tbl"><thead><tr>'
+    + '<th>Competition</th><th>Canada</th><th>Confidence</th><th>Note</th><th>Source</th><th>Checked</th></tr></thead><tbody>'
+    + rows.map(r=>'<tr><td><b>'+esc(COMPS[r.comp].name)+'</b></td>'
+        + '<td>'+(r.carriers.length ? r.carriers.map(c=>esc(c.name)).join(", ") : "&mdash;")+'</td>'
+        + '<td><span class="pill '+r.confidence+'">'+r.confidence+'</span></td>'
+        + '<td>'+esc(r.note)+'</td>'
+        + '<td>'+(r.src&&r.src.url?'<a href="'+esc(r.src.url)+'" target="_blank" rel="noopener">'+esc(r.src.label)+'</a>':esc(r.src?r.src.label:"&mdash;"))+'</td>'
+        + '<td style="white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--muted)">'+esc(r.checked||"&mdash;")+'</td></tr>').join("")
+    + '</tbody></table></div></details>';
+}
+
+function noteBlock(){
+  const n = alerts.size;
+  const listed = myGames().filter(g=>g.listed).length;
+  return '<div class="note"><b>Mixed data.</b> Fixtures marked <span class="pill confirmed">Listed</span> are real, pulled from published TV schedules'
+    + (listed?' &mdash; <b>'+listed+'</b> of your upcoming games right now':'')
+    + '. Everything else is projected from the rights table below, which is real and sourced. Scores are still simulated. '
+    + 'Your teams, services and score setting are stored in this browser only &mdash; anyone else opening the same link sets up their own. '
+    + (n? '<b>'+n+'</b> alert'+(n===1?"":"s")+' set.' : 'Tap the bell on a game to mark it for a pre-game push.')
+    + '</div>';
+}
+function emptyState(){
+  return '<div class="empty"><b>No games on the board</b>Pick at least one team and their schedule fills in here.<div><button class="icon-btn" id="emptyPick">Choose teams</button></div></div>';
+}
+
+function renderList(now, todayKey){
+  const start = new Date(); start.setHours(0,0,0,0);
+  const games = myGames().filter(g=>g.start>=start.getTime() && g.start<start.getTime()+DAY*160);
+  if(!games.length) return welcomeBanner()+renderFilters()+emptyState();
+  let out = welcomeBanner() + renderFilters() + renderCoverage(now);
+  groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
+  return out + renderRights() + noteBlock();
+}
+
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function renderCalendar(now, todayKey){
+  const y=calMonth.getFullYear(), m=calMonth.getMonth();
+  const gridStart=new Date(y,m,1-new Date(y,m,1).getDay());
+  const map=groupByDay(myGames());
+  const present=new Set(myGames().map(g=>g.comp));
+  let head='<div class="cal-head"><button class="nav-btn" id="prevMonth" aria-label="Previous month">&#8249;</button>'
+    + '<button class="nav-btn" id="nextMonth" aria-label="Next month">&#8250;</button><h3>'+MONTHS[m]+' '+y+'</h3>'
+    + '<div class="cal-legend">'+Object.keys(COMPS).filter(c=>present.has(c)).map(c=>'<span><i style="background:'+COMPS[c].color+'"></i>'+esc(COMPS[c].short)+'</span>').join("")+'</div></div>';
+  let grid='<div class="cal-grid">'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>'<div class="cal-dow">'+d+'</div>').join("");
+  for(let i=0;i<42;i++){
+    const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i), key=ymd(d);
+    const gs=map.get(key)||[], out=d.getMonth()!==m;
+    let evs=gs.slice(0,3).map(g=>{
+      const s=stateOf(g,now), ts=timeState(g,now);
+      const mine=(g.home&&selected.has(g.home.id))?g.home:g.away;
+      let opp=(mine&&g.home&&mine.id===g.home.id)?g.away:g.home;
+      if(ts.state==="tbd") opp=null;
+      return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'+esc(mine?mine.abbr:"?")
+        +'<span style="color:var(--muted)">/</span>'+esc(opp?opp.abbr:"TBD")
+        +'<span class="tm">'+(s.status==="live"?"LIVE":s.status==="final"?"FT":ts.state==="tbc"||ts.state==="tbd"?"TBC":esc(fmtTime(g.start)))+'</span></span>';
+    }).join("");
+    if(gs.length>3) evs+='<span class="cal-more">+'+(gs.length-3)+' more</span>';
+    grid+='<button class="cal-cell'+(out?" out":"")+(key===todayKey?" today":"")+(key===selDay?" sel":"")+'" data-day="'+key+'">'
+      +'<span class="cal-num"><b>'+d.getDate()+'</b></span>'+evs+'</button>';
+  }
+  grid+='</div>';
+  let detail;
+  if(selDay){
+    const gs=map.get(selDay)||[];
+    detail='<div class="cal-detail">'+(gs.length?daySection(selDay,gs,now,todayKey)
+      :'<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(selDay))+'</h3><span class="n">No games</span></div></section>')+'</div>';
+  } else detail='<div class="cal-detail"><div class="note">Pick a day to see start times, scores and where each game is carried.</div></div>';
+  return welcomeBanner()+renderFilters()+head+grid+detail;
+}
+
+function renderRail(now, todayKey){
+  const el=document.getElementById("rail");
+  const today=myGames().filter(g=>localKey(g.start)===todayKey);
+  today.sort((a,b)=>{ const rk=s=>s==="live"?0:s==="scheduled"?1:2; return rk(stateOf(a,now).status)-rk(stateOf(b,now).status)||a.start-b.start; });
+  const label='<div class="rail-label"><b>Today</b><span>'+esc(fmtDayLong(todayKey))+'</span></div>';
+  if(!today.length){
+    const next=myGames().find(g=>g.start>now);
+    el.innerHTML=label+(next
+      ? '<div class="rail-empty">Nothing on today. Next up: <b style="margin:0 6px">'+esc(fullName(next.home))+' '+orderedTeams(next).sep+' '+esc(fullName(next.away))+'</b> '+esc(fmtDayLong(localKey(next.start)))+' <span style="margin-left:8px;font-family:var(--mono);font-size:11px" class="countdown" data-start="'+next.start+'">'+esc(countdownText(next.start,now))+'</span></div>'
+      : '<div class="rail-empty">Nothing on today.</div>');
+    return;
+  }
+  el.innerHTML=label+'<div class="rail-scroll">'+today.map(g=>{
+    const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
+    const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
+    const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
+      +(s.status==="scheduled"?"&nbsp;":reveal?(first?sc[0]:sc[1]):"&bull;")+'</span></div>';
+    const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
+    return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
+      +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
+  }).join("")+'</div>';
+}
+
+function renderDrawer(){
+  const q=search.trim().toLowerCase();
+  const groups=Object.keys(COMPS).map(lg=>{
+    const ts=pickable.filter(t=>t.home===lg && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)));
+    if(!ts.length) return "";
+    return '<div class="lg-group"><div class="lg-title"><b>'+esc(COMPS[lg].name)+'</b><span class="bar"></span></div><div class="chips">'
+      + ts.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="'+selected.has(t.id)+'" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
+          + crest(t)+esc(fullName(t))
+          + (t.comps.length>1?'<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+t.comps.length+' comps</span>':'')
+          + '</button>').join("")+'</div></div>';
+  }).join("");
+  document.getElementById("teamGroups").innerHTML = (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
+    + '<div class="lg-group"><div class="lg-title"><b>Your link</b><span class="bar"></span></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
+    + '<button class="icon-btn" id="copyLink">Copy</button>'
+    + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked. Everyone else keeps their own.</span></div></div>';
+  document.getElementById("drawerCount").textContent = selected.size+" selected";
+}
+
+/* ============================ render + events ============================ */
+function render(){
+  const now=Date.now(), todayKey=ymd(new Date(now));
+  document.getElementById("main").innerHTML = view==="list"?renderList(now,todayKey):renderCalendar(now,todayKey);
+  renderRail(now,todayKey);
+  document.getElementById("teamCount").textContent=selected.size;
+  document.getElementById("v-list").setAttribute("aria-pressed",view==="list");
+  document.getElementById("v-cal").setAttribute("aria-pressed",view==="calendar");
+  const stg=document.getElementById("scoreToggle");
+  stg.setAttribute("aria-pressed",showScores);
+  document.getElementById("scoreToggleLabel").textContent=showScores?"Scores on":"Scores hidden";
+  const cov=document.querySelector(".coverage");
+  if(cov) cov.addEventListener("toggle",()=>{ covOpen=cov.open; });
+  const rt=document.querySelector(".rights");
+  if(rt) rt.addEventListener("toggle",()=>{ rightsOpen=rt.open; });
+  stg.querySelector("svg").innerHTML = showScores
+    ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'
+    : '<path d="M3 3l18 18"/><path d="M10.6 5.2A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4"/><path d="M6.3 6.4A16.7 16.7 0 0 0 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
+}
+const drawer=document.getElementById("drawer");
+document.getElementById("v-list").addEventListener("click",()=>{view="list";render();});
+document.getElementById("v-cal").addEventListener("click",()=>{view="calendar"; if(!selDay) selDay=ymd(new Date()); calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1); render();});
+document.getElementById("scoreToggle").addEventListener("click",()=>{showScores=!showScores; if(showScores) revealed.clear(); persist(); render();});
+document.getElementById("teamsToggle").addEventListener("click",function(){
+  if(firstRun){ firstRun=false; LS.set("gdn.seen",true); render(); }
+  const open=drawer.hasAttribute("hidden");
+  if(open){ drawer.removeAttribute("hidden"); renderDrawer(); } else drawer.setAttribute("hidden","");
+  this.setAttribute("aria-pressed",open);
+});
+document.getElementById("teamSearch").addEventListener("input",function(){search=this.value;renderDrawer();});
+document.getElementById("teamGroups").addEventListener("click",function(e){
+  const b=e.target.closest("[data-team]");
+  if(b){ const id=b.getAttribute("data-team"); selected.has(id)?selected.delete(id):selected.add(id); persist(); renderDrawer(); render(); return; }
+  if(e.target.closest("#copyLink")){
+    const box=document.getElementById("shareBox");
+    box.select();
+    try{ navigator.clipboard.writeText(box.value); }catch(err){ try{ document.execCommand("copy"); }catch(e2){} }
+    const btn=e.target.closest("#copyLink"); btn.textContent="Copied"; setTimeout(()=>{btn.textContent="Copy";},1400);
+  }
+});
+document.getElementById("main").addEventListener("click",function(e){
+  const rev=e.target.closest("[data-reveal]"); if(rev){ revealed.add(rev.getAttribute("data-reveal")); render(); return; }
+  const al=e.target.closest("[data-alert]"); if(al){ const id=al.getAttribute("data-alert"); alerts.has(id)?alerts.delete(id):alerts.add(id); persist(); render(); return; }
+  const sv=e.target.closest("[data-service]"); if(sv){ const id=sv.getAttribute("data-service"); services.has(id)?services.delete(id):services.add(id); persist(); render(); return; }
+  const cp=e.target.closest("[data-comp]"); if(cp){ const id=cp.getAttribute("data-comp"); hiddenComps.has(id)?hiddenComps.delete(id):hiddenComps.add(id); persist(); render(); return; }
+  const day=e.target.closest("[data-day]"); if(day){ selDay=day.getAttribute("data-day"); render(); return; }
+  if(e.target.closest("#prevMonth")){ calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1); render(); return; }
+  if(e.target.closest("#nextMonth")){ calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1); render(); return; }
+  if(e.target.closest("#wClose")){ firstRun=false; LS.set("gdn.seen",true); render(); return; }
+  if(e.target.closest("#emptyPick")||e.target.closest("#wPick")){
+    firstRun=false; LS.set("gdn.seen",true);
+    drawer.removeAttribute("hidden"); renderDrawer();
+    document.getElementById("teamsToggle").setAttribute("aria-pressed",true);
+    render();
+  }
+});
+setInterval(()=>{ const now=Date.now(); document.querySelectorAll(".countdown[data-start]").forEach(el=>{ el.textContent=countdownText(Number(el.getAttribute("data-start")),now); }); },1000);
+setInterval(render,30000);
+if(!selected.size){ drawer.removeAttribute("hidden"); document.getElementById("teamsToggle").setAttribute("aria-pressed",true); }
+persist(); renderDrawer(); render();
+})();
+</script>
