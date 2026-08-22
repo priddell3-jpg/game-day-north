@@ -227,24 +227,184 @@ for(const comp of [...comps].filter(c=>!NA.has(c))){
 
 fixtures.sort((a,b)=>a.start-b.start);
 
-/* ============================================================
-   CYCLING RESULTS — stage podiums and the current race lead.
-
-   The page renders these from data.json whenever they are present. No
-   automated source fills them in yet: ProCyclingStats, the obvious one,
-   sits behind a Cloudflare challenge that returns a 403 to any
-   programmatic client, so a scraper against it would report nothing on
-   every run.
-
-   Whatever cycling data data.json already holds is carried forward
-   untouched, so a hand-checked entry survives a rebuild and the page
-   picks it up as soon as it lands.
-   ============================================================ */
+/* The previously committed file. Three things read it: the outage guard
+   below, the no-change guard, and the cycling block, which keeps a
+   settled stage result rather than re-fetching one that cannot change. */
 let previous = null;
 try{ previous = JSON.parse(readFileSync(new URL("../data.json", import.meta.url), "utf8")); }catch(e){}
 
-/* Carried forward, not fetched — see the note above. */
-const cyclingOut = (previous && Array.isArray(previous.cycling)) ? previous.cycling : [];
+/* ============================================================
+   CYCLING RESULTS — stage podiums and the race lead, from Wikipedia.
+
+   Wikipedia is the deliberate source choice: the MediaWiki API is
+   explicitly open to automation and the licence permits reuse, where
+   ProCyclingStats has actively reserved against scraping. Results for
+   WorldTour races land on Wikipedia within hours of a finish.
+
+   Grand Tours keep per-stage results in split articles ("<race>, Stage
+   1 to Stage 11"). Those are the correct titles — the main article's
+   leadership table links to exactly them — but they are created only
+   once the race is under way, so early on the main article is the only
+   source, and it carries the standings as a plain wikitable instead.
+
+   Within a stage section the results are not tables at all: each
+   classification is a run of {{cyclingresult}} templates opened by
+   {{cyclingresult start|title=...}}, the stage result first and the
+   general classification second. A parse that cannot produce exactly
+   three names produces nothing: results are fetched or absent, never
+   invented. A team time trial and a neutralised stage both correctly
+   yield nothing, having no rider podium to report.
+   ============================================================ */
+const WIKI_API = "https://en.wikipedia.org/w/api.php";
+const WIKI_UA = "GameDayNorth/1.0 (personal sports schedule; github.com/priddell3-jpg/game-day-north)";
+const CYCLING_SOURCES = [
+  {name:"Vuelta a España", dates:[
+    "2026-08-22","2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27",
+    "2026-08-28","2026-08-29","2026-08-30","2026-09-01","2026-09-02","2026-09-03",
+    "2026-09-04","2026-09-05","2026-09-06","2026-09-08","2026-09-09","2026-09-10",
+    "2026-09-11","2026-09-12","2026-09-13"],
+   /* The split per-stage articles are the right titles — the main
+      article's leadership table links to exactly these — but they are
+      created only once the race is under way, so the main article is
+      listed too: early on it is the only place the leader appears. */
+   pages:["2026 Vuelta a España, Stage 1 to Stage 11","2026 Vuelta a España, Stage 12 to Stage 21",
+          "2026 Vuelta a España"]},
+  {name:"Bretagne Classic", dates:["2026-08-30"], oneDay:true, pages:["2026 Bretagne Classic"]},
+  {name:"GP de Québec", dates:["2026-09-11"], oneDay:true, pages:["2026 Grand Prix Cycliste de Québec"]},
+  {name:"GP de Montréal", dates:["2026-09-13"], oneDay:true, pages:["2026 Grand Prix Cycliste de Montréal"]},
+  {name:"Il Lombardia", dates:["2026-10-10"], oneDay:true, pages:["2026 Il Lombardia"]},
+  {name:"Tour of Guangxi", dates:[
+    "2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18"],
+   pages:["2026 Tour of Guangxi"]}
+];
+async function wikitextOf(title){
+  const url = WIKI_API + "?action=parse&prop=wikitext&format=json&formatversion=2&redirects=1&page="
+    + encodeURIComponent(title);
+  try{
+    const res = await fetch(url, {headers:{"user-agent":WIKI_UA, "accept":"application/json"},
+      signal:AbortSignal.timeout(20000)});
+    if(!res.ok) return null;
+    const j = await res.json();
+    return (j.parse && j.parse.wikitext) || null;
+  }catch(e){ return null; }
+}
+/* Results are not wiki-table rows. Each classification is a run of
+   {{cyclingresult|rank|[[Rider]]|NAT|team|time}} templates introduced by
+   {{cyclingresult start|title=...}} and closed by {{cyclingresult end}}.
+   Parsing this as a table picked up the first wikilink in the section,
+   which is a citation publisher, not a rider. */
+function resultBlocks(text){
+  const marks = [], re = /\{\{\s*cyclingresult start\b/gi;
+  let m;
+  while((m = re.exec(text))) marks.push(m.index);
+  return marks.map((at,i)=>{
+    const seg = text.slice(at, marks[i+1] !== undefined ? marks[i+1] : text.length);
+    const e = seg.search(/\{\{\s*cyclingresult end\s*\}\}/i);
+    return e >= 0 ? seg.slice(0, e) : seg;
+  });
+}
+const isGCBlock = b => /general classification/i.test(b.slice(0,240));
+/* The rank must be a number. A neutralised stage lists its riders under
+   an em dash, and a team time trial has no rider column at all: both
+   yield nothing, which is the correct answer for "who was on the
+   podium". */
+function ridersInBlock(block, n){
+  const out = [], re = /\{\{\s*cyclingresult\s*\|\s*\d+\s*\|\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/gi;
+  let m;
+  while((m = re.exec(block)) && out.length < n){
+    const name = (m[2] || m[1]).replace(/\s+/g," ").trim();
+    if(name && !out.includes(name)) out.push(name);
+  }
+  return out.slice(0, n);
+}
+/* While a stage race is running, the main article carries the standings
+   as an ordinary wikitable of {{Flag athlete}} rows, before any split
+   per-stage article exists. That is the only place the current leader
+   can be read on day one. */
+function gcLeaderFrom(text){
+  const at = text.search(/\|\+\s*General classification after stage/i);
+  if(at < 0) return null;
+  const seg = text.slice(at, at + 4000);
+  const m = seg.match(/\{\{\s*Flag athlete\s*\|\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/i);
+  if(!m) return null;
+  return (m[2] || m[1]).replace(/\s+/g," ").trim();
+}
+function stageSections(text){
+  // "==Stage 4==" headings, tolerant of spacing and === depth
+  const found = {};
+  const re = /^=+\s*Stage\s+(\d+)\b[^=\n]*=+\s*$/gim;
+  const marks = []; let m;
+  while((m = re.exec(text))) marks.push({n:+m[1], at:m.index});
+  marks.forEach((mk, i)=>{
+    found[mk.n] = text.slice(mk.at, marks[i+1] ? marks[i+1].at : text.length);
+  });
+  return found;
+}
+const todayISO = new Date(now).toISOString().slice(0,10);
+const prevCycling = (previous && Array.isArray(previous.cycling)) ? previous.cycling : [];
+const cyclingOut = [];
+try{
+  for(const rc of CYCLING_SOURCES){
+    if(rc.dates[0] > todayISO) continue;                       // hasn't started
+    const prev = prevCycling.find(x=>x.race===rc.name) || {};
+    const prevStages = prev.stages || [];
+    const settled = d => prevStages.find(x=>x.date===d && Array.isArray(x.top3) && x.top3.length===3);
+    const due = rc.dates.filter(d=>d <= todayISO && !(settled(d) && d < todayISO));
+    let stages = rc.dates.filter(d=>d <= todayISO).map(settled).filter(Boolean);
+    let leader = prev.leader || null;
+    if(due.length){
+      const texts = [];
+      for(const pg of rc.pages){ const t = await wikitextOf(pg); if(t) texts.push(t); }
+      if(texts.length){
+        if(rc.oneDay){
+          // one table, after a Result heading where there is one
+          const t = texts[0];
+          const at = t.search(/^=+\s*Results?\s*=+\s*$/im);
+          const blocks = resultBlocks(at >= 0 ? t.slice(at) : t).filter(b=>!isGCBlock(b));
+          const top3 = blocks.length ? ridersInBlock(blocks[0], 3) : [];
+          stages = top3.length === 3 ? [{date:rc.dates[0], top3}] : stages;
+        } else {
+          const sections = {};
+          texts.forEach(t=>Object.assign(sections, stageSections(t)));
+          const fresh = [];
+          let leadStage = 0;
+          rc.dates.forEach((date, i)=>{
+            if(date > todayISO) return;
+            const kept = settled(date);
+            if(kept && date < todayISO){ fresh.push(kept); return; }
+            const sec = sections[i+1];
+            if(!sec) return;
+            const blocks = resultBlocks(sec);
+            const notGC = blocks.filter(b=>!isGCBlock(b));
+            // prefer the block actually titled as the stage result; a
+            // neutralised stage carries a "time gaps" block instead
+            const res = notGC.filter(b=>/result/i.test(b.slice(0,240)))[0] || notGC[0] || "";
+            const top3 = ridersInBlock(res, 3);
+            if(top3.length === 3) fresh.push({date, top3});
+            const gcBlock = blocks.filter(isGCBlock)[0];
+            if(gcBlock && i+1 > leadStage){
+              const gc = ridersInBlock(gcBlock, 1);
+              if(gc.length){ leader = gc[0]; leadStage = i+1; }
+            }
+          });
+          if(fresh.length) stages = fresh;
+          // before any split article exists there are no stage sections
+          // at all; the main article still carries the standings
+          if(!leader){
+            for(const t of texts){ const l = gcLeaderFrom(t); if(l){ leader = l; break; } }
+          }
+        }
+      }
+    }
+    if(stages.length || leader) cyclingOut.push({race:rc.name, oneDay:!!rc.oneDay, leader, stages});
+  }
+  const podiums = cyclingOut.reduce((a,r)=>a+r.stages.length, 0);
+  console.log("Cycling (Wikipedia): " + podiums + " stage podium" + (podiums===1?"":"s")
+    + " across " + cyclingOut.length + " race(s)");
+}catch(e){
+  console.warn("  ! cycling results skipped — " + (e && e.message || e));
+  if(prevCycling.length && !cyclingOut.length) cyclingOut.push(...prevCycling);
+}
 
 /* A roster entry that matched no fixture at all is almost always a name
    that drifted, not a team with an empty schedule. Say so loudly: this
