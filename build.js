@@ -1,6 +1,5 @@
-/* Wraps the artifact page body into a standalone HTML document.
-   The claude.ai artifact host supplies its own <!doctype>/<head>/<body>,
-   so src/page.html has none. GitHub Pages needs the full document. */
+/* Wraps src/page.html, which is a fragment, into the standalone
+   document GitHub Pages serves. */
 const fs = require("fs");
 const body = fs.readFileSync(__dirname + "/src/page.html", "utf8");
 const title = (body.match(/<title>([^<]*)<\/title>/) || [, "Game Day North"])[1];
