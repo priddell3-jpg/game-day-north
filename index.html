@@ -1236,6 +1236,9 @@ function renderCoverage(now){
 
 /* ---------- results that already happened ---------- */
 function renderResults(now, todayKey){
+  // Nothing followed yet: an empty results panel would say nothing useful,
+  // and the welcome banner already explains what to do.
+  if(!selected.size) return "";
   const midnight = new Date(); midnight.setHours(0,0,0,0);
   const from = midnight.getTime() - 3*DAY;   // whole calendar days, so a day never appears half-shown
   // Only real fixtures can be results.
