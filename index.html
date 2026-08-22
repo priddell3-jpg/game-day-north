@@ -1092,10 +1092,14 @@ async function fillScores(){
   });
   if(!days.length) return 0;
   let filled = 0;
+  const answered = [];
   await Promise.all(days.map(async k=>{
     const [comp, d] = k.split("|");
     let r;
+    // a request that never got through stays eligible for the next cycle;
+    // one that answered — even with nothing — is settled
     try{ r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+d, 9000); }catch(e){ return; }
+    answered.push(k);
     (r.events||[]).forEach(ev=>{
       const parsed = parseEvent(ev, comp);
       if(!parsed || !parsed.result) return;
@@ -1116,7 +1120,7 @@ async function fillScores(){
       filled++;
     });
   }));
-  days.forEach(k=>scoredDays.add(k));
+  answered.forEach(k=>scoredDays.add(k));
   if(filled) GAMES.sort((a,b)=>a.start-b.start);
   return filled;
 }
@@ -1432,9 +1436,23 @@ function renderCoverage(now){
 function renderResults(now, todayKey){
   const midnight = new Date(); midnight.setHours(0,0,0,0);
   const from = midnight.getTime() - 7*DAY;
-  const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime()).sort((a,b)=>b.start-a.start);
-  if(!past.length) return "";
+  const all = myGames().filter(g=>g.start>=from && g.start<midnight.getTime());
+  // A projected fixture is a guess at when a team plays, with a made-up
+  // opponent. That is fine for a diary of what is coming; it is worthless
+  // as a result. Only real fixtures appear here.
+  const past = all.filter(g=>g.listed || g.espn).sort((a,b)=>b.start-a.start);
+  const guessed = all.length - past.length;
+  if(!past.length){
+    if(!guessed) return "";
+    return '<details class="results"'+(resultsOpen?" open":"")+'>'
+      + '<summary>Recent results<span class="conf-note">last 7 days &middot; nothing confirmed</span></summary>'
+      + '<div class="results-in"><div class="note">No confirmed fixtures for your teams in the last week. '
+      + '<b>'+guessed+'</b> projected fixture'+(guessed===1?"":"s")+' fell in this window and '+(guessed===1?"is":"are")+' deliberately not shown &mdash; '
+      + 'a projection guesses when a team plays and invents the opponent, so it can never be a result. '
+      + 'Real fixtures appear here as soon as the feed covers them.</div></div></details>';
+  }
   const scored = past.filter(g=>{ const st=stateOf(g,now); return st.score; }).length;
+  const tail = guessed ? ' &middot; '+guessed+' projected hidden' : '';
   const map = new Map();
   past.forEach(g=>{ const k=localKey(g.start); if(!map.has(k)) map.set(k,[]); map.get(k).push(g); });
   let inner = "";
@@ -1443,7 +1461,7 @@ function renderResults(now, todayKey){
     + '<summary>Recent results<span class="conf-note">last 7 days &middot; '
     + past.length+' game'+(past.length===1?"":"s")
     + (scored?' &middot; '+scored+' final score'+(scored===1?"":"s"):' &middot; no scores available')
-    + '</span></summary><div class="results-in">'+inner+'</div></details>';
+    + tail + '</span></summary><div class="results-in">'+inner+'</div></details>';
 }
 
 /* ---------- rights table ---------- */
@@ -1487,7 +1505,8 @@ function emptyState(){
 
 function renderList(now, todayKey){
   const start = new Date(); start.setHours(0,0,0,0);
-  const games = myGames().filter(g=>g.start>=start.getTime() && g.start<start.getTime()+DAY*160);
+  const games = myGames().filter(g=>g.start>=start.getTime() && g.start<start.getTime()+DAY*160
+    && (g.start > now - 4*3600000 || g.listed || g.espn));
   if(!games.length) return welcomeBanner()+renderFilters()+renderResults(now,todayKey)+emptyState();
   let out = welcomeBanner() + renderFilters() + renderCoverage(now) + renderResults(now, todayKey);
   groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
