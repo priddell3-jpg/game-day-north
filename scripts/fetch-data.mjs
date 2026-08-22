@@ -277,6 +277,19 @@ const CYCLING_SOURCES = [
     "2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18"],
    pages:["2026 Tour of Guangxi"]}
 ];
+/* Significant words in a title. Years are excluded because every
+   article in a season carries one, and the vocabulary of cycling is
+   excluded because it is shared by every race and the season overview
+   alike — "2026 Tour of Guangxi" and "2026 UCI World Tour" have "tour"
+   in common and nothing else. What is left is the distinctive part: the
+   place or the race. */
+const TITLE_GENERIC = new Set(["uci","world","tour","race","racing","grand","prix",
+  "cycliste","classic","cycling","road","men","mens","women","womens","stage","edition"]);
+const titleWords = t => new Set(String(t||"").toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .split(/[^a-z0-9]+/)
+  .filter(w=>w.length >= 3 && !/^\d+$/.test(w) && !TITLE_GENERIC.has(w)));
+
 async function wikitextOf(title){
   const url = WIKI_API + "?action=parse&prop=wikitext&format=json&formatversion=2&redirects=1&page="
     + encodeURIComponent(title);
@@ -285,7 +298,22 @@ async function wikitextOf(title){
       signal:AbortSignal.timeout(20000)});
     if(!res.ok) return null;
     const j = await res.json();
-    return (j.parse && j.parse.wikitext) || null;
+    const text = (j.parse && j.parse.wikitext) || null;
+    if(!text) return null;
+    /* A title that does not exist yet can still answer, by redirecting
+       to a season overview — "2026 Il Lombardia" lands on "2026 UCI
+       World Tour". Parsing that would attribute one page's contents to
+       a race it says nothing about. Reject an answer whose title shares
+       no significant word with the request, and name the mismatch so
+       the title can be corrected rather than quietly returning nothing. */
+    const got = (j.parse && j.parse.title) || "";
+    const want = titleWords(title), have = titleWords(got);
+    if(want.size && ![...want].some(w=>have.has(w))){
+      console.warn("  ! \"" + title + "\" resolved to \"" + got
+        + "\" — no shared words, treating as missing; the title needs fixing");
+      return null;
+    }
+    return text;
   }catch(e){ return null; }
 }
 /* Results are not wiki-table rows. Each classification is a run of
