@@ -52,9 +52,9 @@ const ROSTER = [
 ["mun","EPL","Manchester United"],["che","EPL","Chelsea"],["tot","EPL","Tottenham Hotspur"],
 ["new","EPL","Newcastle United"],
 ["rma","LALIGA","Real Madrid"],["bar","LALIGA","Barcelona"],
-["bay","BUNDES","Bayern Munich"],["psg","LIGUE1","Paris Saint-Germain"],["int","SERIEA","Inter Milan"],
+["bay","BUNDES","Bayern Munich"],["psg","LIGUE1","Paris Saint-Germain"],["int","SERIEA","Internazionale"],
 ["van-mls","MLS","Vancouver Whitecaps"],["tfc","MLS","Toronto FC"],
-["mtl-mls","MLS","CF Montreal"],["lafc","MLS","Los Angeles FC"],
+["mtl-mls","MLS","CF Montreal"],["lafc","MLS","LAFC"],
 ["mia","MLS","Inter Miami CF"],["sou","MLS","Seattle Sounders FC"]
 ];
 /* Clubs that enter competitions beyond their own league. */
@@ -62,6 +62,21 @@ const EXTRA = { EPL:["EFL","FAC","UCL"], LALIGA:["UCL"], BUNDES:["UCL"], LIGUE1:
 
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
 const pad = n => String(n).padStart(2,"0");
+/* Names the feed uses that no rule could derive from ours. Each of these
+   silently detached a club until the unmatched-team warning caught it. */
+const ALIASES = {
+  int:  ["Inter Milan", "Inter"],
+  lafc: ["Los Angeles FC"],
+  "van-mls": ["Vancouver Whitecaps FC"],
+  sou:  ["Seattle Sounders"],
+  mia:  ["Inter Miami"],
+  "mtl-mls": ["CF Montréal", "Montreal Impact"],
+  psg:  ["PSG", "Paris SG"],
+  bay:  ["Bayern München", "FC Bayern München"],
+  rma:  ["Real Madrid CF"],
+  bar:  ["FC Barcelona"]
+};
+
 /* Match on the name, and on the name minus a club suffix. ESPN says
    "Vancouver Whitecaps" where the roster said "Vancouver Whitecaps FC",
    and that one word silently detached every one of their fixtures from
@@ -69,9 +84,12 @@ const pad = n => String(n).padStart(2,"0");
 const trimSuffix = n => n.replace(/\b(fc|cf|sc|afc)\b/gi, "").replace(/\s+/g," ").trim();
 const NAME_TO_ID = new Map();
 for(const [id,,name] of ROSTER){
-  NAME_TO_ID.set(norm(name), id);
-  const bare = norm(trimSuffix(name));
-  if(bare && !NAME_TO_ID.has(bare)) NAME_TO_ID.set(bare, id);
+  const variants = [name].concat(ALIASES[id] || []);
+  for(const v of variants){
+    if(!NAME_TO_ID.has(norm(v))) NAME_TO_ID.set(norm(v), id);
+    const bare = norm(trimSuffix(v));
+    if(bare && !NAME_TO_ID.has(bare)) NAME_TO_ID.set(bare, id);
+  }
 }
 function idFor(displayName){
   const n = norm(displayName);

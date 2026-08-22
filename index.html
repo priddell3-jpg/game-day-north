@@ -423,7 +423,8 @@ const COMPS = {
   LALIGA:{name:"LaLiga",            short:"LaLiga",     color:"#D9822B"},
   SERIEA:{name:"Serie A",           short:"Serie A",    color:"#2E7D8F"},
   BUNDES:{name:"Bundesliga",        short:"Bundesliga", color:"#9E2A2B"},
-  LIGUE1:{name:"Ligue 1",           short:"Ligue 1",    color:"#1B6E8C"}
+  LIGUE1:{name:"Ligue 1",           short:"Ligue 1",    color:"#1B6E8C"},
+  UCI:   {name:"UCI WorldTour",     short:"WorldTour",  color:"#8A6D1F"}
 };
 
 /* ============================================================
@@ -441,7 +442,8 @@ const SERVICES = {
   dazn:     {label:"DAZN",      kind:"stream"},
   apple:    {label:"Apple TV",  kind:"stream"},
   mlbtv:    {label:"MLB.TV",    kind:"stream"},
-  nbalp:    {label:"NBA League Pass", kind:"stream"}
+  nbalp:    {label:"NBA League Pass", kind:"stream"},
+  flobikes: {label:"FloBikes",  kind:"stream"}
 };
 const CARRIER_SERVICE = {
   "Sportsnet":"sportsnet","Sportsnet One":"sportsnet","Sportsnet Pacific":"sportsnet",
@@ -449,7 +451,7 @@ const CARRIER_SERVICE = {
   "TSN":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
   "RDS":"rds","TVA Sports":"tva","CTV":"ctv","CTV2":"ctv",
   "Prime Video":"prime","Fubo Canada":"fubo","DAZN Canada":"dazn",
-  "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp"
+  "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp","FloBikes":"flobikes"
 };
 
 /* ============================================================
@@ -470,6 +472,8 @@ const SRC = {
   wikica:  {label:"Sports broadcasting contracts in Canada", url:"https://en.wikipedia.org/wiki/Sports_broadcasting_contracts_in_Canada"},
   raptors: {label:"Rogers–MLSE: TSN/Sportsnet split holds", url:"https://www.si.com/nba/raptors/changes-for-toronto-raptors-fans-after-rogers-purchase-of-mlse"},
   jays:    {label:"Sportsnet+ carries the MLB postseason", url:"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},
+  flo:     {label:"Escape Collective — how to watch 2026", url:"https://escapecollective.com/how-to-watch-pro-bike-racing-in-2026/"},
+  pcs:     {label:"ProCyclingStats — 2026 WorldTour calendar", url:"https://www.procyclingstats.com/races.php?year=2026&circuit=1"},
   none:    {label:"No Canadian rights holder found", url:""}
 };
 const tv = n => ({name:n, kind:"tv"});
@@ -477,6 +481,12 @@ const st = n => ({name:n, kind:"stream"});
 const CDN_MLS = ["van-mls","tfc","mtl-mls"];
 
 const RIGHTS = [
+  /* ---------------- cycling ----------------
+     Refreshingly simple: one platform holds essentially the whole
+     men's and women's WorldTour in Canada. */
+  {comp:"UCI", carriers:[st("FloBikes")], confidence:"confirmed",
+   note:"Exclusive Canadian home of the men's and women's WorldTour", src:SRC.flo, checked:CHECKED},
+
   /* ---------------- soccer ---------------- */
   {comp:"EPL", carriers:[st("Fubo Canada")], confidence:"confirmed",
    note:"Exclusive — every match, through 2027-28. Note: LiveSoccerTV also lists DAZN Canada for EPL fixtures; Fubo's own release says exclusive, so Fubo is used here", src:SRC.fubo, checked:CHECKED},
@@ -601,7 +611,8 @@ const TEAM_ROWS = [
 ["mtl-mls","MLS","Montréal","CF Montréal","MTL","ET","#00214E"],
 ["lafc","MLS","Los Angeles","LAFC","LAFC","PT","#1B1B1B"],
 ["mia","MLS","Miami","Inter Miami","MIA","ET","#B23A6E"],
-["sou","MLS","Seattle","Sounders","SEA","PT","#005595"]
+["sou","MLS","Seattle","Sounders","SEA","PT","#005595"],
+["uci-wt","UCI","","Men's WorldTour","WT","CET","#8A6D1F"]
 ];
 const TEAMS = {};
 TEAM_ROWS.forEach(r=>{
@@ -613,7 +624,7 @@ TEAM_ROWS.forEach(r=>{
   TEAMS[t.id] = t;
 });
 const teamList = Object.values(TEAMS);
-const CLUB_NAMES = {"van-mls":"Vancouver Whitecaps","tfc":"Toronto FC","mtl-mls":"CF Montréal","lafc":"LAFC","mia":"Inter Miami","sou":"Seattle Sounders"};
+const CLUB_NAMES = {"uci-wt":"Men's WorldTour","van-mls":"Vancouver Whitecaps","tfc":"Toronto FC","mtl-mls":"CF Montréal","lafc":"LAFC","mia":"Inter Miami","sou":"Seattle Sounders"};
 const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1};
 const fullName = t => !t ? "TBD"
   : t.full ? t.name                       // came from the feed already complete
@@ -829,7 +840,7 @@ const ESPN_NAME = {
   che:"Chelsea", tot:"Tottenham Hotspur", new:"Newcastle United", nfo:"Nottingham Forest",
   bou:"AFC Bournemouth", ips:"Ipswich Town", avl:"Aston Villa", bha:"Brighton & Hove Albion",
   whu:"West Ham United", eve:"Everton", cry:"Crystal Palace", bre:"Brentford", ful:"Fulham",
-  rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Inter Milan",
+  rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Internazionale",
   "van-mls":"Vancouver Whitecaps", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
   lafc:"LAFC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
 };
@@ -1105,6 +1116,72 @@ async function loadLive(){
     + (errs.length?" &middot; skipped: "+errs.slice(0,4).map(esc).join("; "):"");
 }
 
+/* ============================================================
+   CYCLING — the men's UCI WorldTour.
+
+   A race is an event, not a fixture between two clubs, and a Grand Tour
+   is one event containing 21 of them. Stage dates are taken from
+   ProCyclingStats rather than spread evenly across the date range,
+   because Grand Tours have rest days and guessing them would put a race
+   on a day nobody is riding.
+
+   Hand-checked against ProCyclingStats on 22 Aug 2026. The build script
+   does not scrape this yet.
+   ============================================================ */
+const CYCLING = [
+  {race:"La Vuelta Ciclista a España", short:"Vuelta a España", stages:[
+    ["2026-08-22","Stage 1 (ITT)","Monaco – Monaco",9.4],
+    ["2026-08-23","Stage 2","Monaco – Manosque",214.3],
+    ["2026-08-24","Stage 3","Gruissan-Aude – Font Romeu",174],
+    ["2026-08-25","Stage 4","Andorra la Vella – Andorra la Vella",104.8],
+    ["2026-08-26","Stage 5","Falset – Roquetes. Terres de l'Ebre",173.3],
+    ["2026-08-27","Stage 6","Alcossebre – Castelló",177.4],
+    ["2026-08-28","Stage 7","Vall d'Alba – Aramón Valdelinares",149.8],
+    ["2026-08-29","Stage 8","Puçol – Xeraco",171],
+    ["2026-08-30","Stage 9","La Vila Joiosa – Alto de Aitana",187.4],
+    ["2026-09-01","Stage 10","Alcaraz – Elche de la Sierra",184.7],
+    ["2026-09-02","Stage 11","Cartagena – Lorca",151.3],
+    ["2026-09-03","Stage 12","Vera – Calar Alto",166.6],
+    ["2026-09-04","Stage 13","Almuñécar – Loja",192.8],
+    ["2026-09-05","Stage 14","Jaén – Sierra de la Pandera",154.5],
+    ["2026-09-06","Stage 15","Palma del Río – Córdoba",189.7],
+    ["2026-09-08","Stage 16","Cortegana – La Rábida",181.1],
+    ["2026-09-09","Stage 17","Dos Hermanas – Sevilla",185],
+    ["2026-09-10","Stage 18 (ITT)","El Puerto de Santa María – Jerez",32.1],
+    ["2026-09-11","Stage 19","Vélez-Málaga – Peñas Blancas",210.8],
+    ["2026-09-12","Stage 20","La Calahorra – Collado del Alguacil",186.8],
+    ["2026-09-13","Stage 21","Carrefour Granada – Granada",112]
+  ]},
+  {race:"Bretagne Classic - CIC", short:"Bretagne Classic", oneDay:"2026-08-30"},
+  {race:"Grand Prix Cycliste de Québec", short:"GP de Québec", oneDay:"2026-09-11"},
+  {race:"Grand Prix Cycliste de Montréal", short:"GP de Montréal", oneDay:"2026-09-13"},
+  {race:"Il Lombardia", short:"Il Lombardia", oneDay:"2026-10-10"},
+  {race:"Tour of Guangxi", short:"Tour of Guangxi", stages:[
+    ["2026-10-13","Stage 1","Chongzuo – Chongzuo",146.3],
+    ["2026-10-14","Stage 2","Chongzuo – Jingxi",177.2],
+    ["2026-10-15","Stage 3","Jingxi – Bama",212],
+    ["2026-10-16","Stage 4","Bama – Tian'e",164.3],
+    ["2026-10-17","Stage 5","Jinchengjiang – Yizhou",170.7],
+    ["2026-10-18","Stage 6","Yizhou – NongLa",165.8]
+  ]}
+];
+(function buildCycling(){
+  const wt = TEAMS["uci-wt"];
+  if(!wt) return;
+  CYCLING.forEach(r=>{
+    const add = (date, label, route, km) => {
+      const ms = Date.parse(date+"T12:00:00Z");   // date-only; noon is a neutral anchor
+      if(!ms) return;
+      addGame({comp:"UCI", home:wt, away:null, start:ms, moved:null, event:true, listed:true, real:true,
+        race:r.short || r.race, stage:label, route:route || "", km:km || 0,
+        localDow:new Date(ms).getUTCDay(), slotHour:12});
+    };
+    if(r.oneDay) add(r.oneDay, "One-day race", r.route, r.km);
+    (r.stages||[]).forEach(st=>add(st[0], st[1], st[2], st[3]));
+  });
+  GAMES.sort((a,b)=>a.start-b.start);
+})();
+
 /* ---- what's actually known yet, and when it will be ---- */
 /* Kick-off times now come from the feed, so there is nothing to hedge
    about. A fixture without an opponent can still appear if a feed lists
@@ -1231,7 +1308,55 @@ function orderedTeams(g){
 }
 const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
 
+/* A race is an event, not a matchup: one name, a stage, a route, and no
+   scoreline. It shares the row grid so the columns still line up. */
+function eventRow(g, now){
+  const c = COMPS[g.comp], rights = resolveRights(g);
+  const day = localKey(g.start), today = ymd(new Date(now));
+  const state = day < today ? "done" : day > today ? "ahead" : "today";
+
+  const timeCell = '<div class="g-time"><span class="tbd">All day</span></div>';
+  const title = '<div class="g-teams"><span class="g-team">'+crest(g.home)+esc(g.race)+'</span></div>';
+  const meta = '<div class="g-meta">'
+    + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
+    + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
+    + (g.route?'<span>'+esc(g.route)+'</span>':'')
+    + (g.km?'<span>'+g.km+' km</span>':'')
+    + '</div>';
+
+  let watch;
+  if(!rights.carriers.length){
+    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Carrier TBC</span></div>';
+  } else {
+    const ids = servicesFor(g);
+    const cov = services.size ? (covered(g)
+      ? '<span class="tag-cov have">You have it</span>'
+      : '<span class="tag-cov need">Needs '+esc(((SERVICES[ids[0]]||{}).label)||"a sub")+'</span>') : "";
+    watch = '<div class="g-watch">'
+      + rights.carriers.map(w=>'<span class="svc '+w.kind+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
+      + cov + '</div>';
+  }
+
+  let right = '<div class="g-score">';
+  if(state === "ahead"){
+    right += '<span class="countdown" data-start="'+g.start+'">'+esc(countdownText(g.start, now))+'</span>'
+      + '<span class="score-state">Race day</span>';
+  } else if(state === "today"){
+    right += '<span class="score-state live"><span class="dot-live"></span>Racing today</span>'
+      + '<span class="conf-note">Start times vary</span>';
+  } else {
+    right += '<span class="score-state">Finished</span>';
+  }
+  right += '</div>';
+
+  const on = alerts.has(g.id);
+  const bell = '<button class="bell" data-alert="'+esc(g.id)+'" aria-pressed="'+on+'" aria-label="'+(on?"Remove alert":"Set alert")+'">'+BELL+'</button>';
+  return '<div class="game'+(state==="today"?" is-live":"")+'">'+timeCell
+    + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
+}
+
 function gameRow(g, now){
+  if(g.event) return eventRow(g, now);
   const st = stateOf(g, now), ts = timeState(g, now), c = COMPS[g.comp];
   const o = orderedTeams(g);
   if(ts.state==="tbd"){ if(o.flip) o.a = null; else o.b = null; }
@@ -1371,7 +1496,9 @@ function renderResults(now, todayKey){
   const midnight = new Date(); midnight.setHours(0,0,0,0);
   const from = midnight.getTime() - 3*DAY;   // whole calendar days, so a day never appears half-shown
   // Only real fixtures can be results.
-  const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime() && (g.listed || g.espn)).sort((a,b)=>b.start-a.start);
+  // a finished stage has no scoreline, so races don't belong in results
+  const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime()
+    && (g.listed || g.espn) && !g.event).sort((a,b)=>b.start-a.start);
   if(!past.length){
     return '<details class="results"'+(resultsOpen?" open":"")+'>'
       + '<summary>Recent results<span class="conf-note">last 3 days &middot; nothing confirmed</span></summary>'
@@ -1468,6 +1595,10 @@ function renderCalendar(now, todayKey){
     const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i), key=ymd(d);
     const gs=map.get(key)||[], out=d.getMonth()!==m;
     let evs=gs.slice(0,3).map(g=>{
+      if(g.event){
+        return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'
+          + esc(g.race) + '<span class="tm">'+esc((g.stage||"").replace(/^Stage /,"St "))+'</span></span>';
+      }
       const s=stateOf(g,now), ts=timeState(g,now);
       const mine=(g.home&&selected.has(g.home.id))?g.home:g.away;
       let opp=(mine&&g.home&&mine.id===g.home.id)?g.away:g.home;
@@ -1503,6 +1634,13 @@ function renderRail(now, todayKey){
     return;
   }
   el.innerHTML=label+'<div class="rail-scroll">'+today.map(g=>{
+    if(g.event){
+      const r=resolveRights(g);
+      return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
+        + '<div class="rail-row"><span class="t" style="color:var(--panel-muted)">'+esc(g.stage||"")+'</span></div>'
+        + '<div class="rail-meta"><span class="dot-live"></span>Racing today<span>&middot;</span><span>'
+        + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
+    }
     const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
     const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
     const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
