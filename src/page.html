@@ -1227,23 +1227,15 @@ function renderCoverage(now){
 function renderResults(now, todayKey){
   const midnight = new Date(); midnight.setHours(0,0,0,0);
   const from = midnight.getTime() - 3*DAY;   // whole calendar days, so a day never appears half-shown
-  const all = myGames().filter(g=>g.start>=from && g.start<midnight.getTime());
-  // A projected fixture is a guess at when a team plays, with a made-up
-  // opponent. That is fine for a diary of what is coming; it is worthless
-  // as a result. Only real fixtures appear here.
-  const past = all.filter(g=>g.listed || g.espn).sort((a,b)=>b.start-a.start);
-  const guessed = all.length - past.length;
+  // Only real fixtures can be results.
+  const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime() && (g.listed || g.espn)).sort((a,b)=>b.start-a.start);
   if(!past.length){
-    if(!guessed) return "";
     return '<details class="results"'+(resultsOpen?" open":"")+'>'
       + '<summary>Recent results<span class="conf-note">last 3 days &middot; nothing confirmed</span></summary>'
       + '<div class="results-in"><div class="note">No confirmed fixtures for your teams in the last three days. '
-      + '<b>'+guessed+'</b> projected fixture'+(guessed===1?"":"s")+' fell in this window and '+(guessed===1?"is":"are")+' deliberately not shown &mdash; '
-      + 'a projection guesses when a team plays and invents the opponent, so it can never be a result. '
       + 'Real fixtures appear here as soon as the feed covers them.</div></div></details>';
   }
   const scored = past.filter(g=>{ const st=stateOf(g,now); return st.score; }).length;
-  const tail = guessed ? ' &middot; '+guessed+' projected hidden' : '';
   const map = new Map();
   past.forEach(g=>{ const k=localKey(g.start); if(!map.has(k)) map.set(k,[]); map.get(k).push(g); });
   let inner = "";
@@ -1252,7 +1244,7 @@ function renderResults(now, todayKey){
     + '<summary>Recent results<span class="conf-note">last 3 days &middot; '
     + past.length+' game'+(past.length===1?"":"s")
     + (scored?' &middot; '+scored+' final score'+(scored===1?"":"s"):' &middot; no scores available')
-    + tail + '</span></summary><div class="results-in">'+inner+'</div></details>';
+    + '</span></summary><div class="results-in">'+inner+'</div></details>';
 }
 
 /* ---------- rights table ---------- */
