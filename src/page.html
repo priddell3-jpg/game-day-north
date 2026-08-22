@@ -663,7 +663,26 @@ function addGame(o){
   GAMES.push(o);
   return o;
 }
+/* Two fixtures are the same game when the competition and both clubs
+   match and they start within four hours of each other. Four hours, not
+   the same calendar day: a baseball doubleheader is two genuinely
+   different games between the same clubs on one date, and collapsing
+   them would silently hide one. */
+const SAME_WINDOW = 4*3600000;
+function sameGame(a, b){
+  if(!a.away || !b.away || a.comp !== b.comp) return false;
+  if(Math.abs(a.start - b.start) >= SAME_WINDOW) return false;
+  return (a.home.id === b.home.id && a.away.id === b.away.id)
+      || (a.home.id === b.away.id && a.away.id === b.home.id);
+}
 function mergeReal(built){
+  // Replace by identity. Without this a refresh re-added every fixture
+  // it had already loaded, so a page left open during a game slowly
+  // filled with duplicates of itself.
+  built.forEach(g=>{
+    for(let i=GAMES.length-1;i>=0;i--) if(sameGame(GAMES[i], g)) GAMES.splice(i,1);
+  });
+  // then retire baked fallback fixtures inside any window the feed covers
   const spans = {};
   built.forEach(g=>{
     [g.home&&g.home.id, g.away&&g.away.id].forEach(id=>{
@@ -674,7 +693,7 @@ function mergeReal(built){
   });
   for(let i=GAMES.length-1;i>=0;i--){
     const g = GAMES[i];
-    if(g.espn) continue;   // live feed data outranks the baked fallback
+    if(g.espn) continue;
     const ids = [g.home&&g.home.id, g.away&&g.away.id];
     const hit = ids.some(id=>{
       const sp = spans[g.comp+"|"+id];
@@ -684,6 +703,42 @@ function mergeReal(built){
   }
   built.forEach(g=>addGame(g));
   GAMES.sort((a,b)=>a.start-b.start);
+}
+
+/* ---- remembered results ------------------------------------------
+   A final score, once fetched, is kept in this browser for a week. So
+   a game you missed still has its score tomorrow even if the feed is
+   slow, unreachable, or has moved that day out of its window. Local to
+   the viewer, like every other preference here.
+   ------------------------------------------------------------------ */
+const RESULTS_KEY = "gdn.results";
+function rememberResults(){
+  try{
+    const now = Date.now(), rows = [];
+    GAMES.forEach(g=>{
+      if(!g.away || !g.result || !g.result.score) return;
+      if(g.result.status !== "final") return;
+      if(g.start < now - 8*DAY || g.start > now) return;
+      rows.push({c:g.comp, t:g.start, s:g.result.score, l:g.result.label,
+        h:[g.home.id, fullName(g.home), g.home.abbr, g.home.color],
+        a:[g.away.id, fullName(g.away), g.away.abbr, g.away.color]});
+    });
+    LS.set(RESULTS_KEY, rows.slice(-80));
+  }catch(e){}
+}
+function recallResults(){
+  const rows = LS.get(RESULTS_KEY, []), now = Date.now(), built = [];
+  if(!rows || !rows.length) return;
+  const team = (r, comp) => TEAMS[r[0]] || {id:r[0], home:comp, city:"", name:r[1],
+    abbr:r[2] || "?", color:r[3] || "#5A6478", ghost:true, comps:[comp]};
+  rows.forEach(r=>{
+    if(!r || !r.t || r.t < now - 8*DAY) return;
+    built.push({comp:r.c, home:team(r.h, r.c), away:team(r.a, r.c), start:r.t, moved:null,
+      real:true, espn:true, listed:true, remembered:true,
+      localDow:new Date(r.t).getUTCDay(), slotHour:new Date(r.t).getUTCHours(), stage:"",
+      result:{status:"final", label:r.l || "Final", score:r.s}});
+  });
+  if(built.length) mergeReal(built);
 }
 
 
@@ -941,7 +996,7 @@ async function loadLive(){
   // near days get fetched there as a source of fixtures in their own
   // right, not merely as a score top-up.
   const naComps = [...new Set(naJobs.map(j=>j[1]))];
-  const nearDates = [-2,-1,0,1].map(d=>espnDate(Date.now()+d*DAY));
+  const nearDates = [-3,-2,-1,0,1].map(d=>espnDate(Date.now()+d*DAY));
   await Promise.all(naComps.map(comp=>Promise.all(nearDates.map(async d=>{
     try{
       const r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+d, 9000);
@@ -971,17 +1026,18 @@ async function loadLive(){
   if(!ok) throw new Error(errs[0] || "no source reachable");
   // keep only fixtures that involve a team you follow
   const keep = built.filter(g=>selected.has(g.home.id) || selected.has(g.away.id));
-  const byKey = new Map();
+  const dedup = [];
   keep.forEach(g=>{
-    const k = g.comp+"|"+localKey(g.start)+"|"+g.home.id+"|"+g.away.id;
-    const prev = byKey.get(k);
-    const better = g.result && g.result.score, had = prev && prev.result && prev.result.score;
-    if(!prev || (better && !had)) byKey.set(k, g);
+    const i = dedup.findIndex(x=>sameGame(x, g));
+    if(i < 0){ dedup.push(g); return; }
+    const had = dedup[i].result && dedup[i].result.score;
+    const better = g.result && g.result.score;
+    if(better && !had) dedup[i] = g;   // the copy carrying a score wins
   });
-  const dedup = [...byKey.values()];
   if(dedup.length) mergeReal(dedup);
   let filled = 0;
   try{ filled = await fillScores(); }catch(e){ errs.push("scores: "+(e && e.message || e)); }
+  rememberResults();
   liveNote = dedup.length+" fixture"+(dedup.length===1?"":"s")+" from ESPN, "
     + filled+" score"+(filled===1?"":"s")+" updated"
     + (errs.length?" &middot; skipped: "+errs.slice(0,4).map(esc).join("; "):"");
@@ -1040,7 +1096,7 @@ let selected, services, hiddenComps, showScores;
 })();
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
-let covOpen = null, rightsOpen = false, resultsOpen = false;
+let covOpen = null, rightsOpen = false, resultsOpen = null;   // null = open when it has results
 let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the sample set   // panels keep their open/closed state across re-renders
 
 function persist(){
@@ -1264,7 +1320,7 @@ function renderResults(now, todayKey){
   past.forEach(g=>{ const k=localKey(g.start); if(!map.has(k)) map.set(k,[]); map.get(k).push(g); });
   let inner = "";
   map.forEach((gs,k)=>{ inner += daySection(k, gs, now, todayKey); });
-  return '<details class="results"'+(resultsOpen?" open":"")+'>'
+  return '<details class="results"'+((resultsOpen===null?true:resultsOpen)?" open":"")+'>'
     + '<summary>Recent results<span class="conf-note">last 3 days &middot; '
     + past.length+' game'+(past.length===1?"":"s")
     + (scored?' &middot; '+scored+' final score'+(scored===1?"":"s"):' &middot; no scores available')
@@ -1295,7 +1351,10 @@ function noteBlock(){
       ? '<b>Live scores on.</b> Fixtures and scores come from ESPN\'s public feed, refreshed while a game is on. '
         + (liveNote?'<span class="conf-note">'+liveNote+'</span> ':'')
     : liveMode===false
-      ? '<b>Scores are unavailable in this view.</b> Nothing could be fetched, so no score is shown &mdash; and none is invented. Inside the claude.ai viewer that is expected, because it blocks outside requests; <a href="'+PAGES_URL+'" target="_blank" rel="noopener">open the live version</a> instead. '
+      ? (myGames().some(g=>g.remembered)
+          ? '<b>Showing remembered results.</b> The feed can\'t be reached right now, so scores you have already seen are being read from this browser; anything newer has no score rather than a guessed one. '
+          : '<b>Scores are unavailable in this view.</b> Nothing could be fetched, so no score is shown &mdash; and none is invented. ')
+        + 'Inside the claude.ai viewer that is expected, because it blocks outside requests; <a href="'+PAGES_URL+'" target="_blank" rel="noopener">open the live version</a> instead. '
         + (liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
       : '<b>Checking for live data&hellip;</b> ';
   return '<div class="note">' + liveLine
@@ -1484,6 +1543,7 @@ function refreshAfterPicks(){
   clearTimeout(pickTimer);
   pickTimer = setTimeout(()=>{ if(selected.size) refreshLive(); }, 700);
 }
+recallResults();   // put last week's known finals on screen before any network call
 refreshLive();
 setInterval(()=>{
   if(liveMode===false) return;
