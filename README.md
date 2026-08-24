@@ -58,6 +58,20 @@ Each of these cost real debugging time and is handled in both the client and the
 
 Where neither copy carries an event id, two fixtures count as the same game only when both clubs match **and** they start within four hours — not merely on the same date, or a baseball doubleheader would collapse into one game.
 
+### What gets polled, and when
+
+A live score is a number that changes, so following one means asking again. Asking too often is rude to a free endpoint and flattens a phone battery, so the rules are narrow and all in one place:
+
+- Only fixtures involving a **followed team**, and only while **Scores on** is enabled — with scores hidden there is no number on screen to keep current.
+- Every **60 seconds** while a fixture is active or its status is unknown. That deliberately includes halftime, delays, extra time, overtime and shootouts: ESPN reports all of them as `state: "in"`, and the page reads that field rather than trying to recognise each phase by name.
+- **Nothing once ESPN says `completed: true` or `state: "post"`.** A final is asked about once and then left alone; the scheduled rebuild of `data.json` carries the rare post-final correction.
+- **Elapsed time never ends a game.** A delay, extra innings and a postponement are indistinguishable from a clock, so only the source can say a game is over.
+- **One refresh at a time.** The minute poll, the quarter-hour poll, the team picker and a returning tab can all ask at once; a caller that asks while a pass is running joins it rather than starting a second.
+- **Paused while the tab is hidden**, with one immediate refresh when it comes back.
+- **Cycling is never polled.** A stage podium is a result, not a live feed, and there is no live cycling source to poll; it arrives with the committed file.
+
+A fixture that has already been given a score is still polled while it is under way. Not doing that is what once froze a match at its halftime score for the rest of the night.
+
 ### Keeping the roster in step
 
 `ROSTER` in `scripts/fetch-data.mjs` mirrors `TEAM_ROWS` in `src/page.html`. Add a team to one and add it to the other, or the picker will offer a team the build never fetches.

@@ -765,6 +765,16 @@ function mergeReal(built){
       const hadFinal = prev.result && prev.result.status === "final" && prev.result.score;
       const hasScore = g.result && g.result.score;
       if(hadFinal && !hasScore){ g.result = prev.result; g.remembered = true; }
+      /* The live top-up runs every minute; the committed file is rebuilt
+         every three hours. A score already on the page can therefore be
+         newer than the one arriving from the file, and letting the file
+         win regardless put a match back to its halftime score on every
+         refresh. A final from the file still wins — that is the one
+         thing it can know that a missed top-up did not. */
+      else if(prev.result && prev.result.score && g.fromFeed &&
+              g.result && g.result.status !== "final"){
+        g.result = prev.result;
+      }
       /* Matched by id but the clock moved: keep where it originally sat,
          so a reschedule can be seen rather than silently applied. */
       if(prev.start !== g.start){
@@ -985,7 +995,19 @@ function parseEvent(ev, comp){
   const stt = (cp.status || ev.status || {});
   const ty = stt.type || {};
   const nm = ty.name || "";
-  const status = /FINAL|FULL_TIME|POST/.test(nm) ? "final"
+  /* ESPN publishes the lifecycle as a field of its own — state is "pre",
+     "in" or "post", and completed is a boolean. Read those rather than
+     the wording of the status: "in" already covers halftime, a rain
+     delay, extra time, overtime and a shootout, every one of which the
+     name matching below had to be told about individually and got wrong
+     the moment ESPN added another. Only completed or "post" ends a game;
+     elapsed time never does. The names remain the fallback for a payload
+     that carries no state at all. */
+  const state = ty.state || "";
+  const status = (ty.completed === true || state === "post") ? "final"
+               : state === "in" ? "live"
+               : state === "pre" ? "scheduled"
+               : /FINAL|FULL_TIME|POST/.test(nm) ? "final"
                : /IN_PROGRESS|HALFTIME|END_PERIOD|FIRST_HALF|SECOND_HALF|RAIN|DELAY/.test(nm) ? "live"
                : "scheduled";
   const num = v => { const n = parseInt(v==null?"":String(v).replace(/[^0-9-]/g,""),10); return isNaN(n)?null:n; };
@@ -1199,6 +1221,46 @@ function applyScored(match, parsed){
   return true;
 }
 
+/* How long after kickoff a fixture is still worth asking about every
+   minute. Long enough for extra time, a shootout, a rain delay and a
+   game that runs past midnight; short enough that a fixture the feed
+   simply never resolved stops asking a minute at a time. This paces
+   requests and nothing else — it never decides that a game has
+   finished, which is ESPN's to say. */
+const POLL_WINDOW = 12*3600000;
+
+/* Which fixtures are worth asking the scoreboard about.
+
+   A fixture with no score has always been eligible. A fixture that is
+   under way is eligible too, score or no score: a live score is a
+   number that changes, and the old rule — poll until the first score
+   arrives — froze a game at whatever it happened to be when that first
+   number landed. Fulham 1-2 Chelsea at halftime stayed 1-2 for the rest
+   of the match, because by then the fixture had a score and was never
+   asked about again.
+
+   A final is asked about once and then left alone. The scheduled rebuild
+   of data.json carries the rare post-final correction; there is nothing
+   for a minute-by-minute request to discover.
+
+   Cycling never qualifies: a stage has no opponent and no ESPN path, so
+   both guards below decline it. Podiums arrive with the committed file,
+   which is the only cycling source there is. */
+function needsScore(g, now){
+  if(!g.away || !ESPN_PATH[g.comp]) return false;
+  const st = stateOf(g, now).status;
+  if(st === "final") return false;                      // settled — leave it alone
+  if(st === "live" || st === "unknown") return true;    // under way — the score moves
+  return !(g.result && g.result.score);                 // not started, nothing known yet
+}
+/* Worth a request this minute: under way, and recent enough that it
+   plausibly still is. */
+function activeNow(g, now){
+  if(!needsScore(g, now)) return false;
+  const st = stateOf(g, now).status;
+  return (st === "live" || st === "unknown") && now - g.start < POLL_WINDOW;
+}
+
 /* Season schedules do not carry a reliable live score, and the scoreboard
    only answers one day at a time. So: fetch schedules for the fixtures,
    then top up scores from the scoreboard for just the handful of days
@@ -1209,16 +1271,22 @@ async function fillScores(){
   // newest first: if the request budget runs out it must be the oldest
   // results that wait, never tonight's game
   const need = myGames().filter(g=>
-    g.away && g.start > now - 4*DAY && g.start < now + 2*3600000 &&
-    !(g.result && g.result.score) && ESPN_PATH[g.comp]).sort((a,b)=>b.start-a.start);
+    g.start > now - 4*DAY && g.start < now + 2*3600000 && needsScore(g, now)
+  ).sort((a,b)=>b.start-a.start);
   if(!need.length) return 0;
   const todayKey = espnDate(now);
   const days = [];
   need.forEach(g=>{
     const d = espnDate(g.start), k = g.comp+"|"+d;
     if(days.indexOf(k)>=0) return;
-    // a day already tried stays skipped unless it is today, where scores move
-    if(scoredDays.has(k) && d !== todayKey) return;
+    /* A day already tried stays skipped unless it is today, where scores
+       move — or unless the fixture itself is still going. A game that
+       kicks off at 8pm Eastern and runs past midnight keeps ESPN's
+       earlier date, and throttling on the date alone stopped asking
+       about it at exactly the point it was most worth asking. */
+    const st = stateOf(g, now).status;
+    const active = st === "live" || st === "unknown";
+    if(scoredDays.has(k) && d !== todayKey && !active) return;
     if(days.length < 12) days.push(k);
   });
   if(!days.length) return 0;
@@ -2071,7 +2139,19 @@ let dataAge = null;     // when the data we are showing was built, or null
 let dataStale = false;  // we are showing it, but it is older than we trust silently
 let liveOK = null;      // did the live source answer this cycle
 
-async function refreshLive(){
+/* One refresh at a time. The minute poll, the quarter-hour poll, the
+   picker and a tab coming back into view can all ask at once; letting
+   them interleave means two passes writing the same fixtures from
+   responses that arrived out of order, which can put an older score
+   back. A caller that asks while one is running joins it rather than
+   starting a second. */
+let refreshing = null;
+function refreshLive(){
+  if(refreshing) return refreshing;
+  refreshing = runRefresh().finally(()=>{ refreshing = null; });
+  return refreshing;
+}
+async function runRefresh(){
   let held = 0;
   try{ held = await loadStatic(); }catch(e){ held = 0; }
   const fresh = held > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
@@ -2125,13 +2205,37 @@ function refreshAfterPicks(){
 }
 recallResults();   // put last week's known finals on screen before any network call
 refreshLive();
+/* ---- the minute poll ------------------------------------------------
+   The whole policy, in one place:
+
+     · only fixtures involving a followed team, and only while scores are
+       on — with them off there is no number on screen to keep current
+     · every 60s while something is active or its status is unknown, which
+       covers halftime, a delay, extra time, overtime and a shootout,
+       because ESPN reports every one of those as state "in"
+     · nothing once ESPN has said completed or "post"; the scheduled
+       rebuild of data.json carries the rare post-final correction
+     · nothing while the tab is hidden, and one refresh the moment it
+       comes back, since an unknown amount of the game happened meanwhile
+
+   Cycling is never polled here: a stage has no opponent and no ESPN
+   path, so needsScore() declines it before any of this is reached.
+   -------------------------------------------------------------------- */
+function pollDue(){
+  if(liveMode === false || !showScores) return false;
+  const now = Date.now();
+  return myGames().some(g => activeNow(g, now));
+}
 setInterval(()=>{
-  if(liveMode===false) return;
-  const now=Date.now();
-  const busy = myGames().some(g=>{ const st=stateOf(g,now); return st.status==="live" || st.status==="unknown"; })
-            || myGames().some(g=>g.start>now && g.start-now < 2*3600000);
-  if(busy) refreshLive();
+  if(document.hidden) return;        // paused with the tab, not merely quiet
+  if(pollDue()) refreshLive();
 }, 60000);
+document.addEventListener("visibilitychange", ()=>{
+  /* Coming back deserves a refresh whether or not scores are on: the
+     fixtures, the live badges and the carrier notes are all as old as
+     the time spent away. This is one request on return, not a poll. */
+  if(!document.hidden && liveMode !== false) refreshLive();
+});
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
 if(!selected.size){ drawer.removeAttribute("hidden"); document.getElementById("teamsToggle").setAttribute("aria-pressed",true); }
 persist(); renderDrawer(); render();

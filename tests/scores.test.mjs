@@ -205,7 +205,8 @@ function harness(){
     ["TEAM_ROWS", "GHOSTS", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
      "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "ESPN_NAME",
      "norm", "espnTeamObj", "parseEvent", "clubKeys", "sameClub", "orientation",
-     "findScored", "applyScored", "scoredDays", "fillScores"], PREAMBLE);
+     "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore", "activeNow",
+     "scoredDays", "fillScores"], PREAMBLE);
   // the shipped roster, built the way the page builds it
   page.TEAM_ROWS.forEach(r=>{
     const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
@@ -217,9 +218,10 @@ function harness(){
     TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ghost:true, comps:[r[1]]};
   });
   Object.values(TEAMS).forEach(t=>allTeams.push(t));
-  const url = comp => page.ESPN + page.ESPN_PATH[comp] + "/scoreboard?dates=" + page.espnDate(Date.now());
+  const url = (comp, ms) => page.ESPN + page.ESPN_PATH[comp] + "/scoreboard?dates=" + page.espnDate(ms == null ? Date.now() : ms);
   return {page, GAMES, TEAMS, asked,
-    stub: (comp, events) => responses.set(url(comp), {events}),
+    // `on` is any instant during the ESPN day being stubbed; today by default
+    stub: (comp, events, on) => responses.set(url(comp, on), {events}),
     url};
 }
 
@@ -230,7 +232,8 @@ const LIVE_EVENT = start => ({
   competitions: [{
     id: "401879318",
     date: new Date(start).toISOString(),
-    status: {type: {name: "STATUS_IN_PROGRESS", shortDetail: "62'", description: "In Progress"}},
+    status: {type: {name: "STATUS_SECOND_HALF", state: "in", completed: false,
+                    shortDetail: "62'", description: "Second Half"}},
     competitors: [
       {homeAway: "home", score: "1", team: {id: "370", displayName: "Fulham", abbreviation: "FUL", location: "Fulham", color: "ffffff"}},
       {homeAway: "away", score: "2", team: {id: "363", displayName: "Chelsea", abbreviation: "CHE", location: "Chelsea", color: "144992"}}
@@ -299,4 +302,276 @@ test("fillScores() asks for nothing when every fixture already has its score", a
 
   assert.equal(await h.page.fillScores(), 0);
   assert.equal(h.asked.length, 0);
+});
+
+/* ================= keeping a live score current =====================
+   The event-id fix got the first score onto the page. It did not keep
+   it there: `need` excluded any fixture that already had a score, so a
+   match was polled until its first number arrived and then dropped.
+   Fulham 1-2 Chelsea at halftime stayed 1-2 while ESPN went to 2-3.
+   ==================================================================== */
+
+// the same fixture a half hour later: still on, now 2-3
+const LATER_EVENT = start => {
+  const ev = LIVE_EVENT(start);
+  ev.competitions[0].status.type.shortDetail = "70'";
+  ev.competitions[0].competitors[0].score = "2";
+  ev.competitions[0].competitors[1].score = "3";
+  return ev;
+};
+const FINAL_EVENT = start => {
+  const ev = LATER_EVENT(start);
+  ev.competitions[0].status.type = {name: "STATUS_FULL_TIME", state: "post", completed: true,
+    shortDetail: "FT", description: "Full Time"};
+  return ev;
+};
+
+test("a live score already on the page is still updated by the next refresh", async () => {
+  const h = harness();
+  const start = Date.now() - 60*60000;
+  const game = asCommitted(h, start);
+  // what the committed file had: the halftime score
+  game.result = {status:"live", label:"HT", score:[1, 2]};
+  h.GAMES.push(game);
+  h.stub("EPL", [LATER_EVENT(start)]);
+
+  assert.equal(await h.page.fillScores(), 1);
+  assert.deepEqual(game.result.score, [2, 3]);
+  assert.equal(game.result.status, "live");
+  assert.equal(game.result.label, "70'");
+});
+
+test("a fixture holding a live score is still asked about", () => {
+  const h = harness();
+  const now = Date.now();
+  const game = asCommitted(h, now - 60*60000);
+  game.result = {status:"live", label:"HT", score:[1, 2]};
+  assert.equal(h.page.needsScore(game, now), true);
+  assert.equal(h.page.activeNow(game, now), true);
+});
+
+test("a fixture whose status is unknown is asked about, score or no score", () => {
+  const h = harness();
+  const now = Date.now();
+  // kicked off, and the file still says scheduled — stateOf calls that unknown
+  const game = asCommitted(h, now - 30*60000);
+  assert.equal(h.page.stateOf(game, now).status, "unknown");
+  assert.equal(h.page.needsScore(game, now), true);
+  game.result = {status:"scheduled", label:"", score:[0, 0]};
+  assert.equal(h.page.needsScore(game, now), true);
+});
+
+test("a fixture with no score is eligible exactly as before", () => {
+  const h = harness();
+  const now = Date.now();
+  const game = asCommitted(h, now + 60*60000);            // kicks off in an hour
+  assert.equal(h.page.stateOf(game, now).status, "scheduled");
+  assert.equal(h.page.needsScore(game, now), true);
+  assert.equal(h.page.activeNow(game, now), false);       // not the minute poll's business yet
+});
+
+test("a known final is not asked about again", () => {
+  const h = harness();
+  const now = Date.now();
+  const game = asCommitted(h, now - 3*3600000);
+  game.result = {status:"final", label:"FT", score:[2, 3]};
+  assert.equal(h.page.needsScore(game, now), false);
+  assert.equal(h.page.activeNow(game, now), false);
+});
+
+test("a live fixture is polled until ESPN says it is over, then stops", async () => {
+  const h = harness();
+  const start = Date.now() - 60*60000;
+  const game = asCommitted(h, start);
+  game.result = {status:"live", label:"HT", score:[1, 2]};
+  h.GAMES.push(game);
+
+  h.stub("EPL", [LATER_EVENT(start)]);
+  assert.equal(await h.page.fillScores(), 1);
+  assert.equal(game.result.status, "live");
+  assert.equal(h.page.needsScore(game, Date.now()), true, "still going, still asked about");
+
+  h.stub("EPL", [FINAL_EVENT(start)]);
+  assert.equal(await h.page.fillScores(), 1);
+  assert.equal(game.result.status, "final");
+  assert.deepEqual(game.result.score, [2, 3]);
+  assert.equal(game.result.label, "FT");
+
+  // and from here it is settled: nothing further is requested
+  const before = h.asked.length;
+  assert.equal(await h.page.fillScores(), 0);
+  assert.equal(h.asked.length, before, "a final is not polled again");
+  assert.equal(h.page.activeNow(game, Date.now()), false);
+});
+
+test("a fixture still going is asked about even once its ESPN date is not today", async () => {
+  const h = harness();
+  /* 26 hours is the only offset that lands on a different Eastern date
+     whatever time of day the suite runs — the point a game that kicked
+     off before midnight reaches once the clock has rolled over. */
+  const start = Date.now() - 26*3600000;
+  assert.notEqual(h.page.espnDate(start), h.page.espnDate(Date.now()),
+    "the fixture must sit on a different ESPN day for this to test anything");
+  const game = asCommitted(h, start);
+  game.result = {status:"live", label:"HT", score:[1, 2]};
+  h.GAMES.push(game);
+  h.stub("EPL", [LATER_EVENT(start)], start);
+
+  assert.equal(await h.page.fillScores(), 1);
+  assert.equal(h.asked.length, 1);
+  assert.deepEqual(game.result.score, [2, 3]);
+
+  // scoredDays now holds that day. It must not silence a match still on.
+  assert.equal(await h.page.fillScores(), 1);
+  assert.equal(h.asked.length, 2, "the day was asked about again");
+});
+
+test("a settled fixture on an old day is left to the throttle", async () => {
+  const h = harness();
+  const start = Date.now() - 26*3600000;
+  const game = asCommitted(h, start);                     // status unknown, no score
+  h.GAMES.push(game);
+  h.stub("EPL", [], start);                               // ESPN lists nothing that day
+
+  await h.page.fillScores();
+  assert.equal(h.asked.length, 1);
+  game.result = {status:"final", label:"FT", score:[2, 3]};
+  await h.page.fillScores();
+  assert.equal(h.asked.length, 1, "a final on a past day is not re-requested");
+});
+
+/* --- the lifecycle comes from ESPN's own fields --- */
+
+const statusOf = (h, type) => {
+  const start = Date.now() - 30*60000;
+  const ev = LIVE_EVENT(start);
+  ev.competitions[0].status.type = Object.assign({shortDetail:"x"}, type);
+  return h.page.parseEvent(ev, "EPL").result.status;
+};
+
+test('state "in" is live, whatever ESPN calls the phase', () => {
+  const h = harness();
+  for(const name of ["STATUS_HALFTIME", "STATUS_DELAYED", "STATUS_RAIN_DELAY",
+                     "STATUS_END_OF_EXTRATIME", "STATUS_OVERTIME", "STATUS_SHOOTOUT",
+                     "STATUS_SOMETHING_ESPN_ADDS_LATER"]){
+    assert.equal(statusOf(h, {name, state:"in", completed:false}), "live", name);
+  }
+});
+
+test("completed or post is final, and nothing else is", () => {
+  const h = harness();
+  assert.equal(statusOf(h, {name:"STATUS_FULL_TIME", state:"post", completed:true}), "final");
+  assert.equal(statusOf(h, {name:"STATUS_FINAL", state:"post", completed:false}), "final");
+  assert.equal(statusOf(h, {name:"STATUS_SCHEDULED", state:"pre", completed:false}), "scheduled");
+  // a shootout is not over just because ESPN has run out of regulation names
+  assert.equal(statusOf(h, {name:"STATUS_SHOOTOUT", state:"in", completed:false}), "live");
+});
+
+test("elapsed time never finishes a game", () => {
+  const h = harness();
+  const now = Date.now();
+  const game = asCommitted(h, now - 9*3600000);           // nine hours ago, nothing reported
+  assert.equal(h.page.stateOf(game, now).status, "unknown");
+  assert.notEqual(h.page.stateOf(game, now).status, "final");
+});
+
+test("a payload with no state at all still reads as before", () => {
+  const h = harness();
+  assert.equal(statusOf(h, {name:"STATUS_IN_PROGRESS"}), "live");
+  assert.equal(statusOf(h, {name:"STATUS_FINAL"}), "final");
+  assert.equal(statusOf(h, {name:"STATUS_SCHEDULED"}), "scheduled");
+});
+
+/* --- what the minute poll will not chase --- */
+
+test("cycling is never polled", () => {
+  const h = harness();
+  const now = Date.now();
+  const stage = {comp:"UCI", home:h.TEAMS["uci-wt"], away:null, start:now - 3600000,
+    event:true, race:"Vuelta a España", listed:true, real:true, result:null};
+  assert.equal(h.page.needsScore(stage, now), false);
+  assert.equal(h.page.activeNow(stage, now), false);
+});
+
+test("a fixture in a competition with no ESPN path is never polled", () => {
+  const h = harness();
+  const now = Date.now();
+  const game = asCommitted(h, now - 3600000);
+  game.comp = "UCI";
+  assert.equal(h.page.needsScore(game, now), false);
+});
+
+test("a fixture that went unresolved days ago stops asking every minute", () => {
+  const h = harness();
+  const now = Date.now();
+  const game = asCommitted(h, now - 3*24*3600000);        // status unknown, three days on
+  assert.equal(h.page.stateOf(game, now).status, "unknown");
+  assert.equal(h.page.needsScore(game, now), true, "still worth one ask on the slow cycle");
+  assert.equal(h.page.activeNow(game, now), false, "but not once a minute");
+  assert.ok(h.page.POLL_WINDOW > 6*3600000, "the window still covers extra time and a long delay");
+});
+
+/* ---- the committed file must not undo a newer live score ------------
+   loadStatic() runs first on every refresh cycle and merges the file's
+   copy of each fixture. The file is rebuilt every three hours; the live
+   top-up runs every minute. So the score already on the page is often
+   the newer of the two, and letting the file win put the match back to
+   its halftime score at the top of every cycle. */
+
+function mergeHarness(){
+  globalThis.__g = {GAMES: []};
+  /* hash() only seeds the per-fixture shuffle and is a one-liner the
+     extractor cannot bound, so it is stubbed rather than pulled in. */
+  const page = loadFromPage(
+    ["normName", "idKey", "SAME_WINDOW", "sameGame", "addGame", "mergeReal"],
+    "const GAMES = globalThis.__g.GAMES; let gid = 0; const hash = () => 0;");
+  return {page, GAMES: globalThis.__g.GAMES};
+}
+
+const onPage = (result, over = {}) => ({
+  eid:"401879318", comp:"EPL", start:KICKOFF,
+  home:{id:"ful", name:"Fulham"}, away:{id:"che", name:"Chelsea"},
+  real:true, espn:true, listed:true, result, ...over
+});
+const fromFile = (result) => onPage(result, {fromFeed:true});
+
+test("the file's older halftime score does not replace a newer live one", () => {
+  const {page, GAMES} = mergeHarness();
+  GAMES.push(onPage({status:"live", label:"70'", score:[2, 3]}));
+  page.mergeReal([fromFile({status:"live", label:"HT", score:[1, 2]})]);
+  assert.equal(GAMES.length, 1);
+  assert.deepEqual(GAMES[0].result.score, [2, 3]);
+  assert.equal(GAMES[0].result.label, "70'");
+});
+
+test("a final from the file does win — it may know what a missed top-up did not", () => {
+  const {page, GAMES} = mergeHarness();
+  GAMES.push(onPage({status:"live", label:"70'", score:[2, 3]}));
+  page.mergeReal([fromFile({status:"final", label:"FT", score:[2, 4]})]);
+  assert.equal(GAMES[0].result.status, "final");
+  assert.deepEqual(GAMES[0].result.score, [2, 4]);
+});
+
+test("a file copy with no score still never erases a final", () => {
+  const {page, GAMES} = mergeHarness();
+  GAMES.push(onPage({status:"final", label:"FT", score:[2, 3]}));
+  page.mergeReal([fromFile({status:"scheduled", label:"", score:null})]);
+  assert.deepEqual(GAMES[0].result.score, [2, 3]);
+  assert.equal(GAMES[0].remembered, true);
+});
+
+test("a fixture with nothing known yet takes whatever the file has", () => {
+  const {page, GAMES} = mergeHarness();
+  GAMES.push(onPage({status:"scheduled", label:"", score:null}));
+  page.mergeReal([fromFile({status:"live", label:"HT", score:[1, 2]})]);
+  assert.deepEqual(GAMES[0].result.score, [1, 2]);
+});
+
+test("a live copy from the source itself is not held back", () => {
+  // only the committed file is treated as possibly-stale; a fresh read
+  // of the scoreboard replaces what is there
+  const {page, GAMES} = mergeHarness();
+  GAMES.push(onPage({status:"live", label:"HT", score:[1, 2]}));
+  page.mergeReal([onPage({status:"live", label:"70'", score:[2, 3]})]);
+  assert.deepEqual(GAMES[0].result.score, [2, 3]);
 });
