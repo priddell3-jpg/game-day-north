@@ -39,3 +39,41 @@ export function loadFromPage(names, preamble = ""){
   const factory = new Function(preamble + "\n" + body + "\nreturn {" + names.join(",") + "};");
   return factory();
 }
+
+/** The page's stylesheet text, for asserting layout invariants.
+    There is no browser in this project's test environment, so these
+    assertions check the rules that are shipped rather than the pixels
+    they produce. That catches a regression — someone reinstating
+    white-space:nowrap — without claiming to have rendered anything. */
+export function styleText(){
+  const open = SRC.indexOf("<style>");
+  const close = SRC.lastIndexOf("</style>");
+  if(open < 0 || close < 0) throw new Error("no <style> block found");
+  return SRC.slice(open + "<style>".length, close);
+}
+
+/** The body of the first @media block whose query contains `needle`. */
+export function mediaBlock(needle){
+  const css = styleText();
+  const at = css.indexOf("@media " + needle);
+  if(at < 0) return null;
+  const open = css.indexOf("{", at);
+  let depth = 0;
+  for(let i = open; i < css.length; i++){
+    if(css[i] === "{") depth++;
+    else if(css[i] === "}"){ depth--; if(depth === 0) return css.slice(open + 1, i); }
+  }
+  return null;
+}
+
+/** Every declaration for a selector, concatenated. A selector is often
+    written more than once — a base rule and a later override — and
+    taking only the first would assert against half the truth. */
+export function ruleFor(css, selector){
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp("(?:^|[},])\\s*" + esc + "\\s*\\{([^}]*)\\}", "gm");
+  const found = [];
+  let m;
+  while((m = re.exec(css))) found.push(m[1].trim());
+  return found.length ? found.join(";") : null;
+}

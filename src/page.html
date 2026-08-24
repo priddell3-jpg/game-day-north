@@ -196,6 +196,7 @@ main{padding:22px 0 80px}
 .g-time .moved{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--live);margin-top:2px}
 .g-time .was{display:block;font-size:10px;color:var(--muted);text-decoration:line-through}
 .g-match{min-width:0;display:flex;flex-direction:column;gap:4px}
+.g-team{min-width:0}
 .g-teams{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .g-team{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px;letter-spacing:-.15px;white-space:nowrap}
 .g-team.dim{font-weight:500;color:var(--ink-2)}
@@ -293,6 +294,22 @@ main{padding:22px 0 80px}
 .welcome .acts{margin-left:auto;display:flex;gap:8px;align-items:center;flex:none}
 .welcome .x{color:var(--muted);font-size:16px;line-height:1;padding:4px 6px}
 @media (max-width:760px){ .welcome{flex-wrap:wrap} .welcome .acts{margin-left:0;width:100%} }
+
+/* At 320px the middle column is about 100px, and a long club name is
+   wider than that. white-space:nowrap meant the name could not shrink to
+   its column, so it painted across the score beside it — "Toronto Blue
+   Jays" over "FIRST PITCH". Letting it wrap keeps the whole name visible
+   rather than truncating it, and overflow-wrap:anywhere lets a single
+   long word break too, which is what actually caps the element's
+   min-content width and makes overflow impossible rather than merely
+   unlikely. Reclaiming a few pixels of gap gives the name more room
+   without narrowing the score column, which has to stay legible. */
+@media (max-width:360px){
+  .game{gap:8px;padding:12px 6px 12px 8px}
+  .g-team{white-space:normal;overflow-wrap:anywhere}
+  .g-teams{gap:6px}
+}
+
 .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 4px}
 .filters .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .fchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
