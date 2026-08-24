@@ -2176,6 +2176,25 @@ function renderRights(){
 function noteBlock(){
   const n = alerts.size;
   const listed = myGames().filter(g=>g.listed||g.espn).length;
+  /* Tennis has its own source and its own way of being unavailable, so
+     it gets its own sentence rather than being folded into the schedule
+     line — a viewer following a player deserves to know the difference
+     between "no matches today" and "the tennis endpoint is down and what
+     you are looking at is twenty minutes old". Silent for anyone who
+     follows nobody. */
+  const tennisNote = () => {
+    if(!players.size) return "";
+    const mine = myGames().filter(g=>g.tennis).length;
+    if(tennisErr){
+      return '<span class="conf-note warn">Tennis: live source unreachable'
+        + (tennisAt ? ', showing matches from ' + esc(agoText(tennisAt)) : ' and nothing loaded yet')
+        + '</span> ';
+    }
+    if(!tennisAt) return '';
+    return '<span class="conf-note">' + mine + ' tennis match' + (mine===1?'':'es')
+      + ' for ' + players.size + ' player' + (players.size===1?'':'s')
+      + ' &middot; updated ' + esc(agoText(tennisAt)) + '</span> ';
+  };
   const liveLine = liveMode===true
       ? (dataStale
           ? '<b class="stale-h">Showing an older schedule.</b> The saved schedule was built <b>'
@@ -2186,6 +2205,7 @@ function noteBlock(){
             : '<b>Live scores on.</b> Fixtures and scores are read live from ESPN\'s public feed. ')
         + (liveNote?'<span class="conf-note">'+liveNote+'</span> ':'')
         + (dataStale && liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
+        + tennisNote()
     : liveMode===false
       ? (myGames().some(g=>g.remembered)
           ? '<b>Showing remembered results.</b> The feed can\'t be reached right now, so scores you have already seen are being read from this browser; anything newer has no score rather than a guessed one. '

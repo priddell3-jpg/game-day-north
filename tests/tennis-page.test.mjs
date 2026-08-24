@@ -344,3 +344,15 @@ test("a player name obeys the same wrapping guarantees a club name does", () => 
   const body = SRC.slice(at, SRC.indexOf("\nfunction gameRow", at));
   assert.match(body, /class="g-team pl/, "a player name must carry .g-team");
 });
+
+/* ---------------- saying when the source is down ---------------- */
+
+test("a tennis outage is stated rather than shown as an empty day", () => {
+  const at = SRC.indexOf("const tennisNote");
+  const body = SRC.slice(at, SRC.indexOf("const liveLine", at));
+  assert.ok(body.length > 100, "could not isolate tennisNote");
+  assert.match(body, /if\(!players\.size\) return ""/, "silent for anyone following nobody");
+  assert.match(body, /tennisErr/);
+  assert.match(body, /unreachable/i);
+  assert.match(body, /agoText\(tennisAt\)/, "an old answer must say how old it is");
+});
