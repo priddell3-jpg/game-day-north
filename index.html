@@ -212,6 +212,20 @@ main{padding:22px 0 80px}
 .g-team{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px;letter-spacing:-.15px;white-space:nowrap}
 .g-team.dim{font-weight:500;color:var(--ink-2)}
 .at{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+/* tennis: two players, a separator that is not "at", and a score that
+   stays a list of sets rather than collapsing into two numbers */
+.vs{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.g-team.pl-win{color:var(--ink)}
+.g-team.tbd-slot{font-weight:500;color:var(--muted);font-style:italic}
+/* The country code sits inside .g-team, which is allowed to break
+   anywhere at the narrow breakpoint so a long name cannot overflow. A
+   three-letter code is not a word to break: without this it stacks one
+   letter per line at 320. */
+.pl-flag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow-wrap:normal}
+.lg-sub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.slam{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);border:1px solid currentColor;border-radius:3px;padding:0 3px;white-space:nowrap}
+.sets{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.set{white-space:nowrap}
 .g-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
 .lg-tag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 6px;border-radius:4px;color:#fff}
 .g-watch{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
@@ -319,6 +333,9 @@ main{padding:22px 0 80px}
   .game{gap:8px;padding:12px 6px 12px 8px}
   .g-team{white-space:normal;overflow-wrap:anywhere}
   .g-teams{gap:6px}
+  /* a player's name gets the same freedom to wrap as a club's, so a long
+     one cannot paint into the score column at 320 */
+  .sets{gap:3px;font-size:11px}
 }
 
 .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 4px}
@@ -408,7 +425,7 @@ main{padding:22px 0 80px}
       <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
       <span id="scoreToggleLabel">Scores on</span>
     </button>
-    <button class="icon-btn" id="teamsToggle" aria-pressed="false">My teams <span id="teamCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
+    <button class="icon-btn" id="teamsToggle" aria-pressed="false">My teams &amp; tennis <span id="teamCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
   </div>
 </header>
 
@@ -417,7 +434,7 @@ main{padding:22px 0 80px}
 <section class="drawer" id="drawer" hidden>
   <div class="wrap drawer-in">
     <div class="drawer-head">
-      <h2>Pick your teams</h2>
+      <h2>Pick your teams &amp; tennis</h2>
       <span class="count" id="drawerCount"></span>
       <input class="search" id="teamSearch" type="search" placeholder="Search teams…" aria-label="Search teams">
     </div>
@@ -450,7 +467,9 @@ const COMPS = {
   SERIEA:{name:"Serie A",           short:"Serie A",    color:"#2E7D8F"},
   BUNDES:{name:"Bundesliga",        short:"Bundesliga", color:"#9E2A2B"},
   LIGUE1:{name:"Ligue 1",           short:"Ligue 1",    color:"#1B6E8C"},
-  UCI:   {name:"UCI WorldTour",     short:"WorldTour",  color:"#8A6D1F"}
+  UCI:   {name:"UCI WorldTour",     short:"WorldTour",  color:"#8A6D1F"},
+  ATP:   {name:"ATP singles",       short:"ATP",        color:"#5B7C1F"},
+  WTA:   {name:"WTA singles",       short:"WTA",        color:"#B5551E"}
 };
 
 /* ============================================================
@@ -500,13 +519,56 @@ const SRC = {
   jays:    {label:"Sportsnet+ carries the MLB postseason", url:"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},
   flo:     {label:"Escape Collective — how to watch 2026", url:"https://escapecollective.com/how-to-watch-pro-bike-racing-in-2026/"},
   pcs:     {label:"ProCyclingStats — 2026 WorldTour calendar", url:"https://www.procyclingstats.com/races.php?year=2026&circuit=1"},
+  atptv:   {label:"ATP Tour — Watch Live, broadcaster list", url:"https://www.atptour.com/en/video/watch-live"},
+  usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"},
   none:    {label:"No Canadian rights holder found", url:""}
 };
 const tv = n => ({name:n, kind:"tv"});
 const st = n => ({name:n, kind:"stream"});
 const CDN_MLS = ["van-mls","tfc","mtl-mls"];
 
+/* Tennis rights attach to a tournament, never to a player. Following
+   Alcaraz tells you nothing about who shows his matches; the tournament
+   he is playing decides that, and it changes from week to week. So these
+   rules key on the event, and a player's row inherits whatever the
+   tournament he is in resolves to.
+
+   Two sources were checked and neither covers everything, which is why
+   most of this table is honest about not knowing:
+
+   · ATP's own broadcaster list names TSN in Canada for the tour, and
+     Sportsnet for the Canadian Masters event specifically.
+   · The US Open's own international broadcaster page names TSN and RDS.
+
+   A Grand Slam is not an ATP tour event and its rights are sold
+   separately, so the ATP listing says nothing about Melbourne, Paris or
+   Wimbledon — those resolve to Coverage TBD rather than being assumed to
+   follow the tour. Neither source covers the WTA tour at all, so a WTA
+   event outside a Slam is unknown too. Guessing here would put a service
+   badge on a match nobody can confirm is carried. */
+const CANADA_MASTERS = /national bank open|canada masters|rogers cup|omnium banque nationale/i;
+const US_OPEN = /^us open$/i;
+
 const RIGHTS = [
+  /* ---------------- tennis ----------------
+     Slam first: its rights are its own, whichever tour the draw sits in. */
+  {comp:"ATP", when:g=>US_OPEN.test(g.tournament), carriers:[tv("TSN"), tv("RDS")], confidence:"confirmed",
+   note:"The US Open's own international broadcaster listing names TSN and RDS for Canada. Grand Slam rights are sold separately from the ATP tour deal", src:SRC.usopen, checked:CHECKED},
+  {comp:"WTA", when:g=>US_OPEN.test(g.tournament), carriers:[tv("TSN"), tv("RDS")], confidence:"confirmed",
+   note:"The US Open's own international broadcaster listing names TSN and RDS for Canada. Grand Slam rights are sold separately from the WTA tour deal", src:SRC.usopen, checked:CHECKED},
+  {comp:"ATP", when:g=>g.major, carriers:[], confidence:"unknown",
+   note:"A Grand Slam outside the US Open. Its Canadian rights are sold separately from the ATP tour deal and no current source was found for them", src:SRC.none, checked:CHECKED},
+  {comp:"WTA", when:g=>g.major, carriers:[], confidence:"unknown",
+   note:"A Grand Slam outside the US Open. Its Canadian rights are sold separately from the WTA tour deal and no current source was found for them", src:SRC.none, checked:CHECKED},
+  {comp:"ATP", when:g=>CANADA_MASTERS.test(g.tournament), carriers:[tv("Sportsnet")], confidence:"confirmed",
+   note:"ATP's broadcaster list names Sportsnet for the Canadian Masters event", src:SRC.atptv, checked:CHECKED},
+  {comp:"WTA", when:g=>CANADA_MASTERS.test(g.tournament), carriers:[], confidence:"unknown",
+   note:"ATP's listing covers the men's Canadian Masters only; no current source was found for the women's event", src:SRC.none, checked:CHECKED},
+  {comp:"ATP", carriers:[tv("TSN"), st("TSN+")], confidence:"expected",
+   note:"ATP's own broadcaster list names TSN as the Canadian home of the tour. Which specific matches reach a channel is not published per event, so this is the tour deal rather than a confirmed listing for this match", src:SRC.atptv, checked:CHECKED},
+  {comp:"WTA", carriers:[], confidence:"unknown",
+   note:"No current Canadian rights source was found for the WTA tour. ATP's broadcaster list does not cover it", src:SRC.none, checked:CHECKED},
+
   /* ---------------- cycling ----------------
      Refreshingly simple: one platform holds essentially the whole
      men's and women's WorldTour in Canada. */
@@ -573,7 +635,9 @@ const RIGHTS = [
 
 function resolveRights(g){
   const ids = [g.home&&g.home.id, g.away&&g.away.id];
-  const ctx = {stage:g.stage||"", has:id=>ids.indexOf(id)>=0, comp:g.comp, hour:g.slotHour||0};
+  const ctx = {stage:g.stage||"", has:id=>ids.indexOf(id)>=0, comp:g.comp, hour:g.slotHour||0,
+    // tennis rules key on the tournament; every other sport ignores these
+    tournament:(tourneyOf(g)||{}).name || "", major:!!((tourneyOf(g)||{}).major)};
   // day-of-week must be the HOME team's local day, not UTC
   ctx.dow = g.localDow;
   if(g.liveCarriers) return {carriers:g.liveCarriers, confidence:"confirmed", listed:true,
@@ -1080,6 +1144,117 @@ async function loadStatic(){
   return built.length;
 }
 
+/* ============================================================
+   TENNIS — ATP and WTA singles, followed by player.
+
+   Tennis is the one sport here that is not a fixture list. A viewer
+   follows Alcaraz, not the US Open, and the matches that matter are
+   wherever he happens to be drawn that week. ESPN publishes that as a
+   tournament containing groupings containing competitions, about 2 MB
+   across the two tours, with a Grand Slam repeated in full under both —
+   so the browser never sees it. /api/tennis does the reading, keeps the
+   singles matches involving the players actually being followed, and
+   returns a few kilobytes. See scripts/lib/tennis.mjs for the parser and
+   api/tennis.js for the endpoint.
+
+   Follow nobody and none of this runs: no request is made, no row is
+   built, and the tennis chips never appear.
+   ============================================================ */
+const TENNIS_TOURS = {ATP:"atp", WTA:"wta"};
+/* Statuses that mean no more play. Mirrors SETTLED in
+   scripts/lib/tennis.mjs — the two are asserted equal by the tests,
+   because a page that thinks a retirement is still live would poll it
+   for ever. */
+const TENNIS_SETTLED = {final:1, retired:1, walkover:1, canceled:1, postponed:1};
+/* The tournaments the endpoint last reported, keyed by ESPN event id.
+   This is both the source of a match's tournament name and the list the
+   picker offers as a filter, so the filter can only ever offer something
+   that has matches behind it. */
+let TOURNEYS = new Map();
+let tennisAt = 0;             // when the matches on screen were normalised
+let tennisErr = "";
+
+const tourneyOf = g => (g.match && TOURNEYS.get(g.match.tid)) || null;
+
+/* A normalised match, as a row this page can place on a day. home and
+   away stay null: tennis has no home side, and leaving them empty is
+   what keeps every team-sport path — scoring, remembering, merging —
+   from trying to treat a match as a fixture. */
+function tennisGame(m){
+  const d = new Date(m.start);
+  return {id:"tennis-"+m.id, comp:m.tour, home:null, away:null, start:m.start,
+    timeKnown:m.timeKnown, moved:null, real:true, espn:true, listed:true,
+    tennis:true, match:m, seed:hash("tennis-"+m.id),
+    localDow:d.getUTCDay(), slotHour:d.getUTCHours(), stage:"", result:null};
+}
+/* The response is the whole truth for the tours being shown, so the
+   tennis rows are replaced outright rather than merged. Anything else
+   would leave a match on screen for a tour that has just been switched
+   off. */
+function mergeTennis(matches){
+  for(let i=GAMES.length-1;i>=0;i--) if(GAMES[i].tennis) GAMES.splice(i,1);
+  matches.forEach(m=>GAMES.push(tennisGame(m)));
+  GAMES.sort((a,b)=>a.start-b.start);
+}
+/* Still capable of changing. A suspended match resumes, and a match the
+   source still calls scheduled after its start time is simply one ESPN
+   has not caught up with — both are worth another look. Anything settled
+   is not, however recently it finished. */
+function tennisActive(m, now){
+  if(!m) return false;
+  if(TENNIS_SETTLED[m.status]) return false;
+  if(m.status === "live" || m.status === "suspended" || m.status === "unknown") return true;
+  return now >= m.start && now - m.start < POLL_WINDOW;
+}
+/* Which tours to ask about. Following only the women's game costs no ATP
+   request, and halves what comes back. `only` narrows further to the
+   tours that actually have something in progress, for the minute poll. */
+function toursOf(only){
+  const now = Date.now();
+  const out = [];
+  for(const tour of ["ATP", "WTA"]){
+    if(!tennisTours.has(tour)) continue;
+    if(only && !GAMES.some(g=>g.tennis && g.comp===tour && isMine(g) && tennisActive(g.match, now))) continue;
+    out.push(TENNIS_TOURS[tour]);
+  }
+  return out.sort();
+}
+async function loadTennis(only){
+  if(!tennisTours.size){
+    if(GAMES.some(g=>g.tennis)) mergeTennis([]);
+    TOURNEYS = new Map(); tennisAt = 0; tennisErr = "";
+    return 0;
+  }
+  const tours = toursOf(only);
+  if(!tours.length) return 0;                    // nothing in progress to chase
+  const url = new URL("api/tennis", location.href);
+  /* Sorted, so two viewers watching the same thing ask for the same URL
+     and share one cached answer rather than each costing a fetch. The
+     tournament filter is deliberately not sent: narrowing happens here,
+     so a tournament that has finished disappears from the list by itself
+     instead of turning the board silently empty. */
+  if(tours.length < 2) url.searchParams.set("tours", tours.join(","));
+  const r = await jget(url.href, 12000, {cache:"no-cache"});
+  if(!r || !Array.isArray(r.matches)) throw new Error("tennis: unusable response");
+  const before = [...TOURNEYS.keys()].sort().join(",");
+  TOURNEYS = new Map((r.tournaments||[]).filter(t=>t && t.id).map(t=>[t.id, t]));
+  /* A tournament that has ended stops being offered, so a filter left
+     pointing at it is dropped rather than quietly hiding everything. */
+  let pruned = false;
+  tennisEvents.forEach(id=>{ if(!TOURNEYS.has(id)){ tennisEvents.delete(id); pruned = true; } });
+  if(pruned) persist();
+  /* The picker is built from this list, and the first answer usually
+     arrives after the picker has already been drawn — so redraw it when
+     the list changes, or the tournaments never appear for someone who
+     opened it while the page was still loading. Only on a change, so an
+     open drawer is not rebuilt under the viewer every minute. */
+  if([...TOURNEYS.keys()].sort().join(",") !== before) renderDrawer();
+  mergeTennis(r.matches);
+  tennisAt = Date.parse(r.generated) || Date.now();
+  tennisErr = "";
+  return r.matches.length;
+}
+
 /* Stage podiums and the race lead are results: they arrive from the
    committed file or they don't exist. Nothing here invents one. */
 function attachCycling(races){
@@ -1526,7 +1701,18 @@ const LS = {
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 const DEFAULT_TEAMS = ["van-nhl","van-mls","tor-mlb","tor-nba","liv"];
-let selected, services, hiddenComps, showScores;
+/* Whatever a stored value or a shared link happens to contain, kept to
+   the shape it must have. localStorage holds anything — a previous
+   build's idea of the key, a hand edit — so the container is checked
+   before the values, and a value that is not one of ours is discarded
+   rather than kept, persisted, or put in a query string. */
+function keptFrom(list, ok){
+  if(!Array.isArray(list)) return [];
+  return list.map(String).filter(ok);
+}
+const isTour = v => v === "ATP" || v === "WTA";
+const isEventId = v => /^\d{1,6}-\d{4}$/.test(v);      // ESPN event id: 189-2026
+let selected, services, hiddenComps, showScores, tennisTours, tennisEvents;
 (function initState(){
   let h = {};
   try{
@@ -1539,6 +1725,21 @@ let selected, services, hiddenComps, showScores;
   services    = new Set(listOf(h.s) || LS.get("gdn.services", []));
   hiddenComps = new Set(listOf(h.x) || LS.get("gdn.hidden", []));
   showScores  = h.sc!=null ? h.sc==="1" : LS.get("gdn.scores", true);
+  /* Tennis is a sport you switch on, by tour. Empty means off: an
+     existing viewer has neither key and sees no tennis and makes no
+     tennis request. With a tour on, the default is every tournament in
+     it — "All Tennis" — and tennisEvents narrows that only if the viewer
+     asks. Empty therefore means "all of them" in both, which is why they
+     are inclusive filters rather than a hidden-list.
+
+     An early build followed individual players under "p". Those links
+     still open, and are read as "this person wanted tennis": both tours
+     go on, which is the nearest honest thing this build can offer. */
+  tennisTours  = new Set(keptFrom(listOf(h.tt) || LS.get("gdn.tennisTours", []), isTour));
+  tennisEvents = new Set(keptFrom(listOf(h.te) || LS.get("gdn.tennisEvents", []), isEventId));
+  if(!tennisTours.size && (h.p || (LS.get("gdn.players", []) || []).length)){
+    tennisTours = new Set(["ATP", "WTA"]);
+  }
 })();
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
@@ -1551,6 +1752,7 @@ let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the
 function persist(){
   LS.set("gdn.teams",[...selected]); LS.set("gdn.services",[...services]);
   LS.set("gdn.hidden",[...hiddenComps]); LS.set("gdn.scores",showScores); LS.set("gdn.alerts",[...alerts]);
+  LS.set("gdn.tennisTours",[...tennisTours]); LS.set("gdn.tennisEvents",[...tennisEvents]);
 }
 /* Built only when you ask for it, so the address bar stays clean. */
 function shareLink(){
@@ -1559,11 +1761,22 @@ function shareLink(){
     if(services.size) parts.push("s="+[...services].join("."));
     if(hiddenComps.size) parts.push("x="+[...hiddenComps].join("."));
     if(!showScores) parts.push("sc=0");
+    /* Appended, never inserted: a link written before tennis existed has
+       neither key and keeps working, and one written now still opens on a
+       build that does not know them. */
+    if(tennisTours.size) parts.push("tt="+[...tennisTours].sort().join("."));
+    if(tennisEvents.size) parts.push("te="+[...tennisEvents].sort().join("."));
     return location.origin + location.pathname + "#" + parts.join("&");
   }catch(e){ return ""; }
 }
 
-const isMine = g => (g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id));
+/* A tennis match is mine when its tour is on and, if the viewer has
+   narrowed to particular tournaments, when it is in one of them. No
+   tournaments chosen means all of them. */
+const tennisMine = g => tennisTours.has(g.comp) &&
+  (!tennisEvents.size || tennisEvents.has(g.match.tid));
+const isMine = g => g.tennis ? tennisMine(g)
+  : ((g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id)));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
 const myComps = () => { const s=new Set(); GAMES.forEach(g=>{ if(isMine(g)) s.add(g.comp); }); return Object.keys(COMPS).filter(c=>s.has(c)); };
 
@@ -1699,7 +1912,112 @@ function eventRow(g, now){
     + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
 }
 
+/* A tennis match is two people, not two clubs, and its score is a list
+   of sets rather than a pair of numbers. Rendering it through the team
+   row would have meant calling one player "home" and flattening 6-4 2-6
+   4-5 into something that is not a tennis score. It shares the row grid
+   so the columns still line up with everything else. */
+const TENNIS_STATE = {
+  live:     {text:"Live",      live:true},
+  suspended:{text:"Suspended", live:true,  note:"Play stopped &mdash; not finished"},
+  final:    {text:"Final"},
+  retired:  {text:"Retired",   note:"Ended early &mdash; opponent retired"},
+  walkover: {text:"Walkover",  note:"Not played &mdash; opponent withdrew"},
+  canceled: {text:"Canceled",  note:"Match called off"},
+  postponed:{text:"Postponed", note:"Moved &mdash; new time not published"},
+  unknown:  {text:"Status unavailable"}
+};
+/* One set as it is actually written: games, and the tiebreak in
+   parentheses where there was one. */
+function setText(m, i){
+  const [a, b] = (m.sets || [])[i] || [null, null];
+  if(a == null && b == null) return "";
+  const tb = (m.tiebreaks || [])[i];
+  const pick = tb ? (tb[0] !== null && tb[1] !== null ? "(" + Math.min(tb[0], tb[1]) + ")" : "") : "";
+  return (a === null ? "-" : a) + "-" + (b === null ? "-" : b) + pick;
+}
+function tennisRow(g, now){
+  const m = g.match, c = COMPS[g.comp], rights = resolveRights(g);
+  const state = TENNIS_STATE[m.status] || TENNIS_STATE.unknown;
+  const started = now >= m.start;
+
+  /* ESPN says outright whether a match has a usable time. Most of a draw
+     does not — an unplayed third round carries a placeholder — so the day
+     is shown and the clock is not invented. */
+  const timeCell = '<div class="g-time">'
+    + (m.timeKnown ? esc(fmtTime(g.start)) : '<span class="tbd">Time TBD</span>')
+    + '</div>';
+
+  const nameOf = (p, i) => '<span class="g-team pl'
+    + (p.tbd ? " tbd-slot" : "")
+    + (m.winner === i ? " pl-win" : "")
+    + '">'
+    + esc(p.name) + (p.country ? '<span class="pl-flag">' + esc(p.country) + '</span>' : '')
+    + '</span>';
+  // "v", never "at": neither player is at home
+  const title = '<div class="g-teams">' + nameOf(m.players[0], 0)
+    + '<span class="vs">v</span>' + nameOf(m.players[1], 1) + '</div>';
+
+  const t = tourneyOf(g);
+  const meta = '<div class="g-meta">'
+    + '<span class="lg-tag" style="background:' + c.color + '">' + esc(c.short) + '</span>'
+    + (t ? '<span>' + esc(t.name) + (t.major ? ' <span class="slam">Slam</span>' : '') + '</span>' : '')
+    + (m.round ? '<span>' + esc(m.round) + '</span>' : '')
+    + (m.court ? '<span>' + esc(m.court) + '</span>' : '')
+    + '</div>';
+
+  let watch;
+  if(!rights.carriers.length){
+    watch = '<div class="g-watch"><span class="svc unconfirmed" title="' + esc(rights.note)
+      + '"><span class="pip"></span>Coverage TBD</span></div>';
+  } else {
+    const ids = servicesFor(g);
+    const cov = services.size ? (covered(g)
+      ? '<span class="tag-cov have">You have it</span>'
+      : '<span class="tag-cov need">Needs ' + esc(((SERVICES[ids[0]] || {}).label) || "a sub") + '</span>') : "";
+    watch = '<div class="g-watch">'
+      + rights.carriers.map(w=>'<span class="svc ' + w.kind + '" title="' + esc(rights.note)
+          + '"><span class="pip"></span>' + esc(w.name) + '</span>').join("")
+      + cov + '</div>';
+  }
+
+  const reveal = showScores || revealed.has(g.id);
+  const played = (m.sets || []).some((_, i) => setText(m, i));
+  let right = '<div class="g-score">';
+  if(!started && m.status === "scheduled"){
+    right += (m.timeKnown
+      ? '<span class="countdown" data-start="' + g.start + '">' + esc(countdownText(g.start, now)) + '</span>'
+      : '<span class="score-state">Scheduled</span>')
+      + '<span class="conf-note">' + (m.timeKnown ? "" : "Time not yet published") + '</span>';
+  } else if(played && !reveal){
+    right += '<button class="hidden-score" data-reveal="' + esc(g.id) + '">Reveal</button>'
+      + '<span class="score-state">' + state.text + ' &middot; hidden</span>';
+  } else {
+    right += '<span class="score-state' + (state.live ? " live" : "") + '">'
+      + (state.live ? '<span class="dot-live"></span>' : "") + state.text + '</span>';
+    if(played){
+      right += '<span class="sets">'
+        + (m.sets || []).map((_, i) => setText(m, i)).filter(Boolean)
+            .map(t=>'<span class="set">' + esc(t) + '</span>').join("")
+        + '</span>';
+    }
+    /* The label is ESPN's own words for where the match is — "3rd Set",
+       "End of 2nd Set". Shown rather than paraphrased, because between
+       sets is a real state and guessing at it would be worse. */
+    if(m.status === "live" && m.label) right += '<span class="conf-note">' + esc(m.label) + '</span>';
+    else if(state.note) right += '<span class="conf-note">' + state.note + '</span>';
+    else if(!played && m.status !== "scheduled") right += '<span class="conf-note">No score published</span>';
+  }
+  right += '</div>';
+
+  const label = m.players.map(p=>p.name).join(" v ");
+  const bell = saveButton(g.id, alerts.has(g.id), label);
+  return '<div class="game' + (state.live ? " is-live" : "") + '">' + timeCell
+    + '<div class="g-match">' + title + meta + '</div>' + watch + right + bell + '</div>';
+}
+
 function gameRow(g, now){
+  if(g.tennis) return tennisRow(g, now);
   if(g.event) return eventRow(g, now);
   const st = stateOf(g, now), ts = timeState(g, now), c = COMPS[g.comp];
   const o = orderedTeams(g);
@@ -1895,6 +2213,28 @@ function renderRights(){
 function noteBlock(){
   const n = alerts.size;
   const listed = myGames().filter(g=>g.listed||g.espn).length;
+  /* Tennis has its own source and its own way of being unavailable, so
+     it gets its own sentence rather than being folded into the schedule
+     line — a viewer following a player deserves to know the difference
+     between "no matches today" and "the tennis endpoint is down and what
+     you are looking at is twenty minutes old". Silent for anyone who
+     follows nobody. */
+  const tennisNote = () => {
+    if(!tennisTours.size) return "";
+    const mine = myGames().filter(g=>g.tennis).length;
+    if(tennisErr){
+      return '<span class="conf-note warn">Tennis: live source unreachable'
+        + (tennisAt ? ', showing matches from ' + esc(agoText(tennisAt)) : ' and nothing loaded yet')
+        + '</span> ';
+    }
+    if(!tennisAt) return '';
+    const scope = tennisEvents.size
+      ? tennisEvents.size + ' tournament' + (tennisEvents.size===1?'':'s')
+      : [...tennisTours].sort().join(' + ');
+    return '<span class="conf-note">' + mine + ' tennis match' + (mine===1?'':'es')
+      + ' &middot; ' + esc(scope)
+      + ' &middot; updated ' + esc(agoText(tennisAt)) + '</span> ';
+  };
   const liveLine = liveMode===true
       ? (dataStale
           ? '<b class="stale-h">Showing an older schedule.</b> The saved schedule was built <b>'
@@ -1905,6 +2245,7 @@ function noteBlock(){
             : '<b>Live scores on.</b> Fixtures and scores are read live from ESPN\'s public feed. ')
         + (liveNote?'<span class="conf-note">'+liveNote+'</span> ':'')
         + (dataStale && liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
+        + tennisNote()
     : liveMode===false
       ? (myGames().some(g=>g.remembered)
           ? '<b>Showing remembered results.</b> The feed can\'t be reached right now, so scores you have already seen are being read from this browser; anything newer has no score rather than a guessed one. '
@@ -1967,6 +2308,16 @@ function renderCalendar(now, todayKey){
         return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'
           + esc(g.race) + '<span class="tm">'+esc((g.stage||"").replace(/^Stage /,"St "))+'</span></span>';
       }
+      if(g.tennis){
+        /* Surnames, not abbreviations: a player has no three-letter code,
+           and "TBD @ TBD" is what reaching for one produced. */
+        const m=g.match, st=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
+        const last=p=>p.tbd ? "TBD" : (p.short || p.name).replace(/^[A-Z]\.\s*/,"");
+        return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'
+          +'<span class="mu">'+esc(last(m.players[0])+" v "+last(m.players[1]))+'</span>'
+          +'<span class="tm">'+(m.status==="live"?"LIVE":m.status==="final"?"FT"
+             :st.live?esc(st.text):!m.timeKnown?"TBD":esc(fmtTime(g.start)))+'</span></span>';
+      }
       const s=stateOf(g,now), ts=timeState(g,now);
       /* "TOR / KC" said nothing about who was at home. Conventional
          North American notation is away @ home, which reads the same way
@@ -1998,22 +2349,48 @@ function renderCalendar(now, todayKey){
   return welcomeBanner()+renderFilters()+head+grid+detail;
 }
 
+/* Who is playing, whatever the sport. The rail and the "next up" line
+   both needed this: reaching for home and away gave tennis "TBD v TBD",
+   because a match has neither. */
+function matchupLabel(g){
+  if(g.tennis) return g.match.players.map(p=>p.name).join(" v ");
+  if(g.event) return g.race || "";
+  const o = orderedTeams(g);
+  return fullName(o.a) + " " + o.sep + " " + fullName(o.b);
+}
+/* Defensive on the optional parts of the contract. The page and the
+   endpoint deploy together, but a browser holding a cached page while a
+   new endpoint answers it — or the reverse — is a real state, and an
+   older answer missing a field must not throw the whole render away. */
+const setsWon = (m, i) => (m.setWins || []).filter(w => w === i).length;
+
 function renderRail(now, todayKey){
   const el=document.getElementById("rail");
   const today=myGames().filter(g=>localKey(g.start)===todayKey);
-  today.sort((a,b)=>{ const rk=s=>s==="live"?0:s==="scheduled"?1:2; return rk(stateOf(a,now).status)-rk(stateOf(b,now).status)||a.start-b.start; });
+  // live first — read from the match for tennis, which has no home side
+  // for stateOf() to reason about
+  const rankOf = g => g.tennis
+    ? (g.match.status==="live"||g.match.status==="suspended" ? 0 : g.match.status==="scheduled" ? 1 : 2)
+    : (st=>st==="live"?0:st==="scheduled"?1:2)(stateOf(g,now).status);
+  today.sort((a,b)=>rankOf(a)-rankOf(b)||a.start-b.start);
   const label='<div class="rail-label"><b>Today</b><span>'+esc(fmtDayLong(todayKey))+'</span></div>';
   if(!today.length){
     const next=myGames().find(g=>g.start>now);
     el.innerHTML=label+(next
       ? '<div class="rail-empty">Nothing on today. Next up: '
-        + '<b>'+esc(fullName(next.home))+' '+orderedTeams(next).sep+' '+esc(fullName(next.away))+'</b>'
+        + '<b>'+esc(matchupLabel(next))+'</b>'
         + ' &middot; ' + esc(fmtDayLong(localKey(next.start)))
         + ' &middot; <span class="countdown" data-start="'+next.start+'">'+esc(countdownText(next.start,now))+'</span></div>'
       : '<div class="rail-empty">Nothing on today.</div>');
     return;
   }
-  el.innerHTML=label+'<div class="rail-scroll">'+today.map(g=>{
+  /* One unrenderable card must not leave the whole rail showing whatever
+     it happened to say before. */
+  const card = g => { try{ return railCard(g, now); }catch(e){ return ""; } };
+  el.innerHTML=label+'<div class="rail-scroll">'+today.map(card).join("")+'</div>';
+}
+function railCard(g, now){
+  {
     if(g.event){
       const r=resolveRights(g);
       return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
@@ -2021,6 +2398,22 @@ function renderRail(now, todayKey){
         + '<div class="rail-meta"><span class="dot-live"></span>Racing today<span>&middot;</span><span>'
         + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
     }
+    if(g.tennis){
+      /* A card of its own. Sets won per player is a real tennis number —
+         ESPN says who took each set — where a single scoreline would not
+         be. The set-by-set line stays on the row in the list. */
+      const m=g.match, r=resolveRights(g), stt=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
+      const reveal=showScores||revealed.has(g.id);
+      const played=(m.sets||[]).some((_,i)=>setText(m,i));
+      const line=i=>'<div class="rail-row"><span class="t">'+esc(m.players[i].short||m.players[i].name)+'</span>'
+        +'<span class="s">'+(m.status==="scheduled"?"&nbsp;":!played?"&ndash;":reveal?setsWon(m,i):"&bull;")+'</span></div>';
+      const meta=stt.live?'<span class="dot-live"></span>'+esc(m.label||stt.text)
+        : m.status==="scheduled"?esc(m.timeKnown?fmtTime(g.start):"Time TBD") : esc(stt.text);
+      return '<div class="rail-card">'+line(0)+line(1)
+        +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'
+        +esc(r.carriers.length?r.carriers[0].name:"TBD")+'</span></div></div>';
+    }
+
     const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
     const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
     const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
@@ -2028,7 +2421,7 @@ function renderRail(now, todayKey){
     const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
     return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
       +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
-  }).join("")+'</div>';
+  }
 }
 
 function renderDrawer(){
@@ -2043,12 +2436,68 @@ function renderDrawer(){
           + '</button>').join("")+'</div></div>';
   }).join("");
   document.getElementById("teamGroups").innerHTML = (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
+    + tennisPicker(q)
     + '<div class="lg-group"><div class="lg-title"><b>Your link</b><span class="bar"></span></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
     + '<button class="icon-btn" id="copyLink">Copy</button>'
     + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></div>';
-  document.getElementById("drawerCount").textContent = selected.size+" selected";
+  // textContent, so the separator is the character rather than an entity
+  document.getElementById("drawerCount").textContent = selected.size+" selected"
+    + (tennisTours.size ? " \u00b7 tennis: "+[...tennisTours].sort().join(", ")
+        + (tennisEvents.size ? " ("+tennisEvents.size+" tournament"+(tennisEvents.size===1?"":"s")+")" : "") : "");
+}
+
+/* Tennis, as a sport rather than a list of people.
+
+   The question this has to answer is "what tennis is on today, and where
+   can I watch it" — which nobody should have to know a player's name to
+   ask. So the top level is the tour: switch on ATP, WTA or both, and the
+   default from there is every tournament in them. The tournaments are
+   offered underneath only once a tour is on, and only the ones that
+   actually have matches, because a filter whose options show nothing is
+   worse than no filter. Choosing none of them means all of them.
+
+   The list comes from the endpoint's own answer, so it is whatever is
+   genuinely being played this week — four or five tournaments, not a
+   season calendar. ESPN publishes singles draws only a few days out;
+   there is no honest way to offer next month's events here. */
+function tennisPicker(q){
+  const tours = [["ATP","ATP","Men's singles"],["WTA","WTA","Women's singles"]];
+  const on = tennisTours.size;
+  const tourChips = tours.map(([id,label,sub])=>
+    '<button class="chip" data-tour="'+id+'" aria-pressed="'+tennisTours.has(id)+'">'
+    + esc(label) + '<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+esc(sub)+'</span>'
+    + '</button>').join("");
+
+  let events = "";
+  if(on){
+    const list = [...TOURNEYS.values()]
+      .filter(t=>t.tours.some(x=>tennisTours.has(x)))
+      .filter(t=>!q || normName(t.name).indexOf(normName(q))>=0);
+    if(list.length){
+      const all = !tennisEvents.size;
+      events = '<div class="lg-sub">Tournaments</div><div class="chips">'
+        + '<button class="chip" data-event="*" aria-pressed="'+all+'">All tennis</button>'
+        + list.map(t=>'<button class="chip" data-event="'+esc(t.id)+'" aria-pressed="'+tennisEvents.has(t.id)+'">'
+            + esc(t.name)
+            + (t.major?'<span class="slam">Slam</span>':'')
+            + '<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+esc(t.tours.join("/"))+' &middot; '+t.n+'</span>'
+            + '</button>').join("")
+        + '</div>';
+    } else {
+      events = '<div class="empty" style="margin-top:6px">'
+        + (q ? 'No tournament matches &ldquo;'+esc(q)+'&rdquo;'
+             : 'No tournament is being played in the tours you have on right now.')
+        + '</div>';
+    }
+  }
+  return '<div class="lg-group"><div class="lg-title"><b>Tennis</b><span class="bar"></span>'
+    + '<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">singles only</span></div>'
+    + '<div class="chips">'+tourChips+'</div>'
+    + events
+    + (on ? '' : '<div class="empty" style="margin-top:6px">Switch on a tour to see what is being played.</div>')
+    + '</div>';
 }
 
 /* ============================ render + events ============================ */
@@ -2078,7 +2527,7 @@ function render(){
     if(el) el.focus();
   }
   renderRail(now,todayKey);
-  document.getElementById("teamCount").textContent=selected.size;
+  document.getElementById("teamCount").textContent=selected.size+(tennisTours.size?"+tennis":"");
   document.getElementById("v-list").setAttribute("aria-pressed",view==="list");
   document.getElementById("v-cal").setAttribute("aria-pressed",view==="calendar");
   const stg=document.getElementById("scoreToggle");
@@ -2109,6 +2558,22 @@ document.getElementById("teamGroups").addEventListener("click",function(e){
   const b=e.target.closest("[data-team]");
   if(b){ const id=b.getAttribute("data-team"); selected.has(id)?selected.delete(id):selected.add(id);
     persist(); renderDrawer(); render(); refreshAfterPicks(); return; }
+  const tb=e.target.closest("[data-tour]");
+  if(tb){ const id=tb.getAttribute("data-tour");
+    if(tennisTours.has(id)) tennisTours.delete(id); else tennisTours.add(id);
+    /* A tournament filter that belongs to no switched-on tour would hide
+       everything with no visible cause, so it goes with the tour. */
+    if(!tennisTours.size) tennisEvents.clear();
+    else tennisEvents.forEach(eid=>{
+      const t=TOURNEYS.get(eid);
+      if(t && !t.tours.some(x=>tennisTours.has(x))) tennisEvents.delete(eid);
+    });
+    persist(); renderDrawer(); render(); refreshAfterPicks(); return; }
+  const eb=e.target.closest("[data-event]");
+  if(eb){ const id=eb.getAttribute("data-event");
+    if(id==="*") tennisEvents.clear();
+    else if(tennisEvents.has(id)) tennisEvents.delete(id); else tennisEvents.add(id);
+    persist(); renderDrawer(); render(); return; }   // narrowing is local; no refetch
   if(e.target.closest("#copyLink")){
     const box=document.getElementById("shareBox");
     box.select();
@@ -2206,16 +2671,63 @@ function agoText(ms){
   const h = Math.round(m/60);
   return h + (h===1?" hour ago":" hours ago");
 }
+/* Tennis refreshes on its own loop and behind its own lock. It is a
+   different endpoint answering a different question, and the team and
+   cycling paths are deliberately untouched by any of it: a viewer who
+   follows no players never reaches this code, and a viewer who follows
+   several never slows their hockey down.
+
+   A failure here is not an emptying. loadTennis() only replaces the rows
+   once it has an answer, so a refusal from the endpoint leaves the last
+   good matches exactly where they were, and the age of them is shown
+   rather than passed off as current. */
+let tennisRefreshing = null;
+function refreshTennis(only){
+  if(tennisRefreshing) return tennisRefreshing;
+  tennisRefreshing = loadTennis(only)
+    .then(n=>{ tennisErr = ""; render(); return n; })
+    .catch(e=>{ tennisErr = (e && e.message || String(e)).slice(0,120); render(); return 0; })
+    .finally(()=>{ tennisRefreshing = null; });
+  return tennisRefreshing;
+}
+/* The whole tennis polling policy:
+     · nobody followed, no request — ever
+     · only while scores are on, as with every other live number here
+     · every 60s while a followed player has a match that is live,
+       suspended, or past its start and unresolved
+     · only the tours that match is actually in
+     · nothing once the source calls it final, retired, walkover or
+       otherwise complete
+     · nothing while the tab is hidden; one refresh when it returns */
+function tennisPollDue(){
+  if(!tennisTours.size || !showScores) return false;
+  const now = Date.now();
+  return GAMES.some(g=>g.tennis && isMine(g) && tennisActive(g.match, now));
+}
+
 /* Picking a team should fill its fixtures in straight away rather than
    leaving a blank until the next cycle. Debounced so working through
    the picker fires one fetch, not one per click. */
 let pickTimer = null;
 function refreshAfterPicks(){
   clearTimeout(pickTimer);
-  pickTimer = setTimeout(()=>{ if(selected.size) refreshLive(); }, 700);
+  pickTimer = setTimeout(()=>{
+    if(selected.size) refreshLive();
+    if(tennisTours.size) refreshTennis(false);
+    else if(GAMES.some(g=>g.tennis)) refreshTennis(false);   // last tour switched off
+  }, 700);
 }
 recallResults();   // put last week's known finals on screen before any network call
 refreshLive();
+if(tennisTours.size) refreshTennis(false);
+setInterval(()=>{
+  if(document.hidden) return;
+  if(tennisPollDue()) refreshTennis(true);   // true: only the tours with a match on
+}, 60000);
+/* Slower sweep for the rest of it — a draw moves on, a walkover is
+   announced, tomorrow's order of play appears. Only when someone is
+   actually being followed. */
+setInterval(()=>{ if(tennisTours.size) refreshTennis(false); }, 15*60000);
 /* ---- the minute poll ------------------------------------------------
    The whole policy, in one place:
 
@@ -2245,7 +2757,9 @@ document.addEventListener("visibilitychange", ()=>{
   /* Coming back deserves a refresh whether or not scores are on: the
      fixtures, the live badges and the carrier notes are all as old as
      the time spent away. This is one request on return, not a poll. */
-  if(!document.hidden && liveMode !== false) refreshLive();
+  if(document.hidden) return;
+  if(liveMode !== false) refreshLive();
+  if(tennisTours.size) refreshTennis(false);
 });
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
 if(!selected.size){ drawer.removeAttribute("hidden"); document.getElementById("teamsToggle").setAttribute("aria-pressed",true); }
