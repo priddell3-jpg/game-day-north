@@ -47,3 +47,30 @@ export function easternOffsetHours(ms){
   const wallAsUTC = Date.UTC(+d.year, +d.month - 1, +d.day, +t.hour, +t.minute);
   return Math.round((wallAsUTC - ms) / 3600000);
 }
+
+/* The generic form, so the page's zone handling and the build's can be
+   compared directly in a test rather than trusted to stay in step. */
+const ZONE_IANA = {
+  ET:"America/New_York", CT:"America/Chicago", MT:"America/Denver",
+  PT:"America/Los_Angeles", UK:"Europe/London", CET:"Europe/Paris", UTC:"UTC"
+};
+const zoneFmt = {};
+export function zoneParts(tz, ms){
+  const zone = ZONE_IANA[tz] || "UTC";
+  let f = zoneFmt[zone];
+  if(!f){
+    f = zoneFmt[zone] = new Intl.DateTimeFormat("en-US", {timeZone:zone,
+      year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+  }
+  const out = {};
+  for(const part of f.formatToParts(new Date(ms))) out[part.type] = part.value;
+  return out;
+}
+
+/** Offset in hours for any supported zone at an instant. */
+export function offsetFor(tz, ms){
+  const p = zoneParts(tz, ms);
+  const wallAsUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
+  return Math.round((wallAsUTC - ms) / 3600000);
+}

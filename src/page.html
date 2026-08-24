@@ -643,19 +643,35 @@ const allTeams = Object.values(TEAMS);
 const pickable = allTeams.filter(t=>!t.ghost);
 
 /* ============================ time helpers ============================ */
-const US_DST_END = Date.UTC(2026,10,1,9);
-const EU_DST_END = Date.UTC(2026,9,25,1);
-const US_DST_START_27 = Date.UTC(2027,2,14,7);
-const EU_DST_START_27 = Date.UTC(2027,2,28,1);
-function offsetFor(tz, ms){
-  const us = ms < US_DST_END || ms >= US_DST_START_27;
-  const eu = ms < EU_DST_END || ms >= EU_DST_START_27;
-  switch(tz){
-    case "ET": return us?-4:-5;  case "CT": return us?-5:-6;
-    case "MT": return us?-6:-7;  case "PT": return us?-7:-8;
-    case "UK": return eu?1:0;    case "CET": return eu?2:1;
-    default: return 0;
+/* Zone offsets used to be four hardcoded changeover instants, correct
+   only for the two seasons someone had written down and silently wrong
+   after them. They are read from the platform now, by the same method as
+   scripts/lib/dates.mjs: format the instant in the zone, read the wall
+   clock back, and the gap to the real instant is the offset. The build
+   and the page therefore derive the same answer from the same source of
+   truth rather than from two tables that can drift apart.
+
+   Intl with an IANA timeZone is used unguarded here, as it already is
+   for every time this page prints. */
+const ZONE_IANA = {ET:"America/New_York", CT:"America/Chicago", MT:"America/Denver",
+  PT:"America/Los_Angeles", UK:"Europe/London", CET:"Europe/Paris", UTC:"UTC"};
+const _zoneFmt = {};
+function zoneParts(tz, ms){
+  const zone = ZONE_IANA[tz] || "UTC";
+  let f = _zoneFmt[zone];
+  if(!f){
+    f = _zoneFmt[zone] = new Intl.DateTimeFormat("en-US", {timeZone:zone,
+      year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
   }
+  const out = {};
+  for(const part of f.formatToParts(new Date(ms))) out[part.type] = part.value;
+  return out;
+}
+function offsetFor(tz, ms){
+  const p = zoneParts(tz, ms);
+  const wallAsUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
+  return Math.round((wallAsUTC - ms) / 3600000);
 }
 const pad = n => String(n).padStart(2,"0");
 const ymd = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
@@ -873,7 +889,7 @@ const LIVE_FIXTURES = [
     if(!home||!away) return;
     const dayMs = Date.parse(f.date+"T00:00:00Z");
     const start = makeStart(dayMs, "ET", f.et[0], f.et[1]);
-    built.push({comp:f.comp, home, away, start, moved:null, real:true,
+    built.push({comp:f.comp, home, away, start, moved:null, real:true, baked:true,
       localDow:new Date(dayMs).getUTCDay(), slotHour:f.et[0], stage:"",
       liveCarriers:f.carriers.map(c=>({name:c[0], kind:c[1]})), liveSrc:LIVE_SRC[f.src], listed:true});
   });
@@ -1061,7 +1077,6 @@ function findEspnTeam(t, list){
       || list.find(e=>norm(e.abbreviation)===norm(t.abbr));
 }
 const NA = {NHL:1, NBA:1, NFL:1, MLB:1};
-const yyyymmdd = d => d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate());
 /* ESPN files a game under its US Eastern date — a 7:05pm EDT game is
    the 21st there and the 22nd in UTC. Ask for the wrong one and you get
    an empty day. */
@@ -1076,8 +1091,8 @@ function monthKeys(a, b){
   return out;
 }
 function espnDate(ms){
-  const shifted = new Date(ms + offsetFor("ET", ms)*3600000);
-  return yyyymmdd(shifted);
+  const p = zoneParts("ET", ms);
+  return p.year + p.month + p.day;
 }
 
 /* Season schedules do not carry a reliable live score, and the scoreboard
@@ -1304,6 +1319,23 @@ function timeState(g, now){
    A source still saying "scheduled" after the start counts as nothing
    reported: that is exactly what ESPN's season schedule returns for a
    game already under way. */
+/* What is on screen during an outage can come from three places, and
+   they are not equally trustworthy. A committed schedule may have moved
+   since it was built; the baked list is a small hand-checked set that
+   was never going to be current; a remembered result is a score this
+   browser saw earlier and kept. One blanket "may be stale" would be
+   wrong about two of them, so each says what it actually is.
+
+   Takes staleness as an argument rather than reading it, so the rule can
+   be exercised without standing up the whole page. */
+function provenanceOf(g, stale){
+  if(!g) return null;
+  if(g.remembered) return {kind:"remembered", label:"Recalled from this browser"};
+  if(g.baked)      return {kind:"baked",      label:"Hand-checked fallback"};
+  if(g.fromFeed && stale) return {kind:"stale", label:"Schedule may be stale"};
+  return null;
+}
+
 function stateOf(g, now){
   if(g.away===null) return {status:"scheduled"};
   const r = g.result, said = r && r.status;
@@ -1526,7 +1558,10 @@ function gameRow(g, now){
     /* Said on the fixture itself, not only in a note at the foot of the
        page: a start time from an old file is the thing most likely to
        have moved since. */
-    + (dataStale && g.fromFeed ? '<span class="conf-note warn">Schedule may be stale</span>' : '')
+    + (function(){
+        const p = provenanceOf(g, dataStale);
+        return p ? '<span class="conf-note'+(p.kind==="stale"?" warn":"")+'">'+esc(p.label)+'</span>' : '';
+      })()
     + '</div>';
 
   let watch;

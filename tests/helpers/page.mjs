@@ -16,9 +16,19 @@ function declarationOf(name){
     if(end < 0) throw new Error("unterminated function " + name);
     return SRC.slice(start, end + 2);
   }
-  // const NAME = ...;  — single line
-  const c = new RegExp("^const " + name + " = .*$", "m").exec(SRC);
-  if(c) return c[0];
+  /* const NAME = ...;  — may span lines, so scan to the semicolon that
+     closes it rather than assuming one line. */
+  const c = new RegExp("^const " + name + "\\s*=", "m").exec(SRC);
+  if(c){
+    let depth = 0;
+    for(let i = c.index; i < SRC.length; i++){
+      const ch = SRC[i];
+      if(ch === "{" || ch === "[" || ch === "(") depth++;
+      else if(ch === "}" || ch === "]" || ch === ")") depth--;
+      else if(ch === ";" && depth === 0) return SRC.slice(c.index, i + 1);
+    }
+    throw new Error("unterminated declaration " + name);
+  }
   throw new Error("could not find a declaration for " + name);
 }
 
