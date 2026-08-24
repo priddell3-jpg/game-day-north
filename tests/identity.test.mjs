@@ -66,3 +66,32 @@ test("clubs outside the roster match on name across id prefixes", () => {
 test("name normalisation ignores case, accents and punctuation", () => {
   assert.equal(normName("CF Montréal"), normName("cf montreal"));
 });
+
+/* --- source event ids take precedence over the composite key --- */
+
+test("matching source ids are the same game even when the clock moved", () => {
+  // a postponement: same id, start a day later
+  const a = g({eid:"401600123"});
+  const b = g({eid:"401600123", start: T + 24*3600000});
+  assert.equal(sameGame(a, b), true);
+});
+
+test("different source ids are different games however close together", () => {
+  const a = g({eid:"401600123"});
+  const b = g({eid:"401600124", start: T + 60000});
+  assert.equal(sameGame(a, b), false);
+});
+
+test("a doubleheader with distinct ids stays two games", () => {
+  assert.equal(sameGame(g({eid:"1"}), g({eid:"2", start: T + 3*3600000})), false);
+});
+
+test("the composite key still applies when only one copy has an id", () => {
+  assert.equal(sameGame(g({eid:"401600123"}), g({start: T + 5*60000})), true);
+  assert.equal(sameGame(g({eid:"401600123"}), g({start: T + 5*3600000})), false);
+});
+
+test("an id never overrides a competition mismatch", () => {
+  assert.equal(sameGame(g({eid:"1"}), g({eid:"1", comp:"NHL"})), false);
+});
+

@@ -705,6 +705,12 @@ function idKey(t){
 }
 function sameGame(a, b){
   if(!a.away || !b.away || a.comp !== b.comp) return false;
+  /* The source's own event id settles it outright where both copies have
+     one — including a postponement, where the clubs match but the start
+     has moved by a day and the composite key below would call it a
+     different fixture. Two different ids are two different games, however
+     close together they sit. */
+  if(a.eid && b.eid) return a.eid === b.eid;
   if(Math.abs(a.start - b.start) >= SAME_WINDOW) return false;
   const ah = idKey(a.home), aa = idKey(a.away), bh = idKey(b.home), ba = idKey(b.away);
   return (ah === bh && aa === ba) || (ah === ba && aa === bh);
@@ -726,6 +732,12 @@ function mergeReal(built){
       const hadFinal = prev.result && prev.result.status === "final" && prev.result.score;
       const hasScore = g.result && g.result.score;
       if(hadFinal && !hasScore){ g.result = prev.result; g.remembered = true; }
+      /* Matched by id but the clock moved: keep where it originally sat,
+         so a reschedule can be seen rather than silently applied. */
+      if(prev.start !== g.start){
+        g.startOriginal = prev.startOriginal || prev.start;
+        g.moved = g.startOriginal;      // the row renders this as "was <time>"
+      }
       GAMES.splice(i,1);
     }
   });
@@ -945,6 +957,7 @@ function parseEvent(ev, comp){
   const sa = num(A.score && A.score.displayValue!=null ? A.score.displayValue : A.score);
   const label = ty.shortDetail || ty.description || (status==="final"?"Final":"");
   return {
+    eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, home, away, start, moved:null, real:true, espn:true, listed:true,
     localDow:new Date(start).getUTCDay(), slotHour:new Date(start).getUTCHours(), stage:"",
     result: (status==="scheduled" || sh===null || sa===null)
@@ -979,7 +992,7 @@ async function loadStatic(){
     if(!f || !f.home || !f.away || !f.start) return;
     const home = staticTeam(f.home, f.comp), away = staticTeam(f.away, f.comp);
     if(!selected.has(home.id) && !selected.has(away.id)) return;
-    built.push({comp:f.comp, home, away, start:f.start, moved:null,
+    built.push({eid:f.eid || null, comp:f.comp, home, away, start:f.start, moved:null,
       real:true, espn:true, listed:true, fromFeed:true,
       localDow:new Date(f.start).getUTCDay(), slotHour:new Date(f.start).getUTCHours(), stage:"",
       result:{status:f.status || "scheduled", label:f.label || "", score:f.score || null}});
@@ -1836,7 +1849,29 @@ function renderDrawer(){
 /* ============================ render + events ============================ */
 function render(){
   const now=Date.now(), todayKey=ymd(new Date(now));
-  document.getElementById("main").innerHTML = view==="list"?renderList(now,todayKey):renderCalendar(now,todayKey);
+  const main = document.getElementById("main");
+  /* This runs every thirty seconds. Replacing the subtree throws away
+     whatever the keyboard was on, which on a page of buttons means focus
+     silently returns to the document while someone is part-way through
+     it. Note where focus was and put it back afterwards. */
+  const active = document.activeElement;
+  const focusKey = active && main.contains(active)
+    ? (active.getAttribute("data-day") ? "day:" + active.getAttribute("data-day")
+      : active.getAttribute("data-alert") ? "alert:" + active.getAttribute("data-alert")
+      : active.getAttribute("data-comp") ? "comp:" + active.getAttribute("data-comp")
+      : active.getAttribute("data-service") ? "service:" + active.getAttribute("data-service")
+      : active.getAttribute("data-reveal") ? "reveal:" + active.getAttribute("data-reveal")
+      : active.id ? "id:" + active.id : null)
+    : null;
+  main.innerHTML = view==="list"?renderList(now,todayKey):renderCalendar(now,todayKey);
+  if(focusKey){
+    const [kind, val] = [focusKey.slice(0, focusKey.indexOf(":")), focusKey.slice(focusKey.indexOf(":")+1)];
+    const attr = {day:"data-day", alert:"data-alert", comp:"data-comp", service:"data-service", reveal:"data-reveal"}[kind];
+    let el = null;
+    try{ el = kind==="id" ? main.querySelector("#"+CSS.escape(val))
+                          : main.querySelector("["+attr+'="'+CSS.escape(val)+'"]'); }catch(e){}
+    if(el) el.focus();
+  }
   renderRail(now,todayKey);
   document.getElementById("teamCount").textContent=selected.size;
   document.getElementById("v-list").setAttribute("aria-pressed",view==="list");

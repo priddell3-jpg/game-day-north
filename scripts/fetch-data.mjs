@@ -158,6 +158,11 @@ function parseEvent(ev, comp){
   const sh = num(H.score && H.score.displayValue != null ? H.score.displayValue : H.score);
   const sa = num(A.score && A.score.displayValue != null ? A.score.displayValue : A.score);
   return {
+    /* The source's own event id. Team names drift, start times move, and
+       a composite key built from them has to guess whether two records
+       are one game. An id does not guess. Kept as eid so it never
+       collides with the page's internal row ids. */
+    eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, start, home: side(H), away: side(A), status,
     label: ty.shortDetail || ty.description || (status==="final" ? "Final" : ""),
     score: (status === "scheduled" || sh === null || sa === null) ? null : [sh, sa]
