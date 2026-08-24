@@ -15,13 +15,17 @@ const REAL = normalizeTennis([fx("tennis-atp-scoreboard.json"), fx("tennis-wta-s
 
 const PREAMBLE = `
   const GAMES = globalThis.__t.GAMES;
-  const players = globalThis.__t.players;
+  const tennisTours = globalThis.__t.tours;
+  const tennisEvents = globalThis.__t.events;
   const selected = globalThis.__t.selected;
   const hiddenComps = globalThis.__t.hidden;
+  let TOURNEYS = globalThis.__t.tourneys;
   let showScores = true, liveMode = true;
   globalThis.__t.setScores = v => { showScores = v; };
-  const PLAYER_DIR = globalThis.__t.dir;
+  globalThis.__t.getTourneys = () => TOURNEYS;
   const jget = (...a) => globalThis.__t.jget(...a);
+  const persist = () => { globalThis.__t.persisted++; };
+  const renderDrawer = () => { globalThis.__t.drawn++; };
   const location = {href: "https://example.test/game-day-north/"};
   const hash = () => 0;
   const render = () => { globalThis.__t.renders++; };
@@ -29,8 +33,8 @@ const PREAMBLE = `
 
 function harness(){
   globalThis.__t = {
-    GAMES: [], players: new Set(), selected: new Set(), hidden: new Set(),
-    dir: [], asked: [], renders: 0,
+    GAMES: [], tours: new Set(), events: new Set(), selected: new Set(), hidden: new Set(),
+    tourneys: new Map(), asked: [], renders: 0, persisted: 0, drawn: 0,
     reply: null,
     jget: async (url, ms, init) => {
       globalThis.__t.asked.push({url, init});
@@ -40,133 +44,196 @@ function harness(){
   };
   const page = loadFromPage(
     ["DAY", "POLL_WINDOW", "TENNIS_TOURS", "TENNIS_SETTLED", "normName",
-     "tennisGame", "mergeTennis", "tennisActive", "toursOf", "loadTennis",
-     "isMine", "myGames", "tennisPollDue", "COMPS"], PREAMBLE);
+     "tourneyOf", "tennisGame", "mergeTennis", "tennisActive", "toursOf", "loadTennis",
+     "tennisMine", "isMine", "myGames", "tennisPollDue", "COMPS"], PREAMBLE);
   return {page, t: globalThis.__t};
 }
 
 const match = (over = {}) => ({
-  id: "184503", tour: "ATP", tid: "363-2026", tournament: "Winston-Salem Open",
-  short: "Winston-Salem", major: false, round: "Round 1", court: "Stadium Court",
+  id: "184503", tour: "ATP", tid: "363-2026", round: "Round 1", court: "Stadium Court",
   venue: "Winston-Salem, USA", start: Date.now() - 45 * 60000, timeKnown: true,
   status: "live", label: "3rd Set",
   players: [{id: "11399", name: "Sebastian Gorzny", short: "S. Gorzny", country: "USA", tbd: false},
             {id: "15548", name: "Cruz Hewitt", short: "C. Hewitt", country: "AUS", tbd: false}],
-  sets: [[6, 1], [6, 7], [2, 2]], tiebreaks: [null, [3, 7], null], winner: null, ...over
+  sets: [[6, 1], [6, 7], [2, 2]], tiebreaks: [null, [3, 7], null], setWins: [0, 1, null],
+  winner: null, ...over
 });
+const tourney = (over = {}) => ({id: "363-2026", name: "Winston-Salem Open",
+  short: "Winston-Salem Open", major: false, tours: ["ATP"], n: 1, ...over});
+const reply = (matches, tournaments) => ({generated: new Date().toISOString(),
+  matches, tournaments: tournaments || [tourney()]});
 
-/* ---------------- nobody followed ---------------- */
+/* ---------------- tennis switched off ---------------- */
 
-test("a viewer who follows no player makes no tennis request at all", async () => {
+test("a viewer with no tour on makes no tennis request at all", async () => {
   const {page, t} = harness();
   assert.equal(await page.loadTennis(false), 0);
-  assert.equal(t.asked.length, 0, "the endpoint was called for a viewer with no players");
+  assert.equal(t.asked.length, 0, "the endpoint was called with tennis off");
 });
 
-test("a viewer who follows no player has no tennis rows and no tennis poll", () => {
+test("a viewer with no tour on has no tennis rows and no tennis poll", () => {
   const {page, t} = harness();
   t.GAMES.push(page.tennisGame(match()));
-  assert.equal(page.myGames().length, 0, "a tennis row showed for someone following nobody");
+  assert.equal(page.myGames().length, 0, "a tennis row showed with tennis off");
   assert.equal(page.tennisPollDue(), false);
 });
 
-test("unfollowing the last player clears the rows", async () => {
+test("switching the last tour off clears the rows", async () => {
   const {page, t} = harness();
-  t.players.add("11399");
+  t.tours.add("ATP");
   t.GAMES.push(page.tennisGame(match()));
   assert.equal(page.myGames().length, 1);
-  t.players.delete("11399");
+  t.tours.clear();
   await page.loadTennis(false);
   assert.equal(t.GAMES.filter(g => g.tennis).length, 0);
 });
 
-/* ---------------- following ---------------- */
+/* ---------------- All Tennis is the default ---------------- */
 
-test("a match is mine when I follow either player", () => {
+test("a tour with no tournament chosen shows every tournament in it", () => {
   const {page, t} = harness();
-  const g = page.tennisGame(match());
-  t.GAMES.push(g);
-  assert.equal(page.isMine(g), false);
-  t.players.add("15548");                       // the second player
-  assert.equal(page.isMine(g), true);
-  t.players.clear(); t.players.add("11399");    // the first
-  assert.equal(page.isMine(g), true);
+  t.tours.add("ATP");
+  t.GAMES.push(page.tennisGame(match({id: "1", tid: "363-2026"})));
+  t.GAMES.push(page.tennisGame(match({id: "2", tid: "189-2026"})));
+  assert.equal(page.myGames().length, 2, "no filter should mean all of them");
 });
 
-test("following a player I am not in a match with shows nothing", () => {
+test("choosing a tournament narrows to it", () => {
   const {page, t} = harness();
-  t.players.add("999999");
-  t.GAMES.push(page.tennisGame(match()));
+  t.tours.add("ATP");
+  t.GAMES.push(page.tennisGame(match({id: "1", tid: "363-2026"})));
+  t.GAMES.push(page.tennisGame(match({id: "2", tid: "189-2026"})));
+  t.events.add("189-2026");
+  assert.equal(page.myGames().length, 1);
+  assert.equal(page.myGames()[0].match.tid, "189-2026");
+});
+
+test("choosing several tournaments shows all of them", () => {
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  ["363-2026", "189-2026", "341-2026"].forEach((tid, i) =>
+    t.GAMES.push(page.tennisGame(match({id: String(i), tid}))));
+  t.events.add("189-2026"); t.events.add("341-2026");
+  assert.equal(page.myGames().length, 2);
+});
+
+test("a tour that is off hides its matches whatever the tournament filter says", () => {
+  const {page, t} = harness();
+  t.tours.add("WTA");
+  t.GAMES.push(page.tennisGame(match({tour: "ATP", tid: "363-2026"})));
+  t.events.add("363-2026");
   assert.equal(page.myGames().length, 0);
 });
 
-test("an unfilled draw slot can never make a match mine", () => {
+test("both tours on shows both", () => {
   const {page, t} = harness();
-  const g = page.tennisGame(match({
-    players: [{id: "11399", name: "Sebastian Gorzny", tbd: false},
-              {id: null, name: "TBD", tbd: true}]
-  }));
-  t.GAMES.push(g);
-  t.players.add("11399");
-  assert.equal(page.isMine(g), true, "the real player still counts");
-  t.players.clear();
-  assert.equal(page.isMine(g), false);
+  t.tours.add("ATP"); t.tours.add("WTA");
+  t.GAMES.push(page.tennisGame(match({id: "1", tour: "ATP"})));
+  t.GAMES.push(page.tennisGame(match({id: "2", tour: "WTA"})));
+  assert.equal(page.myGames().length, 2);
 });
 
-test("hiding the ATP chip hides ATP matches", () => {
+test("hiding the ATP chip still hides ATP matches", () => {
   const {page, t} = harness();
-  t.players.add("11399");
+  t.tours.add("ATP");
   t.GAMES.push(page.tennisGame(match()));
   assert.equal(page.myGames().length, 1);
   t.hidden.add("ATP");
   assert.equal(page.myGames().length, 0);
 });
 
+test("a match knows nothing about who is playing it, for selection purposes", () => {
+  // the whole point of the change: no player is consulted anywhere here
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  const g = page.tennisGame(match({players: [{id: null, name: "TBD", tbd: true},
+                                             {id: null, name: "TBD", tbd: true}]}));
+  t.GAMES.push(g);
+  assert.equal(page.tennisMine(g), true, "an unfilled draw line is still tennis that is on");
+});
+
 /* ---------------- the request ---------------- */
 
-test("the request carries sorted player ids, so viewers share a cached answer", async () => {
+test("one tour on asks for only that tour", async () => {
   const {page, t} = harness();
-  ["15548", "11399", "2980"].forEach(id => t.players.add(id));
-  t.reply = {generated: new Date().toISOString(), matches: []};
+  t.tours.add("WTA");
+  t.reply = reply([]);
   await page.loadTennis(false);
-  const u = new URL(t.asked[0].url);
-  assert.equal(u.searchParams.get("players"), "11399.15548.2980");
+  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), "wta");
+});
+
+test("both tours on asks for everything, with no filter at all", async () => {
+  const {page, t} = harness();
+  t.tours.add("ATP"); t.tours.add("WTA");
+  t.reply = reply([]);
+  await page.loadTennis(false);
+  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), null,
+    "no tours filter means ask for all of it");
+});
+
+test("the tournament filter is never sent — narrowing happens on the page", async () => {
+  /* Sending it would mean a tournament that has finished turns the board
+     silently empty instead of dropping out of the list. */
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  t.events.add("189-2026");
+  t.reply = reply([]);
+  await page.loadTennis(false);
+  assert.equal(new URL(t.asked[0].url).searchParams.get("events"), null);
 });
 
 test("the request revalidates rather than reading a cached copy", async () => {
   const {page, t} = harness();
-  t.players.add("11399");
-  t.reply = {generated: new Date().toISOString(), matches: []};
+  t.tours.add("ATP");
+  t.reply = reply([]);
   await page.loadTennis(false);
   assert.equal(t.asked[0].init.cache, "no-cache");
 });
 
-test("only the tours with a live match are polled", async () => {
+test("the tournament list comes back with the matches", async () => {
   const {page, t} = harness();
-  t.players.add("11399");
-  t.GAMES.push(page.tennisGame(match({tour: "ATP", status: "live"})));
-  t.GAMES.push(page.tennisGame(match({id: "9", tour: "WTA", status: "final",
-    players: [{id: "11399", name: "A"}, {id: "2", name: "B"}]})));
-  t.reply = {generated: new Date().toISOString(), matches: []};
-  await page.loadTennis(true);                  // true = only what is active
-  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), "atp");
+  t.tours.add("ATP");
+  t.reply = reply([match()], [tourney(), tourney({id: "189-2026", name: "US Open", major: true})]);
+  await page.loadTennis(false);
+  const map = t.getTourneys();
+  assert.equal(map.size, 2);
+  assert.equal(map.get("189-2026").name, "US Open");
 });
 
-test("both tours are asked for when both have something on", async () => {
+test("a row reads its tournament from that list rather than repeating it", async () => {
   const {page, t} = harness();
-  t.players.add("11399");
-  t.GAMES.push(page.tennisGame(match({tour: "ATP", status: "live"})));
-  t.GAMES.push(page.tennisGame(match({id: "9", tour: "WTA", status: "live",
-    players: [{id: "11399", name: "A"}, {id: "2", name: "B"}]})));
-  t.reply = {generated: new Date().toISOString(), matches: []};
-  await page.loadTennis(true);
-  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), null,
-    "no tours filter means ask for everything");
+  t.tours.add("ATP");
+  t.reply = reply([match()], [tourney({name: "Winston-Salem Open"})]);
+  await page.loadTennis(false);
+  const g = t.GAMES.find(x => x.tennis);
+  assert.equal(page.tourneyOf(g).name, "Winston-Salem Open");
+  assert.equal(g.match.tournament, undefined);
+});
+
+test("a filter pointing at a tournament that has ended is dropped", async () => {
+  /* Otherwise the board goes empty with nothing on screen explaining why. */
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  t.events.add("999-2026");                       // finished since it was chosen
+  t.reply = reply([match()], [tourney()]);
+  await page.loadTennis(false);
+  assert.equal(t.events.has("999-2026"), false, "the stale filter should be pruned");
+  assert.ok(t.persisted > 0, "and the pruning should be remembered");
+  assert.equal(page.myGames().length, 1);
+});
+
+test("a filter still pointing at something live is left alone", async () => {
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  t.events.add("363-2026");
+  t.reply = reply([match()], [tourney()]);
+  await page.loadTennis(false);
+  assert.equal(t.events.has("363-2026"), true);
 });
 
 test("a failing endpoint leaves the matches already on screen alone", async () => {
   const {page, t} = harness();
-  t.players.add("11399");
+  t.tours.add("ATP");
   t.GAMES.push(page.tennisGame(match()));
   t.reply = new Error("HTTP 503");
   await assert.rejects(() => page.loadTennis(false));
@@ -176,7 +243,7 @@ test("a failing endpoint leaves the matches already on screen alone", async () =
 
 test("an unusable response is refused rather than rendered", async () => {
   const {page, t} = harness();
-  t.players.add("11399");
+  t.tours.add("ATP");
   t.GAMES.push(page.tennisGame(match()));
   for(const bad of [null, {}, {matches: null}, {matches: "nope"}]){
     t.reply = bad;
@@ -186,6 +253,25 @@ test("an unusable response is refused rather than rendered", async () => {
 });
 
 /* ---------------- what keeps polling ---------------- */
+
+test("only the tours with something in progress are polled", async () => {
+  const {page, t} = harness();
+  t.tours.add("ATP"); t.tours.add("WTA");
+  t.GAMES.push(page.tennisGame(match({tour: "ATP", status: "live"})));
+  t.GAMES.push(page.tennisGame(match({id: "9", tour: "WTA", status: "final"})));
+  t.reply = reply([]);
+  await page.loadTennis(true);                  // true = only what is active
+  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), "atp");
+});
+
+test("nothing in progress asks for nothing at all", async () => {
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  t.GAMES.push(page.tennisGame(match({status: "final"})));
+  assert.equal(await page.loadTennis(true), 0);
+  assert.equal(t.asked.length, 0);
+});
+
 
 test("live and suspended keep polling; settled states stop it", () => {
   const {page} = harness();
@@ -215,7 +301,7 @@ test("a match that never resolved stops being chased every minute", () => {
 
 test("the poll stops when the match finishes", () => {
   const {page, t} = harness();
-  t.players.add("11399");
+  t.tours.add("ATP");
   const g = page.tennisGame(match({status: "live"}));
   t.GAMES.push(g);
   assert.equal(page.tennisPollDue(), true);
@@ -225,7 +311,7 @@ test("the poll stops when the match finishes", () => {
 
 test("the poll stops with scores switched off", () => {
   const {page, t} = harness();
-  t.players.add("11399");
+  t.tours.add("ATP");
   t.GAMES.push(page.tennisGame(match({status: "live"})));
   assert.equal(page.tennisPollDue(), true);
   t.setScores(false);
@@ -351,7 +437,7 @@ test("a tennis outage is stated rather than shown as an empty day", () => {
   const at = SRC.indexOf("const tennisNote");
   const body = SRC.slice(at, SRC.indexOf("const liveLine", at));
   assert.ok(body.length > 100, "could not isolate tennisNote");
-  assert.match(body, /if\(!players\.size\) return ""/, "silent for anyone following nobody");
+  assert.match(body, /if\(!tennisTours\.size\) return ""/, "silent when tennis is off");
   assert.match(body, /tennisErr/);
   assert.match(body, /unreachable/i);
   assert.match(body, /agoText\(tennisAt\)/, "an old answer must say how old it is");
@@ -427,4 +513,61 @@ test("the rail names the players too", () => {
   const body = SRC.slice(at, at + 400);
   assert.match(body, /g\.tennis/);
   assert.match(body, /g\.match\.players/);
+});
+
+/* ---------------- the picker ---------------- */
+
+test("the picker offers tours first, then the tournaments inside them", () => {
+  const at = SRC.indexOf("function tennisPicker");
+  const body = SRC.slice(at, SRC.indexOf("\n}", SRC.indexOf("return '<div class=\"lg-group\"><div class=\"lg-title\"><b>Tennis", at)));
+  assert.ok(body.length > 200, "could not isolate tennisPicker");
+  assert.match(body, /data-tour="/);
+  assert.match(body, /data-event="/);
+  assert.ok(body.indexOf('data-tour="') < body.indexOf('data-event="'),
+    "the tour is the top level, the tournament the refinement");
+  assert.match(body, /All tennis/, "there must be a way back to everything");
+  assert.doesNotMatch(body, /data-player|athlete/, "no player is selectable any more");
+});
+
+test("no tournament is offered until a tour is on", () => {
+  const at = SRC.indexOf("function tennisPicker");
+  const body = SRC.slice(at, at + 2600);
+  assert.match(body, /const on = tennisTours\.size/);
+  assert.match(body, /if\(on\)\{/);
+});
+
+test("the tournament list is built from the endpoint's answer, never a hardcoded one", () => {
+  const at = SRC.indexOf("function tennisPicker");
+  const body = SRC.slice(at, at + 2600);
+  assert.match(body, /TOURNEYS\.values\(\)/);
+});
+
+test("the labels no longer promise a player picker", () => {
+  assert.doesNotMatch(SRC, /My teams &amp; players/);
+  assert.doesNotMatch(SRC, /Pick your teams<\/h2>/);
+  assert.match(SRC, /My teams &amp; tennis/);
+});
+
+test("switching a tour off drops any tournament filter that belonged to it", () => {
+  const at = SRC.indexOf('const tb=e.target.closest("[data-tour]")');
+  const body = SRC.slice(at, at + 700);
+  assert.match(body, /tennisEvents\.clear\(\)/);
+  assert.match(body, /tennisEvents\.delete\(eid\)/);
+});
+
+test("narrowing to a tournament does not cost a request", () => {
+  const at = SRC.indexOf('const eb=e.target.closest("[data-event]")');
+  const body = SRC.slice(at, at + 400);
+  assert.doesNotMatch(body, /refreshAfterPicks|refreshTennis/,
+    "the matches are already loaded; narrowing is a local filter");
+});
+
+test("the picker is redrawn when the tournament list changes", () => {
+  /* The first answer usually arrives after the drawer has been built, so
+     without this the tournaments never appear for someone who opened the
+     picker while the page was still loading. */
+  const at = SRC.indexOf("const before = [...TOURNEYS.keys()]");
+  const body = SRC.slice(at, at + 900);
+  assert.ok(at > 0, "loadTennis should notice a changed tournament list");
+  assert.match(body, /!== before\) renderDrawer\(\)/);
 });

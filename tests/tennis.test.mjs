@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  parseScoreboard, parseCompetition, normalizeTennis, assembleMatches,
-  keepMatch, forPlayers, statusOf, playerDirectory,
+  parseScoreboard, matchesOf, parseCompetition, normalizeTennis, assembleMatches,
+  keepMatch, selectMatches, statusOf,
   DAY, KEEP_COMPLETED_DAYS, HORIZON_DAYS, SINGLES_GROUPINGS, SETTLED
 } from "../scripts/lib/tennis.mjs";
 
@@ -19,8 +19,8 @@ const ATP = fx("tennis-atp-scoreboard.json");
 const WTA = fx("tennis-wta-scoreboard.json");
 const RARE = fx("tennis-rare-states.json");
 
-const atpM = parseScoreboard(ATP);
-const wtaM = parseScoreboard(WTA);
+const atpM = matchesOf(ATP);
+const wtaM = matchesOf(WTA);
 const byId = (ms, id) => ms.find(m => m.id === id);
 
 /* ---------------- nested parsing ---------------- */
@@ -29,26 +29,44 @@ test("matches are found three levels down, inside groupings", () => {
   assert.ok(atpM.length > 0, "nothing parsed out of the ATP fixture");
   assert.ok(wtaM.length > 0, "nothing parsed out of the WTA fixture");
   // every match names its tournament and round, which only exist at the levels above it
-  for(const m of atpM){
-    assert.ok(m.tournament, "a match came back without its tournament");
-    assert.ok(m.tid, "a match came back without a tournament id");
-  }
+  for(const m of atpM) assert.ok(m.tid, "a match came back without a tournament id");
 });
 
 test("more than one tournament comes out of a single payload", () => {
-  assert.deepEqual([...new Set(atpM.map(m => m.tournament))].sort(),
+  assert.deepEqual(parseScoreboard(ATP).tournaments.map(t => t.name).sort(),
     ["US Open", "Winston-Salem Open"]);
 });
 
-test("a tournament's own fields land on each of its matches", () => {
-  const us = atpM.filter(m => m.tid === "189-2026");
-  assert.ok(us.length);
-  for(const m of us){
-    assert.equal(m.tournament, "US Open");
-    assert.equal(m.major, true, "a Grand Slam should be flagged as one");
+test("a tournament is described once, not repeated on each of its matches", () => {
+  /* A Grand Slam has hundreds of matches; carrying its name and venue on
+     every one of them is most of what the payload would weigh. */
+  const {tournaments} = parseScoreboard(ATP);
+  const us = tournaments.find(t => t.id === "189-2026");
+  assert.ok(us, "the US Open should be described");
+  assert.equal(us.name, "US Open");
+  assert.equal(us.major, true, "a Grand Slam should be flagged as one");
+  assert.equal(tournaments.find(t => t.id === "363-2026").major, false);
+  for(const m of atpM){
+    assert.equal(m.tournament, undefined, "a match should not repeat its tournament's name");
+    assert.equal(m.major, undefined);
+    assert.ok(m.tid, "but it must say which tournament it belongs to");
   }
-  const ws = atpM.filter(m => m.tid === "363-2026");
-  assert.equal(ws[0].major, false);
+});
+
+test("every match's tournament is one that was described", () => {
+  const {matches, tournaments} = parseScoreboard(ATP);
+  const known = new Set(tournaments.map(t => t.id));
+  for(const m of matches) assert.ok(known.has(m.tid), "orphan match in " + m.tid);
+});
+
+test("a tournament with no singles match is not offered at all", () => {
+  // an event whose only groupings are doubles must not reach the list
+  const doublesOnly = {events: [{id: "999-2026", name: "Doubles Only Cup", groupings: [
+    {grouping: {id: "3", slug: "mens-doubles"}, competitions: [{id: "1", competitors: []}]}
+  ]}]};
+  const {matches, tournaments} = parseScoreboard(doublesOnly);
+  assert.deepEqual(matches, []);
+  assert.deepEqual(tournaments, []);
 });
 
 /* ---------------- singles only ---------------- */
@@ -129,20 +147,22 @@ test("a match with nobody in it at all is not a match", () => {
   assert.equal(parseCompetition(raw, {tour: "ATP"}), null);
 });
 
-test("a placeholder can never be followed", () => {
-  const out = assembleMatches([atpM, wtaM], {now: Date.parse("2026-08-24T20:00:00Z"),
-    players: ["-3", "-4", "0"]});
-  assert.deepEqual(out.matches, []);
+test("a placeholder is shown as one and is never mistaken for a person", () => {
+  const slot = atpM.find(m => m.players.some(p => p.tbd));
+  assert.ok(slot, "the fixtures must contain a TBD slot");
+  const real = slot.players.filter(p => p.id);
+  assert.equal(real.length, 1, "one real player, one unfilled slot");
+  assert.equal(slot.players.find(p => p.tbd).name, "TBD");
 });
 
-test("a competitor with no usable id becomes a placeholder, never a followable player", () => {
+test("a competitor with no usable id becomes a placeholder, not a named player", () => {
   const real = ATP.events[0].groupings[0].competitions[0];
   const broken = JSON.parse(JSON.stringify(real));
   delete broken.competitors[0].id;
   const m = parseCompetition(broken, {tour: "ATP"});
   assert.ok(m, "the other player is still real, so the match still exists");
   assert.equal(m.players.filter(p => p.id === null).length, 1);
-  assert.equal(forPlayers([m], ["null", "undefined", ""]).length, 0);
+  assert.equal(m.players.find(p => p.id === null).tbd, true);
 });
 
 test("country comes off the flag, as a code", () => {
@@ -305,7 +325,7 @@ test("suspended, walkover and a cancellation parse as themselves", () => {
   /* These three come from the constructed fixture: ESPN was publishing no
      example of any of them when the real payloads were taken, so the
      status blocks are written by hand from ESPN's own naming. */
-  const rare = parseScoreboard(RARE);
+  const rare = matchesOf(RARE);
   assert.equal(rare.length, 3);
   const sus = rare.find(m => m.id === "900001");
   const wo = rare.find(m => m.id === "900002");
@@ -403,33 +423,94 @@ test("old finished matches are dropped before anything is sent out", () => {
   assert.equal(out.counts.retained, 0);
 });
 
-/* ---------------- following players ---------------- */
+/* ---------------- choosing what to show ---------------- */
 
-test("only matches involving a followed player come back", () => {
-  const all = assembleMatches([atpM, wtaM], {now: NOW});
-  const someone = all.matches[0].players[0].id;
-  const mine = assembleMatches([atpM, wtaM], {now: NOW, players: [someone]});
-  assert.ok(mine.matches.length >= 1);
-  for(const m of mine.matches){
-    assert.ok(m.players.some(p => p.id === someone), "a match arrived for nobody I follow");
+test("naming no tour and no tournament is asking for all of it", () => {
+  const all = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)], {now: NOW});
+  const same = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)],
+    {now: NOW, tours: [], events: []});
+  assert.equal(same.matches.length, all.matches.length);
+  assert.ok(all.matches.length > 0);
+});
+
+test("a tour narrows to that tour's matches", () => {
+  const atpOnly = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)],
+    {now: NOW, tours: ["ATP"]});
+  assert.ok(atpOnly.matches.length);
+  for(const m of atpOnly.matches) assert.equal(m.tour, "ATP");
+  const wtaOnly = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)],
+    {now: NOW, tours: ["WTA"]});
+  for(const m of wtaOnly.matches) assert.equal(m.tour, "WTA");
+  const all = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)], {now: NOW});
+  assert.equal(atpOnly.matches.length + wtaOnly.matches.length, all.matches.length);
+});
+
+test("a tour is matched case-insensitively, since a URL may lower-case it", () => {
+  const a = assembleMatches([parseScoreboard(ATP)], {now: NOW, tours: ["atp"]});
+  const b = assembleMatches([parseScoreboard(ATP)], {now: NOW, tours: ["ATP"]});
+  assert.equal(a.matches.length, b.matches.length);
+  assert.ok(a.matches.length);
+});
+
+test("a tournament narrows to that tournament", () => {
+  const out = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)],
+    {now: NOW, events: ["363-2026"]});
+  assert.ok(out.matches.length);
+  for(const m of out.matches) assert.equal(m.tid, "363-2026");
+  assert.equal(out.tournaments.length, 1);
+  assert.equal(out.tournaments[0].id, "363-2026");
+});
+
+test("tour and tournament together are both applied", () => {
+  const out = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)],
+    {now: NOW, tours: ["WTA"], events: ["189-2026"]});
+  for(const m of out.matches){
+    assert.equal(m.tour, "WTA");
+    assert.equal(m.tid, "189-2026");
   }
 });
 
-test("following nobody returns nothing at all", () => {
-  const out = assembleMatches([atpM, wtaM], {now: NOW, players: []});
-  assert.deepEqual(out.matches, []);
-  assert.equal(out.counts.returned, 0);
-});
-
-test("an unknown player id simply matches nothing", () => {
-  const out = assembleMatches([atpM, wtaM], {now: NOW, players: ["999999999"]});
+test("a tournament is identified by ESPN's event id, never by its name", () => {
+  // sponsors rename these mid-season; the id does not move
+  const out = assembleMatches([parseScoreboard(ATP)], {now: NOW, events: ["Winston-Salem Open"]});
   assert.deepEqual(out.matches, []);
 });
 
-test("a player id is compared as a string, whichever way it arrives", () => {
-  const all = assembleMatches([atpM, wtaM], {now: NOW});
-  const id = all.matches[0].players[0].id;
-  assert.equal(forPlayers(all.matches, [Number(id)]).length, forPlayers(all.matches, [id]).length);
+test("a tournament that has finished is simply not offered", () => {
+  const old = matchesOf(ATP).map(m => ({...m, status: "final", start: NOW - 30 * DAY}));
+  const out = assembleMatches([{matches: old, tournaments: parseScoreboard(ATP).tournaments}], {now: NOW});
+  assert.deepEqual(out.matches, []);
+  assert.deepEqual(out.tournaments, [], "a filter must not offer an option that shows nothing");
+});
+
+test("the tournament list counts what it would actually show", () => {
+  const out = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)], {now: NOW});
+  for(const t of out.tournaments){
+    assert.equal(t.n, out.matches.filter(m => m.tid === t.id).length);
+    assert.ok(t.n > 0);
+  }
+  assert.equal(out.counts.tournaments, out.tournaments.length);
+});
+
+test("a Grand Slam is listed under both tours, from one description", () => {
+  const out = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)], {now: NOW});
+  const us = out.tournaments.find(t => t.id === "189-2026");
+  assert.ok(us);
+  assert.deepEqual(us.tours, ["ATP", "WTA"], "each feed names only its own half of the draw");
+});
+
+test("the majors sort to the top of the list", () => {
+  const out = assembleMatches([parseScoreboard(ATP), parseScoreboard(WTA)], {now: NOW});
+  const firstOrdinary = out.tournaments.findIndex(t => !t.major);
+  const lastMajor = out.tournaments.map(t => t.major).lastIndexOf(true);
+  if(firstOrdinary >= 0 && lastMajor >= 0) assert.ok(lastMajor < firstOrdinary);
+});
+
+test("selectMatches on its own is the same rule", () => {
+  const ms = matchesOf(ATP);
+  assert.equal(selectMatches(ms, {}).length, ms.length);
+  assert.equal(selectMatches(ms, {tours: ["WTA"]}).every(m => m.tour === "WTA"), true);
+  assert.deepEqual(selectMatches(null, {tours: ["ATP"]}), []);
 });
 
 /* ---------------- output shape ---------------- */
@@ -440,10 +521,12 @@ test("the normalized output is a small, flat contract", () => {
   assert.match(out.generated, /^\d{4}-\d{2}-\d{2}T/);
   const m = out.matches[0];
   assert.deepEqual(Object.keys(m).sort(), [
-    "court", "id", "label", "major", "players", "round", "sets", "setWins",
-    "short", "start", "status", "tiebreaks", "timeKnown", "tid", "tour",
-    "tournament", "venue", "winner"
+    "court", "id", "label", "players", "round", "sets", "setWins",
+    "start", "status", "tiebreaks", "timeKnown", "tid", "tour", "venue", "winner"
   ].sort());
+  const t = out.tournaments[0];
+  assert.deepEqual(Object.keys(t).sort(),
+    ["end", "id", "major", "n", "name", "short", "start", "tours"].sort());
 });
 
 test("matches come back in time order", () => {
@@ -470,41 +553,4 @@ test("nothing here throws on a hostile or empty payload", () => {
   }
   assert.doesNotThrow(() => normalizeTennis(null, {}));
   assert.doesNotThrow(() => assembleMatches([null, [null]], {}));
-});
-
-/* ---------------- the player directory ---------------- */
-
-test("the directory lists every singles player once, by id", () => {
-  const dir = playerDirectory([ATP, WTA]);
-  assert.ok(dir.length > 0);
-  const ids = dir.map(r => r[0]);
-  assert.equal(ids.length, new Set(ids).size, "a player is listed twice");
-  const parsed = new Set(atpM.concat(wtaM).flatMap(m => m.players).filter(p => p.id).map(p => p.id));
-  assert.equal(ids.length, parsed.size);
-  assert.equal(dir.some(r => r[1] === "TBD"), false, "an unfilled draw slot reached the picker");
-});
-
-test("a directory row is id, name, tour and country", () => {
-  const dir = playerDirectory([ATP, WTA]);
-  for(const [id, name, tour, country] of dir){
-    assert.match(id, /^\d+$/);
-    assert.ok(name.length);
-    assert.match(tour, /^(ATP|WTA|ATP\/WTA)$/);
-    assert.ok(country === "" || /^[A-Z]{2,3}$/.test(country));
-  }
-});
-
-test("the directory carries no doubles player", () => {
-  const dir = new Set(playerDirectory([ATP, WTA]).map(r => r[0]));
-  for(const p of [ATP, WTA]){
-    for(const e of p.events) for(const g of e.groupings){
-      if(!/doubles/.test(g.grouping.slug)) continue;
-      for(const c of g.competitions) for(const x of c.competitors || []){
-        for(const a of (x.roster && x.roster.athletes) || []){
-          const m = /\/id\/(\d+)\//.exec(((a.links || [])[0] || {}).href || "");
-          if(m) assert.equal(dir.has(m[1]), false, "doubles player " + m[1] + " is in the directory");
-        }
-      }
-    }
-  }
 });

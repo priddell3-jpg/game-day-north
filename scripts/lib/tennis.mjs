@@ -163,10 +163,7 @@ export function parseCompetition(comp, ctx){
   return {
     id: String(comp.id),
     tour: ctx.tour,
-    tid: ctx.tid || null,
-    tournament: ctx.tournament || "",
-    short: ctx.short || ctx.tournament || "",
-    major: !!ctx.major,
+    tid: ctx.tid || null,          // the tournament's facts live in `tournaments`
     round: (comp.round && comp.round.displayName) || "",
     court: (comp.venue && comp.venue.court) || "",
     venue: (comp.venue && comp.venue.fullName) || ctx.venue || "",
@@ -182,30 +179,51 @@ export function parseCompetition(comp, ctx){
   };
 }
 
-/* Every singles match in one scoreboard payload. */
+/* Every singles match in one scoreboard payload, and the tournaments they
+   belong to. The tournament is described once rather than repeated on
+   each of its matches — a Grand Slam has hundreds — and the same list is
+   what the page offers as a filter, so it is part of the answer rather
+   than something the client has to reconstruct. */
 export function parseScoreboard(payload){
-  const out = [];
+  const matches = [], tournaments = new Map();
   const events = (payload && payload.events) || [];
   for(const ev of events){
-    const ctx0 = {
-      tid: ev.id != null ? String(ev.id) : null,
-      tournament: ev.name || "",
-      short: ev.shortName || ev.name || "",
-      major: ev.major === true,
-      venue: (ev.venue && ev.venue.fullName) || ""
-    };
+    const tid = ev.id != null ? String(ev.id) : null;
+    const ctx0 = {tid, venue: (ev.venue && ev.venue.fullName) || ""};
+    let used = false;
     for(const g of ev.groupings || []){
       const gid = g && g.grouping && g.grouping.id != null ? String(g.grouping.id) : "";
       const tour = SINGLES_GROUPINGS[gid];
       if(!tour) continue;                  // doubles and mixed never get built
       for(const comp of g.competitions || []){
         const m = parseCompetition(comp, Object.assign({tour}, ctx0));
-        if(m) out.push(m);
+        if(!m) continue;
+        matches.push(m);
+        used = true;
+        if(!tournaments.has(tid)){
+          tournaments.set(tid, {
+            id: tid,
+            name: ev.name || "",
+            short: ev.shortName || ev.name || "",
+            major: ev.major === true,
+            start: Date.parse(ev.date || "") || null,
+            end: Date.parse(ev.endDate || "") || null,
+            tours: []
+          });
+        }
+        const t = tournaments.get(tid);
+        if(t.tours.indexOf(tour) < 0) t.tours.push(tour);
       }
     }
+    /* A tournament with no singles match anyone can see is not offered as
+       a filter. ESPN publishes an event weeks before its draw exists. */
+    if(!used) tournaments.delete(tid);
   }
-  return out;
+  return {matches, tournaments: [...tournaments.values()]};
 }
+
+/* The matches alone, for callers that only want those. */
+export const matchesOf = payload => parseScoreboard(payload).matches;
 
 /* Retention. Applied here, server-side, so the browser is never sent a
    draw it would only throw away.
@@ -224,13 +242,17 @@ export function keepMatch(m, now){
   return m.start <= now + HORIZON_DAYS * DAY && m.start >= now - KEEP_COMPLETED_DAYS * DAY;
 }
 
-/* Matches involving at least one of these athlete ids. Identity is the
-   id ESPN assigns; names are never the key, because two players can share
-   one and one player's name is spelled several ways across a season. */
-export function forPlayers(matches, ids){
-  const want = new Set([...(ids || [])].map(String));
-  if(!want.size) return [];
-  return (matches || []).filter(m => m.players.some(p => p.id && want.has(p.id)));
+/* Narrow to the tours and tournaments being shown. Both are inclusive
+   and both default to everything: an empty set means "all of it", which
+   is what "All Tennis" is. Tours are compared upper-case ("ATP") and
+   tournaments by the id ESPN gives the event ("189-2026"), never by
+   name — sponsors rename these mid-season. */
+export function selectMatches(matches, opts){
+  const o = opts || {};
+  const tours = new Set([...(o.tours || [])].map(t => String(t).toUpperCase()));
+  const events = new Set([...(o.events || [])].map(String));
+  return (matches || []).filter(m =>
+    (!tours.size || tours.has(m.tour)) && (!events.size || events.has(m.tid)));
 }
 
 /* Assemble already-parsed match lists into the contract the browser
@@ -245,10 +267,22 @@ export function forPlayers(matches, ids){
 export function assembleMatches(lists, opts){
   const o = opts || {};
   const now = typeof o.now === "number" ? o.now : Date.now();
-  const seen = new Map();
+  const seen = new Map(), tseen = new Map();
   let parsed = 0;
   for(const list of lists || []){
-    for(const m of list || []){
+    /* A list is either {matches, tournaments} from parseScoreboard or a
+       bare array of matches, so the tests can hand over either. */
+    const ms = Array.isArray(list) ? list : (list && list.matches) || [];
+    const ts = Array.isArray(list) ? [] : (list && list.tournaments) || [];
+    for(const t of ts){
+      if(!t || !t.id) continue;
+      const prev = tseen.get(t.id);
+      if(!prev) tseen.set(t.id, Object.assign({}, t, {tours: (t.tours || []).slice()}));
+      /* The same tournament arrives under both feeds at a Grand Slam,
+         each naming only its own half of the draw. Union the tours. */
+      else for(const tour of t.tours || []) if(prev.tours.indexOf(tour) < 0) prev.tours.push(tour);
+    }
+    for(const m of ms){
       if(!m || m.id == null) continue;
       parsed++;
       if(!seen.has(m.id)) seen.set(m.id, m);
@@ -258,12 +292,23 @@ export function assembleMatches(lists, opts){
   const deduped = matches.length;
   matches = matches.filter(m => keepMatch(m, now));
   const retained = matches.length;
-  if(o.players) matches = forPlayers(matches, o.players);
+  matches = selectMatches(matches, o);
   matches.sort((a, b) => a.start - b.start || (a.id < b.id ? -1 : 1));
+
+  /* Only tournaments that still have a match after all of that. A filter
+     offering an option that shows nothing is worse than no filter. */
+  const live = new Set(matches.map(m => m.tid));
+  const tournaments = [...tseen.values()]
+    .filter(t => live.has(t.id))
+    .map(t => Object.assign({}, t, {tours: t.tours.slice().sort(),
+      n: matches.filter(m => m.tid === t.id).length}))
+    .sort((a, b) => (b.major ? 1 : 0) - (a.major ? 1 : 0) || b.n - a.n || a.name.localeCompare(b.name));
+
   return {
     generated: new Date(now).toISOString(),
+    tournaments,
     matches,
-    counts: {parsed, deduped, retained, returned: matches.length}
+    counts: {parsed, deduped, retained, returned: matches.length, tournaments: tournaments.length}
   };
 }
 
@@ -272,24 +317,4 @@ export function assembleMatches(lists, opts){
    lists. */
 export function normalizeTennis(payloads, opts){
   return assembleMatches((payloads || []).map(parseScoreboard), opts);
-}
-
-/* The searchable player list for the picker: every singles player
-   currently in a draw, by stable id. Small enough to ship with the
-   schedule file, which means searching costs no request at all. */
-export function playerDirectory(payloads){
-  const byId = new Map();
-  for(const p of payloads || []){
-    for(const m of parseScoreboard(p)){
-      for(const pl of m.players){
-        if(!pl.id) continue;               // an unfilled draw slot is not a player
-        const prev = byId.get(pl.id);
-        if(!prev) byId.set(pl.id, {id:pl.id, name:pl.name, country:pl.country, tours:new Set([m.tour])});
-        else prev.tours.add(m.tour);
-      }
-    }
-  }
-  return [...byId.values()]
-    .map(p => [p.id, p.name, [...p.tours].sort().join("/"), p.country])
-    .sort((a, b) => a[1].localeCompare(b[1]));
 }

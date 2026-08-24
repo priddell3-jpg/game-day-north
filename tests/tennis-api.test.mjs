@@ -46,78 +46,98 @@ const call = async (qs, plan = {atp: "ok", wta: "ok"}, handler) => {
   return {r, calls, json: r.json()};
 };
 
-// two players who really are in the committed fixtures
-const someone = () => {
-  const d = JSON.parse(ATP);
-  const c = d.events[0].groupings[0].competitions.find(x => x.competitors.every(y => /^\d+$/.test(y.id)));
-  return c.competitors.map(x => String(x.id));
-};
+// tournaments that really are in the committed fixtures
+const WINSTON = "363-2026", USOPEN = "189-2026";
 
-/* ---------------- never the whole draw ---------------- */
+/* ---------------- what comes back by default ---------------- */
 
-test("asking for nothing returns no matches and fetches nothing", async () => {
+test("asking for nothing returns all the singles, which is the default view", async () => {
   const {r, calls, json} = await call("");
   assert.equal(r.statusCode, 200);
-  assert.deepEqual(json.matches, []);
-  assert.equal(calls.length, 0, "the endpoint went upstream for a request naming nobody");
+  assert.ok(json.matches.length > 0, "All Tennis should mean all of it");
+  assert.equal(calls.length, 2, "both tours");
+  assert.ok(json.tournaments.length > 0, "and the list the filter is built from");
 });
 
-test("a cold instance with a failing source has nothing to fall back on", async () => {
-  const {r, json} = await call("?players=1", {atp: "fail", wta: "fail"});
-  assert.equal(r.statusCode, 503);
-  assert.equal(json.matches, null);
-});
-
-test("a full draw is not a response this endpoint can produce", async () => {
-  // no players, every plausible way of asking for everything
-  for(const qs of ["", "?players=", "?players=all", "?tours=atp,wta", "?players=*"]){
-    const {json} = await call(qs);
-    assert.deepEqual(json.matches, [], "matches came back for " + JSON.stringify(qs));
+test("doubles never appears however it is asked for", async () => {
+  const {json} = await call("");
+  const doubles = [];
+  for(const p of [ATP, WTA]){
+    for(const e of JSON.parse(p).events) for(const g of e.groupings){
+      if(/doubles/.test(g.grouping.slug)) doubles.push(...g.competitions.map(c => String(c.id)));
+    }
   }
+  assert.ok(doubles.length, "the fixtures must contain doubles");
+  const got = new Set(json.matches.map(m => m.id));
+  for(const id of doubles) assert.equal(got.has(id), false);
 });
 
-test("only matches involving the named players come back", async () => {
-  const [a] = someone();
-  const {json} = await call("?players=" + a);
-  assert.ok(json.matches.length >= 1);
-  for(const m of json.matches){
-    assert.ok(m.players.some(p => p.id === a), "a match arrived for someone not asked about");
+test("a tour narrows both the answer and the upstream work", async () => {
+  const {calls, json} = await call("?tours=atp");
+  assert.equal(calls.length, 1, "the other tour is not even fetched");
+  assert.match(calls[0], /\/tennis\/atp\//);
+  for(const m of json.matches) assert.equal(m.tour, "ATP");
+});
+
+test("a tournament narrows to that tournament", async () => {
+  const {json} = await call("?events=" + WINSTON);
+  assert.ok(json.matches.length);
+  for(const m of json.matches) assert.equal(m.tid, WINSTON);
+  assert.equal(json.tournaments.length, 1);
+  assert.equal(json.tournaments[0].id, WINSTON);
+});
+
+test("a Grand Slam comes back listed under both tours", async () => {
+  const {json} = await call("?events=" + USOPEN);
+  const t = json.tournaments.find(x => x.id === USOPEN);
+  assert.ok(t);
+  assert.deepEqual(t.tours, ["ATP", "WTA"]);
+  assert.equal(t.major, true);
+});
+
+test("every tournament offered has matches behind it", async () => {
+  const {json} = await call("");
+  for(const t of json.tournaments){
+    assert.ok(t.n > 0);
+    assert.equal(t.n, json.matches.filter(m => m.tid === t.id).length);
   }
-  assert.ok(json.counts.deduped > json.counts.returned, "the draw was reduced, not passed through");
 });
 
 /* ---------------- input handling ---------------- */
 
-test("ids that are not ids are dropped rather than sent upstream", async () => {
-  const [a] = someone();
-  const {json, calls} = await call("?players=" + a + ".<script>alert(1)</script>..-3.%2e%2e%2f");
-  assert.ok(json.matches.length >= 1, "the one real id still worked");
+test("a tournament id that is not one is refused, not passed on", async () => {
+  const {json, calls} = await call("?events=" + encodeURIComponent("../../secret") + ".<script>");
+  assert.deepEqual(json.matches, [], "an explicit filter naming nothing real shows nothing");
   for(const u of calls) assert.doesNotMatch(u, /script|\.\./);
 });
 
-test("an absurd number of ids is capped", async () => {
-  const many = Array.from({length: 500}, (_, i) => 1000 + i).join(".");
-  const {r} = await call("?players=" + many);
-  assert.equal(r.statusCode, 200);
+test("an explicit filter that matches nothing shows nothing, rather than everything", async () => {
+  // a tournament that has since finished, still selected in someone's link
+  const {json} = await call("?events=99999-1999");
+  assert.deepEqual(json.matches, []);
+  assert.deepEqual(json.tournaments, []);
 });
 
 test("an unknown tour is ignored rather than trusted", async () => {
-  const [a] = someone();
-  const {calls} = await call("?players=" + a + "&tours=atp,../../secret,ftp");
+  const {calls} = await call("?tours=atp,../../secret,ftp");
   assert.equal(calls.length, 1);
   assert.match(calls[0], /\/tennis\/atp\/scoreboard$/);
 });
 
-test("naming one tour fetches only that tour", async () => {
-  const [a] = someone();
-  const {calls} = await call("?players=" + a + "&tours=wta");
-  assert.equal(calls.length, 1);
-  assert.match(calls[0], /\/wta\//);
+test("naming only unknown tours shows nothing rather than both", async () => {
+  const {json, calls} = await call("?tours=ftp");
+  assert.deepEqual(json.matches, []);
+  assert.equal(calls.length, 0, "nothing was fetched for a request naming no real tour");
+});
+
+test("an absurd number of tournament ids is capped", async () => {
+  const many = Array.from({length: 500}, (_, i) => (1000 + i) + "-2026").join(",");
+  const {r} = await call("?events=" + many);
+  assert.equal(r.statusCode, 200);
 });
 
 test("naming no tour fetches both", async () => {
-  const [a] = someone();
-  const {calls} = await call("?players=" + a);
+  const {calls} = await call("");
   assert.equal(calls.length, 2);
 });
 
@@ -125,7 +145,7 @@ test("naming no tour fetches both", async () => {
 
 test("the CDN shares an answer for just under the client's poll", () => {
   // read off a real response so the assertion is on what ships
-  return call("?players=1").then(({r}) => {
+  return call("").then(({r}) => {
     const cc = r.headers["Cache-Control"];
     const s = /s-maxage=(\d+)/.exec(cc);
     assert.ok(s, "no shared cache directive: " + cc);
@@ -134,7 +154,7 @@ test("the CDN shares an answer for just under the client's poll", () => {
 });
 
 test("the browser is told to revalidate every time", async () => {
-  const {r} = await call("?players=1");
+  const {r} = await call("");
   const cc = r.headers["Cache-Control"];
   assert.match(cc, /max-age=0/);
   assert.match(cc, /must-revalidate/);
@@ -142,15 +162,14 @@ test("the browser is told to revalidate every time", async () => {
 });
 
 test("the response is JSON", async () => {
-  const {r} = await call("?players=1");
+  const {r} = await call("");
   assert.match(r.headers["Content-Type"], /application\/json/);
 });
 
 /* ---------------- failure ---------------- */
 
 test("one tour failing still returns the other", async () => {
-  const [a] = someone();
-  const {r, json} = await call("?players=" + a, {atp: "fail", wta: "ok"});
+  const {r, json} = await call("", {atp: "fail", wta: "ok"});
   assert.equal(r.statusCode, 200);
   const atp = json.tours.find(t => t.tour === "atp");
   assert.equal(atp.ok, false);
@@ -159,25 +178,24 @@ test("one tour failing still returns the other", async () => {
 });
 
 test("every tour failing is an outage, not a quiet day", async () => {
-  const {r, json} = await call("?players=1", {atp: "fail", wta: "fail"});
+  const {r, json} = await call("", {atp: "fail", wta: "fail"});
   assert.equal(r.statusCode, 503);
   assert.equal(json.matches, null, "null, so the client can tell an outage from no matches");
   assert.equal(r.headers["Cache-Control"], "no-store", "an outage must not be cached");
 });
 
 test("an upstream error status is a failure, not an empty draw", async () => {
-  const {r, json} = await call("?players=1", {atp: "500", wta: "500"});
+  const {r, json} = await call("", {atp: "500", wta: "500"});
   assert.equal(r.statusCode, 503);
   assert.equal(json.matches, null);
 });
 
 test("a warm instance serves its last good answer when the source drops out", async () => {
-  const [a] = someone();
   const warm = await freshHandler();                 // one instance, used twice
-  const good = await call("?players=" + a, {atp: "ok", wta: "ok"}, warm);
+  const good = await call("", {atp: "ok", wta: "ok"}, warm);
   assert.ok(good.json.matches.length >= 1);
   // same instance, upstream now failing
-  const after = await call("?players=" + a, {atp: "fail", wta: "fail"}, warm);
+  const after = await call("", {atp: "fail", wta: "fail"}, warm);
   assert.equal(after.r.statusCode, 200, "the held answer should still be served");
   assert.deepEqual(after.json.matches.map(m => m.id), good.json.matches.map(m => m.id));
   assert.equal(after.json.tours.every(t => t.stale), true, "and it should say it is stale");
@@ -186,13 +204,13 @@ test("a warm instance serves its last good answer when the source drops out", as
 /* ---------------- the contract ---------------- */
 
 test("the response carries what the rows need and nothing more", async () => {
-  const [a] = someone();
-  const {json} = await call("?players=" + a);
+  const {json} = await call("");
   assert.match(json.generated, /^\d{4}-\d{2}-\d{2}T/);
   const m = json.matches[0];
-  for(const k of ["id", "tour", "tournament", "round", "start", "timeKnown", "status", "players", "sets"]){
+  for(const k of ["id", "tour", "tid", "round", "start", "timeKnown", "status", "players", "sets"]){
     assert.ok(k in m, "the contract lost " + k);
   }
+  assert.equal(m.tournament, undefined, "the tournament is described once, in its own list");
   // nothing from the raw payload leaked through
   const s = JSON.stringify(json);
   for(const junk of ["geoBroadcasts", "previousWinners", "playercard", "espncdn", "uid"]){
@@ -200,10 +218,9 @@ test("the response carries what the rows need and nothing more", async () => {
   }
 });
 
-test("the answer is a small fraction of what it was read from", async () => {
-  const [a] = someone();
-  const {r} = await call("?players=" + a);
+test("the answer is a fraction of what it was read from", async () => {
+  const {r} = await call("");
   const raw = ATP.length + WTA.length;
-  assert.ok(r.body().length * 20 < raw,
-    "expected a large reduction; got " + (raw / r.body().length).toFixed(0) + "x");
+  assert.ok(r.body().length * 3 < raw,
+    "expected a large reduction; got " + (raw / r.body().length).toFixed(1) + "x");
 });

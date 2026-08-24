@@ -211,6 +211,8 @@ main{padding:22px 0 80px}
    three-letter code is not a word to break: without this it stacks one
    letter per line at 320. */
 .pl-flag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow-wrap:normal}
+.lg-sub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.slam{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);border:1px solid currentColor;border-radius:3px;padding:0 3px;white-space:nowrap}
 .sets{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
 .set{white-space:nowrap}
 .g-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
@@ -412,7 +414,7 @@ main{padding:22px 0 80px}
       <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
       <span id="scoreToggleLabel">Scores on</span>
     </button>
-    <button class="icon-btn" id="teamsToggle" aria-pressed="false">My teams &amp; players <span id="teamCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
+    <button class="icon-btn" id="teamsToggle" aria-pressed="false">My teams &amp; tennis <span id="teamCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
   </div>
 </header>
 
@@ -421,7 +423,7 @@ main{padding:22px 0 80px}
 <section class="drawer" id="drawer" hidden>
   <div class="wrap drawer-in">
     <div class="drawer-head">
-      <h2>Pick your teams</h2>
+      <h2>Pick your teams &amp; tennis</h2>
       <span class="count" id="drawerCount"></span>
       <input class="search" id="teamSearch" type="search" placeholder="Search teams…" aria-label="Search teams">
     </div>
@@ -624,7 +626,7 @@ function resolveRights(g){
   const ids = [g.home&&g.home.id, g.away&&g.away.id];
   const ctx = {stage:g.stage||"", has:id=>ids.indexOf(id)>=0, comp:g.comp, hour:g.slotHour||0,
     // tennis rules key on the tournament; every other sport ignores these
-    tournament:(g.match && g.match.tournament) || "", major:!!(g.match && g.match.major)};
+    tournament:(tourneyOf(g)||{}).name || "", major:!!((tourneyOf(g)||{}).major)};
   // day-of-week must be the HOME team's local day, not UTC
   ctx.dow = g.localDow;
   if(g.liveCarriers) return {carriers:g.liveCarriers, confidence:"confirmed", listed:true,
@@ -1126,9 +1128,6 @@ async function loadStatic(){
   });
   if(built.length) mergeReal(built);
   if(Array.isArray(r.cycling)) attachCycling(r.cycling);
-  /* The picker's search list. Small enough to travel with the schedule
-     file, which means typing a name costs no request at all. */
-  if(Array.isArray(r.players)) PLAYER_DIR = r.players.filter(x=>Array.isArray(x) && x.length >= 2);
   staticAt = Date.parse(r.generated) || 0;
   staticCount = built.length;
   return built.length;
@@ -1156,9 +1155,15 @@ const TENNIS_TOURS = {ATP:"atp", WTA:"wta"};
    because a page that thinks a retirement is still live would poll it
    for ever. */
 const TENNIS_SETTLED = {final:1, retired:1, walkover:1, canceled:1, postponed:1};
-let PLAYER_DIR = [];          // [id, name, tour, country] — search fodder for the picker
+/* The tournaments the endpoint last reported, keyed by ESPN event id.
+   This is both the source of a match's tournament name and the list the
+   picker offers as a filter, so the filter can only ever offer something
+   that has matches behind it. */
+let TOURNEYS = new Map();
 let tennisAt = 0;             // when the matches on screen were normalised
 let tennisErr = "";
+
+const tourneyOf = g => (g.match && TOURNEYS.get(g.match.tid)) || null;
 
 /* A normalised match, as a row this page can place on a day. home and
    away stay null: tennis has no home side, and leaving them empty is
@@ -1171,10 +1176,10 @@ function tennisGame(m){
     tennis:true, match:m, seed:hash("tennis-"+m.id),
     localDow:d.getUTCDay(), slotHour:d.getUTCHours(), stage:"", result:null};
 }
-/* The response is the whole truth for the players being followed, so the
+/* The response is the whole truth for the tours being shown, so the
    tennis rows are replaced outright rather than merged. Anything else
-   would leave a match on screen for a player who has just been
-   unfollowed. */
+   would leave a match on screen for a tour that has just been switched
+   off. */
 function mergeTennis(matches){
   for(let i=GAMES.length-1;i>=0;i--) if(GAMES[i].tennis) GAMES.splice(i,1);
   matches.forEach(m=>GAMES.push(tennisGame(m)));
@@ -1190,37 +1195,49 @@ function tennisActive(m, now){
   if(m.status === "live" || m.status === "suspended" || m.status === "unknown") return true;
   return now >= m.start && now - m.start < POLL_WINDOW;
 }
-/* Which tours to ask about. Following only women costs no ATP request. */
+/* Which tours to ask about. Following only the women's game costs no ATP
+   request, and halves what comes back. `only` narrows further to the
+   tours that actually have something in progress, for the minute poll. */
 function toursOf(only){
-  const t = new Set();
   const now = Date.now();
-  GAMES.forEach(g=>{
-    if(!g.tennis || !isMine(g)) return;
-    if(only && !tennisActive(g.match, now)) return;
-    if(TENNIS_TOURS[g.comp]) t.add(TENNIS_TOURS[g.comp]);
-  });
-  if(!only && !t.size){
-    // nothing loaded yet: fall back to whichever tours the picker says
-    PLAYER_DIR.forEach(r=>{ if(players.has(r[0])) String(r[2]).split("/").forEach(x=>{
-      if(TENNIS_TOURS[x]) t.add(TENNIS_TOURS[x]);
-    }); });
+  const out = [];
+  for(const tour of ["ATP", "WTA"]){
+    if(!tennisTours.has(tour)) continue;
+    if(only && !GAMES.some(g=>g.tennis && g.comp===tour && isMine(g) && tennisActive(g.match, now))) continue;
+    out.push(TENNIS_TOURS[tour]);
   }
-  return [...t].sort();
+  return out.sort();
 }
 async function loadTennis(only){
-  if(!players.size){
+  if(!tennisTours.size){
     if(GAMES.some(g=>g.tennis)) mergeTennis([]);
-    tennisAt = 0; tennisErr = "";
+    TOURNEYS = new Map(); tennisAt = 0; tennisErr = "";
     return 0;
   }
-  const url = new URL("api/tennis", location.href);
-  /* Sorted, so two viewers following the same players ask for the same
-     URL and share one cached answer rather than each costing a fetch. */
-  url.searchParams.set("players", [...players].sort().join("."));
   const tours = toursOf(only);
-  if(tours.length && tours.length < 2) url.searchParams.set("tours", tours.join(","));
+  if(!tours.length) return 0;                    // nothing in progress to chase
+  const url = new URL("api/tennis", location.href);
+  /* Sorted, so two viewers watching the same thing ask for the same URL
+     and share one cached answer rather than each costing a fetch. The
+     tournament filter is deliberately not sent: narrowing happens here,
+     so a tournament that has finished disappears from the list by itself
+     instead of turning the board silently empty. */
+  if(tours.length < 2) url.searchParams.set("tours", tours.join(","));
   const r = await jget(url.href, 12000, {cache:"no-cache"});
   if(!r || !Array.isArray(r.matches)) throw new Error("tennis: unusable response");
+  const before = [...TOURNEYS.keys()].sort().join(",");
+  TOURNEYS = new Map((r.tournaments||[]).filter(t=>t && t.id).map(t=>[t.id, t]));
+  /* A tournament that has ended stops being offered, so a filter left
+     pointing at it is dropped rather than quietly hiding everything. */
+  let pruned = false;
+  tennisEvents.forEach(id=>{ if(!TOURNEYS.has(id)){ tennisEvents.delete(id); pruned = true; } });
+  if(pruned) persist();
+  /* The picker is built from this list, and the first answer usually
+     arrives after the picker has already been drawn — so redraw it when
+     the list changes, or the tournaments never appear for someone who
+     opened it while the page was still loading. Only on a change, so an
+     open drawer is not rebuilt under the viewer every minute. */
+  if([...TOURNEYS.keys()].sort().join(",") !== before) renderDrawer();
   mergeTennis(r.matches);
   tennisAt = Date.parse(r.generated) || Date.now();
   tennisErr = "";
@@ -1673,16 +1690,18 @@ const LS = {
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 const DEFAULT_TEAMS = ["van-nhl","van-mls","tor-mlb","tor-nba","liv"];
-/* Ids only, whatever a stored value or a shared link happens to contain.
-   ESPN athlete ids are digits; anything else is discarded rather than
-   kept, persisted, or put in a query string. */
-function playerIdsFrom(list){
-  // localStorage can hold anything, including whatever a previous build
-  // or a hand edit left there, so the shape is checked before the values
+/* Whatever a stored value or a shared link happens to contain, kept to
+   the shape it must have. localStorage holds anything — a previous
+   build's idea of the key, a hand edit — so the container is checked
+   before the values, and a value that is not one of ours is discarded
+   rather than kept, persisted, or put in a query string. */
+function keptFrom(list, ok){
   if(!Array.isArray(list)) return [];
-  return list.map(String).filter(id=>/^\d{1,12}$/.test(id));
+  return list.map(String).filter(ok);
 }
-let selected, services, hiddenComps, showScores, players;
+const isTour = v => v === "ATP" || v === "WTA";
+const isEventId = v => /^\d{1,6}-\d{4}$/.test(v);      // ESPN event id: 189-2026
+let selected, services, hiddenComps, showScores, tennisTours, tennisEvents;
 (function initState(){
   let h = {};
   try{
@@ -1695,13 +1714,21 @@ let selected, services, hiddenComps, showScores, players;
   services    = new Set(listOf(h.s) || LS.get("gdn.services", []));
   hiddenComps = new Set(listOf(h.x) || LS.get("gdn.hidden", []));
   showScores  = h.sc!=null ? h.sc==="1" : LS.get("gdn.scores", true);
-  /* Tennis players, followed individually rather than by tournament.
-     Nobody is followed by default, and a stored preference written before
-     tennis existed simply has no "p" and no gdn.players — which reads as
-     an empty set, so an existing viewer sees no tennis and the page makes
-     no tennis request. Ids are ESPN's athlete ids; anything else in the
-     stored value or the link is discarded rather than sent anywhere. */
-  players = new Set(playerIdsFrom(listOf(h.p) || LS.get("gdn.players", [])));
+  /* Tennis is a sport you switch on, by tour. Empty means off: an
+     existing viewer has neither key and sees no tennis and makes no
+     tennis request. With a tour on, the default is every tournament in
+     it — "All Tennis" — and tennisEvents narrows that only if the viewer
+     asks. Empty therefore means "all of them" in both, which is why they
+     are inclusive filters rather than a hidden-list.
+
+     An early build followed individual players under "p". Those links
+     still open, and are read as "this person wanted tennis": both tours
+     go on, which is the nearest honest thing this build can offer. */
+  tennisTours  = new Set(keptFrom(listOf(h.tt) || LS.get("gdn.tennisTours", []), isTour));
+  tennisEvents = new Set(keptFrom(listOf(h.te) || LS.get("gdn.tennisEvents", []), isEventId));
+  if(!tennisTours.size && (h.p || (LS.get("gdn.players", []) || []).length)){
+    tennisTours = new Set(["ATP", "WTA"]);
+  }
 })();
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
@@ -1714,7 +1741,7 @@ let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the
 function persist(){
   LS.set("gdn.teams",[...selected]); LS.set("gdn.services",[...services]);
   LS.set("gdn.hidden",[...hiddenComps]); LS.set("gdn.scores",showScores); LS.set("gdn.alerts",[...alerts]);
-  LS.set("gdn.players",[...players]);
+  LS.set("gdn.tennisTours",[...tennisTours]); LS.set("gdn.tennisEvents",[...tennisEvents]);
 }
 /* Built only when you ask for it, so the address bar stays clean. */
 function shareLink(){
@@ -1724,15 +1751,20 @@ function shareLink(){
     if(hiddenComps.size) parts.push("x="+[...hiddenComps].join("."));
     if(!showScores) parts.push("sc=0");
     /* Appended, never inserted: a link written before tennis existed has
-       no "p" and keeps working, and one written now still opens on a
-       build that does not know the key. */
-    if(players.size) parts.push("p="+[...players].join("."));
+       neither key and keeps working, and one written now still opens on a
+       build that does not know them. */
+    if(tennisTours.size) parts.push("tt="+[...tennisTours].sort().join("."));
+    if(tennisEvents.size) parts.push("te="+[...tennisEvents].sort().join("."));
     return location.origin + location.pathname + "#" + parts.join("&");
   }catch(e){ return ""; }
 }
 
-const isMine = g => g.tennis
-  ? g.match.players.some(p=>p.id && players.has(p.id))
+/* A tennis match is mine when its tour is on and, if the viewer has
+   narrowed to particular tournaments, when it is in one of them. No
+   tournaments chosen means all of them. */
+const tennisMine = g => tennisTours.has(g.comp) &&
+  (!tennisEvents.size || tennisEvents.has(g.match.tid));
+const isMine = g => g.tennis ? tennisMine(g)
   : ((g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id)));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
 const myComps = () => { const s=new Set(); GAMES.forEach(g=>{ if(isMine(g)) s.add(g.comp); }); return Object.keys(COMPS).filter(c=>s.has(c)); };
@@ -1908,16 +1940,17 @@ function tennisRow(g, now){
   const nameOf = (p, i) => '<span class="g-team pl'
     + (p.tbd ? " tbd-slot" : "")
     + (m.winner === i ? " pl-win" : "")
-    + (p.id && players.has(p.id) ? "" : " dim") + '">'
+    + '">'
     + esc(p.name) + (p.country ? '<span class="pl-flag">' + esc(p.country) + '</span>' : '')
     + '</span>';
   // "v", never "at": neither player is at home
   const title = '<div class="g-teams">' + nameOf(m.players[0], 0)
     + '<span class="vs">v</span>' + nameOf(m.players[1], 1) + '</div>';
 
+  const t = tourneyOf(g);
   const meta = '<div class="g-meta">'
     + '<span class="lg-tag" style="background:' + c.color + '">' + esc(c.short) + '</span>'
-    + '<span>' + esc(m.tournament) + '</span>'
+    + (t ? '<span>' + esc(t.name) + (t.major ? ' <span class="slam">Slam</span>' : '') + '</span>' : '')
     + (m.round ? '<span>' + esc(m.round) + '</span>' : '')
     + (m.court ? '<span>' + esc(m.court) + '</span>' : '')
     + '</div>';
@@ -2176,7 +2209,7 @@ function noteBlock(){
      you are looking at is twenty minutes old". Silent for anyone who
      follows nobody. */
   const tennisNote = () => {
-    if(!players.size) return "";
+    if(!tennisTours.size) return "";
     const mine = myGames().filter(g=>g.tennis).length;
     if(tennisErr){
       return '<span class="conf-note warn">Tennis: live source unreachable'
@@ -2184,8 +2217,11 @@ function noteBlock(){
         + '</span> ';
     }
     if(!tennisAt) return '';
+    const scope = tennisEvents.size
+      ? tennisEvents.size + ' tournament' + (tennisEvents.size===1?'':'s')
+      : [...tennisTours].sort().join(' + ');
     return '<span class="conf-note">' + mine + ' tennis match' + (mine===1?'':'es')
-      + ' for ' + players.size + ' player' + (players.size===1?'':'s')
+      + ' &middot; ' + esc(scope)
       + ' &middot; updated ' + esc(agoText(tennisAt)) + '</span> ';
   };
   const liveLine = liveMode===true
@@ -2389,7 +2425,7 @@ function renderDrawer(){
           + '</button>').join("")+'</div></div>';
   }).join("");
   document.getElementById("teamGroups").innerHTML = (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
-    + playerPicker(q)
+    + tennisPicker(q)
     + '<div class="lg-group"><div class="lg-title"><b>Your link</b><span class="bar"></span></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
@@ -2397,47 +2433,59 @@ function renderDrawer(){
     + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></div>';
   // textContent, so the separator is the character rather than an entity
   document.getElementById("drawerCount").textContent = selected.size+" selected"
-    + (players.size ? " \u00b7 "+players.size+" player"+(players.size===1?"":"s") : "");
+    + (tennisTours.size ? " \u00b7 tennis: "+[...tennisTours].sort().join(", ")
+        + (tennisEvents.size ? " ("+tennisEvents.size+" tournament"+(tennisEvents.size===1?"":"s")+")" : "") : "");
 }
 
-/* Tennis is followed by player, so the picker needs a search rather than
-   a grid: there are a few hundred singles players in the draws at any
-   time and listing them all would be a wall of names. Type to find one;
-   with nothing typed, only the players already followed are shown, so
-   the section is empty and quiet for someone who does not want tennis.
+/* Tennis, as a sport rather than a list of people.
 
-   The list travels with the schedule file, so searching costs no request
-   and works with the tennis endpoint unreachable. */
-const PLAYER_LIMIT = 30;
-function playerPicker(q){
-  const chosen = PLAYER_DIR.filter(r=>players.has(r[0]));
-  /* An id followed from a share link but missing from the list — the
-     player is out of the draws this week — is still shown, so it can be
-     seen and removed rather than silently persisting. */
-  const known = new Set(PLAYER_DIR.map(r=>r[0]));
-  const orphans = [...players].filter(id=>!known.has(id)).map(id=>[id, "Player "+id, "", ""]);
-  let show, note;
-  if(q){
-    const hits = PLAYER_DIR.filter(r=>normName(r[1]).indexOf(normName(q))>=0);
-    show = hits.slice(0, PLAYER_LIMIT);
-    note = hits.length > PLAYER_LIMIT
-      ? (hits.length - PLAYER_LIMIT)+" more match &mdash; keep typing"
-      : hits.length ? "" : "No player matches &ldquo;"+esc(q)+"&rdquo;";
-  } else {
-    show = chosen.concat(orphans);
-    note = PLAYER_DIR.length
-      ? (show.length ? "" : "Search a name to follow a player &mdash; "+PLAYER_DIR.length+" in the current draws")
-      : "The player list arrives with the schedule file.";
+   The question this has to answer is "what tennis is on today, and where
+   can I watch it" — which nobody should have to know a player's name to
+   ask. So the top level is the tour: switch on ATP, WTA or both, and the
+   default from there is every tournament in them. The tournaments are
+   offered underneath only once a tour is on, and only the ones that
+   actually have matches, because a filter whose options show nothing is
+   worse than no filter. Choosing none of them means all of them.
+
+   The list comes from the endpoint's own answer, so it is whatever is
+   genuinely being played this week — four or five tournaments, not a
+   season calendar. ESPN publishes singles draws only a few days out;
+   there is no honest way to offer next month's events here. */
+function tennisPicker(q){
+  const tours = [["ATP","ATP","Men's singles"],["WTA","WTA","Women's singles"]];
+  const on = tennisTours.size;
+  const tourChips = tours.map(([id,label,sub])=>
+    '<button class="chip" data-tour="'+id+'" aria-pressed="'+tennisTours.has(id)+'">'
+    + esc(label) + '<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+esc(sub)+'</span>'
+    + '</button>').join("");
+
+  let events = "";
+  if(on){
+    const list = [...TOURNEYS.values()]
+      .filter(t=>t.tours.some(x=>tennisTours.has(x)))
+      .filter(t=>!q || normName(t.name).indexOf(normName(q))>=0);
+    if(list.length){
+      const all = !tennisEvents.size;
+      events = '<div class="lg-sub">Tournaments</div><div class="chips">'
+        + '<button class="chip" data-event="*" aria-pressed="'+all+'">All tennis</button>'
+        + list.map(t=>'<button class="chip" data-event="'+esc(t.id)+'" aria-pressed="'+tennisEvents.has(t.id)+'">'
+            + esc(t.name)
+            + (t.major?'<span class="slam">Slam</span>':'')
+            + '<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+esc(t.tours.join("/"))+' &middot; '+t.n+'</span>'
+            + '</button>').join("")
+        + '</div>';
+    } else {
+      events = '<div class="empty" style="margin-top:6px">'
+        + (q ? 'No tournament matches &ldquo;'+esc(q)+'&rdquo;'
+             : 'No tournament is being played in the tours you have on right now.')
+        + '</div>';
+    }
   }
-  const chip = r => '<button class="chip" data-player="'+esc(r[0])+'" aria-pressed="'+players.has(r[0])+'">'
-    + esc(r[1])
-    + (r[3] ? '<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+esc(r[3])+'</span>' : "")
-    + (r[2] ? '<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+esc(r[2])+'</span>' : "")
-    + '</button>';
-  return '<div class="lg-group"><div class="lg-title"><b>Tennis players</b><span class="bar"></span>'
-    + '<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">ATP &middot; WTA singles</span></div>'
-    + (show.length ? '<div class="chips">'+show.map(chip).join("")+'</div>' : "")
-    + (note ? '<div class="empty" style="margin-top:6px">'+note+'</div>' : "")
+  return '<div class="lg-group"><div class="lg-title"><b>Tennis</b><span class="bar"></span>'
+    + '<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">singles only</span></div>'
+    + '<div class="chips">'+tourChips+'</div>'
+    + events
+    + (on ? '' : '<div class="empty" style="margin-top:6px">Switch on a tour to see what is being played.</div>')
     + '</div>';
 }
 
@@ -2468,7 +2516,7 @@ function render(){
     if(el) el.focus();
   }
   renderRail(now,todayKey);
-  document.getElementById("teamCount").textContent=selected.size+(players.size?"+"+players.size:"");
+  document.getElementById("teamCount").textContent=selected.size+(tennisTours.size?"+tennis":"");
   document.getElementById("v-list").setAttribute("aria-pressed",view==="list");
   document.getElementById("v-cal").setAttribute("aria-pressed",view==="calendar");
   const stg=document.getElementById("scoreToggle");
@@ -2499,9 +2547,22 @@ document.getElementById("teamGroups").addEventListener("click",function(e){
   const b=e.target.closest("[data-team]");
   if(b){ const id=b.getAttribute("data-team"); selected.has(id)?selected.delete(id):selected.add(id);
     persist(); renderDrawer(); render(); refreshAfterPicks(); return; }
-  const pb=e.target.closest("[data-player]");
-  if(pb){ const id=pb.getAttribute("data-player"); players.has(id)?players.delete(id):players.add(id);
+  const tb=e.target.closest("[data-tour]");
+  if(tb){ const id=tb.getAttribute("data-tour");
+    if(tennisTours.has(id)) tennisTours.delete(id); else tennisTours.add(id);
+    /* A tournament filter that belongs to no switched-on tour would hide
+       everything with no visible cause, so it goes with the tour. */
+    if(!tennisTours.size) tennisEvents.clear();
+    else tennisEvents.forEach(eid=>{
+      const t=TOURNEYS.get(eid);
+      if(t && !t.tours.some(x=>tennisTours.has(x))) tennisEvents.delete(eid);
+    });
     persist(); renderDrawer(); render(); refreshAfterPicks(); return; }
+  const eb=e.target.closest("[data-event]");
+  if(eb){ const id=eb.getAttribute("data-event");
+    if(id==="*") tennisEvents.clear();
+    else if(tennisEvents.has(id)) tennisEvents.delete(id); else tennisEvents.add(id);
+    persist(); renderDrawer(); render(); return; }   // narrowing is local; no refetch
   if(e.target.closest("#copyLink")){
     const box=document.getElementById("shareBox");
     box.select();
@@ -2628,7 +2689,7 @@ function refreshTennis(only){
        otherwise complete
      · nothing while the tab is hidden; one refresh when it returns */
 function tennisPollDue(){
-  if(!players.size || !showScores) return false;
+  if(!tennisTours.size || !showScores) return false;
   const now = Date.now();
   return GAMES.some(g=>g.tennis && isMine(g) && tennisActive(g.match, now));
 }
@@ -2641,13 +2702,13 @@ function refreshAfterPicks(){
   clearTimeout(pickTimer);
   pickTimer = setTimeout(()=>{
     if(selected.size) refreshLive();
-    if(players.size) refreshTennis(false);
-    else if(GAMES.some(g=>g.tennis)) refreshTennis(false);   // unfollowed the last player
+    if(tennisTours.size) refreshTennis(false);
+    else if(GAMES.some(g=>g.tennis)) refreshTennis(false);   // last tour switched off
   }, 700);
 }
 recallResults();   // put last week's known finals on screen before any network call
 refreshLive();
-if(players.size) refreshTennis(false);
+if(tennisTours.size) refreshTennis(false);
 setInterval(()=>{
   if(document.hidden) return;
   if(tennisPollDue()) refreshTennis(true);   // true: only the tours with a match on
@@ -2655,7 +2716,7 @@ setInterval(()=>{
 /* Slower sweep for the rest of it — a draw moves on, a walkover is
    announced, tomorrow's order of play appears. Only when someone is
    actually being followed. */
-setInterval(()=>{ if(players.size) refreshTennis(false); }, 15*60000);
+setInterval(()=>{ if(tennisTours.size) refreshTennis(false); }, 15*60000);
 /* ---- the minute poll ------------------------------------------------
    The whole policy, in one place:
 
@@ -2687,7 +2748,7 @@ document.addEventListener("visibilitychange", ()=>{
      the time spent away. This is one request on return, not a poll. */
   if(document.hidden) return;
   if(liveMode !== false) refreshLive();
-  if(players.size) refreshTennis(false);
+  if(tennisTours.size) refreshTennis(false);
 });
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
 if(!selected.size){ drawer.removeAttribute("hidden"); document.getElementById("teamsToggle").setAttribute("aria-pressed",true); }

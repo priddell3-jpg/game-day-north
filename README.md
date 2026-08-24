@@ -7,7 +7,7 @@ Schedules are easy to find. "Where is this on, in Canada?" is not — no sports 
 ## What it does
 
 - **Multiple teams at once**, across NHL, NBA, NFL, MLB, MLS, the Premier League and UEFA club competitions
-- **Tennis by player** — follow individual ATP and WTA singles players and see only their matches, with set scores, round and court
+- **Tennis as a sport** — switch on ATP or WTA and see what is being played, narrowed to a tournament if you want, with set scores, round and court
 - **Where to watch** per game — Sportsnet, TSN, Prime Video, Fubo, DAZN, Apple TV, RDS, TVA Sports, CTV, MLB.TV, NBA League Pass
 - **Coverage check** — mark the services you subscribe to and every game is flagged *You have it* or *Needs DAZN*
 - **Scores with a global on/off switch**, spoiler-safe: a hidden game still shows that it's live and where it's carried, with a per-game reveal
@@ -70,27 +70,28 @@ A live score is a number that changes, so following one means asking again. Aski
 - **One refresh at a time.** The minute poll, the quarter-hour poll, the team picker and a returning tab can all ask at once; a caller that asks while a pass is running joins it rather than starting a second.
 - **Paused while the tab is hidden**, with one immediate refresh when it comes back.
 - **Cycling is never polled.** A stage podium is a result, not a live feed, and there is no live cycling source to poll; it arrives with the committed file.
-- **Tennis polls on its own loop**, against `/api/tennis` rather than ESPN directly, and only for the tours a followed player actually has a live or unresolved match in. It follows the same rules otherwise: one request at a time, paused with the tab, stopped once the source calls a match final, retired or walkover. The team and cycling paths are untouched by it.
+- **Tennis polls on its own loop**, against `/api/tennis` rather than ESPN directly, and only for the tours that actually have a live or unresolved match in view. It follows the same rules otherwise: one request at a time, paused with the tab, stopped once the source calls a match final, retired or walkover. The team and cycling paths are untouched by it.
 
 A fixture that has already been given a score is still polled while it is under way. Not doing that is what once froze a match at its halftime score for the rest of the night.
 
-### Tennis is followed by player, not by tournament
+### Tennis is a sport, not a list of people
 
-Every other sport here is a fixture list you subscribe to by club. Tennis is not: you follow Alcaraz, and the matches that matter are wherever he is drawn that week. So tennis is modelled as players, and nobody is followed by default — a viewer who has never picked one sees no tennis rows and the page makes no tennis request.
+The question this has to answer is *what tennis is on today, and where can I watch it* — which nobody should have to know a player's name to ask. So the top level is the tour: switch on ATP, WTA or both, and the default from there is every tournament in them. Narrow to a tournament only if you want to. Nobody gets tennis without asking: with no tour on there are no rows, no chips, and no request.
 
 ESPN publishes tennis as a tournament containing *groupings* — men's singles, women's doubles, mixed doubles — each containing the *competitions* that are the actual matches. That is a different shape from the one event per game every other sport answers, so it has its own parser in `scripts/lib/tennis.mjs` rather than the team parser being taught to guess.
 
-Three things about that feed are load-bearing:
+Four things about that feed are load-bearing:
 
 - **It is about 2 MB across the two tours**, and a Grand Slam is published in full under *both* — the US Open's 239 men's singles matches appear identically in the ATP and the WTA scoreboard. Deduplicating by ESPN's competition id is the only thing that collapses them.
+- **Every competition carries a `tournamentId`**, and the event's own id is `{tournamentId}-{season}`. That is what makes a tournament filter possible at all, and it is why the filter keys on the id rather than the name — sponsors rename these mid-season.
 - **Most matches have no usable time.** ESPN says so itself with `timeValid: false`, and an unplayed third round carries a placeholder of midnight Eastern. The day is shown and the clock is not invented.
-- **An unfilled slot in a draw is still published as a competitor**, with a negative athlete id and the name `TBD`. It is a placeholder, never a person: it cannot be followed, never reaches the picker, and a line with two of them is not a match at all.
+- **An unfilled slot in a draw is still published as a competitor**, with a negative athlete id and the name `TBD`. It is a placeholder, never a person, and a line with two of them is not a match at all.
 
-Because of the size, the browser never reads that feed. `api/tennis.js` does, keeps the singles matches involving the players actually being followed, and returns a few kilobytes — about **8× smaller** for the whole singles field and roughly **1000× smaller** for a viewer following two or three players. Vercel's CDN shares each answer for 55 seconds, just under the client's one-minute poll, and browsers are told to revalidate every time. The searchable player list travels with `data.json` instead, so typing a name costs no request.
+Because of the size, the browser never reads that feed. `api/tennis.js` does, keeps the singles, and returns about **105 KB for the whole field — a nineteenth of what it read** — or less for a single tour. Tournament facts are described once in a `tournaments` list rather than repeated on every one of a Slam's hundreds of matches, and that same list is what the picker offers as a filter, so a filter can only ever offer something with matches behind it.
 
-Identity is ESPN's athlete and competition ids throughout. Names are never a key: they are spelled several ways across a season and two players can share one.
+**The tournament list is what is being played this week, not a season calendar.** ESPN publishes singles draws only a few days out — in practice about two days either side of today — so there is no honest way to offer next month's events. `?dates=YYYYMM` does return a month of tournaments, but the ones that have not started carry no matches, so they would be options that show nothing.
 
-**Canadian coverage is modelled per tournament, never per player.** Following a player tells you nothing about who carries him; the event he is in decides that, and it changes weekly. Two sources were checked — ATP's own broadcaster list (TSN for the tour, Sportsnet for the Canadian Masters) and the US Open's international broadcaster page (TSN and RDS). Neither covers the WTA tour, and a Grand Slam's rights are sold separately from the tour deal, so Melbourne, Paris, Wimbledon and every WTA event outside a Slam resolve to **Coverage TBD** rather than being assumed to follow the tour. Uncertain coverage is never counted as a service you have.
+**Canadian coverage is modelled per tournament**, which is what the rights actually attach to. Two sources were checked — ATP's own broadcaster list (TSN for the tour, Sportsnet for the Canadian Masters) and the US Open's international broadcaster page (TSN and RDS). Neither covers the WTA tour, and a Grand Slam's rights are sold separately from the tour deal, so Melbourne, Paris, Wimbledon and every WTA event outside a Slam resolve to **Coverage TBD** rather than being assumed to follow the tour. Uncertain coverage is never counted as a service you have.
 
 Retention is applied server-side, before anything is sent: a settled match is kept for three days from its start, anything still live or suspended is kept however old it is, and upcoming matches run to a fortnight. Only singles; no doubles, juniors, exhibitions or team competitions in this phase.
 
