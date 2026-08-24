@@ -14,6 +14,13 @@ on:
   # ready_for_review: without it, a draft opened before its last commit
   # and then marked ready would never be tested at the moment someone
   # actually asked for review.
+  #
+  # Worth knowing, because it cost an afternoon: a pull request whose
+  # branch conflicts with its base runs none of this. These jobs run
+  # against the merge of head into base, and a conflicted pull request has
+  # no such merge to check out, so GitHub starts no run at all — silently,
+  # with no failed check to notice. A pull request showing no tests is
+  # worth checking for conflicts before suspecting the triggers.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
