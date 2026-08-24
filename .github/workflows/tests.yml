@@ -9,7 +9,13 @@ on:
     branches: [main]
     paths-ignore:
       - "data.json"          # the scheduled refresh commits this; it changes no logic
+  # Every pull request, draft included. The activity types are named
+  # rather than left to the default because the default set omits
+  # ready_for_review: without it, a draft opened before its last commit
+  # and then marked ready would never be tested at the moment someone
+  # actually asked for review.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 jobs:

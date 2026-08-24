@@ -45,6 +45,16 @@ jobs:
             echo "No fixture changes."
             exit 0
           fi
+          # Only main gets a commit. This job also runs on a branch push
+          # that touches scripts/**, which is deliberate — it proves the
+          # build still works before the change is merged — but committing
+          # there put bot commits on feature branches and left a pull
+          # request's head as a commit made with GITHUB_TOKEN, which by
+          # design triggers no workflow of its own and so arrives untested.
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "Built cleanly on ${GITHUB_REF}; leaving data.json to main."
+            exit 0
+          fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.json
