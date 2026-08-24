@@ -104,7 +104,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   display:grid;place-items:center;color:#fff;font-family:var(--mono);
   font-size:12px;font-weight:600;letter-spacing:-.5px;
 }
-.brand-name{font-weight:800;font-stretch:118%;letter-spacing:-.2px;font-size:16px;white-space:nowrap}
+.brand-name{font-weight:800;font-stretch:118%;letter-spacing:-.2px;font-size:16px;white-space:nowrap;margin:0}
 .brand-sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
 .seg button{
@@ -140,7 +140,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .rail-row .t{flex:1;color:var(--panel-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rail-row .s{font-weight:600;font-variant-numeric:tabular-nums}
 .rail-meta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--panel-muted);display:flex;gap:7px;align-items:center}
-.rail-empty{display:flex;align-items:center;color:var(--panel-muted);font-size:13.5px;padding:12px 0}
+.rail-empty{display:block;color:var(--panel-muted);font-size:13.5px;line-height:1.55;padding:12px 0}
+.rail-empty .countdown{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+.rail-empty b{white-space:normal}
 .rail-empty b{color:var(--panel-ink);font-weight:700}
 
 /* ---------- live dot ---------- */
@@ -247,9 +249,9 @@ main{padding:22px 0 80px}
 .nav-btn:hover{border-color:var(--line-strong)}
 .cal-legend{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .cal-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 .cal-dow{background:var(--surface-2);padding:7px 8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center}
-.cal-cell{background:var(--surface);min-height:96px;padding:6px 7px;display:flex;flex-direction:column;gap:3px;text-align:left;align-items:stretch;border:none;border-radius:0}
+.cal-cell{background:var(--surface);min-height:96px;min-width:0;overflow:hidden;padding:6px 7px;display:flex;flex-direction:column;gap:3px;text-align:left;align-items:stretch;border:none;border-radius:0}
 .cal-cell.out{background:var(--surface-2);color:var(--muted)}
 .cal-cell:hover{background:var(--accent-soft)}
 .cal-cell.sel{outline:2px solid var(--accent);outline-offset:-2px;z-index:2}
@@ -257,7 +259,8 @@ main{padding:22px 0 80px}
 .cal-cell.today .cal-num b{background:var(--live);color:#fff;border-radius:4px;padding:0 4px}
 .cal-num b{font-weight:600;color:var(--ink)}
 .cal-cell.out .cal-num b{color:var(--muted)}
-.cal-ev{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.cal-ev{display:flex;align-items:center;gap:5px;min-width:0;font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.cal-ev .mu{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .cal-ev i{width:6px;height:6px;border-radius:50%;flex:none}
 .cal-ev .tm{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:9.5px}
 .cal-more{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:auto}
@@ -277,9 +280,12 @@ main{padding:22px 0 80px}
   .brand-sub{display:none}
   .topbar-in{height:auto;padding:10px 0;flex-wrap:wrap;gap:8px}
   .game{grid-template-columns:64px 1fr auto;gap:10px;padding:12px 8px 12px 10px}
-  .g-watch{grid-column:2/4;align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:10px}
+  .g-watch{grid-column:2/3;align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:10px}
   .g-score{grid-column:3;grid-row:1;min-width:0}
-  .bell{grid-column:3;grid-row:1;justify-self:end;display:none}
+  /* Saving a game was unreachable on a phone. It sits beside the watch
+     row now, at a size a thumb can actually hit. */
+  .bell{grid-column:3;grid-row:2;justify-self:end;align-self:center;width:44px;height:44px}
+  .bell svg{width:18px;height:18px}
   .cal-cell{min-height:70px}
   .cal-ev .tm{display:none}
   .rail-label{display:none}
@@ -372,7 +378,7 @@ main{padding:22px 0 80px}
     <div class="brand">
       <div class="brand-mark">GD</div>
       <div>
-        <div class="brand-name">Game Day North</div>
+        <h1 class="brand-name">Game Day North</h1>
         <div class="brand-sub">Where to watch, coast to coast</div>
       </div>
     </div>
@@ -1277,7 +1283,10 @@ let selected, services, hiddenComps, showScores;
 })();
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
-let covOpen = null, rightsOpen = false, resultsOpen = null;   // null = open when it has results
+let covOpen = null, rightsOpen = false, resultsOpen = null;   // null = decide per viewport
+/* Screen width changes what should be open by default, not what exists.
+   Guarded because matchMedia is absent in a non-browser context. */
+const isNarrow = () => { try{ return window.matchMedia("(max-width:760px)").matches; }catch(e){ return false; } };
 let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the sample set   // panels keep their open/closed state across re-renders
 
 function persist(){
@@ -1344,7 +1353,17 @@ function countdownText(ms, now){
   if(m>0) return "in "+m+"m "+pad(s)+"s";
   return "starting now";
 }
-const BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>';
+/* A bookmark, not a bell: nothing here schedules a notification, and a
+   bell icon promises one. Saving a game is local to this browser. */
+const BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4Z"/></svg>';
+/* Named for what it does and what it acts on: "Save" alone gives a
+   screen reader a row of identical buttons. */
+function saveButton(id, on, what){
+  const label = (on ? "Remove saved game: " : "Save game: ") + what;
+  return '<button class="bell" data-alert="'+esc(id)+'" aria-pressed="'+on+'"'
+    + ' title="'+esc(on?"Saved in this browser":"Save in this browser")+'"'
+    + ' aria-label="'+esc(label)+'">'+BELL+'</button>';
+}
 function orderedTeams(g){
   return SOCCER[g.comp] ? {a:g.home,b:g.away,sep:"vs",flip:false} : {a:g.away,b:g.home,sep:"at",flip:true};
 }
@@ -1416,7 +1435,7 @@ function eventRow(g, now){
   right += '</div>';
 
   const on = alerts.has(g.id);
-  const bell = '<button class="bell" data-alert="'+esc(g.id)+'" aria-pressed="'+on+'" aria-label="'+(on?"Remove alert":"Set alert")+'">'+BELL+'</button>';
+  const bell = saveButton(g.id, on, g.race || "this race");
   return '<div class="game'+(state==="today"?" is-live":"")+'">'+timeCell
     + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
 }
@@ -1488,7 +1507,7 @@ function gameRow(g, now){
   scoreCell += '</div>';
 
   const on = alerts.has(g.id);
-  const bell = '<button class="bell" data-alert="'+esc(g.id)+'" aria-pressed="'+on+'" aria-label="'+(on?"Remove alert":"Set alert")+'">'+BELL+'</button>';
+  const bell = saveButton(g.id, on, fullName(g.home) + " v " + fullName(g.away));
   return '<div class="game'+(st.status==="live"?" is-live":"")+'">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
@@ -1576,7 +1595,8 @@ function renderResults(now, todayKey){
   past.forEach(g=>{ const k=localKey(g.start); if(!map.has(k)) map.set(k,[]); map.get(k).push(g); });
   let inner = "";
   map.forEach((gs,k)=>{ inner += daySection(k, gs, now, todayKey); });
-  return '<details class="results"'+((resultsOpen===null?true:resultsOpen)?" open":"")+'>'
+  const openResults = resultsOpen===null ? !isNarrow() : resultsOpen;
+  return '<details class="results"'+(openResults?" open":"")+'>'
     + '<summary>Recent results<span class="conf-note">last 3 days &middot; '
     + past.length+' game'+(past.length===1?"":"s")
     + (scored?' &middot; '+scored+' final score'+(scored===1?"":"s"):' &middot; no scores available')
@@ -1620,7 +1640,8 @@ function noteBlock(){
     + (listed?' &mdash; <b>'+listed+'</b> of your upcoming games right now':'')
     + '. Everything else is projected from the rights table below, which is real and sourced. '
     + 'Your teams, services and score setting are stored in this browser only &mdash; anyone else opening the same link sets up their own. '
-    + (n? '<b>'+n+'</b> alert'+(n===1?"":"s")+' set.' : 'Tap the bell on a game to mark it for a pre-game push.')
+    + (n? '<b>'+n+'</b> game'+(n===1?"":"s")+' saved in this browser.'
+        : 'Save a game to mark it here &mdash; a bookmark in this browser, not a notification.')
     + '</div>';
 }
 function emptyState(){
@@ -1641,10 +1662,14 @@ function renderList(now, todayKey){
   const start = new Date(); start.setHours(0,0,0,0);
   const games = myGames().filter(g=>g.start>=start.getTime() && g.start<start.getTime()+DAY*160
     && (g.start > now - 4*3600000 || g.listed || g.espn));
-  if(!games.length) return welcomeBanner()+renderFilters()+renderResults(now,todayKey)+emptyState();
-  let out = welcomeBanner() + renderFilters() + renderCoverage(now) + renderResults(now, todayKey);
+  if(!games.length) return welcomeBanner()+renderFilters()+emptyState()+renderResults(now,todayKey);
+  /* The schedule first. This page exists to answer what is on next and
+     where it is carried, so that answer should be the first thing in
+     view — service setup and past results are support, and reading
+     order now says so. */
+  let out = welcomeBanner() + renderFilters();
   groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
-  return out + renderRights() + noteBlock();
+  return out + renderCoverage(now) + renderResults(now, todayKey) + renderRights() + noteBlock();
 }
 
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -1666,24 +1691,33 @@ function renderCalendar(now, todayKey){
           + esc(g.race) + '<span class="tm">'+esc((g.stage||"").replace(/^Stage /,"St "))+'</span></span>';
       }
       const s=stateOf(g,now), ts=timeState(g,now);
-      const mine=(g.home&&selected.has(g.home.id))?g.home:g.away;
-      let opp=(mine&&g.home&&mine.id===g.home.id)?g.away:g.home;
-      if(ts.state==="tbd") opp=null;
-      return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'+esc(mine?mine.abbr:"?")
-        +'<span style="color:var(--muted)">/</span>'+esc(opp?opp.abbr:"TBD")
+      /* "TOR / KC" said nothing about who was at home. Conventional
+         North American notation is away @ home, which reads the same way
+         on every scoreboard. */
+      const away = ts.state==="tbd" ? null : g.away, home = g.home;
+      const matchup = esc(away?away.abbr:"TBD") + " @ " + esc(home?home.abbr:"TBD");
+      return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'
+        +'<span class="mu">'+matchup+'</span>'
         +'<span class="tm">'+(s.status==="live"?"LIVE":s.status==="final"?"FT":ts.state==="tbc"||ts.state==="tbd"?"TBC":esc(fmtTime(g.start)))+'</span></span>';
     }).join("");
     if(gs.length>3) evs+='<span class="cal-more">+'+(gs.length-3)+' more</span>';
-    grid+='<button class="cal-cell'+(out?" out":"")+(key===todayKey?" today":"")+(key===selDay?" sel":"")+'" data-day="'+key+'">'
-      +'<span class="cal-num"><b>'+d.getDate()+'</b></span>'+evs+'</button>';
+    /* The visible cell is a number and a few abbreviations, which does
+       not read as a date. Name it in full, state whether it is today,
+       and expose the selection rather than leaving it to the outline. */
+    const label = fmtDayLong(key) + (gs.length ? ", " + gs.length + (gs.length===1?" game":" games") : ", no games");
+    grid+='<button class="cal-cell'+(out?" out":"")+(key===todayKey?" today":"")+(key===selDay?" sel":"")+'"'
+      +' data-day="'+key+'" aria-label="'+esc(label)+'"'
+      +' aria-pressed="'+(key===selDay)+'" aria-controls="calDetail"'
+      +(key===todayKey?' aria-current="date"':'')+'>'
+      +'<span class="cal-num" aria-hidden="true"><b>'+d.getDate()+'</b></span>'+evs+'</button>';
   }
   grid+='</div>';
   let detail;
   if(selDay){
     const gs=map.get(selDay)||[];
-    detail='<div class="cal-detail">'+(gs.length?daySection(selDay,gs,now,todayKey)
+    detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day">'+(gs.length?daySection(selDay,gs,now,todayKey)
       :'<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(selDay))+'</h3><span class="n">No games</span></div></section>')+'</div>';
-  } else detail='<div class="cal-detail"><div class="note">Pick a day to see start times, scores and where each game is carried.</div></div>';
+  } else detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day"><div class="note">Pick a day to see start times, scores and where each game is carried.</div></div>';
   return welcomeBanner()+renderFilters()+head+grid+detail;
 }
 
@@ -1695,7 +1729,10 @@ function renderRail(now, todayKey){
   if(!today.length){
     const next=myGames().find(g=>g.start>now);
     el.innerHTML=label+(next
-      ? '<div class="rail-empty">Nothing on today. Next up: <b style="margin:0 6px">'+esc(fullName(next.home))+' '+orderedTeams(next).sep+' '+esc(fullName(next.away))+'</b> '+esc(fmtDayLong(localKey(next.start)))+' <span style="margin-left:8px;font-family:var(--mono);font-size:11px" class="countdown" data-start="'+next.start+'">'+esc(countdownText(next.start,now))+'</span></div>'
+      ? '<div class="rail-empty">Nothing on today. Next up: '
+        + '<b>'+esc(fullName(next.home))+' '+orderedTeams(next).sep+' '+esc(fullName(next.away))+'</b>'
+        + ' &middot; ' + esc(fmtDayLong(localKey(next.start)))
+        + ' &middot; <span class="countdown" data-start="'+next.start+'">'+esc(countdownText(next.start,now))+'</span></div>'
       : '<div class="rail-empty">Nothing on today.</div>');
     return;
   }
