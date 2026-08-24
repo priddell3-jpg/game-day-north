@@ -12,7 +12,10 @@ on:
   workflow_dispatch:             # and on demand from the Actions tab
   push:
     paths:
-      - "scripts/fetch-data.mjs"
+      # scripts/** rather than the entry point alone: the build now
+      # imports helpers from scripts/lib, and a change there would
+      # otherwise ship without a run proving it still builds.
+      - "scripts/**"
       - ".github/workflows/refresh-data.yml"
 
 concurrency:
