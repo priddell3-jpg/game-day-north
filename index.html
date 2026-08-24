@@ -231,6 +231,7 @@ main{padding:22px 0 80px}
 .hidden-score:hover{border-color:var(--accent);color:var(--accent)}
 .podium{font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
 .conf-note.leader{color:var(--accent)}
+.stale-h{color:var(--warn)}
 .countdown{font-family:var(--mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bell{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--muted);border:1px solid transparent;transition:color .15s,background .15s,border-color .15s}
 .bell:hover{background:var(--surface-2);border-color:var(--line)}
@@ -724,7 +725,20 @@ function mergeReal(built){
   // it had already loaded, so a page left open during a game slowly
   // filled with duplicates of itself.
   built.forEach(g=>{
-    for(let i=GAMES.length-1;i>=0;i--) if(sameGame(GAMES[i], g)) GAMES.splice(i,1);
+    for(let i=GAMES.length-1;i>=0;i--){
+      if(!sameGame(GAMES[i], g)) continue;
+      /* A newer copy replaces an older one — but ESPN's season schedule
+         reports a finished game as scheduled with no score, so a plain
+         replacement can erase a final we already hold. Keep the known
+         result in that one case, and mark it remembered so it is
+         labelled rather than passed off as freshly fetched. A newer copy
+         that does carry a score always wins. */
+      const prev = GAMES[i];
+      const hadFinal = prev.result && prev.result.status === "final" && prev.result.score;
+      const hasScore = g.result && g.result.score;
+      if(hadFinal && !hasScore){ g.result = prev.result; g.remembered = true; }
+      GAMES.splice(i,1);
+    }
   });
   // then retire baked fallback fixtures inside any window the feed covers
   const spans = {};
@@ -756,6 +770,38 @@ function mergeReal(built){
    the viewer, like every other preference here.
    ------------------------------------------------------------------ */
 const RESULTS_KEY = "gdn.results";
+const RESULTS_VERSION = 2;
+/* Stored results were a bare array with no version, so any change to the
+   shape would have been read as if it were the current one. The store is
+   versioned now, every row is validated before it is trusted, and a
+   payload that cannot be understood discards that one key rather than
+   throwing on the way into the page. Nothing here is allowed to stop the
+   app from starting. */
+function validResultRow(r, now){
+  if(!r || typeof r !== "object") return false;
+  if(typeof r.c !== "string" || !r.c) return false;
+  if(typeof r.t !== "number" || !isFinite(r.t)) return false;
+  if(r.t < now - 8*DAY || r.t > now + DAY) return false;      // expired or absurd
+  if(!Array.isArray(r.s) || r.s.length !== 2) return false;
+  if(!r.s.every(n => typeof n === "number" && isFinite(n))) return false;
+  for(const side of [r.h, r.a]){
+    if(!Array.isArray(side) || side.length < 2) return false;
+    if(typeof side[0] !== "string" || !side[0]) return false;
+    if(typeof side[1] !== "string" || !side[1]) return false;
+  }
+  return true;
+}
+/* Returns the usable rows, whatever shape was on disk. A legacy bare
+   array is migrated; an unknown version is discarded, because guessing
+   at a shape written by a newer build is exactly how a wrong score
+   reaches the screen. */
+function readResultStore(raw, now){
+  if(Array.isArray(raw)) return {rows: raw.filter(r=>validResultRow(r, now)), migrated: true};
+  if(!raw || typeof raw !== "object") return {rows: [], migrated: false};
+  if(raw.v !== RESULTS_VERSION) return {rows: [], migrated: false, discarded: true};
+  if(!Array.isArray(raw.rows)) return {rows: [], migrated: false, discarded: true};
+  return {rows: raw.rows.filter(r=>validResultRow(r, now)), migrated: false};
+}
 function rememberResults(){
   try{
     const now = Date.now(), rows = [];
@@ -767,18 +813,22 @@ function rememberResults(){
         h:[g.home.id, fullName(g.home), g.home.abbr, g.home.color, g.home.city || ""],
         a:[g.away.id, fullName(g.away), g.away.abbr, g.away.color, g.away.city || ""]});
     });
-    LS.set(RESULTS_KEY, rows.slice(-80));
+    LS.set(RESULTS_KEY, {v:RESULTS_VERSION, saved:now, rows:rows.slice(-80)});
   }catch(e){}
 }
 function recallResults(){
-  const rows = LS.get(RESULTS_KEY, []), now = Date.now(), built = [];
-  if(!rows || !rows.length) return;
+  const now = Date.now(), built = [];
+  let store;
+  try{ store = readResultStore(LS.get(RESULTS_KEY, null), now); }
+  catch(e){ store = {rows:[], discarded:true}; }
+  if(store.discarded){ try{ localStorage.removeItem(RESULTS_KEY); }catch(e){} }
+  const rows = store.rows;
+  if(!rows.length) return;
   // full:true — the stored name is already complete, so the renderer must
   // not prepend the city to it a second time
   const team = (r, comp) => TEAMS[r[0]] || {id:r[0], home:comp, city:r[4] || "", name:r[1],
     abbr:r[2] || "?", color:r[3] || "#5A6478", ghost:true, full:true, comps:[comp]};
   rows.forEach(r=>{
-    if(!r || !r.t || r.t < now - 8*DAY) return;
     built.push({comp:r.c, home:team(r.h, r.c), away:team(r.a, r.c), start:r.t, moved:null,
       real:true, espn:true, listed:true, remembered:true,
       localDow:new Date(r.t).getUTCDay(), slotHour:new Date(r.t).getUTCHours(), stage:"",
@@ -1471,6 +1521,10 @@ function gameRow(g, now){
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
     + (g.home && g.home.city && normName(g.home.city) !== normName(g.home.name)
         ? '<span>in '+esc(g.home.city)+'</span>' : '')
+    /* Said on the fixture itself, not only in a note at the foot of the
+       page: a start time from an old file is the thing most likely to
+       have moved since. */
+    + (dataStale && g.fromFeed ? '<span class="conf-note warn">Schedule may be stale</span>' : '')
     + '</div>';
 
   let watch;
@@ -1635,10 +1689,15 @@ function noteBlock(){
   const n = alerts.size;
   const listed = myGames().filter(g=>g.listed||g.espn).length;
   const liveLine = liveMode===true
-      ? (staticCount
-          ? '<b>Live scores on.</b> Fixtures come from this site\'s own schedule file, rebuilt on a schedule; anything in progress is read live. '
-          : '<b>Live scores on.</b> Fixtures and scores are read live from ESPN\'s public feed. ')
+      ? (dataStale
+          ? '<b class="stale-h">Showing an older schedule.</b> The saved schedule was built <b>'
+            + esc(agoText(dataAge||Date.now())) + '</b> and the live feed could not be reached, so times and '
+            + 'carriers may have moved since. Nothing here is invented &mdash; it is simply old. '
+          : staticCount
+            ? '<b>Live scores on.</b> Fixtures come from this site\'s own schedule file, rebuilt on a schedule; anything in progress is read live. '
+            : '<b>Live scores on.</b> Fixtures and scores are read live from ESPN\'s public feed. ')
         + (liveNote?'<span class="conf-note">'+liveNote+'</span> ':'')
+        + (dataStale && liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
     : liveMode===false
       ? (myGames().some(g=>g.remembered)
           ? '<b>Showing remembered results.</b> The feed can\'t be reached right now, so scores you have already seen are being read from this browser; anything newer has no score rather than a guessed one. '
@@ -1854,27 +1913,48 @@ setInterval(render,30000);
 // barely move, and anything in progress is topped up live regardless. A
 // short window would only push every visitor back to fetching directly.
 const STALE_AFTER = 12*60*60*1000;
+/* Freshness and reachability are different questions, and conflating them
+   produced a page that held a complete schedule and 60-odd scores while
+   announcing "Nothing could be fetched". What we hold, how old it is, and
+   whether the live source answered are tracked apart from each other. */
+let dataAge = null;     // when the data we are showing was built, or null
+let dataStale = false;  // we are showing it, but it is older than we trust silently
+let liveOK = null;      // did the live source answer this cycle
+
 async function refreshLive(){
+  let held = 0;
+  try{ held = await loadStatic(); }catch(e){ held = 0; }
+  const fresh = held > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
+  if(held > 0){
+    liveMode = true; liveErr = "";
+    dataAge = staticAt || null;
+    dataStale = !fresh;
+    rememberResults(); render();
+  }
+  if(fresh){
+    // one cheap top-up for anything in progress, then done
+    let filled = 0;
+    try{ filled = await fillScores(); liveOK = true; }catch(e){ liveOK = false; }
+    if(filled){ rememberResults(); }
+    liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from the schedule file"
+      + (filled ? ", " + filled + " score" + (filled===1?"":"s") + " live" : "")
+      + " &middot; updated " + agoText(staticAt);
+    render();
+    return;
+  }
   try{
-    const n = await loadStatic();
-    const fresh = n > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
-    if(n > 0){ liveMode = true; liveErr = ""; rememberResults(); render(); }
-    if(fresh){
-      // one cheap top-up for anything in progress, then done
-      let filled = 0;
-      try{ filled = await fillScores(); }catch(e){}
-      if(filled){ rememberResults(); }
-      liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from the schedule file"
-        + (filled ? ", " + filled + " score" + (filled===1?"":"s") + " live" : "")
-        + " &middot; updated " + agoText(staticAt);
-      render();
-      return;
-    }
     await loadLive();
-    liveMode = true; liveErr = ""; rememberResults(); render();
+    liveMode = true; liveErr = ""; liveOK = true;
+    dataStale = false; dataAge = Date.now();
+    rememberResults(); render();
   }catch(e){
-    liveMode = false;
+    liveOK = false;
     liveErr = (e && e.message || String(e)).slice(0,120);
+    /* Holding a stale schedule is not the same as holding nothing. Keep
+       it, and say plainly how old it is; only with nothing at all is the
+       page genuinely unable to answer. */
+    if(held > 0){ liveMode = true; dataStale = true; }
+    else { liveMode = false; dataAge = null; dataStale = false; }
     render();
   }
 }
