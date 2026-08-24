@@ -76,6 +76,11 @@ A fixture that has already been given a score is still polled while it is under 
 
 ### Tennis is a sport, not a list of people
 
+> **Paused.** Tennis is built and tested but not released — it is on `feature/tennis-mvp`,
+> not on `main`, and is being treated as a sports-architecture experiment. See
+> [`SPORTS_MODEL.md`](SPORTS_MODEL.md) for what it established and where this should go next.
+
+
 The question this has to answer is *what tennis is on today, and where can I watch it* — which nobody should have to know a player's name to ask. So the top level is the tour: switch on ATP, WTA or both, and the default from there is every tournament in them. Narrow to a tournament only if you want to. Nobody gets tennis without asking: with no tour on there are no rows, no chips, and no request.
 
 ESPN publishes tennis as a tournament containing *groupings* — men's singles, women's doubles, mixed doubles — each containing the *competitions* that are the actual matches. That is a different shape from the one event per game every other sport answers, so it has its own parser in `scripts/lib/tennis.mjs` rather than the team parser being taught to guess.
