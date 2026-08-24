@@ -53,8 +53,10 @@ Each of these cost real debugging time and is handled in both the client and the
 - The **season schedule carries no live score**, and omits games entirely. A finished game can read `STATUS_SCHEDULED` 0-0 there. Only the scoreboard has the result, so both are queried and the copy carrying a score wins.
 - A **`YYYYMMDD-YYYYMMDD` range looks like it works and silently returns only the first day.** Soccer accepts `YYYYMM` for a whole month; the North American leagues do not, so they use per-team season schedules plus per-date scoreboards.
 - Sources fail independently. Out-of-season cup competitions 404 as a matter of course, and one of those must never be able to blank the rest of the page.
+- A fixture and a scoreboard event are matched on **the source's own event id first**, never on team ids. The committed file mints a synthetic id for any club it could not map to the roster, so one club reads `feed:EPL:FUL` in the file and `ful` from ESPN; comparing those raw left a game showing as scheduled while it was live at 1-2. Team identity decides only which way round the score goes, and a score whose orientation cannot be established is dropped rather than guessed.
+- **`data.json` is served with `max-age=600`.** The page re-reads it every minute while a game is on, so it asks for a revalidation instead of accepting a copy the browser may hold for ten minutes — otherwise a score the scheduled job has already committed stays invisible. An unchanged file costs a 304 and no body; the API calls keep ordinary caching.
 
-Two fixtures count as the same game only when both clubs match **and** they start within four hours — not merely on the same date, or a baseball doubleheader would collapse into one game.
+Where neither copy carries an event id, two fixtures count as the same game only when both clubs match **and** they start within four hours — not merely on the same date, or a baseball doubleheader would collapse into one game.
 
 ### Keeping the roster in step
 

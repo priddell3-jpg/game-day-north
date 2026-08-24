@@ -942,11 +942,14 @@ const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f
 let liveMode = null;          // null = not tried, true = reachable, false = blocked
 let liveNote = "", liveErr = "";
 
-async function jget(url, ms){
+/* `init` is merged into the fetch, for the one caller that needs to say
+   something about caching. The abort signal is applied last so a caller
+   can never drop the timeout. */
+async function jget(url, ms, init){
   const ctl = new AbortController();
   const timer = setTimeout(()=>ctl.abort(), ms||9000);
   try{
-    const res = await fetch(url, {signal:ctl.signal, mode:"cors"});
+    const res = await fetch(url, Object.assign({mode:"cors"}, init, {signal:ctl.signal}));
     if(!res.ok) throw new Error("HTTP "+res.status);
     return await res.json();
   } finally { clearTimeout(timer); }
@@ -1017,7 +1020,14 @@ function staticTeam(t, comp){
 }
 async function loadStatic(){
   let r;
-  try{ r = await jget(new URL("data.json", location.href).href, 12000); }
+  /* GitHub Pages serves data.json with max-age=600, so a browser that
+     already has a copy will answer from it for ten minutes — long enough
+     for a score the scheduled job has already committed to stay
+     invisible through several refresh cycles. "no-cache" does not mean
+     "do not cache": the copy is still stored and still sent back with
+     its validator, so an unchanged file costs a 304 and no body. Only
+     this file asks for it; the API calls keep ordinary caching. */
+  try{ r = await jget(new URL("data.json", location.href).href, 12000, {cache:"no-cache"}); }
   catch(e){ return 0; }
   if(!r || !Array.isArray(r.fixtures)) return 0;
   const built = [];
@@ -1112,6 +1122,83 @@ function espnDate(ms){
   return p.year + p.month + p.day;
 }
 
+/* ---- merging a scoreboard event into a fixture already on the page ---
+   The two copies of one fixture routinely disagree about a club's id.
+   The committed file mints a `feed:` id for any club the build could not
+   map to the roster, while a scoreboard read of that same club resolves
+   it to its roster id — so Fulham arrives as `feed:EPL:FUL` from the
+   file and as `ful` from ESPN. Comparing those raw is what left a game
+   reading "scheduled" while the source had it live at 1-2. Identity here
+   is sameGame()'s: the source's own event id where both copies carry
+   one, the competition/clubs/start composite where they do not.
+   ------------------------------------------------------------------ */
+
+/* Every name a club is known by, normalised. The file writes a name in
+   full — "Toronto Blue Jays" — where the roster splits it into a city
+   and a name, so a club record matches on whichever of these two
+   descriptions the other side happened to use. */
+function clubKeys(t){
+  if(!t) return [];
+  const keys = [idKey(t)];
+  if(t.name) keys.push(normName(t.name), normName((t.city || "") + " " + t.name));
+  if(ESPN_NAME[t.id]) keys.push(normName(ESPN_NAME[t.id]));
+  return keys.filter(Boolean);
+}
+const sameClub = (a, b) => clubKeys(a).some(k => clubKeys(b).indexOf(k) >= 0);
+
+/* Which way round the two copies list the clubs. The event itself is
+   settled by the time this runs, so this only has to tell one of two
+   known clubs from the other — a weaker question than identity, and one
+   it can answer more loosely. 1 as listed, -1 reversed, 0 undecidable.
+   A score whose orientation cannot be established is worse than no score
+   at all, so the caller drops it rather than guess which way it goes. */
+function orientation(mine, parsed){
+  const straight = (sameClub(mine.home, parsed.home) ? 1 : 0) + (sameClub(mine.away, parsed.away) ? 1 : 0);
+  const reversed = (sameClub(mine.home, parsed.away) ? 1 : 0) + (sameClub(mine.away, parsed.home) ? 1 : 0);
+  if(straight > reversed) return 1;
+  if(reversed > straight) return -1;
+  return 0;
+}
+
+/* The fixture this scoreboard event is about, if the page holds one.
+   Event ids are swept across the whole list before anything else:
+   sameGame() already gives the id precedence within a pair, but a baked
+   fixture carrying no id can sit at the same kickoff as the fed copy
+   that does, and whichever came first would otherwise take the score. */
+function findScored(parsed, games){
+  if(parsed.eid){
+    const byId = games.find(g => g.eid && g.eid === parsed.eid && sameGame(g, parsed));
+    if(byId) return byId;
+  }
+  return games.find(g => sameGame(g, parsed));
+}
+
+/* Take a scoreboard event into the fixture it belongs to, and say
+   whether anything came of it. */
+function applyScored(match, parsed){
+  /* The scoreboard is the authority on what is happening now, but a copy
+     carrying no score must not erase a final already known — the rule
+     mergeReal() applies wherever two copies of a fixture meet. */
+  const hadFinal = match.result && match.result.status === "final" && match.result.score;
+  if(hadFinal && !parsed.result.score) return false;
+  const turn = orientation(match, parsed);
+  const sc = turn === 0 ? null : parsed.result.score;
+  match.result = {
+    status: parsed.result.status,
+    label: parsed.result.label,
+    score: sc ? (turn < 0 ? [sc[1], sc[0]] : sc) : null
+  };
+  /* Matched by id but the clock moved: keep where it originally sat, so
+     a reschedule is shown rather than silently applied. */
+  if(match.start !== parsed.start){
+    match.startOriginal = match.startOriginal || match.start;
+    match.moved = match.startOriginal;      // the row renders this as "was <time>"
+    match.start = parsed.start;
+  }
+  match.listed = true;
+  return true;
+}
+
 /* Season schedules do not carry a reliable live score, and the scoreboard
    only answers one day at a time. So: fetch schedules for the fixtures,
    then top up scores from the scoreboard for just the handful of days
@@ -1147,21 +1234,8 @@ async function fillScores(){
     (r.events||[]).forEach(ev=>{
       const parsed = parseEvent(ev, comp);
       if(!parsed || !parsed.result) return;
-      const match = GAMES.find(g=>g.comp===comp && g.away &&
-        Math.abs(g.start-parsed.start) < 6*3600000 &&
-        ((g.home.id===parsed.home.id && g.away.id===parsed.away.id) ||
-         (g.home.id===parsed.away.id && g.away.id===parsed.home.id)));
-      if(!match) return;
-      const flipped = match.home.id === parsed.away.id;
-      const sc = parsed.result.score;
-      match.result = {
-        status: parsed.result.status,
-        label: parsed.result.label,
-        score: sc ? (flipped ? [sc[1], sc[0]] : sc) : null
-      };
-      match.start = parsed.start;
-      match.listed = true;
-      filled++;
+      const match = findScored(parsed, GAMES);
+      if(match && applyScored(match, parsed)) filled++;
     });
   }));
   answered.forEach(k=>scoredDays.add(k));

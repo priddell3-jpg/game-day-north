@@ -8,8 +8,8 @@ import { readFileSync } from "node:fs";
 const SRC = readFileSync(new URL("../../src/page.html", import.meta.url), "utf8");
 
 function declarationOf(name){
-  // function NAME(...) { ... }  — closing brace at column 0
-  const fn = new RegExp("^function " + name + "\\(", "m").exec(SRC);
+  // [async] function NAME(...) { ... }  — closing brace at column 0
+  const fn = new RegExp("^(?:async )?function " + name + "\\(", "m").exec(SRC);
   if(fn){
     const start = fn.index;
     const end = SRC.indexOf("\n}", start);
