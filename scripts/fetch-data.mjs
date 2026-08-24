@@ -19,6 +19,7 @@ import { writeFileSync, readFileSync } from "node:fs";
 import { easternDate } from "./lib/dates.mjs";
 import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, stageSections,
          titleWords, titleMatches } from "./lib/cycling.mjs";
+import { playerDirectory } from "./lib/tennis.mjs";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -467,6 +468,32 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
   process.exit(1);
 }
 
+/* ============================================================
+   TENNIS — the searchable player list, not the draws.
+
+   Matches are never built here: they change by the minute and are served
+   by /api/tennis, which reads the same two scoreboards live. What the
+   committed file carries is only the list of singles players currently
+   in a draw, so the picker can search a name without a request and
+   without shipping anyone a tournament bracket. A few hundred rows of
+   [id, name, tour, country] — about 15 KB.
+
+   The two tours fail independently, and neither is allowed to fail the
+   build: no tennis simply means an empty picker until the next run.
+   ============================================================ */
+let playersOut = [];
+try{
+  const boards = [];
+  for(const tour of ["atp", "wta"]){
+    try{ boards.push(await get(ESPN + "tennis/" + tour + "/scoreboard")); }
+    catch(e){ console.log("  tennis " + tour + " unavailable: " + (e && e.message || e)); }
+  }
+  if(boards.length) playersOut = playerDirectory(boards);
+  console.log("Tennis: " + playersOut.length + " singles players from " + boards.length + " tour(s)");
+}catch(e){
+  console.log("Tennis player list skipped: " + (e && e.message || e));
+}
+
 /* Don't rewrite the file just to move a timestamp. The build stamps
    `generated`, which differs on every run, so writing unconditionally
    meant a commit and a site rebuild every time — including all through
@@ -475,7 +502,12 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
    otherwise start treating the file as stale. */
 const MAX_AGE = 6*3600000;
 const cyclingSame = previous && JSON.stringify(previous.cycling || []) === JSON.stringify(cyclingOut);
-if(previous && cyclingSame && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
+/* A player joining or leaving a draw is a change worth committing: it is
+   what the picker searches. An empty list because both tours failed is
+   not — that would throw away a good list on a bad day. */
+const playersSame = previous &&
+  (!playersOut.length || JSON.stringify(previous.players || []) === JSON.stringify(playersOut));
+if(previous && cyclingSame && playersSame && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
     console.log("No fixture changed and the file is " + Math.round(age/60000) +
@@ -491,9 +523,13 @@ const out = {
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
   counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
-            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0) },
+            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0),
+            tennisPlayers: playersOut.length },
   fixtures,
-  cycling: cyclingOut
+  cycling: cyclingOut,
+  // both tours down: keep the list the file already had rather than
+  // shipping an empty picker
+  players: playersOut.length ? playersOut : ((previous && previous.players) || [])
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +
