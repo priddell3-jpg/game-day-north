@@ -116,14 +116,18 @@ function playerOf(c){
 function setsOf(a, b){
   const la = (a && a.linescores) || [], lb = (b && b.linescores) || [];
   const n = Math.max(la.length, lb.length);
-  const sets = [], tiebreaks = [];
+  const sets = [], tiebreaks = [], setWins = [];
   for(let i = 0; i < n; i++){
     const x = la[i] || {}, y = lb[i] || {};
     sets.push([num(x.value), num(y.value)]);
     const tx = num(x.tiebreak), ty = num(y.tiebreak);
     tiebreaks.push(tx === null && ty === null ? null : [tx, ty]);
+    /* Who took the set, from ESPN rather than from comparing games. A set
+       in progress has a leader and no winner, and 6-5 is not a set won —
+       deriving it from the numbers would call one. */
+    setWins.push(x.winner === true ? 0 : y.winner === true ? 1 : null);
   }
-  return {sets, tiebreaks};
+  return {sets, tiebreaks, setWins};
 }
 
 /* One competition — one match — or null if it is not singles between two
@@ -153,7 +157,7 @@ export function parseCompetition(comp, ctx){
      match onto a day, but no time is shown and none is invented. */
   const timeKnown = comp.timeValid === true;
 
-  const {sets, tiebreaks} = setsOf(cs[0], cs[1]);
+  const {sets, tiebreaks, setWins} = setsOf(cs[0], cs[1]);
   const wi = cs.findIndex(c => c.winner === true);
 
   return {
@@ -173,6 +177,7 @@ export function parseCompetition(comp, ctx){
     players: [p0, p1],
     sets,
     tiebreaks,
+    setWins,
     winner: wi >= 0 ? wi : null
   };
 }

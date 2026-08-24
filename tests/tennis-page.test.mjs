@@ -298,7 +298,7 @@ test("set scores are rendered as sets, not as one scoreline", () => {
   assert.match(body, /class="sets"/);
   assert.match(body, /class="set"/);
   // the tiebreak is shown beside its set rather than folded into the games
-  assert.match(body, /tiebreaks\[i\]/);
+  assert.match(body, /m\.tiebreaks/);
 });
 
 test("the row honours the scores toggle, with a per-match reveal", () => {
@@ -355,4 +355,76 @@ test("a tennis outage is stated rather than shown as an empty day", () => {
   assert.match(body, /tennisErr/);
   assert.match(body, /unreachable/i);
   assert.match(body, /agoText\(tennisAt\)/, "an old answer must say how old it is");
+});
+
+/* ---------------- surviving a contract that has moved ---------------- */
+
+test("a match missing the optional parts of the contract still renders", () => {
+  /* The page and the endpoint deploy together, but a cached page being
+     answered by a newer endpoint — or the reverse — is a real state, and
+     it must degrade rather than throw the whole render away. */
+  const {page} = harness();
+  const thin = {id: "1", tour: "ATP", tournament: "X", round: "", court: "", venue: "",
+    start: Date.now(), timeKnown: true, status: "final", label: "Final",
+    players: [{id: "1", name: "A"}, {id: "2", name: "B"}], winner: 0};
+  assert.doesNotThrow(() => page.tennisGame(thin));
+  const g = page.tennisGame(thin);
+  assert.equal(page.tennisActive(g.match, Date.now()), false);
+});
+
+test("the set helpers tolerate a match with no sets at all", () => {
+  const {setsWon, setText} = loadFromPage(["setsWon", "setText"]);
+  for(const m of [{}, {sets: null}, {sets: [], tiebreaks: null}, {setWins: undefined}]){
+    assert.doesNotThrow(() => setsWon(m, 0));
+    assert.doesNotThrow(() => setText(m, 0));
+    assert.equal(setsWon(m, 0), 0);
+    assert.equal(setText(m, 0), "");
+  }
+});
+
+test("one unrenderable card does not take the whole rail with it", () => {
+  const at = SRC.indexOf("const card = g =>");
+  const body = SRC.slice(at, at + 200);
+  assert.match(body, /try\{[\s\S]*railCard\(g, now\)[\s\S]*catch/,
+    "the rail must not be left showing whatever it said before");
+});
+
+test("the picker's count uses characters, not HTML entities", () => {
+  // it is assigned with textContent, where an entity would render literally
+  const at = SRC.indexOf('getElementById("drawerCount")');
+  const body = SRC.slice(at, at + 260);
+  assert.match(body, /textContent/);
+  assert.doesNotMatch(body, /&[a-z]+;/, "an HTML entity in a textContent assignment");
+});
+
+test("a country code is never broken between its letters", () => {
+  /* .pl-flag lives inside .g-team, which the narrow breakpoint lets break
+     anywhere so a long name cannot overflow into the score column. A
+     three-letter code is not a word to break — without this it stacks one
+     letter per line at 320px. */
+  const rule = ruleFor(styleText(), ".pl-flag");
+  assert.ok(rule, ".pl-flag must be styled");
+  assert.match(rule, /white-space\s*:\s*nowrap/);
+  assert.match(rule, /overflow-wrap\s*:\s*normal/);
+});
+
+test("a calendar cell names the players rather than reaching for team codes", () => {
+  const at = SRC.indexOf("function renderCalendar");
+  const body = SRC.slice(at, SRC.indexOf("function renderRail", at));
+  const tennisAt = body.indexOf("if(g.tennis){");
+  assert.ok(tennisAt > 0, "the calendar cell must handle tennis before the team path");
+  const branch = body.slice(tennisAt, body.indexOf("const s=stateOf", tennisAt));
+  assert.match(branch, /m\.players\[0\]/);
+  assert.match(branch, /m\.players\[1\]/);
+  assert.doesNotMatch(branch, /\.abbr/, "a player has no team abbreviation");
+  // and the team branch must be reached only after tennis is handled
+  assert.ok(body.indexOf("if(g.tennis){") < body.indexOf('" @ "'),
+    "the team @ notation must not be applied to a tennis match");
+});
+
+test("the rail names the players too", () => {
+  const at = SRC.indexOf("function matchupLabel");
+  const body = SRC.slice(at, at + 400);
+  assert.match(body, /g\.tennis/);
+  assert.match(body, /g\.match\.players/);
 });

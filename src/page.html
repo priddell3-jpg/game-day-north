@@ -206,7 +206,11 @@ main{padding:22px 0 80px}
 .vs{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .g-team.pl-win{color:var(--ink)}
 .g-team.tbd-slot{font-weight:500;color:var(--muted);font-style:italic}
-.pl-flag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--muted)}
+/* The country code sits inside .g-team, which is allowed to break
+   anywhere at the narrow breakpoint so a long name cannot overflow. A
+   three-letter code is not a word to break: without this it stacks one
+   letter per line at 320. */
+.pl-flag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow-wrap:normal}
 .sets{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
 .set{white-space:nowrap}
 .g-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
@@ -1883,9 +1887,9 @@ const TENNIS_STATE = {
 /* One set as it is actually written: games, and the tiebreak in
    parentheses where there was one. */
 function setText(m, i){
-  const [a, b] = m.sets[i] || [null, null];
-  if(a === null && b === null) return "";
-  const tb = m.tiebreaks[i];
+  const [a, b] = (m.sets || [])[i] || [null, null];
+  if(a == null && b == null) return "";
+  const tb = (m.tiebreaks || [])[i];
   const pick = tb ? (tb[0] !== null && tb[1] !== null ? "(" + Math.min(tb[0], tb[1]) + ")" : "") : "";
   return (a === null ? "-" : a) + "-" + (b === null ? "-" : b) + pick;
 }
@@ -1934,7 +1938,7 @@ function tennisRow(g, now){
   }
 
   const reveal = showScores || revealed.has(g.id);
-  const played = m.sets.some((_, i) => setText(m, i));
+  const played = (m.sets || []).some((_, i) => setText(m, i));
   let right = '<div class="g-score">';
   if(!started && m.status === "scheduled"){
     right += (m.timeKnown
@@ -1949,7 +1953,7 @@ function tennisRow(g, now){
       + (state.live ? '<span class="dot-live"></span>' : "") + state.text + '</span>';
     if(played){
       right += '<span class="sets">'
-        + m.sets.map((_, i) => setText(m, i)).filter(Boolean)
+        + (m.sets || []).map((_, i) => setText(m, i)).filter(Boolean)
             .map(t=>'<span class="set">' + esc(t) + '</span>').join("")
         + '</span>';
     }
@@ -2257,6 +2261,16 @@ function renderCalendar(now, todayKey){
         return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'
           + esc(g.race) + '<span class="tm">'+esc((g.stage||"").replace(/^Stage /,"St "))+'</span></span>';
       }
+      if(g.tennis){
+        /* Surnames, not abbreviations: a player has no three-letter code,
+           and "TBD @ TBD" is what reaching for one produced. */
+        const m=g.match, st=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
+        const last=p=>p.tbd ? "TBD" : (p.short || p.name).replace(/^[A-Z]\.\s*/,"");
+        return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'
+          +'<span class="mu">'+esc(last(m.players[0])+" v "+last(m.players[1]))+'</span>'
+          +'<span class="tm">'+(m.status==="live"?"LIVE":m.status==="final"?"FT"
+             :st.live?esc(st.text):!m.timeKnown?"TBD":esc(fmtTime(g.start)))+'</span></span>';
+      }
       const s=stateOf(g,now), ts=timeState(g,now);
       /* "TOR / KC" said nothing about who was at home. Conventional
          North American notation is away @ home, which reads the same way
@@ -2288,22 +2302,48 @@ function renderCalendar(now, todayKey){
   return welcomeBanner()+renderFilters()+head+grid+detail;
 }
 
+/* Who is playing, whatever the sport. The rail and the "next up" line
+   both needed this: reaching for home and away gave tennis "TBD v TBD",
+   because a match has neither. */
+function matchupLabel(g){
+  if(g.tennis) return g.match.players.map(p=>p.name).join(" v ");
+  if(g.event) return g.race || "";
+  const o = orderedTeams(g);
+  return fullName(o.a) + " " + o.sep + " " + fullName(o.b);
+}
+/* Defensive on the optional parts of the contract. The page and the
+   endpoint deploy together, but a browser holding a cached page while a
+   new endpoint answers it — or the reverse — is a real state, and an
+   older answer missing a field must not throw the whole render away. */
+const setsWon = (m, i) => (m.setWins || []).filter(w => w === i).length;
+
 function renderRail(now, todayKey){
   const el=document.getElementById("rail");
   const today=myGames().filter(g=>localKey(g.start)===todayKey);
-  today.sort((a,b)=>{ const rk=s=>s==="live"?0:s==="scheduled"?1:2; return rk(stateOf(a,now).status)-rk(stateOf(b,now).status)||a.start-b.start; });
+  // live first — read from the match for tennis, which has no home side
+  // for stateOf() to reason about
+  const rankOf = g => g.tennis
+    ? (g.match.status==="live"||g.match.status==="suspended" ? 0 : g.match.status==="scheduled" ? 1 : 2)
+    : (st=>st==="live"?0:st==="scheduled"?1:2)(stateOf(g,now).status);
+  today.sort((a,b)=>rankOf(a)-rankOf(b)||a.start-b.start);
   const label='<div class="rail-label"><b>Today</b><span>'+esc(fmtDayLong(todayKey))+'</span></div>';
   if(!today.length){
     const next=myGames().find(g=>g.start>now);
     el.innerHTML=label+(next
       ? '<div class="rail-empty">Nothing on today. Next up: '
-        + '<b>'+esc(fullName(next.home))+' '+orderedTeams(next).sep+' '+esc(fullName(next.away))+'</b>'
+        + '<b>'+esc(matchupLabel(next))+'</b>'
         + ' &middot; ' + esc(fmtDayLong(localKey(next.start)))
         + ' &middot; <span class="countdown" data-start="'+next.start+'">'+esc(countdownText(next.start,now))+'</span></div>'
       : '<div class="rail-empty">Nothing on today.</div>');
     return;
   }
-  el.innerHTML=label+'<div class="rail-scroll">'+today.map(g=>{
+  /* One unrenderable card must not leave the whole rail showing whatever
+     it happened to say before. */
+  const card = g => { try{ return railCard(g, now); }catch(e){ return ""; } };
+  el.innerHTML=label+'<div class="rail-scroll">'+today.map(card).join("")+'</div>';
+}
+function railCard(g, now){
+  {
     if(g.event){
       const r=resolveRights(g);
       return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
@@ -2311,6 +2351,22 @@ function renderRail(now, todayKey){
         + '<div class="rail-meta"><span class="dot-live"></span>Racing today<span>&middot;</span><span>'
         + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
     }
+    if(g.tennis){
+      /* A card of its own. Sets won per player is a real tennis number —
+         ESPN says who took each set — where a single scoreline would not
+         be. The set-by-set line stays on the row in the list. */
+      const m=g.match, r=resolveRights(g), stt=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
+      const reveal=showScores||revealed.has(g.id);
+      const played=(m.sets||[]).some((_,i)=>setText(m,i));
+      const line=i=>'<div class="rail-row"><span class="t">'+esc(m.players[i].short||m.players[i].name)+'</span>'
+        +'<span class="s">'+(m.status==="scheduled"?"&nbsp;":!played?"&ndash;":reveal?setsWon(m,i):"&bull;")+'</span></div>';
+      const meta=stt.live?'<span class="dot-live"></span>'+esc(m.label||stt.text)
+        : m.status==="scheduled"?esc(m.timeKnown?fmtTime(g.start):"Time TBD") : esc(stt.text);
+      return '<div class="rail-card">'+line(0)+line(1)
+        +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'
+        +esc(r.carriers.length?r.carriers[0].name:"TBD")+'</span></div></div>';
+    }
+
     const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
     const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
     const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
@@ -2318,7 +2374,7 @@ function renderRail(now, todayKey){
     const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
     return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
       +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
-  }).join("")+'</div>';
+  }
 }
 
 function renderDrawer(){
@@ -2339,8 +2395,9 @@ function renderDrawer(){
     + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
     + '<button class="icon-btn" id="copyLink">Copy</button>'
     + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></div>';
+  // textContent, so the separator is the character rather than an entity
   document.getElementById("drawerCount").textContent = selected.size+" selected"
-    + (players.size ? " &middot; "+players.size+" player"+(players.size===1?"":"s") : "");
+    + (players.size ? " \u00b7 "+players.size+" player"+(players.size===1?"":"s") : "");
 }
 
 /* Tennis is followed by player, so the picker needs a search rather than
@@ -2411,7 +2468,7 @@ function render(){
     if(el) el.focus();
   }
   renderRail(now,todayKey);
-  document.getElementById("teamCount").textContent=selected.size;
+  document.getElementById("teamCount").textContent=selected.size+(players.size?"+"+players.size:"");
   document.getElementById("v-list").setAttribute("aria-pressed",view==="list");
   document.getElementById("v-cal").setAttribute("aria-pressed",view==="calendar");
   const stg=document.getElementById("scoreToggle");

@@ -233,6 +233,29 @@ test("a tiebreak is kept beside its set, in the same order", () => {
   });
 });
 
+test("who took each set comes from ESPN, not from comparing games", () => {
+  const live = atpM.concat(wtaM).find(m => m.status === "live" && m.sets.length >= 2);
+  assert.ok(live, "no live match in the fixtures");
+  assert.equal(live.setWins.length, live.sets.length);
+  // a set in progress has no winner even though one player leads it
+  assert.equal(live.setWins[live.setWins.length - 1], null,
+    "the set being played must not be awarded to whoever is ahead");
+  // and a completed set names the player with more games in it
+  live.setWins.forEach((w, i) => {
+    if(w === null) return;
+    const [a, b] = live.sets[i];
+    if(a === null || b === null) return;
+    assert.equal(w, a > b ? 0 : 1, "set " + (i + 1) + " went to the wrong player");
+  });
+});
+
+test("a finished match's set wins add up to its winner", () => {
+  const done = atpM.concat(wtaM).find(m => m.status === "final" && m.sets.length);
+  assert.ok(done);
+  const tally = [0, 1].map(i => done.setWins.filter(w => w === i).length);
+  assert.equal(done.winner, tally[0] > tally[1] ? 0 : 1);
+});
+
 test("the winner is an index into the players, or nothing", () => {
   for(const m of atpM.concat(wtaM)){
     if(m.winner === null) continue;
@@ -417,9 +440,9 @@ test("the normalized output is a small, flat contract", () => {
   assert.match(out.generated, /^\d{4}-\d{2}-\d{2}T/);
   const m = out.matches[0];
   assert.deepEqual(Object.keys(m).sort(), [
-    "court", "id", "label", "major", "players", "round", "sets", "short",
-    "start", "status", "tiebreaks", "timeKnown", "tid", "tour", "tournament",
-    "venue", "winner"
+    "court", "id", "label", "major", "players", "round", "sets", "setWins",
+    "short", "start", "status", "tiebreaks", "timeKnown", "tid", "tour",
+    "tournament", "venue", "winner"
   ].sort());
 });
 
