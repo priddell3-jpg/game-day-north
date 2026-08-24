@@ -1,0 +1,25 @@
+name: Tests
+
+# The parsing rules in this repo are the kind that fail silently: a bad
+# regex returns a plausible name rather than an error, and a fixed
+# timezone offset is wrong for only part of the year. Run them against
+# saved real inputs on every push.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "data.json"          # the scheduled refresh commits this; it changes no logic
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run tests
+        run: node --test tests/

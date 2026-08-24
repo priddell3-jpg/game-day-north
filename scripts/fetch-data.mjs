@@ -16,6 +16,9 @@
  * No dependencies. Node 20+ for built-in fetch.
  */
 import { writeFileSync, readFileSync } from "node:fs";
+import { easternDate } from "./lib/dates.mjs";
+import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, stageSections,
+         titleWords, titleMatches } from "./lib/cycling.mjs";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -98,11 +101,6 @@ function idFor(displayName){
   return NAME_TO_ID.get(bare) || null;
 }
 
-// US Eastern is UTC-4 in DST, UTC-5 otherwise. Close enough for date bucketing.
-function easternDate(ms){
-  const d = new Date(ms - 4*3600000);
-  return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate());
-}
 function monthKeys(from, to){
   const out = [], d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
   while(d <= to){ out.push(d.getUTCFullYear()+pad(d.getUTCMonth()+1)); d.setUTCMonth(d.getUTCMonth()+1); }
@@ -281,19 +279,6 @@ const CYCLING_SOURCES = [
     "2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18"],
    pages:["2026 Tour of Guangxi"]}
 ];
-/* Significant words in a title. Years are excluded because every
-   article in a season carries one, and the vocabulary of cycling is
-   excluded because it is shared by every race and the season overview
-   alike — "2026 Tour of Guangxi" and "2026 UCI World Tour" have "tour"
-   in common and nothing else. What is left is the distinctive part: the
-   place or the race. */
-const TITLE_GENERIC = new Set(["uci","world","tour","race","racing","grand","prix",
-  "cycliste","classic","cycling","road","men","mens","women","womens","stage","edition"]);
-const titleWords = t => new Set(String(t||"").toLowerCase()
-  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-  .split(/[^a-z0-9]+/)
-  .filter(w=>w.length >= 3 && !/^\d+$/.test(w) && !TITLE_GENERIC.has(w)));
-
 async function wikitextOf(title){
   const url = WIKI_API + "?action=parse&prop=wikitext&format=json&formatversion=2&redirects=1&page="
     + encodeURIComponent(title);
@@ -311,66 +296,13 @@ async function wikitextOf(title){
        no significant word with the request, and name the mismatch so
        the title can be corrected rather than quietly returning nothing. */
     const got = (j.parse && j.parse.title) || "";
-    const want = titleWords(title), have = titleWords(got);
-    if(want.size && ![...want].some(w=>have.has(w))){
+    if(!titleMatches(title, got)){
       console.warn("  ! \"" + title + "\" resolved to \"" + got
         + "\" — no shared words, treating as missing; the title needs fixing");
       return null;
     }
     return text;
   }catch(e){ return null; }
-}
-/* Results are not wiki-table rows. Each classification is a run of
-   {{cyclingresult|rank|[[Rider]]|NAT|team|time}} templates introduced by
-   {{cyclingresult start|title=...}} and closed by {{cyclingresult end}}.
-   Parsing this as a table picked up the first wikilink in the section,
-   which is a citation publisher, not a rider. */
-function resultBlocks(text){
-  const marks = [], re = /\{\{\s*cyclingresult start\b/gi;
-  let m;
-  while((m = re.exec(text))) marks.push(m.index);
-  return marks.map((at,i)=>{
-    const seg = text.slice(at, marks[i+1] !== undefined ? marks[i+1] : text.length);
-    const e = seg.search(/\{\{\s*cyclingresult end\s*\}\}/i);
-    return e >= 0 ? seg.slice(0, e) : seg;
-  });
-}
-const isGCBlock = b => /general classification/i.test(b.slice(0,240));
-/* The rank must be a number. A neutralised stage lists its riders under
-   an em dash, and a team time trial has no rider column at all: both
-   yield nothing, which is the correct answer for "who was on the
-   podium". */
-function ridersInBlock(block, n){
-  const out = [], re = /\{\{\s*cyclingresult\s*\|\s*\d+\s*\|\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/gi;
-  let m;
-  while((m = re.exec(block)) && out.length < n){
-    const name = (m[2] || m[1]).replace(/\s+/g," ").trim();
-    if(name && !out.includes(name)) out.push(name);
-  }
-  return out.slice(0, n);
-}
-/* While a stage race is running, the main article carries the standings
-   as an ordinary wikitable of {{Flag athlete}} rows, before any split
-   per-stage article exists. That is the only place the current leader
-   can be read on day one. */
-function gcLeaderFrom(text){
-  const at = text.search(/\|\+\s*General classification after stage/i);
-  if(at < 0) return null;
-  const seg = text.slice(at, at + 4000);
-  const m = seg.match(/\{\{\s*Flag athlete\s*\|\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/i);
-  if(!m) return null;
-  return (m[2] || m[1]).replace(/\s+/g," ").trim();
-}
-function stageSections(text){
-  // "==Stage 4==" headings, tolerant of spacing and === depth
-  const found = {};
-  const re = /^=+\s*Stage\s+(\d+)\b[^=\n]*=+\s*$/gim;
-  const marks = []; let m;
-  while((m = re.exec(text))) marks.push({n:+m[1], at:m.index});
-  marks.forEach((mk, i)=>{
-    found[mk.n] = text.slice(mk.at, marks[i+1] ? marks[i+1].at : text.length);
-  });
-  return found;
 }
 const todayISO = new Date(now).toISOString().slice(0,10);
 const prevCycling = (previous && Array.isArray(previous.cycling)) ? previous.cycling : [];

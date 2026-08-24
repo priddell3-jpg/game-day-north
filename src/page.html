@@ -1229,21 +1229,26 @@ function timeState(g, now){
 }
 
 /* ============================ live state ============================ */
-const DURATION = {NHL:9300000, NBA:8400000, NFL:11400000, MLB:11100000};
-const durOf = c => DURATION[c] || 6900000;
 
 /* A game's state comes from real data or it comes from nothing.
    There is deliberately no code here that invents a score. */
+/* Completion is something a source reports, not something a clock infers.
+   A delay, extra innings, a weather stoppage and a postponement all look
+   identical to elapsed time, and the old rule turned every one of them
+   into a confident "Final" for a game still being played. Two states are
+   trusted — final and live — and only when a source says so.
+
+   A source still saying "scheduled" after the start counts as nothing
+   reported: that is exactly what ESPN's season schedule returns for a
+   game already under way. */
 function stateOf(g, now){
   if(g.away===null) return {status:"scheduled"};
-  if(g.result){
-    const r = g.result;
-    return {status:r.status, score:r.score, label:r.label || (r.status==="final"?"Final":""), real:true};
+  const r = g.result, said = r && r.status;
+  if(said==="final" || said==="live"){
+    return {status:said, score:r.score||null, label:r.label || (said==="final"?"Final":""), real:true};
   }
-  if(now < g.start) return {status:"scheduled"};
-  return now >= g.start + durOf(g.comp)
-    ? {status:"final", label:"Final", score:null}
-    : {status:"live", label:"In progress", score:null};
+  if(now < g.start) return {status:"scheduled", score:null};
+  return {status:"unknown", label:"Status unavailable", score:null};
 }
 
 /* ============================ per-viewer state ============================
@@ -1477,6 +1482,12 @@ function gameRow(g, now){
   } else if(st.status==="scheduled"){
     scoreCell += '<span class="countdown" data-start="'+g.start+'">'+esc(countdownText(g.start,now))+'</span>'
       + '<span class="score-state">'+(ts.state==="tbc" ? "Confirmed by "+esc(fmtShortDate(ts.confirmBy)) : verbOf(g.comp))+'</span>';
+  } else if(st.status==="unknown"){
+    /* Started, and nothing has said what happened. Do not guess either
+       way — no countdown, because it has begun; no "Final", because
+       nothing reported one. */
+    scoreCell += '<span class="score-state">Status unavailable</span>'
+      + '<span class="conf-note'+(liveMode===false?" warn":"")+'">Awaiting update</span>';
   } else if(!st.score){
     scoreCell += '<span class="score-state'+(st.status==="live"?" live":"")+'">'
       + (st.status==="live"?'<span class="dot-live"></span>':"")+esc(st.label||"")+'</span>'
@@ -1876,7 +1887,7 @@ refreshLive();
 setInterval(()=>{
   if(liveMode===false) return;
   const now=Date.now();
-  const busy = myGames().some(g=>{ const st=stateOf(g,now); return st.status==="live"; })
+  const busy = myGames().some(g=>{ const st=stateOf(g,now); return st.status==="live" || st.status==="unknown"; })
             || myGames().some(g=>g.start>now && g.start-now < 2*3600000);
   if(busy) refreshLive();
 }, 60000);

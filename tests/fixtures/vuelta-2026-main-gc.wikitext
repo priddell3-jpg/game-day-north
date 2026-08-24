@@ -1,0 +1,90 @@
+aña|mountains classification]]
+| {{cjersey|yellow number}}
+| Denotes the winner of the combativity award
+|-
+|}
+
+=== General classification ===
+{| class="wikitable" style="width:50em;margin-bottom:0;"
+|+ General classification after stage 1 (1–10)<ref name="class">{{cite web|url=https://www.lavuelta.es/en/rankings|title=Official classifications of La Vuelta 2026|website=LA VUELTA.ES|publisher=[[Amaury Sport Organisation]]|access-date=22 August 2026}}</ref><ref name="tissottime">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-1/rankings|title=Vuelta a España Rankings Tissot Timing|work=Tissot Timing|access-date=22 August 2026}}</ref>
+|-
+! scope="col" | Rank
+! scope="col" | Rider
+! scope="col" | Team
+! scope="col" | Time
+|-
+! scope="row" | 1
+| {{Flag athlete|[[Tadej Pogačar]]|SLO}} {{cjersey|red}}{{cjersey|dark green}}{{cjersey|red number}}
+| {{UCI team code|UEX|2026}}
+| align="right" | 10' 57"
+|-
+! scope="row" | 2
+| {{Flag athlete|[[Ethan Hayter]]|GBR}}
+| {{UCI team code|SOQ|2026}}
+| align="right" | + 0"
+|-
+! scope="row" | 3
+| {{Flag athlete|[[Joshua Tarling]]|GBR}} {{cjersey|white}}
+| {{UCI team code|NCI|2026b}}
+| align="right" | + 4"
+|-
+! scope="row" | 4
+| {{Flag athlete|[[Callum Thornley]]|GBR}} {{cjersey|blue polkadot}}
+| {{UCI team code|RBH|2026}}
+| align="right" | + 5"
+|-
+! scope="row" | 5
+| {{Flag athlete|[[Christophe Laporte]]|FRA}}
+| {{UCI team code|TVL men|2026}}
+| align="right" | + 6"
+|-
+! scope="row" | 6
+| {{Flag athlete|[[Léo Bisiaux]]|FRA}}
+| {{UCI team code|DCT|2026}}
+| align="right" | + 8"
+|-
+! scope="row" | 7
+| {{Flag athlete|[[Oscar Chamberlain]]|AUS}}
+| {{UCI team code|DCT|2026}}
+| align="right" | + 9"
+|-
+! scope="row" | 8
+| {{Flag athlete|[[Wout van Aert]]|BEL}}
+| {{UCI team code|TVL men|2026}}
+| align="right" | + 9"
+|-
+! scope="row" | 9
+| {{Flag athlete|[[Finn Fisher-Black]]|NZL}}
+| {{UCI team code|RBH|2026}}
+| align="right" | + 10"
+|-
+! scope="row" | 10
+| {{Flag athlete|[[Arthur Kluckers]]|LUX}}
+| {{UCI team code|TUD|2026}}
+| align="right" | + 11"
+|}
+{{columns-start}}
+
+=== Points classification ===
+{| class="wikitable" margin-bottom:0;"
+|+ Points classification after stage 1 (1–10)<ref name="class" /><ref name="tissottime" />
+|-
+! scope="col" | Rank
+! scope="col" | Rider
+! scope="col" | Team
+! scope="col" | Points
+|-
+! scope="row" | 1
+| {{Flag athlete|[[Tadej Pogačar]]|SLO}} {{cjersey|dark green}}{{cjersey|red}}{{cjersey|red number}}
+| {{UCI team code|UEX|2026}}
+| align="right" | 20
+|-
+! scope="row" | 2
+| {{Flag athlete|[[Ethan Hayter]]|GBR}}
+| {{UCI team code|SOQ|2026}}
+| align="right" | 17
+|-
+! scope="row" | 3
+| {{Flag athlete|[[Joshua Tarling]]|GBR}} {{cjersey|white}}
+| {{UCI team code|NCI|2026b}}
+| align="right" | 15

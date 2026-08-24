@@ -1,0 +1,131 @@
+== Stage 1 ==
+;23 August 2025 – [[Turin]] ([[Palace of Venaria|Reggia di Venaria]]) (Italy) to [[Novara]] (Italy), {{convert|186.1|km|abbr=on}}
+
+The race began with a {{convert|186.1|km|adj=on}} flat stage that was expected to offer an opportunity for the sprinters to take the first red leader’s jersey. There was a lone third-category climb that topped after {{convert|69.8|km|abbr=}} of racing.
+
+As soon as the flag dropped, six riders got a gap on the peloton. The break was composed of [[Koen Bouwman]] ({{UCI team code|JAY men|2025}}), [[Alessandro Verre]] ({{UCI team code|ARK men|2025}}), [[Nicolas Vinokurov]] ({{UCI team code|XAT|2025}}), [[Pepijn Reinderink]] ({{UCI team code|SOQ|2025}}), [[Hugo de la Calle]] ({{UCI team code|BBH|2025}}), and [[Joel Nicolau]] ({{UCI team code|CJR|2025}}). Their advantage over the peloton maxed out at just over two minutes as {{UCI team code|ADC|2025}} and {{UCI team code|LTK men|2025}} took control for their sprinters, [[Jasper Philipsen]] and [[Mads Pedersen (cyclist)|Mads Pedersen]], respectively. At the top of the only categorized climb on the stage, Verre took maximum {{abbr|KOM|King of the Mountains}} points ahead of Nicolau and Vinokourov to take the first polka-dot jersey of the race. At the intermediate sprint with {{convert|90.6|km|abbr=}} left, the break swept up the points and the bonus seconds available. With {{convert|84|km|abbr=}} to go, de la Calle went solo off the front. The five remnants of the break were soon caught by the peloton. As the riders approached the finale of the stage, de la Calle was caught by the peloton at {{convert|37|km|abbr=}} from the finish. The race headed to the inevitable bunch sprint with the sprinters’ teams setting stations at the front of the peloton. In the final sprint, Philipsen launched inside the final {{convert|200|m|abbr=}}, sprinting to the victory ahead of [[Ethan Vernon]] ({{UCI team code|IPT|2025}}) and [[Orluis Aular]] ({{UCI team code|MOV men|2025}}) to take the first red jersey. Pedersen, the other stage favorite, was unable to contest the finish and only took fourteenth on the stage.<ref name="CN-1" /><ref>{{cite web|url=https://www.cyclingweekly.com/racing/jasper-philipsen-takes-vuelta-a-espana-red-jersey-after-sprinting-to-stage-one-win|title=Jasper Philipsen takes Vuelta a España red jersey after sprinting to stage one win|first=Dan|last=Challis|work=Cycling Weekly|date=23 August 2025|access-date=23 August 2025}}</ref>
+{|
+|-
+||
+{{cyclingresult start|title=Stage 1 Result<ref name="CN-1">{{cite web|url=https://www.cyclingnews.com/races/vuelta-a-espana-2025/stage-1/results/|title=Vuelta a España stage 1: Jasper Philipsen dominates sprint finish to win on the opening day|first1=Joseph|last1=Lycett|first2=Laura|last2=Weislo|work=Cycling News|date=23 August 2025|access-date=23 August 2025}}</ref><ref name="Stage-1">{{cite web|url=https://www.tissottiming.com/2025/vue/stage-1/rankings|title=La Vuelta – 1 – Reggia di Venaria > Novara|publisher=[[Tissot Timing]]|date=23 August 2025|access-date=23 August 2025}}</ref>}}
+{{cyclingresult|1|[[Jasper Philipsen]]|BEL|{{UCI team code|ADC|2025}}|4h 09' 12"}}
+{{cyclingresult|2|[[Ethan Vernon]]|GBR|{{UCI team code|IPT|2025}}|+ 0"}}
+{{cyclingresult|3|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2025}}|+ 0"}}
+{{cyclingresult|4|[[Elia Viviani]]|ITA|{{UCI team code|LOT|2025}}|+ 0"}}
+{{cyclingresult|5|[[Iván García Cortina]]|ESP|{{UCI team code|MOV men|2025}}|+ 0"}}
+{{cyclingresult|6|[[David González (cyclist)|David González]]|ESP|{{UCI team code|Q36|2025}}|+ 0"}}
+{{cyclingresult|7|[[Bryan Coquard]]|FRA|{{UCI team code|COF men|2025}}|+ 0"}}
+{{cyclingresult|8|[[Guillermo Thomas Silva]]|URU|{{UCI team code|CJR|2025}}|+ 0"}}
+{{cyclingresult|9|[[Tom Pidcock]]|GBR|{{UCI team code|Q36|2025}}|+ 0"}}
+{{cyclingresult|10|[[Madis Mihkels]]|EST|{{UCI team code|EFE|2025}}|+ 0"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 1<ref name="CN-1" /><ref name="Stage-1" />}}
+{{cyclingresult|1|[[Jasper Philipsen]]|BEL|{{UCI team code|ADC|2025}}|4h 09' 02"|{{cjersey|red}}{{cjersey|dark green}}}}
+{{cyclingresult|2|[[Ethan Vernon]]|GBR|{{UCI team code|IPT|2025}}|+ 4"|{{cjersey|white}}}}
+{{cyclingresult|3|[[Pepijn Reinderink]]|NED|{{UCI team code|SOQ|2025}}|+ 4"}}
+{{cyclingresult|4|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2025}}|+ 6"}}
+{{cyclingresult|5|[[Nicolas Vinokurov]]|KAZ|{{UCI team code|XAT|2025}}|+ 6"}}
+{{cyclingresult|6|[[Koen Bouwman]]|NED|{{UCI team code|JAY men|2025}}|+ 8"}}
+{{cyclingresult|7|[[Elia Viviani]]|ITA|{{UCI team code|LOT|2025}}|+ 10"}}
+{{cyclingresult|8|[[Iván García Cortina]]|ESP|{{UCI team code|MOV men|2025}}|+ 10"}}
+{{cyclingresult|9|[[David González (cyclist)|David González]]|ESP|{{UCI team code|Q36|2025}}|+ 10"}}
+{{cyclingresult|10|[[Bryan Coquard]]|FRA|{{UCI team code|COF men|2025}}|+ 10"}}
+{{cyclingresult end}}
+|}
+
+== Stage 5 ==
+;27 August 2025 – [[Figueres]] to Figueres, {{convert|20|km|abbr=on}} ([[Team time trial|TTT]])
+
+The race reached Spain on the fifth stage as the riders tackled a {{convert|24.1|km|adj=on}} flat team time trial in [[Figueres]]. The teams set off at four-minute intervals in the reverse order of their team classification standing with the exception of {{UCI team code|GFC|2025|nolink=y}}, which was the last team off the start ramp by virtue of having the general classification leader, Gaudu. Each team’s time was set by their fourth rider across the line.
+
+The first team off the start ramp, {{UCI team code|LOT|2025|nolink=y}}, set the initial benchmark time of 25’ 53”. Their team was not beaten until the seventh team off the start ramp, {{UCI team code|LTK men|2025|nolink=y}}, was able to do so. They set a time of 25’ 35”, becoming the first team to average more than 56 kilometres per hour. Their time was threatened by {{UCI team code|IGD|2025|nolink=y}}, which set a time that was 10 seconds faster by the first time check. However, they slowed towards the end, eventually finishing with a time of 25’ 42”, seven seconds slower than {{UCI team code|LTK men|2025|nolink=y}}. {{UCI team code|RBH|2025|nolink=y}} was in contention for the stage win and despite being more than ten seconds slower by the second time check, they managed to threaten {{UCI team code|LTK men|2025|nolink=y}}’s time before falling short  by just three seconds. Three more teams, {{UCI team code|UAD men|2025|nolink=y}}, {{UCI team code|TVL men|2025|nolink=y}}, and {{UCI team code|GFC|2025|nolink=y}}, were able to beat {{UCI team code|LTK men|2025|nolink=y}}’s time at the first time check before falling behind by the second time check. Eventually, the best performance was ridden by {{UCI team code|UAD men|2025|nolink=y}}. They took 14 seconds from {{UCI team code|LTK men|2025|nolink=y}} in the final part of the course to set a time of 25’ 26”, averaging almost 57 kilometres per hour. {{UCI team code|TVL men|2025|nolink=y}} eventually finished second on the day, going eight seconds slower than the winners. With Gaudu losing 16 seconds to Vingegaard on the day, the Dane regained the red jersey by eight seconds ahead of the {{UCI team code|UAD men|2025|nolink=y}} trio of [[Juan Ayuso]], [[João Almeida (cyclist)|João Almeida]], and Soler.<ref name="CN-5" /><ref>{{cite web|url=https://www.cyclingweekly.com/racing/uae-team-emirates-xrg-power-to-team-time-trial-win-on-stage-5-of-vuelta-a-espana-as-jonas-vingegaard-moves-back-into-red-jersey|title=UAE Team Emirates-XRG power to team time trial win on stage 5 of Vuelta a España, as Jonas Vingegaard moves back into red jersey|first=Adam|last=Becket|work=Cycling Weekly|date=27 August 2025|access-date=27 August 2025}}</ref>
+
+Protestors with Palestinian flags and a banner reading "Neutrality is complicity. Boycott Israel"<ref>{{Cite web |title=Instagram |url=https://www.instagram.com/reel/DN3zbW4XprB/ |access-date=2025-08-28 |website=www.instagram.com}}</ref> blocked Israel-Premier Tech's team time trial.<ref>{{Cite web |author1=Adam Becket |date=2025-08-27 |title=Pro-Palestine protestors disrupt Israel-Premier Tech's team time trial on stage 5 at Vuelta a España |url=https://www.cyclingweekly.com/racing/pro-palestine-protestors-disrupt-israel-premier-techs-team-time-trial-on-stage-5-at-vuelta-a-espana |access-date=2025-08-27 |website=Cycling Weekly |language=en}}</ref> The team finished the stage in 19th place of 23, 54 seconds to the stage winners,<ref>{{Cite web |title=La Vuelta Ciclista a España 2025 Stage 5 (TTT) results |url=https://www.procyclingstats.com/race/vuelta-a-espana/2025/stage-5 |access-date=2025-08-27 |website=www.procyclingstats.com}}</ref> but were then awarded 15 seconds due to the protest, thus placing them in 14th place.<ref>{{Cite web |date=2025-08-27 |title=Israel - Premier Tech awarded 15-seconds improved time by jury after their TTT is hindered by protests |url=https://cyclinguptodate.com/cycling/israel-premier-tech-awarded-15-seconds-improved-time-by-jury-after-their-ttt-is-hindered-by-protests |access-date=2025-08-28 |website=CyclingUpToDate.com |language=en}}</ref> One protestor was arrested by the regional Catalan Police.<ref>{{Cite web |date=2025-08-28 |title=Vuelta a España: Pasa a disposición judicial un detenido por obstaculizar el paso del Israel-Premier Tech |url=https://www.esciclismo.com/actualidad/carretera/87662.html |access-date=2025-08-28 |website=EsCiclismo.com |language=spanish}}</ref> Vuelta's director, Javier Guillén, responded by stating "they cannot allow what happened" in Stage 5 with the Israel-Premier Tech team.<ref>{{Cite web |last=Labarga |first=Nacho |date=2025-08-27 |title=Javier Guillén y el parón por Palestina: "Vamos a presentar una denuncia, no podemos permitirlo" |url=https://www.marca.com/ciclismo/vuelta-espana/2025/08/27/javier-guillen-paron-palestina-presentar-denuncia-permitirlo.html |access-date=2025-08-28 |website=MARCA |language=es}}</ref> Some sports commentators have commended protestors, but disapproved that the protest affected only one team<ref>{{Cite web |last=verTele |first=Redacción |date=2025-08-28 |title=Carlos de Andrés denuncia la masacre en Gaza durante la protesta contra el equipo Israel en la Vuelta: "Genocidio tremendo" |url=https://www.eldiario.es/vertele/noticias/carlos-de-andres-denuncia-masacre-gaza-protesta-equipo-israel-la-vuelta-genocidio-tremendo_1_12561566.html |access-date=2025-08-28 |website=Vertele |language=es}}</ref> and for putting rider safety at risk during the protest.<ref>{{Cite AV media |url=https://www.youtube.com/watch?v=nHlbLBJNQqU |title=VICIOUSLY Technical Team Time Trial |date=2025-08-27 |last=Chris Horner |access-date=2025-08-28 |via=YouTube}}</ref> Other commentators disapproved the protest all together affirming that the Vuelta is not the place for such protests.<ref>{{Cite AV media |url=https://www.youtube.com/watch?v=UF0B-oW8p3k |title=⏱️ UAE puede con VISMA pero VINGEGAARD vuelve a ser LÍDER ♦️ |date=2025-08-27 |last=Javier Ares |access-date=2025-08-28 |via=YouTube}}</ref>
+{|
+|-
+||
+{{cyclingresult start|rider=no|title=Stage 5 Result<ref name="CN-5">{{cite web|url=https://www.cyclingnews.com/races/vuelta-a-espana-2025/stage-5/results/|title=Vuelta a España stage 5: UAE Team Emirates-XRG delivers commanding team time trial victory while Jonas Vingegaard slips back into leader's jersey|first=Laura|last=Weislo|work=Cycling News|date=27 August 2025|access-date=27 August 2025}}</ref><ref name="Stage-5">{{cite web|url=https://www.tissottiming.com/2025/vue/stage-5/rankings|title=La Vuelta – 5 – Figueres > Figueres|publisher=[[Tissot Timing]]|date=27 August 2025|access-date=27 August 2025}}</ref>}}
+{{cyclingresult|1|||{{flagicon|UAE}} {{UCI team code|UAD men|2025}}|25' 26"}}
+{{cyclingresult|2|||{{flagicon|NED}} {{UCI team code|TVL men|2025}}|+ 8"}}
+{{cyclingresult|3|||{{flagicon|USA}} {{UCI team code|LTK men|2025}}|+ 9"}}
+{{cyclingresult|4|||{{flagicon|GER}} {{UCI team code|RBH|2025}}|+ 12"}}
+{{cyclingresult|5|||{{flagicon|GBR}} {{UCI team code|IGD|2025}}|+ 16"}}
+{{cyclingresult|6|||{{flagicon|ESP}} {{UCI team code|MOV men|2025}}|+ 17"}}
+{{cyclingresult|7|||{{flagicon|FRA}} {{UCI team code|DAT|2025}}|+ 17"}}
+{{cyclingresult|8|||{{flagicon|SUI}} {{UCI team code|Q36|2025}}|+ 22"}}
+{{cyclingresult|9|||{{flagicon|FRA}} {{UCI team code|GFC|2025}}|+ 24"}}
+{{cyclingresult|10|||{{flagicon|BEL}} {{UCI team code|LOT|2025}}|+ 27"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after stage 5<ref name="CN-5" /><ref name="Stage-5" />}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2025}}|16h 11' 24"|{{cjersey|red}}}}
+{{cyclingresult|2|[[Juan Ayuso]]|ESP|{{UCI team code|UAD men|2025}}|+ 8"|{{cjersey|white}}{{cjersey|red number}}}}
+{{cyclingresult|3|[[João Almeida (cyclist)|João Almeida]]|POR|{{UCI team code|UAD men|2025}}|+ 8"|{{cjersey|red number}}}}
+{{cyclingresult|4|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2025}}|+ 8"|{{cjersey|red number}}}}
+{{cyclingresult|5|[[Giulio Ciccone]]|ITA|{{UCI team code|LTK men|2025}}|+ 9"}}
+{{cyclingresult|6|[[David Gaudu]]|FRA|{{UCI team code|GFC|2025}}|+ 16"}}
+{{cyclingresult|7|[[Matteo Jorgenson]]|USA|{{UCI team code|TVL men|2025}}|+ 16"}}
+{{cyclingresult|8|[[Jai Hindley]]|AUS|{{UCI team code|RBH|2025}}|+ 20"}}
+{{cyclingresult|9|[[Giulio Pellizzari]]|ITA|{{UCI team code|RBH|2025}}|+ 20"}}
+{{cyclingresult|10|[[Egan Bernal]]|COL|{{UCI team code|IGD|2025}}|+ 22"}}
+{{cyclingresult end}}
+|}
+
+== Stage 11 ==
+;3 September 2025 – [[Bilbao]] to Bilbao, {{convert|157.4|km|abbr=on}}
+The twelfth stage featured a hilly {{convert|167|km|adj=on}} stage that was expected to suit the puncheurs. There were seven categorized climbs that were scattered throughout the stage. In the last {{convert|57|km|abbr=}}, the riders tackled the second-category Alto del Vivero (4.2&nbsp;km at 8.3%) twice before heading towards the third-category Alto de Pike (2.3&nbsp;km at 8.9%), the final climb on the day. The last {{convert|1.2|km|abbr=}} of the Alto de Pike averaged over 12% with bonus seconds available at the top. From the top, there were {{convert|7.8|km|abbr=}} left to the finish in Bilbao.
+
+The start of the stage was delayed due to a meeting between team representatives, CPA, and the race organizers with regards to safety issues from potential pro-Palestinian protests on the stage.<ref>{{cite web|url=https://www.cyclingweekly.com/racing/we-are-just-cyclists-doing-our-job-vuelta-a-espana-riders-blame-pro-palestine-protests-for-causing-crash|title='We are just cyclists doing our job' – Vuelta a España riders blame pro-Palestine protests for causing crash, demonstration delays start of stage 11|first=Adam|last=Becket|work=Cycling Weekly|date=3 September 2025|access-date=3 September 2025}}</ref> With the uphill start to the stage, multiple riders attempted to get into the break. After just over {{convert|34|km|abbr=}} of racing, a group of three riders, Soler, Pedersen, and Aular, was able to get a significant gap on the peloton. Several riders tried to bridge to the trio but the front group was the only one allowed to get a gap. With {{convert|80|km|abbr=}} left, Soler soloed off the front while Pedersen and Aular were caught by the peloton. Soler himself was caught at the base of the first ascent of Alto del Vivero. On the climb, [[Mikel Landa]] ({{UCI team code|SOQ|2025|nolink=y}}) tried to form another break. He was soon joined by [[Santiago Buitrago]] ({{UCI team code|TBV|2025|nolink=y}}) while a group of six chasers, including Pedersen, went off in pursuit of them. The chasers were never able to get close to the front duo and were eventually swallowed up by the peloton. With {{convert|33|km|abbr=}} to go, Landa suffered from cramps, leaving Buitrago up front. Buitrago held a lead of close to 40 seconds heading to the second climb up Alto del Vivero.
+
+On the climb, Almeida accelerated twice with his final attack bringing back Buitrago in the process. A group containing most of the {{abbr|GC|general classification}} contenders formed on the descent of the climb. On the approach to Alto de Pike, the race center announced that due to pro-Palestinian protests at the finish, the {{abbr|GC|general classification}} times were to be taken at the {{convert|3|km|adj=on}} mark and that there was going to be no stage winner. On the final climb, Pidcock attacked twice, distancing Vingegaard both times. At the top, Vingegaard gradually made his way back to Pidcock’s wheel while a group containing Almeida, Hindley, Gall, and Jorgenson formed behind the two. Pidcock and Vingegaard worked together to keep their gap over the chasers, crossing the {{convert|3|km|adj=on}} mark 10 seconds ahead of the four chasers. In the {{abbr|GC|general classification}}, Vingegaard extended his lead to 50 seconds on Almeida while Pidcock gained two bonus seconds on Vingegaard at the top of Alto de Pike, reducing his deficit to 56 seconds.<ref name="CN-11" /><ref>{{cite web|url=https://www.cyclingweekly.com/racing/jonas-vingegaard-and-tom-pidcock-take-time-on-rivals-on-stage-11-of-vuelta-a-espana-as-day-ends-without-a-winner|title=Jonas Vingegaard and Tom Pidcock take time on rivals on stage 11 of Vuelta a España as day ends without a winner|first=Adam|last=Becket|work=Cycling Weekly|date=3 September 2025|access-date=3 September 2025}}</ref>
+
+Apart from the protests at the finish which caused the neutralization of the stage, there were more incidents on the stage stemming from the protests. Before the first passage of the finish line, several small white papers were thrown on the road while several protesters tried to invade the road. On the second time up Alto del Vivero, a protester with a banner blocked the road, causing riders to swerve to avoid the banner.<ref>{{cite web|url=https://www.cyclingweekly.com/racing/more-pro-palestine-protests-affect-vuelta-a-espana-on-stage-11-in-bilbao|title=No winner on stage 11 of Vuelta a España due to pro-Palestine protests, general classification time taken with 3km to go|first=Adam|last=Becket|work=Cycling Weekly|date=3 September 2025|access-date=3 September 2025}}</ref>
+{|
+|-
+||
+{{Cyclingresult start|title=Time gaps at the three-kilometre mark<ref name="CN-11">{{cite web|url=https://www.cyclingnews.com/races/vuelta-a-espana-2025/stage-11/results/|title=Vuelta a España stage 11: Tom Pidcock gains GC time on race leader Jonas Vingegaard as race neutralised with 3km to go|first=Kirsten|last=Frattini|work=Cycling News|date=3 September 2025|access-date=3 September 2025}}</ref><ref name="Stage-11">{{cite web|url=https://www.tissottiming.com/2025/vue/stage-11/rankings|title=La Vuelta – 11 – Bilbao > Bilbao|publisher=[[Tissot Timing]]|date=3 September 2025|access-date=3 September 2025}}</ref>}}
+{{cyclingresult|—|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2025}}|3h 40' 14"|{{cjersey|red}}}}
+{{cyclingresult|—|[[Tom Pidcock]]|GBR|{{UCI team code|Q36|2025}}|+ 0"}}
+{{cyclingresult|—|[[Jai Hindley]]|AUS|{{UCI team code|RBH|2025}}|+ 10"}}
+{{cyclingresult|—|[[João Almeida (cyclist)|João Almeida]]|POR|{{UCI team code|UAD men|2025}}|+ 10"|{{cjersey|red number}}}}
+{{cyclingresult|—|[[Matteo Jorgenson]]|USA|{{UCI team code|TVL men|2025}}|+ 10"}}
+{{cyclingresult|—|[[Felix Gall]]|AUT|{{UCI team code|DAT|2025}}|+ 10"}}
+{{cyclingresult|—|[[Egan Bernal]]|COL|{{UCI team code|IGD|2025}}|+ 24"}}
+{{cyclingresult|—|[[Giulio Ciccone]]|ITA|{{UCI team code|LTK men|2025}}|+ 24"}}
+{{cyclingresult|—|[[Giulio Pellizzari]]|ITA|{{UCI team code|RBH|2025}}|+ 24"|{{cjersey|white}}}}
+{{cyclingresult|—|[[Matthew Riccitello]]|USA|{{UCI team code|IPT|2025}}|+ 24"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 11<ref name="CN-11" /><ref name="Stage-11" />}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2025}}|41h 14' 02"|{{cjersey|red}}}}
+{{cyclingresult|2|[[João Almeida (cyclist)|João Almeida]]|POR|{{UCI team code|UAD men|2025}}|+ 50"|{{cjersey|red number}}}}
+{{cyclingresult|3|[[Tom Pidcock]]|GBR|{{UCI team code|Q36|2025}}|+ 56"|{{cjersey|yellow number}}}}
+{{cyclingresult|4|[[Torstein Træen]]|NOR|{{UCI team code|TBV|2025}}|+ 1' 06"}}
+{{cyclingresult|5|[[Felix Gall]]|AUT|{{UCI team code|DAT|2025}}|+ 2' 17"}}
+{{cyclingresult|6|[[Matteo Jorgenson]]|USA|{{UCI team code|TVL men|2025}}|+ 2' 26"}}
+{{cyclingresult|7|[[Jai Hindley]]|AUS|{{UCI team code|RBH|2025}}|+ 2' 30"}}
+{{cyclingresult|8|[[Giulio Ciccone]]|ITA|{{UCI team code|LTK men|2025}}|+ 2' 33"}}
+{{cyclingresult|9|[[Giulio Pellizzari]]|ITA|{{UCI team code|RBH|2025}}|+ 2' 44"|{{cjersey|white}}}}
+{{cyclingresult|10|[[Matthew Riccitello]]|USA|{{UCI team code|IPT|2025}}|+ 3' 11"}}
+{{cyclingresult end}}
+|}
+
+== References ==
+{{reflist|30em|refs=
+}}
+
+== External links ==
+{{Cycling stage recaps|2025 Vuelta a España|1|11|12|21}}
+
+[[Category:2025 Vuelta a España]]
+[[Category:Vuelta a España stages]]
+[[Category:August 2025 sports events in France]]
+[[Category:August 2025 sports events in Italy]]
+[[Category:Cycle races in Andorra]]
+[[Category:Cycle races in Italy]]
+[[Category:Cycle races in France]]
+[[Category:2025 in Andorran sport]]
