@@ -436,11 +436,34 @@ try{
        timetables shift; at most two small requests per race per run.
        Times are the site's local clock, made absolute via the race's
        fixed UTC offset. */
+    /* A timetable is a fact about a day, and it does not stop being
+       true once the day passes. The fetch window only covers today and
+       the next two, and the stages array is rebuilt each run from
+       settled podiums, so without this a past stage silently reverted
+       to "All day". Carry any previously known times forward, filling
+       only what is missing so a freshly fetched time still wins, and
+       merging into the settled entry rather than displacing it. */
+    const TIME_KEYS = ["start","startUtc","finish","finishUtc"];
+    prevStages.forEach(p=>{
+      if(!p || !p.date || !TIME_KEYS.some(k=>p[k] != null)) return;
+      let entry = stages.find(x=>x && x.date === p.date);
+      if(!entry){ entry = {date:p.date}; stages.push(entry); }
+      TIME_KEYS.forEach(k=>{ if(entry[k] == null && p[k] != null) entry[k] = p[k]; });
+    });
+    stages.sort((a,b)=>a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     if(rc.official){
+      let fetched = 0;
       for(let i = 0; i < rc.dates.length; i++){
         const date = rc.dates[i];
-        if(date < todayISO) continue;
-        if(Date.parse(date) - Date.parse(todayISO) > 2*86400000) break;
+        const ahead = Date.parse(date) - Date.parse(todayISO);
+        if(ahead > 2*86400000) break;              // not published this far out
+        const known = stages.find(x=>x && x.date === date && x.startUtc != null);
+        /* Today and the next two are refetched because timetables shift.
+           An earlier day is fetched only to fill a gap — a stage whose
+           times were lost before they were carried forward. */
+        if(ahead < 0 && known) continue;
+        if(fetched >= 4) break;                    // bound the work per run
+        fetched++;
         try{
           const res = await fetch(rc.official.base + (i+1), {headers:{
             "user-agent":WIKI_UA, "accept":"text/html"}, signal:AbortSignal.timeout(15000)});
@@ -467,6 +490,7 @@ try{
         }catch(e){ /* timetable is a nicety — never let it cost a run */ }
       }
     }
+    stages.sort((a,b)=>a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     if(stages.length || leader) cyclingOut.push({race:rc.name, oneDay:!!rc.oneDay, leader, stages});
   }
   const podiums = cyclingOut.reduce((a,r)=>a+podiumCount(r), 0);
