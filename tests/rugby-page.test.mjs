@@ -318,6 +318,23 @@ test("starring persists and re-renders both the drawer and the page", () => {
   assert.match(branch[0], /render\(\)/);
 });
 
+test("the nation picker is redrawn when rugby fixtures actually arrive", () => {
+  /* Switching rugby on renders the drawer immediately, but the fixtures
+     the picker is built from arrive 700ms later on the refresh. Without
+     a redraw the first thing a new rugby follower saw was a picker with
+     no nations in it — the schedule was right, the star list was empty.
+     Guarded on a change so an open drawer is not redrawn every minute,
+     which would throw away focus. */
+  const run = /async function runRefresh\(\)\{[\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(run, /const rugbyBefore = rugbyCount;/);
+  assert.match(run, /rugbyCount !== rugbyBefore/);
+  assert.match(run, /renderDrawer\(\)/);
+  assert.match(run, /!drawer\.hasAttribute\("hidden"\)/,
+    "a closed drawer needs no redraw");
+  // and the count it keys on is actually maintained by the loader
+  assert.match(SRC, /rugbyCount = built\.length;/);
+});
+
 /* ---------------- scores from a source ---------------- */
 
 function applyHarness(){
