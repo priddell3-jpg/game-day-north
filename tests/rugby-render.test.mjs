@@ -1,3 +1,17 @@
+/* Pinned before anything else runs, and before any Intl formatter is
+   built. The page reads a day from the VIEWER's zone by design, so a
+   test that asserts what a row says about a day is asserting something
+   about a viewer — and left to the runner's own zone it asserts a
+   different thing on every machine. This file passed in Vancouver and
+   failed in CI, which runs in UTC.
+
+   Vancouver is the zone to pin: it is the one the product is written
+   for, and it is far enough west that a Pacific-rim kickoff genuinely
+   lands on the previous local day, which is the case worth asserting.
+   Zone-independent behaviour is covered in rugby-time.test.mjs, where
+   every zone is passed in explicitly. */
+process.env.TZ = "America/Vancouver";
+
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
