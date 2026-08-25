@@ -2872,7 +2872,16 @@ function refreshLive(){
 }
 async function runRefresh(){
   let held = 0;
+  /* The nation picker is built from the rugby fixtures currently loaded,
+     and switching rugby on renders the drawer BEFORE the fetch that
+     supplies them. Without this the list stayed empty until some other
+     interaction happened to redraw the drawer — so the first thing a new
+     rugby follower saw was a picker with nothing in it. Redraw it when
+     the set it is derived from actually changes, rather than on every
+     refresh, which would throw away focus in the open drawer. */
+  const rugbyBefore = rugbyCount;
   try{ held = await loadStatic(); }catch(e){ held = 0; }
+  if(rugbyCount !== rugbyBefore && !drawer.hasAttribute("hidden")) renderDrawer();
   const fresh = held > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
   if(held > 0){
     liveMode = true; liveErr = "";
