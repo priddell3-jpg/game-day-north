@@ -228,6 +228,35 @@ main{padding:22px 0 80px}
 .bell[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
 .bell svg{width:15px;height:15px}
 
+/* ---------- rugby ----------
+   A starred nation is emphasis, never a filter: the row it appears in is
+   marked, and every other international stays exactly where it was. The
+   cue is weight and a star rather than colour alone, so it survives a
+   monochrome display and does not rely on hue to be read. */
+.g-team.starred{color:var(--accent)}
+.cal-ev.starred .mu{color:var(--accent);font-weight:700}
+.star-pip{font-size:10px;line-height:1;color:var(--accent);flex:none}
+.game.has-star{border-left-color:var(--accent)}
+.game.is-live.has-star{border-left-color:var(--live)}
+/* The venue's own day, where it differs from the reader's. A Saturday
+   in Auckland is a Friday in Vancouver and the fixture is correctly
+   grouped under Friday; this says so instead of looking like a mistake. */
+/* This note exists to explain why a Saturday match is filed under
+   Friday, so it has to be readable in full: it wraps within the time
+   column rather than being clipped to "SAT IN NIG...". overflow-wrap is
+   what caps its min-content width, which is what actually stops a long
+   place name painting across the row beside it — the same fix, and for
+   the same reason, as the one on .g-team at 320px. */
+.venue-day{display:block;font-size:9.5px;line-height:1.3;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:2px;white-space:normal;overflow-wrap:anywhere;max-width:100%}
+.g-time{min-width:0}
+.g-time .tbd{color:var(--muted)}
+/* The nation picker. Starring is a highlight, so it lives apart from the
+   team list and says as much in the panel itself. */
+.ru-stars{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
+.ru-star{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
+.ru-star[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.ru-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:2px 0 8px}
+
 /* ---------- empty ---------- */
 .empty{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty b{display:block;font-size:18px;font-weight:800;font-stretch:115%;color:var(--ink);margin-bottom:6px}
@@ -308,6 +337,12 @@ main{padding:22px 0 80px}
   .game{gap:8px;padding:12px 6px 12px 8px}
   .g-team{white-space:normal;overflow-wrap:anywhere}
   .g-teams{gap:6px}
+  /* The star rides with the name it marks rather than being allowed to
+     wrap onto a line of its own, and the venue-day note is short enough
+     to keep at this width — it is the only thing explaining why a
+     Saturday match sits under Friday. */
+  .star-pip{margin-left:-2px}
+  .venue-day{font-size:9px}
 }
 
 .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 4px}
@@ -439,8 +474,27 @@ const COMPS = {
   SERIEA:{name:"Serie A",           short:"Serie A",    color:"#2E7D8F"},
   BUNDES:{name:"Bundesliga",        short:"Bundesliga", color:"#9E2A2B"},
   LIGUE1:{name:"Ligue 1",           short:"Ligue 1",    color:"#1B6E8C"},
-  UCI:   {name:"UCI WorldTour",     short:"WorldTour",  color:"#8A6D1F"}
+  UCI:   {name:"UCI WorldTour",     short:"WorldTour",  color:"#8A6D1F"},
+  /* Men's senior international rugby union. Each competition is its own
+     entry because that is the level Canadian rights attach at: the Six
+     Nations and the Nations Championship are both on Premier Sports,
+     the Autumn Nations Series is on DAZN, and a Lions tour is sold
+     separately every four years. Modelling "rugby" as one carriage rule
+     would be wrong about all three. */
+  RU6N:   {name:"Six Nations",            short:"Six Nations", color:"#8C3A2B", rugby:true},
+  RUNC:   {name:"Nations Championship",   short:"Nations C'ship", color:"#3E5C76", rugby:true},
+  RUWNC:  {name:"World Rugby Nations Cup",short:"Nations Cup", color:"#5C6B3E", rugby:true},
+  RUTRC:  {name:"The Rugby Championship", short:"Rugby C'ship", color:"#A8552C", rugby:true},
+  RURWC:  {name:"Rugby World Cup",        short:"RWC",         color:"#2D6A4F", rugby:true},
+  RUPNC:  {name:"Pacific Nations Cup",    short:"Pacific NC",  color:"#1F7A8C", rugby:true},
+  RULIONS:{name:"British & Irish Lions",  short:"Lions",       color:"#B03A2E", rugby:true},
+  RUANS:  {name:"Autumn Nations Series",  short:"Autumn Series", color:"#7A4E8C", rugby:true},
+  RUTEST: {name:"International Test",     short:"Test",        color:"#6B5B4F", rugby:true}
 };
+/* One place to ask "is this rugby?", so a competition added above is
+   picked up by the gate, the poller and the drawer without three edits. */
+const RUGBY_COMPS = Object.keys(COMPS).filter(c=>COMPS[c].rugby);
+const isRugbyComp = c => !!(COMPS[c] && COMPS[c].rugby);
 
 /* ============================================================
    SERVICES — carriers roll up to the subscription you'd buy.
@@ -458,7 +512,8 @@ const SERVICES = {
   apple:    {label:"Apple TV",  kind:"stream"},
   mlbtv:    {label:"MLB.TV",    kind:"stream"},
   nbalp:    {label:"NBA League Pass", kind:"stream"},
-  flobikes: {label:"FloBikes",  kind:"stream"}
+  flobikes: {label:"FloBikes",  kind:"stream"},
+  premier:  {label:"Premier Sports", kind:"stream"}
 };
 const CARRIER_SERVICE = {
   "Sportsnet":"sportsnet","Sportsnet One":"sportsnet","Sportsnet Pacific":"sportsnet",
@@ -466,7 +521,8 @@ const CARRIER_SERVICE = {
   "TSN":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
   "RDS":"rds","TVA Sports":"tva","CTV":"ctv","CTV2":"ctv",
   "Prime Video":"prime","Fubo Canada":"fubo","DAZN Canada":"dazn",
-  "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp","FloBikes":"flobikes"
+  "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp","FloBikes":"flobikes",
+  "Premier Sports":"premier"
 };
 
 /* ============================================================
@@ -489,7 +545,11 @@ const SRC = {
   jays:    {label:"Sportsnet+ carries the MLB postseason", url:"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},
   flo:     {label:"Escape Collective — how to watch 2026", url:"https://escapecollective.com/how-to-watch-pro-bike-racing-in-2026/"},
   pcs:     {label:"ProCyclingStats — 2026 WorldTour calendar", url:"https://www.procyclingstats.com/races.php?year=2026&circuit=1"},
-  none:    {label:"No Canadian rights holder found", url:""}
+  none:    {label:"No Canadian rights holder found", url:""},
+  m6n:     {label:"Six Nations — where to watch", url:"https://www.sixnationsrugby.com/en/m6n/where-to-watch-guinness-six-nations"},
+  nchamp:  {label:"Nations Championship — where to watch", url:"https://nationschampionshiprugby.com/en/news/where-to-watch-the-inaugural-2026-nations-championship"},
+  ans:     {label:"Autumn Nations Series — where to watch", url:"https://www.sixnationsrugby.com/en/autumn-nations-series/where-to-watch-ans"},
+  lions25: {label:"British & Irish Lions 2025 — where to watch", url:"https://www.lionsrugby.com/en/news/where-to-watch-the-british-and-irish-lions-this-summer"}
 };
 const tv = n => ({name:n, kind:"tv"});
 const st = n => ({name:n, kind:"stream"});
@@ -501,6 +561,40 @@ const RIGHTS = [
      men's and women's WorldTour in Canada. */
   {comp:"UCI", carriers:[st("FloBikes")], confidence:"confirmed",
    note:"Exclusive Canadian home of the men's and women's WorldTour", src:SRC.flo, checked:CHECKED},
+
+  /* ---------------- men's international rugby union ----------------
+     Rights here attach to the competition and never to a nation. Ireland
+     appear in the Six Nations (Premier Sports), the Nations Championship
+     (Premier Sports) and a summer tour test (nobody confirmed), and a
+     rule keyed on "Ireland" would get two of those three wrong. */
+  {comp:"RU6N", carriers:[st("Premier Sports")], confidence:"confirmed",
+   note:"Premier Sports is the Canadian home of the Guinness Men's Six Nations",
+   src:SRC.m6n, checked:CHECKED},
+  {comp:"RUNC", carriers:[st("Premier Sports")], confidence:"confirmed",
+   note:"Premier Sports carries the inaugural 2026 Nations Championship in Canada",
+   src:SRC.nchamp, checked:CHECKED},
+  {comp:"RUANS", carriers:[st("DAZN Canada")], confidence:"confirmed",
+   note:"DAZN carries the Quilter Autumn Nations Series in Canada",
+   src:SRC.ans, checked:CHECKED},
+  /* The 2025 tour was on DAZN in Canada. That is a fact about 2025 and
+     not about the next tour, which is sold separately and has no
+     announced Canadian carriage — so it is recorded here as unknown
+     with the old listing named in the note rather than carried forward
+     as though it still applied. */
+  {comp:"RULIONS", carriers:[], confidence:"unknown",
+   note:"DAZN carried the 2025 tour in Canada; no current source for any later tour, so no carrier is claimed",
+   src:SRC.lions25, checked:CHECKED},
+  {comp:"RUTRC", carriers:[], confidence:"unknown",
+   note:"No Canadian rights holder verified for The Rugby Championship", src:SRC.none, checked:CHECKED},
+  {comp:"RURWC", carriers:[], confidence:"unknown",
+   note:"No Canadian rights holder verified for Rugby World Cup 2027", src:SRC.none, checked:CHECKED},
+  {comp:"RUPNC", carriers:[], confidence:"unknown",
+   note:"No Canadian rights holder verified for the Pacific Nations Cup", src:SRC.none, checked:CHECKED},
+  {comp:"RUWNC", carriers:[], confidence:"unknown",
+   note:"No Canadian rights holder verified for the World Rugby Nations Cup", src:SRC.none, checked:CHECKED},
+  {comp:"RUTEST", carriers:[], confidence:"unknown",
+   note:"Test-match carriage in Canada is sold per series and none is confirmed for these fixtures",
+   src:SRC.none, checked:CHECKED},
 
   /* ---------------- soccer ---------------- */
   {comp:"EPL", carriers:[st("Fubo Canada")], confidence:"confirmed",
@@ -1064,8 +1158,132 @@ async function loadStatic(){
   });
   if(built.length) mergeReal(built);
   if(Array.isArray(r.cycling)) attachCycling(r.cycling);
+  /* Independent of the team fixtures above: a rugby row is here because
+     rugby is switched on, not because it involves a followed club, so
+     it is not subject to the selected-team filter that built `built`. */
+  const ru = (rugbyOn() && Array.isArray(r.rugby)) ? attachRugby(r.rugby) : 0;
   staticAt = Date.parse(r.generated) || 0;
-  staticCount = built.length;
+  /* Rugby counts towards "we have data". Someone following rugby and no
+     clubs at all has a full page, and returning 0 here sent them down
+     the direct-fetch fallback as though the file were missing. */
+  staticCount = built.length + ru;
+  return built.length + ru;
+}
+
+/* ESPN's rugby leagues, by the id this page uses. A competition absent
+   from this map is one ESPN has no league for — the Pacific Nations Cup
+   and the World Rugby Nations Cup — and is followed through World Rugby
+   instead. Neither source is allowed to be the only way in. */
+const RUGBY_ESPN_LEAGUE = {
+  RU6N:"180659", RUNC:"17567", RUTRC:"244293",
+  RURWC:"164205", RULIONS:"268565", RUTEST:"289234"
+};
+const RUGBY_ESPN = "https://site.api.espn.com/apis/site/v2/sports/rugby/";
+const RUGBY_WR = "https://api.wr-rims-prod.pulselive.com/rugby/v3/match";
+
+/* ============================================================
+   RUGBY — turning the committed file into rows.
+
+   The build has already decided what counts as a men's senior test and
+   merged the two sources; this only has to place the result on a
+   calendar. Two rules live here rather than there, because both depend
+   on where the reader is and the build does not know that:
+
+     · the results cutoff is three LOCAL calendar days, and a local day
+       in Auckland starts twenty-one hours before one in Vancouver
+     · a match still unresolved is kept however old it is
+   ============================================================ */
+const RUGBY_RESULT_DAYS = 3;
+/* Whole calendar days, walked with the local-date setters rather than
+   by subtracting 72 hours: on the two days a year the clocks move, a
+   fixed subtraction lands at 23:00 or 01:00 and takes an extra day's
+   results with it or leaves them a day too long. */
+function rugbyCutoff(now){
+  const d = new Date(now);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - RUGBY_RESULT_DAYS);
+  return d.getTime();
+}
+/* Terminal means the source stopped reporting, not that eighty minutes
+   passed. Only these are old enough to drop. */
+const RUGBY_TERMINAL = {final:1, cancelled:1, abandoned:1};
+const RUGBY_ACTIVE = {live:1, halftime:1, delayed:1, suspended:1, unknown:1};
+const rugbyIsTerminal = st => !!RUGBY_TERMINAL[st];
+const rugbyIsActive = st => !!RUGBY_ACTIVE[st];
+
+function rugbyInWindow(f, now){
+  if(!f || typeof f.start !== "number") return false;
+  if(f.start > now + 90*DAY) return false;
+  if(!rugbyIsTerminal(f.status)) return true;      // live, delayed, unresolved
+  return f.start >= rugbyCutoff(now);
+}
+
+/* A nation is a team-shaped thing so the existing row machinery — the
+   crest, the name, the calendar abbreviation — works unchanged. The
+   slug is what a star is stored against, and is the one field that must
+   not drift: it is what a share link carries. */
+function rugbyTeam(side, comp){
+  if(!side) return null;
+  if(side.tbd || !side.slug){
+    /* "Winner M1", "NTH 1st". A real, dated fixture whose opponent is
+       genuinely not decided yet — shown as the feed labels it, which
+       says more than "TBD" does. */
+    return {id:"ru:tbd:"+normName(side.name||"tbd"), home:comp, city:"", name:side.name||"TBD",
+            abbr:(side.abbr||side.name||"TBD").slice(0,4).toUpperCase(),
+            color:"#5A6478", ghost:true, full:true, tbdSide:true, comps:[comp]};
+  }
+  const id = "ru:"+side.slug;
+  if(!TEAMS[id]){
+    TEAMS[id] = {id, home:comp, city:"", name:side.name, nation:side.slug,
+      abbr:(side.abbr||side.name.slice(0,3)).slice(0,4).toUpperCase(),
+      color:"#4A5B6A", ghost:true, full:true, comps:[]};
+    allTeams.push(TEAMS[id]);
+  }
+  const t = TEAMS[id];
+  if(t.comps.indexOf(comp) < 0) t.comps.push(comp);
+  return t;
+}
+
+/* The page keeps its own three-word status vocabulary for the shared
+   machinery — the live count on a day heading, the rail. The precise
+   rugby state rides alongside on `ru`, because "abandoned" and
+   "postponed" are things this page should say and "final" is not a
+   truthful stand-in for either. */
+function rugbyPageStatus(st){
+  if(st === "final") return "final";
+  if(rugbyIsActive(st) && st !== "unknown") return "live";
+  if(st === "unknown") return "unknown";
+  return "scheduled";                 // scheduled, postponed, cancelled, abandoned
+}
+
+let rugbyCount = 0;
+function attachRugby(rows){
+  if(!Array.isArray(rows)) return 0;
+  const now = Date.now(), built = [];
+  for(const f of rows){
+    if(!f || !f.home || !f.away) continue;
+    if(!rugbyInWindow(f, now)) continue;
+    const comp = COMPS[f.comp] ? f.comp : "RUTEST";
+    const home = rugbyTeam(f.home, comp), away = rugbyTeam(f.away, comp);
+    if(!home || !away) continue;
+    const st = f.status || "unknown";
+    built.push({
+      eid: (f.ids && f.ids[0]) || null,
+      ids: f.ids || [],
+      comp, home, away, start: f.start,
+      rugby: true, real: true, espn: true, listed: true, fromFeed: true,
+      moved: null, stage: f.round || "", timeKnown: !f.timeTBD,
+      venue: f.venue || null,
+      sources: f.sources || [],
+      /* Every rendering decision that is rugby-specific reads this, and
+         nothing infers it from the clock. */
+      ru: {state: st, label: f.label || "", timeTBD: !!f.timeTBD},
+      localDow: new Date(f.start).getUTCDay(), slotHour: new Date(f.start).getUTCHours(),
+      result: {status: rugbyPageStatus(st), label: f.label || "", score: f.score || null}
+    });
+  }
+  if(built.length) mergeReal(built);
+  rugbyCount = built.length;
   return built.length;
 }
 
@@ -1259,6 +1477,204 @@ function activeNow(g, now){
   if(!needsScore(g, now)) return false;
   const st = stateOf(g, now).status;
   return (st === "live" || st === "unknown") && now - g.start < POLL_WINDOW;
+}
+
+/* ---- following a rugby match that is on -------------------------------
+
+   The same policy as everything else, with one competition-shaped
+   difference: rugby is polled because rugby is switched on, not because
+   a followed nation is playing. Starring Ireland must not stop the page
+   following Argentina v Australia.
+
+   What ends the polling is the source saying so. Rugby has no clock this
+   code can read: eighty minutes takes a hundred, extra time is normal in
+   a knockout, and a match can be stopped and restarted. So "final" is
+   only ever something the feed reported, and an unreadable status keeps
+   the fixture in the poll rather than retiring it.
+   ---------------------------------------------------------------------- */
+function rugbyActiveNow(g, now){
+  if(!g.rugby || !rugbyOn()) return false;
+  const st = (g.ru && g.ru.state) || "unknown";
+  if(rugbyIsTerminal(st) || st === "postponed") return false;   // the source is done
+  /* Under way, or past its kickoff with the source still saying it has
+     not started — which is exactly the case worth asking about. */
+  const started = now >= g.start;
+  if(!rugbyIsActive(st) && !(st === "scheduled" && started)) return false;
+  return now - g.start < POLL_WINDOW;
+}
+
+/* Names to nation slugs, built from the fixtures already on the page.
+   Deliberately not a second copy of the registry the build holds: this
+   only has to recognise a nation it is already showing, so it cannot
+   drift out of step with one. */
+let _ruNames = null;
+function rugbyNationSlug(name){
+  if(!_ruNames){
+    _ruNames = new Map();
+    allTeams.forEach(t=>{ if(t.nation) _ruNames.set(norm(t.name), t.nation); });
+  }
+  return _ruNames.get(norm(name)) || null;
+}
+
+/* Which reported numbers are actually a score. Both feeds print 0-0
+   against a fixture that has not been played, and that is filler rather
+   than a result — so a scheduled or postponed match never carries one,
+   and neither does a cancellation with nothing on the board. An
+   abandoned match keeps the score it had reached, which is the only
+   number anyone is looking for. Mirrors scoreFrom in scripts/lib/rugby.mjs. */
+function rugbyScoreFrom(state, sh, sa){
+  if(sh === null || sa === null) return null;
+  if(state === "scheduled" || state === "postponed") return null;
+  if(state === "cancelled" && sh === 0 && sa === 0) return null;
+  return [sh, sa];
+}
+
+/* An update from a source, reduced to the few things a row shows. */
+function parseRugbyEspn(ev){
+  const cp = (ev.competitions && ev.competitions[0]) || ev;
+  const cs = cp.competitors || [];
+  const H = cs.find(c=>c.homeAway==="home") || cs[0];
+  const A = cs.find(c=>c.homeAway==="away") || cs[1];
+  if(!H || !A || !H.team || !A.team) return null;
+  const ty = ((cp.status || ev.status || {}).type) || {};
+  const nm = String(ty.name||"").toUpperCase();
+  const state = /POSTPON/.test(nm) ? "postponed" : /CANCEL/.test(nm) ? "cancelled"
+              : /ABANDON/.test(nm) ? "abandoned" : /SUSPEND/.test(nm) ? "suspended"
+              : /DELAY/.test(nm) ? "delayed" : /HALFTIME/.test(nm) ? "halftime"
+              : ty.completed === true ? "final"
+              : ty.state === "post" ? "final" : ty.state === "in" ? "live"
+              : ty.state === "pre" ? "scheduled" : "unknown";
+  const num = v => { const n = parseInt(v==null?"":String(v).replace(/[^0-9-]/g,""),10); return isNaN(n)?null:n; };
+  const sh = num(H.score && H.score.displayValue!=null ? H.score.displayValue : H.score);
+  const sa = num(A.score && A.score.displayValue!=null ? A.score.displayValue : A.score);
+  return {
+    eid: ev.id!=null ? "espn:"+ev.id : null,
+    start: Date.parse(ev.date || cp.date) || 0,
+    home: rugbyNationSlug(H.team.displayName || H.team.name),
+    away: rugbyNationSlug(A.team.displayName || A.team.name),
+    state, label: ty.shortDetail || ty.description || "",
+    score: rugbyScoreFrom(state, sh, sa)
+  };
+}
+function parseRugbyWr(m){
+  if(String(m.sport||"").toUpperCase() !== "MRU") return null;
+  const t = m.teams || [];
+  if(t.length < 2 || !m.time) return null;
+  const code = String(m.status||"").toUpperCase();
+  const state = code==="C" ? "final" : code==="CC" ? "cancelled"
+              : (code==="P"||code==="PP") ? "postponed" : (code==="A"||code==="AB") ? "abandoned"
+              : (code==="U"||code==="F") ? "scheduled" : code==="HT" ? "halftime"
+              : (code==="L"||code==="LIVE"||code==="L1"||code==="L2") ? "live" : "unknown";
+  const sc = Array.isArray(m.scores) ? m.scores : [];
+  const num = v => { const n = parseInt(v==null?"":String(v),10); return isNaN(n)?null:n; };
+  const sh = num(sc[0]), sa = num(sc[1]);
+  return {
+    eid: m.matchId ? "wr:"+m.matchId : null,
+    start: typeof m.time.millis === "number" ? m.time.millis : 0,
+    home: rugbyNationSlug(t[0].name), away: rugbyNationSlug(t[1].name),
+    state, label: state==="final" ? "FT" : "",
+    score: rugbyScoreFrom(state, sh, sa)
+  };
+}
+
+/* The fixture an update belongs to. The source's own id settles it where
+   both copies carry one from the same source; otherwise both nations
+   must match and the kickoffs must be close, because South Africa play
+   New Zealand three times in four weeks. */
+const RUGBY_SAME = 6*3600000;
+function findRugby(u, games){
+  if(!u) return null;
+  if(u.eid){
+    const byId = games.find(g=>g.rugby && (g.ids||[]).indexOf(u.eid) >= 0);
+    if(byId) return byId;
+  }
+  if(!u.home || !u.away) return null;
+  return games.find(g=>{
+    if(!g.rugby || !g.home.nation || !g.away.nation) return false;
+    if(Math.abs(g.start - u.start) >= RUGBY_SAME) return false;
+    return (g.home.nation===u.home && g.away.nation===u.away)
+        || (g.home.nation===u.away && g.away.nation===u.home);
+  }) || null;
+}
+
+/* Take an update into a fixture. The score belongs to the sides the
+   source listed it against, so it is turned round when the copies
+   disagree about who is at home rather than being trusted as printed. */
+function applyRugby(g, u){
+  if(!g || !u) return false;
+  const before = g.ru.state + "|" + (g.result.score||[]).join("-") + "|" + g.ru.label;
+  let score = u.score;
+  if(score && u.home && g.home.nation && u.home !== g.home.nation && u.home === g.away.nation){
+    score = [score[1], score[0]];
+  }
+  /* A source that has stopped knowing must not un-report what another
+     one already said. Only a stated status replaces a stated status. */
+  if(u.state !== "unknown"){ g.ru.state = u.state; g.ru.label = u.label || ""; }
+  if(score) g.result.score = score;
+  g.result.status = rugbyPageStatus(g.ru.state);
+  g.result.label = g.ru.label;
+  return before !== (g.ru.state + "|" + (g.result.score||[]).join("-") + "|" + g.ru.label);
+}
+
+/* Ask about the rugby that is actually on, and nothing else.
+
+   ESPN files a rugby event under its US EASTERN date, exactly as it does
+   the other sports: a 00:00 UTC kickoff answers to the previous day, and
+   asking for the UTC date returns an empty scoreboard. That cost real
+   time to find and is why espnDate is used here rather than a UTC date.
+
+   Each source is asked separately and fails separately: the Pacific
+   Nations Cup exists only in World Rugby's feed, so an ESPN outage must
+   not silence it, and a World Rugby outage must not silence the Six
+   Nations. */
+let rugbyLiveErr = "";
+async function fillRugbyScores(){
+  if(!rugbyOn()) return 0;                 // nothing rugby is requested when rugby is off
+  const now = Date.now();
+  const due = GAMES.filter(g=>rugbyActiveNow(g, now));
+  if(!due.length) return 0;
+  let changed = 0;
+  const errs = [];
+
+  /* --- ESPN, by league and Eastern date --- */
+  const days = new Set();
+  due.forEach(g=>{
+    const lg = RUGBY_ESPN_LEAGUE[g.comp];
+    if(lg) days.add(lg + "|" + espnDate(g.start));
+  });
+  for(const key of days){
+    const [lg, d] = key.split("|");
+    try{
+      const r = await jget(RUGBY_ESPN + lg + "/scoreboard?dates=" + d, 9000);
+      for(const ev of (r && r.events) || []){
+        const u = parseRugbyEspn(ev);
+        const hit = findRugby(u, GAMES);
+        if(hit && applyRugby(hit, u)) changed++;
+      }
+    }catch(e){ errs.push("ESPN rugby " + lg); }
+  }
+
+  /* --- World Rugby, for what ESPN has no league for --- */
+  const wrDue = due.filter(g=>!RUGBY_ESPN_LEAGUE[g.comp]);
+  if(wrDue.length){
+    /* One request spanning the day before and after every due fixture:
+       the feed is queried by date and a match near either midnight would
+       otherwise fall outside a single-day window. */
+    const lo = Math.min(...wrDue.map(g=>g.start)) - DAY;
+    const hi = Math.max(...wrDue.map(g=>g.start)) + DAY;
+    const iso = ms => new Date(ms).toISOString().slice(0,10);
+    try{
+      const r = await jget(RUGBY_WR + "?startDate=" + iso(lo) + "&endDate=" + iso(hi)
+        + "&sort=asc&pageSize=100", 12000);
+      for(const m of (r && r.content) || []){
+        const u = parseRugbyWr(m);
+        const hit = findRugby(u, GAMES);
+        if(hit && applyRugby(hit, u)) changed++;
+      }
+    }catch(e){ errs.push("World Rugby"); }
+  }
+  rugbyLiveErr = errs.join(", ");
+  return changed;
 }
 
 /* Season schedules do not carry a reliable live score, and the scoreboard
@@ -1515,7 +1931,20 @@ const LS = {
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 const DEFAULT_TEAMS = ["van-nhl","van-mls","tor-mlb","tor-nba","liv"];
+/* Rugby is followed as a competition, not as a team, so one id stands
+   for "all supported men's international rugby". It lives in the same
+   set as the teams deliberately: an existing share link and an existing
+   localStorage entry both carry it with no new key and no migration,
+   and neither can contain it by accident, so nobody is opted in. */
+const RUGBY_FOLLOW = "rugby-intl";
 let selected, services, hiddenComps, showScores;
+/* Starred nations are a highlight and, later, the thing notifications
+   will key on. They are deliberately NOT a filter: starring Ireland
+   must not hide New Zealand v South Africa, because the question this
+   page answers for rugby is "what internationals are on", not "when do
+   my teams play". Kept as its own set so a notification preference can
+   read it without disturbing team selection. */
+let rugbyStars;
 (function initState(){
   let h = {};
   try{
@@ -1528,7 +1957,19 @@ let selected, services, hiddenComps, showScores;
   services    = new Set(listOf(h.s) || LS.get("gdn.services", []));
   hiddenComps = new Set(listOf(h.x) || LS.get("gdn.hidden", []));
   showScores  = h.sc!=null ? h.sc==="1" : LS.get("gdn.scores", true);
+  /* A link written before rugby existed has no "rs", and an older
+     browser has no stored value: both land on an empty set, which is
+     the same as not starring anything. Nothing here can turn rugby on
+     for someone who did not ask for it.
+
+     The stored value is checked for being a list before it is used.
+     LS.get returns whatever JSON.parse produced, and `new Set(42)`
+     throws — which, this early, would take the whole page down rather
+     than costing one preference. */
+  const storedStars = LS.get("gdn.rugby.stars", []);
+  rugbyStars  = new Set(listOf(h.rs) || (Array.isArray(storedStars) ? storedStars : []));
 })();
+const rugbyOn = () => selected.has(RUGBY_FOLLOW);
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
 let covOpen = null, rightsOpen = false, resultsOpen = null;   // null = decide per viewport
@@ -1540,6 +1981,7 @@ let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the
 function persist(){
   LS.set("gdn.teams",[...selected]); LS.set("gdn.services",[...services]);
   LS.set("gdn.hidden",[...hiddenComps]); LS.set("gdn.scores",showScores); LS.set("gdn.alerts",[...alerts]);
+  LS.set("gdn.rugby.stars",[...rugbyStars]);
 }
 /* Built only when you ask for it, so the address bar stays clean. */
 function shareLink(){
@@ -1548,11 +1990,20 @@ function shareLink(){
     if(services.size) parts.push("s="+[...services].join("."));
     if(hiddenComps.size) parts.push("x="+[...hiddenComps].join("."));
     if(!showScores) parts.push("sc=0");
+    /* Appended, never inserted: a reader of an older link parses the
+       keys it knows and ignores the rest, so adding one cannot break a
+       link already in someone's bookmarks. */
+    if(rugbyStars.size) parts.push("rs="+[...rugbyStars].join("."));
     return location.origin + location.pathname + "#" + parts.join("&");
   }catch(e){ return ""; }
 }
 
-const isMine = g => (g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id));
+/* Rugby answers to the rugby switch and nothing else. A starred nation
+   changes how a row looks, never whether it is here. */
+const isMine = g => g.rugby
+  ? rugbyOn()
+  : ((g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id)));
+const isStarred = t => !!(t && t.nation && rugbyStars.has(t.nation));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
 const myComps = () => { const s=new Set(); GAMES.forEach(g=>{ if(isMine(g)) s.add(g.comp); }); return Object.keys(COMPS).filter(c=>s.has(c)); };
 
@@ -1613,6 +2064,10 @@ function saveButton(id, on, what){
     + ' aria-label="'+esc(label)+'">'+BELL+'</button>';
 }
 function orderedTeams(g){
+  /* Rugby is written home v away, like soccer and unlike the North
+     American "away at home". Getting this wrong would not merely read
+     oddly: `flip` is what decides which way round a score is printed. */
+  if(g.rugby) return {a:g.home,b:g.away,sep:"v",flip:false};
   return SOCCER[g.comp] ? {a:g.home,b:g.away,sep:"vs",flip:false} : {a:g.away,b:g.home,sep:"at",flip:true};
 }
 const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
@@ -1688,8 +2143,133 @@ function eventRow(g, now){
     + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
 }
 
+/* What the venue's own calendar says, when it disagrees with the
+   reader's. A Saturday afternoon in Auckland is Friday evening in
+   Vancouver, and grouping it under Friday — which is correct — reads as
+   an error without this. Absent unless the venue's UTC offset is known,
+   because guessing one is how a fixture ends up labelled with the wrong
+   day in the wrong city. */
+function venueDayNote(g){
+  const v = g.venue;
+  if(!v || v.offset == null) return "";
+  const here = ymd(new Date(g.start));
+  const there = new Date(g.start + v.offset*3600000).toISOString().slice(0,10);
+  if(here === there) return "";
+  const [y,m,d] = there.split("-").map(Number);
+  const dow = new Intl.DateTimeFormat(undefined,{weekday:"short",timeZone:"UTC"})
+    .format(new Date(Date.UTC(y,m-1,d,12)));
+  return dow + (function(){
+    /* Concise, or it is not context. World Rugby writes some cities as a
+       compound — "Osaka Prefecture, Higashiosaka City", "Sydney |
+       Wangal", "Perth | Boorloo" — and the whole string in a 74px
+       column painted straight across the competition chip beside it.
+       Take the first part, and fall back to the country when even that
+       is too long to sit on one line. */
+    const first = String(v.city || "").split(/[,|]/)[0].trim();
+    const where = first && first.length <= 18 ? first
+                : (v.country && v.country.length <= 18 ? v.country : "");
+    return where ? " in "+where : " at the venue";
+  })();
+}
+
+/* How each rugby state is said, and whether it counts as under way.
+   Taken from what the source reported and nothing else: eighty minutes
+   of rugby routinely takes a hundred, extra time exists, and a match
+   can be stopped and restarted, so no elapsed-time rule may appear
+   here or anywhere downstream of it. */
+const RUGBY_STATE_TEXT = {
+  live:"Live", halftime:"Half-time", delayed:"Delayed", suspended:"Suspended",
+  postponed:"Postponed", cancelled:"Cancelled", abandoned:"Abandoned",
+  final:"FT", scheduled:"", unknown:"Status unavailable"
+};
+
+function rugbyRow(g, now){
+  const c = COMPS[g.comp], rights = resolveRights(g);
+  const state = (g.ru && g.ru.state) || "unknown";
+  const live = rugbyIsActive(state) && state !== "unknown";
+  const reveal = showScores || revealed.has(g.id);
+  const starA = isStarred(g.home), starB = isStarred(g.away);
+
+  /* A kickoff the source has not settled is said to be unknown, not
+     rounded to midnight and presented as a time. */
+  let timeCell = '<div class="g-time">'
+    + (g.ru && g.ru.timeTBD ? '<span class="tbd">Time TBD</span>' : esc(fmtTime(g.start)));
+  const vnote = venueDayNote(g);
+  if(vnote) timeCell += '<span class="venue-day">'+esc(vnote)+'</span>';
+  timeCell += '</div>';
+
+  const side = (t, starred) => '<span class="g-team'+(starred?" starred":"")+(t.tbdSide?" tbd":"")+'">'
+    + crest(t)+esc(t.name)+(starred?'<span class="star-pip" aria-label="Starred nation">&#9733;</span>':"")+'</span>';
+  const teams = '<div class="g-teams">'+side(g.home,starA)
+    + '<span class="at">v</span>'+side(g.away,starB)+'</div>';
+
+  const place = g.venue && (g.venue.name || g.venue.city)
+    ? (g.venue.name || g.venue.city) + (g.venue.city && g.venue.name ? ", "+g.venue.city : "") : "";
+  const meta = '<div class="g-meta">'
+    + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
+    + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
+    + (place?'<span>at '+esc(place)+'</span>':'')
+    + (function(){
+        const p = provenanceOf(g, dataStale);
+        return p ? '<span class="conf-note'+(p.kind==="stale"?" warn":"")+'">'+esc(p.label)+'</span>' : '';
+      })()
+    + '</div>';
+
+  /* Rugby carriage is unverified far more often than it is verified, so
+     the unknown case says "Coverage TBD" rather than naming a carrier
+     nobody has confirmed. */
+  let watch;
+  if(!rights.carriers.length){
+    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Coverage TBD</span>'
+      + '<span class="conf-note warn" title="'+esc(rights.note)+'">Not confirmed in Canada</span></div>';
+  } else {
+    const cov = services.size ? (covered(g)
+      ? '<span class="tag-cov have">You have it</span>'
+      : '<span class="tag-cov need">Needs '+esc(SERVICES[servicesFor(g)[0]]?SERVICES[servicesFor(g)[0]].label:"a sub")+'</span>') : "";
+    watch = '<div class="g-watch">'
+      + rights.carriers.map(w=>'<span class="svc '+w.kind+(rights.confidence==="expected"?" expected":"")+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
+      + (rights.confidence==="expected"?'<span class="conf-note">Expected</span>':"")
+      + cov + '</div>';
+  }
+
+  const said = RUGBY_STATE_TEXT[state] || "";
+  const detail = (g.ru && g.ru.label) || said;
+  let scoreCell = '<div class="g-score">';
+  if(state === "scheduled"){
+    scoreCell += (g.home.tbdSide || g.away.tbdSide
+        ? '<span class="countdown">Opponent TBD</span>'
+        : '<span class="countdown" data-start="'+g.start+'">'+esc(countdownText(g.start,now))+'</span>')
+      + '<span class="score-state">Kick-off</span>';
+  } else if(state === "unknown"){
+    scoreCell += '<span class="score-state">Status unavailable</span>'
+      + '<span class="conf-note'+(liveMode===false?" warn":"")+'">Awaiting update</span>';
+  } else if(state === "postponed" || state === "cancelled" || state === "abandoned"){
+    scoreCell += '<span class="score-state">'+esc(said)+'</span>'
+      + '<span class="conf-note warn">Reported by the source</span>';
+  } else if(!g.result.score){
+    scoreCell += '<span class="score-state'+(live?" live":"")+'">'
+      + (live?'<span class="dot-live"></span>':"")+esc(detail||said)+'</span>'
+      + '<span class="conf-note">'+(state==="final"?"No score available":"No score yet")+'</span>';
+  } else if(reveal){
+    const sc = g.result.score;
+    scoreCell += '<span class="score-line">'+sc[0]+' &ndash; '+sc[1]+'</span>'
+      + '<span class="score-state'+(live?" live":"")+'">'
+      + (live?'<span class="dot-live"></span>':"")+esc(detail||said)+'</span>';
+  } else {
+    scoreCell += '<button class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal</button>'
+      + '<span class="score-state'+(live?" live":"")+'">'
+      + (live?'<span class="dot-live"></span>'+esc(said)+' now':esc(said||"Final")+' &middot; hidden')+'</span>';
+  }
+  scoreCell += '</div>';
+
+  const bell = saveButton(g.id, alerts.has(g.id), g.home.name + " v " + g.away.name);
+  return '<div class="game'+(live?" is-live":"")+(starA||starB?" has-star":"")+'">'
+    + timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
+}
+
 function gameRow(g, now){
   if(g.event) return eventRow(g, now);
+  if(g.rugby) return rugbyRow(g, now);
   const st = stateOf(g, now), ts = timeState(g, now), c = COMPS[g.comp];
   const o = orderedTeams(g);
   if(ts.state==="tbd"){ if(o.flip) o.a = null; else o.b = null; }
@@ -1961,10 +2541,21 @@ function renderCalendar(now, todayKey){
          North American notation is away @ home, which reads the same way
          on every scoreboard. */
       const away = ts.state==="tbd" ? null : g.away, home = g.home;
-      const matchup = esc(away?away.abbr:"TBD") + " @ " + esc(home?home.abbr:"TBD");
-      return '<span class="cal-ev"><i style="background:'+COMPS[g.comp].color+'"></i>'
-        +'<span class="mu">'+matchup+'</span>'
-        +'<span class="tm">'+(s.status==="live"?"LIVE":s.status==="final"?"FT":ts.state==="tbc"||ts.state==="tbd"?"TBC":esc(fmtTime(g.start)))+'</span></span>';
+      /* Rugby reads home v away; the North American leagues read away at
+         home. Same two abbreviations, opposite order, so the separator
+         alone would not be enough. */
+      const matchup = g.rugby
+        ? esc(home.abbr) + " v " + esc(away.abbr)
+        : esc(away?away.abbr:"TBD") + " @ " + esc(home?home.abbr:"TBD");
+      const ru = g.ru ? g.ru.state : null;
+      const starred = g.rugby && (isStarred(g.home) || isStarred(g.away));
+      return '<span class="cal-ev'+(starred?" starred":"")+'"><i style="background:'+COMPS[g.comp].color+'"></i>'
+        +'<span class="mu">'+matchup+(starred?' <span aria-hidden="true">&#9733;</span>':"")+'</span>'
+        +'<span class="tm">'+(s.status==="live"?"LIVE"
+            :ru==="postponed"?"PPD":ru==="cancelled"?"CANC":ru==="abandoned"?"ABD"
+            :s.status==="final"?"FT"
+            :(g.ru&&g.ru.timeTBD)?"TBD"
+            :ts.state==="tbc"||ts.state==="tbd"?"TBC":esc(fmtTime(g.start)))+'</span></span>';
     }).join("");
     if(gs.length>3) evs+='<span class="cal-more">+'+(gs.length-3)+' more</span>';
     /* The visible cell is a number and a few abbreviations, which does
@@ -2020,6 +2611,47 @@ function renderRail(now, todayKey){
   }).join("")+'</div>';
 }
 
+/* Rugby is followed as a competition and starred as a nation, and those
+   are two different controls doing two different things. Keeping them
+   apart in the panel is not decoration: the whole point is that starring
+   Ireland does not hide anyone else, and a nation sitting in the same
+   list as the clubs would say the opposite. */
+function renderRugbyPicker(){
+  const on = rugbyOn();
+  /* The nations offered are the ones actually appearing in the fixtures
+     that were loaded, so the list cannot drift from the feed and cannot
+     offer a nation with nothing to show. */
+  const seen = new Map();
+  GAMES.forEach(g=>{
+    if(!g.rugby) return;
+    [g.home, g.away].forEach(t=>{ if(t && t.nation && !seen.has(t.nation)) seen.set(t.nation, t); });
+  });
+  const q = search.trim().toLowerCase();
+  const nations = [...seen.values()]
+    .filter(t=>!q || t.name.toLowerCase().includes(q))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  let out = '<div class="lg-group"><div class="lg-title"><b>Rugby union</b><span class="bar"></span></div>'
+    + '<div class="chips"><button class="chip" data-team="'+RUGBY_FOLLOW+'" aria-pressed="'+on+'">'
+    + '<span class="crest" style="background:'+COMPS.RUNC.color+'">RU</span>Men&rsquo;s International Rugby</button></div>';
+  if(!on){
+    out += '<p class="ru-note">Every supported men&rsquo;s senior international &mdash; Six Nations, '
+      + 'Nations Championship, Pacific Nations Cup, tests and Lions tours &mdash; in one switch. '
+      + 'Off by default; nothing rugby is fetched until it is on.</p>';
+  } else {
+    out += '<p class="ru-note">Star a nation to pick it out of the schedule. '
+      + 'Starring changes nothing about which matches are listed &mdash; every supported '
+      + 'international stays on the page.</p>';
+    out += nations.length
+      ? '<div class="ru-stars">' + nations.map(t=>
+          '<button class="ru-star" data-nation="'+esc(t.nation)+'" aria-pressed="'+rugbyStars.has(t.nation)+'">'
+          + (rugbyStars.has(t.nation)?'<span aria-hidden="true">&#9733;</span>':'<span aria-hidden="true">&#9734;</span>')
+          + esc(t.name)+'</button>').join("") + '</div>'
+      : '<p class="ru-note">No international fixtures are loaded yet, so there is nothing to star.</p>';
+  }
+  return out + '</div>';
+}
+
 function renderDrawer(){
   const q=search.trim().toLowerCase();
   const groups=Object.keys(COMPS).map(lg=>{
@@ -2032,6 +2664,7 @@ function renderDrawer(){
           + '</button>').join("")+'</div></div>';
   }).join("");
   document.getElementById("teamGroups").innerHTML = (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
+    + renderRugbyPicker()
     + '<div class="lg-group"><div class="lg-title"><b>Your link</b><span class="bar"></span></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
@@ -2095,6 +2728,15 @@ document.getElementById("teamsToggle").addEventListener("click",function(){
 });
 document.getElementById("teamSearch").addEventListener("input",function(){search=this.value;renderDrawer();});
 document.getElementById("teamGroups").addEventListener("click",function(e){
+  /* Starring a nation lives here, in the drawer's own listener, and not
+     in the one on #main: the nation buttons are rendered into
+     #teamGroups, so a handler on #main never sees the click at all. */
+  const nat=e.target.closest("[data-nation]");
+  if(nat){
+    const id=nat.getAttribute("data-nation");
+    rugbyStars.has(id)?rugbyStars.delete(id):rugbyStars.add(id);
+    persist(); renderDrawer(); render(); return;
+  }
   const b=e.target.closest("[data-team]");
   if(b){ const id=b.getAttribute("data-team"); selected.has(id)?selected.delete(id):selected.add(id);
     persist(); renderDrawer(); render(); refreshAfterPicks(); return; }
@@ -2165,15 +2807,27 @@ async function runRefresh(){
     // one cheap top-up for anything in progress, then done
     let filled = 0;
     try{ filled = await fillScores(); liveOK = true; }catch(e){ liveOK = false; }
-    if(filled){ rememberResults(); }
+    /* Rugby is a separate source behind a separate try. A rugby endpoint
+       being down must cost rugby its live scores and nothing else — it
+       may not take the hockey down with it, and it may not set liveOK,
+       which is the page's claim about whether the sports API answered. */
+    let ruFilled = 0;
+    try{ ruFilled = await fillRugbyScores(); }
+    catch(e){ rugbyLiveErr = (e && e.message || String(e)).slice(0,80); }
+    if(filled || ruFilled){ rememberResults(); }
     liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from the schedule file"
-      + (filled ? ", " + filled + " score" + (filled===1?"":"s") + " live" : "")
+      + (filled + ruFilled ? ", " + (filled+ruFilled) + " score" + (filled+ruFilled===1?"":"s") + " live" : "")
       + " &middot; updated " + agoText(staticAt);
     render();
     return;
   }
   try{
     await loadLive();
+    /* The same separation on the fallback path. loadLive has already
+       succeeded by this point, so a rugby failure here changes nothing
+       about the page's state. */
+    try{ await fillRugbyScores(); }
+    catch(e){ rugbyLiveErr = (e && e.message || String(e)).slice(0,80); }
     liveMode = true; liveErr = ""; liveOK = true;
     dataStale = false; dataAge = Date.now();
     rememberResults(); render();
@@ -2224,7 +2878,12 @@ refreshLive();
 function pollDue(){
   if(liveMode === false || !showScores) return false;
   const now = Date.now();
-  return myGames().some(g => activeNow(g, now));
+  /* Rugby answers to its own gate: it is here because rugby is on, not
+     because a followed club is playing, so it is asked about through
+     rugbyActiveNow rather than through the team-shaped one. With rugby
+     off, rugbyActiveNow is false for everything and no rugby request is
+     ever made. */
+  return myGames().some(g => g.rugby ? rugbyActiveNow(g, now) : activeNow(g, now));
 }
 setInterval(()=>{
   if(document.hidden) return;        // paused with the tab, not merely quiet

@@ -7,7 +7,8 @@ Schedules are easy to find. "Where is this on, in Canada?" is not — no sports 
 ## What it does
 
 - **Multiple teams at once**, across NHL, NBA, NFL, MLB, MLS, the Premier League and UEFA club competitions
-- **Where to watch** per game — Sportsnet, TSN, Prime Video, Fubo, DAZN, Apple TV, RDS, TVA Sports, CTV, MLB.TV, NBA League Pass
+- **Men's international rugby union** as a single follow — the Six Nations, the Nations Championship, the Pacific Nations Cup, test matches and Lions Tests, with nations you can star
+- **Where to watch** per game — Sportsnet, TSN, Prime Video, Fubo, DAZN, Apple TV, RDS, TVA Sports, CTV, MLB.TV, NBA League Pass, Premier Sports
 - **Coverage check** — mark the services you subscribe to and every game is flagged *You have it* or *Needs DAZN*
 - **Scores with a global on/off switch**, spoiler-safe: a hidden game still shows that it's live and where it's carried, with a per-game reveal
 - **Agenda by day and a month calendar**, league-coloured
@@ -28,6 +29,167 @@ Every row carries a confidence level and a source:
 | `unknown` | No Canadian rights holder found. Shown as `Carrier TBC` rather than guessed |
 
 When sources disagree, the primary release wins and the disagreement goes in the row's note. There is a live example in the table: an aggregator lists DAZN Canada for Premier League fixtures while Fubo's own release says exclusive.
+
+## Rugby is followed by competition, not by team
+
+Every other sport here starts from "which teams do you follow". International
+rugby does not: there are ten or so relevant nations, they play in windows a
+few weeks long, and the question is *what internationals are on*, not *when
+does my team play*. So rugby is one switch — **Men's International Rugby** —
+and turning it on shows every supported fixture.
+
+Nations can be **starred**, which marks them and nothing else. Starring
+Ireland does not hide New Zealand v South Africa. That is the whole point of
+the separation, and it is why the star set lives apart from the team
+selection: it is also where per-nation notifications will read from when
+they exist.
+
+Rugby is **off unless you ask for it**. It is not in the default set, no
+existing link or stored preference can turn it on, and with it off the page
+makes no rugby request of any kind.
+
+### What is in scope
+
+Senior men's fifteen-a-side international rugby union: the Men's Six
+Nations, the Nations Championship, the World Rugby Nations Cup, the Pacific
+Nations Cup, The Rugby Championship and the Rugby World Cup when they are
+scheduled, official test matches, and British & Irish Lions **Tests**.
+
+Not in scope, and actively filtered out: club and domestic rugby, women's
+rugby, sevens, rugby league, U20 and age-grade, and uncapped or invitational
+XV fixtures.
+
+That filtering is harder than it sounds, because **neither source flags
+it**. ESPN's British and Irish Lions league carries ten fixtures of which
+four are Tests; the other six are Super Rugby clubs and two invitational
+sides, filed under the same competition with nothing to tell them apart.
+World Rugby's "Rugby's Greatest Rivalry" is the same shape. So a fixture is
+a test only when **both sides resolve in a registry of test-playing
+nations** — and a name that is neither a nation nor a recognised non-test
+side is reported loudly rather than dropped, because that is how a feed
+renaming a country gets noticed.
+
+Two traps worth naming, both real:
+
+- **"Lions" is a South African franchise.** The Johannesburg Lions play New
+  Zealand three days after the actual Test, in the same feed. The touring
+  side is matched on its full name and never on the word alone.
+- **"Argentina XV" is not Argentina.** Uncapped XV sides appear in the
+  men's international bucket, so no suffix-trimming rule may ever be applied
+  to a rugby name — the club-name helper elsewhere in this repo would turn
+  one straight into the other.
+
+### Two sources, kept independent
+
+| Source | Carries |
+| --- | --- |
+| ESPN's numeric rugby leagues | Six Nations, Nations Championship, Rugby Championship, Rugby World Cup, Lions Tour, International Test Match |
+| World Rugby's own match feed | Pacific Nations Cup and World Rugby Nations Cup, which ESPN has no league for at all, plus the Nations Championship finals weekend that ESPN's copy omits |
+
+Neither may suppress the other. Each is fetched and parsed on its own, a
+failure in one is recorded rather than thrown, and a competition reachable
+through only one source still appears when the other is unreachable. What
+could not be reached is **reported as unavailable** — which is a different
+claim from a competition that answered with nothing. The Rugby Championship
+publishes no 2026 fixtures under its own ESPN league; that is an empty
+competition, not a broken one, and the build says so.
+
+Fixtures are merged on **the source's own event id first**. Those ids are
+authoritative only within the source that minted them — ESPN says `603247`
+where World Rugby says a UUID — so they are namespaced, two ids from the
+*same* source never merge however alike the fixtures look, and only where
+the namespaces do not overlap does the fallback apply: both nations, plus
+kickoffs within six hours. Nations alone is not enough, because South Africa
+play New Zealand three times in four weeks.
+
+Where the two disagree, the more specific competition wins over the
+catch-all test bucket, and **World Rugby's venue wins** — ESPN files the
+Perth Test as "Perth, Scotland" and the Jujuy Test as "San Salvador, El
+Salvador", because `address.state` is a US field being made to hold a
+country.
+
+They also sometimes disagree about the **kickoff itself**, by fifteen to
+sixty minutes. ESPN's reading is the one shown, because it agreed with World
+Rugby on every fixture already played and is self-consistent across a series
+where World Rugby is not — but that is a judgement, so the other reading is
+kept on the fixture as `altStart` and counted in the build log rather than
+discarded.
+
+### Time, and the international date line
+
+Every kickoff is stored as one absolute UTC instant, and every question
+about a *day* is asked of `Intl` for the zone it is being asked about. No
+offset is ever baked: Vancouver is UTC-8 for part of the year and UTC-7 for
+the rest, which is why the label is **PT** and never "PST".
+
+A Saturday afternoon in Auckland is Friday evening in Vancouver, and both
+are true. The page groups the fixture under the reader's day — correctly —
+and adds a short note saying whose Saturday it was: *Sat in Nigata*. That
+note appears only where the two calendars actually differ, and only where
+the venue's own UTC offset is known, because guessing one is how a fixture
+ends up labelled with the wrong day in the wrong city.
+
+### What is kept
+
+Completed matches for the previous **three local calendar days**, upcoming
+ones for at most **ninety**. Whole calendar days, walked with the local-date
+setters rather than by subtracting seventy-two hours: on the two days a year
+the clocks move, a flat subtraction lands at 23:00 and takes an extra day of
+results with it.
+
+Anything **unresolved is kept regardless of age**. A match abandoned
+mid-second-half and never resolved is precisely the fixture someone is still
+looking for, and age is not what should retire it.
+
+Because "three local days" starts twenty-one hours earlier in Auckland than
+in Vancouver and the build does not know where the reader is, the committed
+file keeps a deliberate superset and the browser applies the exact rule.
+
+### Following a rugby match that is on
+
+The existing sixty-second model, with one competition-shaped difference:
+rugby is polled because rugby is switched on, not because a followed nation
+is playing. Starring Ireland must not stop the page following Argentina v
+Australia.
+
+**Nothing here reads a clock.** Eighty minutes of rugby routinely takes a
+hundred, extra time is normal in a knockout, and a match can be stopped and
+restarted — so a fixture is over only when the source says `completed`, an
+unrecognised status reads as *unresolved* rather than as a result, and a
+match past its kickoff that the feed still calls scheduled is exactly the
+one worth asking about again. Half-time, delays and suspensions all keep the
+poll running.
+
+The two sources are asked separately here too, so a World Rugby outage
+cannot cost the Six Nations its live scores — and a rugby failure is caught
+on its own and can never set `liveOK`, which is the page's claim about
+whether the *sports* API answered. There is no Vercel cron; the existing
+GitHub Actions refresh is what rebuilds the file.
+
+One quirk carried over from the other sports and confirmed for rugby:
+**ESPN files a rugby event under its US Eastern date.** A 00:00 UTC kickoff
+answers to the previous day, and asking for the UTC date returns an empty
+scoreboard.
+
+### Canadian carriage
+
+Modelled per competition and never per nation — Ireland appear in the Six
+Nations, the Nations Championship and a summer tour test, and a rule keyed
+on "Ireland" would get two of those three wrong.
+
+| Competition | Canada | Confidence |
+| --- | --- | --- |
+| Men's Six Nations | Premier Sports | confirmed |
+| Nations Championship | Premier Sports | confirmed |
+| Quilter Autumn Nations Series | DAZN | confirmed |
+| British & Irish Lions | — | unknown |
+| Everything else | — | unknown |
+
+The 2025 Lions tour was on DAZN in Canada. That is a fact about 2025 and not
+about the next tour, which is sold separately and has no announced Canadian
+carriage, so it is recorded as **unknown** with the old listing named in the
+note rather than carried forward. Anything unverified shows **Coverage TBD**
+and is never marked *You have it*.
 
 ## Data
 
@@ -75,6 +237,12 @@ A fixture that has already been given a score is still polled while it is under 
 ### Keeping the roster in step
 
 `ROSTER` in `scripts/fetch-data.mjs` mirrors `TEAM_ROWS` in `src/page.html`. Add a team to one and add it to the other, or the picker will offer a team the build never fetches.
+
+Rugby needs no such pairing: the nations offered for starring are derived
+from the fixtures actually loaded, so the list cannot drift from the feed
+and cannot offer a nation with nothing to show. The one list that does have
+to be maintained is the nation registry in `scripts/lib/rugby.mjs`, and the
+build warns loudly about any competitor name it could not place.
 
 ## Running it
 
