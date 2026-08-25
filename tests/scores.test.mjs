@@ -204,7 +204,7 @@ function harness(){
   const page = loadFromPage(
     ["TEAM_ROWS", "GHOSTS", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
      "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "ESPN_NAME",
-     "norm", "espnTeamObj", "parseEvent", "clubKeys", "sameClub", "orientation",
+     "norm", "espnTeamObj", "venueOf", "parseEvent", "clubKeys", "sameClub", "orientation",
      "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore", "activeNow",
      "scoredDays", "fillScores"], PREAMBLE);
   // the shipped roster, built the way the page builds it

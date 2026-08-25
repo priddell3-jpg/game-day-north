@@ -1,0 +1,416 @@
+{
+ "_note": "Trimmed from ESPN soccer scoreboards captured 2026-08-25 (soccer/eng.1, soccer/usa.1 and soccer/eng.league_cup). competitions[0].venue is verbatim. The last entry is CONSTRUCTED: it is the first event with its venue deleted, because ESPN stated a venue on every one of the 1206 soccer events scanned and a genuinely location-less fixture could not be captured.",
+ "events": [
+  {
+   "_comp": "EPL",
+   "id": "401879288",
+   "date": "2026-09-04T19:00Z",
+   "name": "Liverpool at Ipswich Town",
+   "shortName": "LIV @ IPS",
+   "competitions": [
+    {
+     "id": "401879288",
+     "date": "2026-09-04T19:00Z",
+     "timeValid": true,
+     "venue": {
+      "id": "257",
+      "fullName": "Portman Road",
+      "address": {
+       "city": "Ipswich",
+       "country": "England"
+      }
+     },
+     "competitors": [
+      {
+       "id": "373",
+       "homeAway": "home",
+       "team": {
+        "id": "373",
+        "name": "Ipswich Town",
+        "abbreviation": "IPS",
+        "displayName": "Ipswich Town",
+        "location": "Ipswich Town",
+        "color": "0000fa",
+        "venue": {
+         "id": "257"
+        }
+       },
+       "score": "0"
+      },
+      {
+       "id": "364",
+       "homeAway": "away",
+       "team": {
+        "id": "364",
+        "name": "Liverpool",
+        "abbreviation": "LIV",
+        "displayName": "Liverpool",
+        "location": "Liverpool",
+        "color": "d11317",
+        "venue": {
+         "id": "192"
+        }
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "0'",
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Fri, September 4th at 3:00 PM EDT",
+       "shortDetail": "Scheduled"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "_comp": "EPL",
+   "id": "740596",
+   "date": "2025-08-15T19:00Z",
+   "name": "AFC Bournemouth at Liverpool",
+   "shortName": "BOU @ LIV",
+   "competitions": [
+    {
+     "id": "740596",
+     "date": "2025-08-15T19:00Z",
+     "timeValid": true,
+     "venue": {
+      "id": "192",
+      "fullName": "Anfield",
+      "address": {
+       "city": "Liverpool",
+       "country": "England"
+      }
+     },
+     "competitors": [
+      {
+       "id": "364",
+       "homeAway": "home",
+       "team": {
+        "id": "364",
+        "name": "Liverpool",
+        "abbreviation": "LIV",
+        "displayName": "Liverpool",
+        "location": "Liverpool",
+        "color": "d11317",
+        "venue": {
+         "id": "192"
+        }
+       },
+       "score": "4"
+      },
+      {
+       "id": "349",
+       "homeAway": "away",
+       "team": {
+        "id": "349",
+        "name": "AFC Bournemouth",
+        "abbreviation": "BOU",
+        "displayName": "AFC Bournemouth",
+        "location": "AFC Bournemouth",
+        "color": "f42727",
+        "venue": {
+         "id": "6020"
+        }
+       },
+       "score": "2"
+      }
+     ],
+     "status": {
+      "clock": 5400,
+      "displayClock": "90'+7'",
+      "period": 2,
+      "type": {
+       "id": "28",
+       "name": "STATUS_FULL_TIME",
+       "state": "post",
+       "completed": true,
+       "description": "Full Time",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "_comp": "MLS",
+   "id": "727198",
+   "date": "2025-08-18T01:00Z",
+   "name": "Houston Dynamo FC at Vancouver Whitecaps",
+   "shortName": "HOU @ VAN",
+   "competitions": [
+    {
+     "id": "727198",
+     "date": "2025-08-18T01:00Z",
+     "timeValid": true,
+     "venue": {
+      "id": "4370",
+      "fullName": "BC Place",
+      "address": {
+       "city": "Vancouver",
+       "country": "Canada"
+      }
+     },
+     "competitors": [
+      {
+       "id": "9727",
+       "homeAway": "home",
+       "team": {
+        "id": "9727",
+        "name": "Vancouver Whitecaps",
+        "abbreviation": "VAN",
+        "displayName": "Vancouver Whitecaps",
+        "location": "Vancouver Whitecaps",
+        "color": "ffffff",
+        "venue": {
+         "id": "4370"
+        }
+       },
+       "score": "1"
+      },
+      {
+       "id": "6077",
+       "homeAway": "away",
+       "team": {
+        "id": "6077",
+        "name": "Houston Dynamo FC",
+        "abbreviation": "HOU",
+        "displayName": "Houston Dynamo FC",
+        "location": "Houston Dynamo FC",
+        "color": "ff6b00",
+        "venue": {
+         "id": "4791"
+        }
+       },
+       "score": "1"
+      }
+     ],
+     "status": {
+      "clock": 5400,
+      "displayClock": "90'+7'",
+      "period": 2,
+      "type": {
+       "id": "28",
+       "name": "STATUS_FULL_TIME",
+       "state": "post",
+       "completed": true,
+       "description": "Full Time",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "_comp": "MLS",
+   "id": "727178",
+   "date": "2025-08-10T02:30Z",
+   "name": "Vancouver Whitecaps at San Jose Earthquakes",
+   "shortName": "VAN @ SJ",
+   "competitions": [
+    {
+     "id": "727178",
+     "date": "2025-08-10T02:30Z",
+     "timeValid": true,
+     "venue": {
+      "id": "6072",
+      "fullName": "PayPal Park",
+      "address": {
+       "city": "San Jose, California",
+       "country": "USA"
+      }
+     },
+     "competitors": [
+      {
+       "id": "191",
+       "homeAway": "home",
+       "team": {
+        "id": "191",
+        "name": "San Jose Earthquakes",
+        "abbreviation": "SJ",
+        "displayName": "San Jose Earthquakes",
+        "location": "San Jose Earthquakes",
+        "color": "003da6",
+        "venue": {
+         "id": "6072"
+        }
+       },
+       "score": "2"
+      },
+      {
+       "id": "9727",
+       "homeAway": "away",
+       "team": {
+        "id": "9727",
+        "name": "Vancouver Whitecaps",
+        "abbreviation": "VAN",
+        "displayName": "Vancouver Whitecaps",
+        "location": "Vancouver Whitecaps",
+        "color": "ffffff",
+        "venue": {
+         "id": "4370"
+        }
+       },
+       "score": "1"
+      }
+     ],
+     "status": {
+      "clock": 5400,
+      "displayClock": "90'+13'",
+      "period": 2,
+      "type": {
+       "id": "28",
+       "name": "STATUS_FULL_TIME",
+       "state": "post",
+       "completed": true,
+       "description": "Full Time",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "_comp": "EFL",
+   "id": "401859837",
+   "date": "2026-03-22T16:30Z",
+   "name": "Manchester City at Arsenal",
+   "shortName": "MNC @ ARS",
+   "competitions": [
+    {
+     "id": "401859837",
+     "date": "2026-03-22T16:30Z",
+     "timeValid": true,
+     "venue": {
+      "id": "2023",
+      "fullName": "Wembley Stadium",
+      "address": {
+       "city": "London",
+       "country": "England"
+      }
+     },
+     "competitors": [
+      {
+       "id": "359",
+       "homeAway": "home",
+       "team": {
+        "id": "359",
+        "name": "Arsenal",
+        "abbreviation": "ARS",
+        "displayName": "Arsenal",
+        "location": "Arsenal",
+        "color": "e20520",
+        "venue": {
+         "id": "2267"
+        }
+       },
+       "score": "0"
+      },
+      {
+       "id": "382",
+       "homeAway": "away",
+       "team": {
+        "id": "382",
+        "name": "Manchester City",
+        "abbreviation": "MNC",
+        "displayName": "Manchester City",
+        "location": "Manchester City",
+        "color": "99c5ea",
+        "venue": {
+         "id": "4036"
+        }
+       },
+       "score": "2"
+      }
+     ],
+     "status": {
+      "clock": 5400,
+      "displayClock": "90'+4'",
+      "period": 2,
+      "type": {
+       "id": "28",
+       "name": "STATUS_FULL_TIME",
+       "state": "post",
+       "completed": true,
+       "description": "Full Time",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "_comp": "EPL",
+   "id": "900500",
+   "date": "2026-09-04T19:00Z",
+   "name": "Liverpool at Ipswich Town",
+   "shortName": "LIV @ IPS",
+   "competitions": [
+    {
+     "id": "900500",
+     "date": "2026-09-04T19:00Z",
+     "timeValid": true,
+     "competitors": [
+      {
+       "id": "373",
+       "homeAway": "home",
+       "team": {
+        "id": "373",
+        "name": "Ipswich Town",
+        "abbreviation": "IPS",
+        "displayName": "Ipswich Town",
+        "location": "Ipswich Town",
+        "color": "0000fa",
+        "venue": {
+         "id": "257"
+        }
+       },
+       "score": "0"
+      },
+      {
+       "id": "364",
+       "homeAway": "away",
+       "team": {
+        "id": "364",
+        "name": "Liverpool",
+        "abbreviation": "LIV",
+        "displayName": "Liverpool",
+        "location": "Liverpool",
+        "color": "d11317",
+        "venue": {
+         "id": "192"
+        }
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "0'",
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Fri, September 4th at 3:00 PM EDT",
+       "shortDetail": "Scheduled"
+      }
+     }
+    }
+   ],
+   "_constructed": true
+  }
+ ]
+}

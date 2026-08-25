@@ -19,6 +19,8 @@ import { writeFileSync, readFileSync } from "node:fs";
 import { easternDate } from "./lib/dates.mjs";
 import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, stageSections,
          titleWords, titleMatches } from "./lib/cycling.mjs";
+import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
+         FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -132,6 +134,33 @@ async function get(url){
     }
   }
 }
+/* Where the match is actually being played, as the source states it.
+
+   This is a fact about the FIXTURE, not about the home club, and the
+   difference is not academic: the 2026 League Cup final is filed as
+   "Manchester City at Arsenal" and played at Wembley. Reading a location
+   off the home team would have labelled it with Arsenal's own ground.
+
+   Deliberately no mapping and no inference. If ESPN states a venue it is
+   carried through verbatim; if it states none, the fixture carries none
+   and the page shows nothing rather than guessing. ESPN populates this
+   on every soccer and North American event seen so far, on both the
+   scoreboard and the per-team season schedule. */
+function venueOf(cp){
+  const v = cp && cp.venue;
+  if(!v) return null;
+  const a = v.address || {};
+  const out = {};
+  if(v.fullName) out.name = v.fullName;
+  if(a.city) out.city = a.city;
+  /* state is a US/Canadian field and is absent for English grounds;
+     country is absent for US ones. Both are kept when given because
+     "Kansas City" alone is two different places. */
+  if(a.state) out.state = a.state;
+  if(a.country) out.country = a.country;
+  return Object.keys(out).length ? out : null;
+}
+
 function parseEvent(ev, comp){
   const cp = (ev.competitions && ev.competitions[0]) || ev;
   const cs = cp.competitors || [];
@@ -150,13 +179,18 @@ function parseEvent(ev, comp){
     const t = c.team;
     return { id: idFor(t.displayName),
              name: t.displayName || t.name || "", abbr: (t.abbreviation||"?").slice(0,4),
-             // the home club's city is what names the venue in the UI, so it
-             // has to survive for clubs outside the followable roster too
+             /* ESPN's team.location is the club's own label, and for
+                soccer that is the club name rather than a town —
+                "Ipswich Town", "New York City FC". It is kept because
+                the roster matches against it, but it is NOT where the
+                page gets a location from: that comes from venueOf above,
+                which is a fact about the fixture. */
              city: t.location || "",
              color: t.color ? "#"+String(t.color).replace("#","") : null };
   };
   const sh = num(H.score && H.score.displayValue != null ? H.score.displayValue : H.score);
   const sa = num(A.score && A.score.displayValue != null ? A.score.displayValue : A.score);
+  const venue = venueOf(cp);
   return {
     /* The source's own event id. Team names drift, start times move, and
        a composite key built from them has to guess whether two records
@@ -164,6 +198,7 @@ function parseEvent(ev, comp){
        collides with the page's internal row ids. */
     eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, start, home: side(H), away: side(A), status,
+    ...(venue ? {venue} : {}),
     label: ty.shortDetail || ty.description || (status==="final" ? "Final" : ""),
     score: (status === "scheduled" || sh === null || sa === null) ? null : [sh, sa]
   };
@@ -184,7 +219,14 @@ function add(f){
   if(!f.home.id && !f.away.id) return;                 // nobody follows either club
   const i = fixtures.findIndex(x=>sameGame(x,f));
   if(i < 0){ fixtures.push(f); return; }
-  if(f.score && !fixtures[i].score) fixtures[i] = f;   // the copy with a score wins
+  if(f.score && !fixtures[i].score){
+    // the copy with a score wins, but must not lose a venue it lacks:
+    // the season schedule and the scoreboard do not always both state one
+    if(!f.venue && fixtures[i].venue) f.venue = fixtures[i].venue;
+    fixtures[i] = f;
+  } else if(!fixtures[i].venue && f.venue){
+    fixtures[i].venue = f.venue;
+  }
 }
 
 const comps = new Set();
@@ -438,6 +480,170 @@ try{
   if(prevCycling.length && !cyclingOut.length) cyclingOut.push(...prevCycling);
 }
 
+
+/* ============================================================
+   MEN'S INTERNATIONAL RUGBY UNION
+
+   Two independent sources, deliberately kept independent. ESPN carries
+   the six numbered rugby leagues; World Rugby's own match feed carries
+   the Pacific Nations Cup and the World Rugby Nations Cup, which ESPN
+   has no league for at all, and the Nations Championship finals
+   weekend, which ESPN's copy of that competition omits.
+
+   Neither may suppress the other. A competition reachable through only
+   one of them must still appear when the other is unreachable, so each
+   adapter is wrapped on its own and a failure is recorded rather than
+   thrown. What could not be reached is reported; nothing is filled in.
+   ============================================================ */
+const RUGBY_BACK_DAYS = 5;      // the browser applies the exact 3-local-day
+                                // cutoff; the file keeps a superset, because
+                                // "three local days" is 26 hours wider in
+                                // Auckland than in Vancouver and the build
+                                // does not know where the reader is
+const rugbyFrom = now - RUGBY_BACK_DAYS*DAY, rugbyTo = now + RUGBY_FORWARD*DAY;
+const rugbyReject = new Set();
+const rugbySourceErrors = [];
+const rugbyCompsSeen = {};
+
+/* Years the window touches. A window that straddles New Year needs both,
+   and ESPN answers a whole season to ?dates=YYYY — the same request that
+   returns 15 Six Nations fixtures for 2026 and nothing for 2027. */
+const rugbyYears = [...new Set([
+  new Date(rugbyFrom).getUTCFullYear(), new Date(rugbyTo).getUTCFullYear()
+])];
+
+/* ---- ESPN, one league at a time ---- */
+const espnRugby = [];
+for(const [compId, cfg] of Object.entries(RUGBY_COMPS)){
+  /* Not every competition has an ESPN league. The Pacific Nations Cup
+     and the World Rugby Nations Cup have none, which is a fact about
+     the source and not a failure to reach it — recorded as such so the
+     log does not report a working source as broken. */
+  if(!cfg.espn){ rugbyCompsSeen[compId] = {espn:"none"}; continue; }
+  let reached = false, kept = 0;
+  for(const year of rugbyYears){
+    let r = null;
+    try{
+      r = await get(ESPN + "rugby/" + cfg.espn + "/scoreboard?dates=" + year);
+    }catch(err){
+      rugbySourceErrors.push("ESPN " + compId + " " + year + ": " + (err && err.message || err));
+      continue;
+    }
+    if(r === null) continue;                    // 404 or a failure already warned
+    reached = true;
+    for(const ev of r.events || []){
+      const f = fromEspnEvent(ev, compId, rugbyReject);
+      if(f){ espnRugby.push(f); kept++; }
+    }
+  }
+  /* An empty competition is normal — The Rugby Championship publishes
+     nothing until it is scheduled — but "we asked and got nothing" and
+     "we never got an answer" are different claims and are recorded as
+     different things. */
+  rugbyCompsSeen[compId] = {espn: reached ? kept : null};
+}
+
+/* ---- World Rugby's own feed ---- */
+const WR_API = "https://api.wr-rims-prod.pulselive.com/rugby/v3/match";
+const WR_PAGE = 100;
+const wrRugby = [];
+let wrReached = false;
+try{
+  const iso = ms => new Date(ms).toISOString().slice(0,10);
+  const qs = p => WR_API + "?startDate=" + iso(rugbyFrom) + "&endDate=" + iso(rugbyTo)
+    + "&sort=asc&pageSize=" + WR_PAGE + "&page=" + p;
+  /* This host answers 429 to a burst, so the pages are walked in order
+     with a pause, and a rate-limited page is retried once rather than
+     silently leaving a hole in the middle of the window. */
+  let page = 0, pages = 1;
+  while(page < pages && page < 40){
+    let body = null;
+    for(let attempt = 0; attempt < 3 && !body; attempt++){
+      if(attempt) await new Promise(r=>setTimeout(r, 1500*attempt));
+      try{
+        const res = await fetch(qs(page), {headers:{"user-agent":WIKI_UA, "accept":"application/json"},
+          signal:AbortSignal.timeout(20000)});
+        if(res.status === 429) continue;        // backs off on the next pass
+        if(!res.ok) break;
+        body = await res.json();
+      }catch(e){ /* retried, then given up on below */ }
+    }
+    if(!body){ rugbySourceErrors.push("World Rugby: page " + page + " unavailable"); break; }
+    wrReached = true;
+    pages = (body.pageInfo && body.pageInfo.numPages) || 1;
+    for(const m of body.content || []){
+      const f = fromWrMatch(m, rugbyReject);
+      if(f) wrRugby.push(f);
+    }
+    page++;
+    await new Promise(r=>setTimeout(r, 350));
+  }
+}catch(err){
+  rugbySourceErrors.push("World Rugby: " + (err && err.message || err));
+}
+for(const compId of Object.keys(RUGBY_COMPS)){
+  const seen = rugbyCompsSeen[compId] || (rugbyCompsSeen[compId] = {espn:null});
+  if(seen.espn === undefined) seen.espn = null;
+  seen.wr = wrReached ? wrRugby.filter(f=>f.comp === compId).length : null;
+}
+
+/* One list, ids first and nations-plus-kickoff only where the id
+   namespaces do not overlap.
+
+   ESPN is concatenated first on purpose rather than by accident: where
+   both sources carry a fixture the base copy's kickoff is the one kept,
+   and ESPN agreed with World Rugby on every fixture already played
+   while disagreeing with it on several still to come. Where they do
+   disagree the other reading is recorded on the fixture as altStart. */
+const rugbyAll = dedupe(espnRugby.concat(wrRugby));
+/* Old results are dropped here rather than in the browser so the file
+   does not carry a season of finished matches to every visitor. The
+   browser applies the exact local-calendar rule on top of this. */
+const rugbyOut = rugbyAll.filter(f =>
+  f.start <= rugbyTo && (!isTerminal(f.status) || f.start >= rugbyFrom))
+  /* __src is a merge hint about which feed a venue came from; it has
+     done its job by now and does not belong in the shipped file. */
+  .map(f => f.venue ? Object.assign({}, f, {venue:(({__src, ...v}) => v)(f.venue)}) : f);
+
+if(rugbyReject.size){
+  console.warn("\n  !! " + rugbyReject.size + " rugby side(s) matched no nation and are not a known "
+    + "non-test side — check the name against the feed:");
+  [...rugbyReject].sort().forEach(n=>console.warn("     " + n));
+  console.warn("");
+}
+/* A competition neither source answered for. Distinct from one that
+   answered with nothing: The Rugby Championship legitimately publishes
+   no 2026 fixtures yet, and that is not the same as not being asked. */
+const rugbyUnavailable = Object.entries(rugbyCompsSeen)
+  .filter(([,v]) => (v.espn === null || v.espn === "none") && v.wr === null)
+  .map(([k]) => RUGBY_COMPS[k].label);
+console.log("Rugby: " + rugbyOut.length + " fixture(s) in window from "
+  + (espnRugby.length ? "ESPN" : "") + (espnRugby.length && wrRugby.length ? " + " : "")
+  + (wrRugby.length ? "World Rugby" : "") + (!espnRugby.length && !wrRugby.length ? "no source" : "")
+  + " (" + espnRugby.length + " + " + wrRugby.length + " before dedup)");
+Object.entries(rugbyCompsSeen).forEach(([k,v])=>{
+  const label = RUGBY_COMPS[k].label;
+  const say = x => x === null ? "unreachable" : x === "none" ? "no league" : x;
+  const bits = ["espn=" + say(v.espn), "wr=" + say(v.wr)];
+  console.log("    " + label.padEnd(26) + " " + bits.join("  "));
+});
+const rugbyDisputed = rugbyOut.filter(f => f.altStart != null);
+if(rugbyDisputed.length){
+  console.warn("  ! " + rugbyDisputed.length + " kickoff(s) reported differently by the two sources; "
+    + "the ESPN reading is shown and the other is kept as altStart:");
+  rugbyDisputed.forEach(f => console.warn("     " + f.home.name + " v " + f.away.name
+    + "  " + new Date(f.start).toISOString() + " vs " + new Date(f.altStart).toISOString()
+    + " (" + f.altSource + ")"));
+}
+if(rugbyUnavailable.length){
+  console.warn("  ! no source answered for: " + rugbyUnavailable.join(", ")
+    + " — reported as unavailable rather than shown as empty");
+}
+if(rugbySourceErrors.length){
+  console.warn("  ! rugby source problems: " + rugbySourceErrors.length);
+  rugbySourceErrors.forEach(e=>console.warn("     " + e));
+}
+
 /* A roster entry that matched no fixture at all is almost always a name
    that drifted, not a team with an empty schedule. Say so loudly: this
    failure is invisible in the app, where it just looks like a team that
@@ -475,7 +681,8 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
    otherwise start treating the file as stale. */
 const MAX_AGE = 6*3600000;
 const cyclingSame = previous && JSON.stringify(previous.cycling || []) === JSON.stringify(cyclingOut);
-if(previous && cyclingSame && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
+const rugbySame = previous && JSON.stringify(previous.rugby || []) === JSON.stringify(rugbyOut);
+if(previous && cyclingSame && rugbySame && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
     console.log("No fixture changed and the file is " + Math.round(age/60000) +
@@ -491,11 +698,17 @@ const out = {
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
   counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
-            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0) },
+            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0),
+            rugby: rugbyOut.length, rugbyByComp: rugbyOut.reduce((a,f)=>{a[f.comp]=(a[f.comp]||0)+1;return a;},{}),
+            /* Named in the file so the page can say a competition is
+               unavailable instead of implying the feed is complete. */
+            rugbyUnavailable, rugbyUnknownSides: [...rugbyReject].sort(),
+            rugbyDisputedKickoffs: rugbyDisputed.length },
   fixtures,
-  cycling: cyclingOut
+  cycling: cyclingOut,
+  rugby: rugbyOut
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +
-  calls + " requests, " + failures + " failed");
+  rugbyOut.length + " rugby, " + calls + " requests, " + failures + " failed");
 console.log("  " + Object.entries(byComp).map(([k,v])=>k+":"+v).join("  "));
