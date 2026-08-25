@@ -875,6 +875,11 @@ function mergeReal(built){
         g.startOriginal = prev.startOriginal || prev.start;
         g.moved = g.startOriginal;      // the row renders this as "was <time>"
       }
+      /* A copy that states no venue must not erase one already known.
+         The baked fallback and a remembered result carry none at all,
+         and a refresh that let them win blanked the location on a row
+         that had it a second earlier. */
+      if(!g.venue && prev.venue) g.venue = prev.venue;
       GAMES.splice(i,1);
     }
   });
@@ -1076,6 +1081,27 @@ function espnTeamObj(e, comp){
   }
   return TEAMS[key];
 }
+/* Where the match is played, as the source states it. Mirrors venueOf in
+   scripts/fetch-data.mjs — the committed file and the direct fetch must
+   describe a fixture the same way or a row would change shape depending
+   on which path it arrived by.
+
+   A fact about the FIXTURE, never about the home club. The 2026 League
+   Cup final reads "Manchester City at Arsenal" and is played at Wembley;
+   a location taken from the home team would name Arsenal's own ground.
+   No mapping, no inference: stated or absent. */
+function venueOf(cp){
+  const v = cp && cp.venue;
+  if(!v) return null;
+  const a = v.address || {};
+  const out = {};
+  if(v.fullName) out.name = v.fullName;
+  if(a.city) out.city = a.city;
+  if(a.state) out.state = a.state;
+  if(a.country) out.country = a.country;
+  return Object.keys(out).length ? out : null;
+}
+
 function parseEvent(ev, comp){
   const cp = (ev.competitions && ev.competitions[0]) || ev;
   const cs = cp.competitors || [];
@@ -1111,6 +1137,7 @@ function parseEvent(ev, comp){
   return {
     eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, home, away, start, moved:null, real:true, espn:true, listed:true,
+    venue: venueOf(cp),
     localDow:new Date(start).getUTCDay(), slotHour:new Date(start).getUTCHours(), stage:"",
     result: (status==="scheduled" || sh===null || sa===null)
       ? {status, label:label||"", score:null}
@@ -1152,7 +1179,7 @@ async function loadStatic(){
     const home = staticTeam(f.home, f.comp), away = staticTeam(f.away, f.comp);
     if(!selected.has(home.id) && !selected.has(away.id)) return;
     built.push({eid:f.eid || null, comp:f.comp, home, away, start:f.start, moved:null,
-      real:true, espn:true, listed:true, fromFeed:true,
+      real:true, espn:true, listed:true, fromFeed:true, venue:f.venue || null,
       localDow:new Date(f.start).getUTCDay(), slotHour:new Date(f.start).getUTCHours(), stage:"",
       result:{status:f.status || "scheduled", label:f.label || "", score:f.score || null}});
   });
@@ -1435,6 +1462,9 @@ function applyScored(match, parsed){
     match.moved = match.startOriginal;      // the row renders this as "was <time>"
     match.start = parsed.start;
   }
+  /* Same rule on the scoreboard top-up: fill a venue the fixture lacks,
+     never replace one it has with nothing. */
+  if(parsed.venue && !match.venue) match.venue = parsed.venue;
   match.listed = true;
   return true;
 }
@@ -2267,6 +2297,43 @@ function rugbyRow(g, now){
     + timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
+/* Where the match is being played, or nothing.
+
+   This used to read the home team's nominal city and show it only when
+   that city happened to differ textually from the club's name. Both
+   halves of that were wrong.
+
+   It was wrong about WHICH fixtures got a location: an English club is
+   usually named after its town, so "Liverpool" hosting at "Liverpool"
+   compared equal and the line vanished, while "Vancouver Whitecaps"
+   compared unequal and kept it. Two fixtures, same data quality,
+   different output — the inconsistency that started this.
+
+   And it was wrong about WHAT the location was. A club's city is not
+   the match's location. The 2026 League Cup final is filed as
+   "Manchester City at Arsenal" and played at Wembley; had Liverpool been
+   the nominal home side, a team-derived rule would have printed
+   "in Liverpool" over a match in London.
+
+   So: the venue the source states for this fixture, or nothing at all.
+   No mapping from club to ground — a mapping is exactly what breaks the
+   moment a match moves. The stadium name rides along in the tooltip
+   rather than in the line, so the row keeps the width it was verified
+   at. */
+function venueTag(g){
+  const v = g && g.venue;
+  if(!v || !v.city) return "";
+  /* The city is printed exactly as the source gives it, with no
+     qualifier bolted on. ESPN already qualifies each one as far as it
+     needs to — MLS says "Cincinnati, Ohio", the NHL says "Vancouver"
+     with BC in a separate field, English grounds say "London" — so
+     appending a state would make hockey read "Vancouver, BC" beside
+     soccer's "Vancouver" and reintroduce the unevenness this is fixing.
+     The full address goes in the tooltip, where length costs nothing. */
+  const full = [v.name, v.city, v.state, v.country].filter(Boolean).join(", ");
+  return '<span title="'+esc(full)+'">in '+esc(v.city)+'</span>';
+}
+
 function gameRow(g, now){
   if(g.event) return eventRow(g, now);
   if(g.rugby) return rugbyRow(g, now);
@@ -2292,8 +2359,7 @@ function gameRow(g, now){
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
     + (g.listed?'<span class="pill confirmed" title="Real fixture from a published TV listing">Listed</span>':"")
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
-    + (g.home && g.home.city && normName(g.home.city) !== normName(g.home.name)
-        ? '<span>in '+esc(g.home.city)+'</span>' : '')
+    + venueTag(g)
     /* Said on the fixture itself, not only in a note at the foot of the
        page: a start time from an old file is the thing most likely to
        have moved since. */

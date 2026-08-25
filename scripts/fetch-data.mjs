@@ -134,6 +134,33 @@ async function get(url){
     }
   }
 }
+/* Where the match is actually being played, as the source states it.
+
+   This is a fact about the FIXTURE, not about the home club, and the
+   difference is not academic: the 2026 League Cup final is filed as
+   "Manchester City at Arsenal" and played at Wembley. Reading a location
+   off the home team would have labelled it with Arsenal's own ground.
+
+   Deliberately no mapping and no inference. If ESPN states a venue it is
+   carried through verbatim; if it states none, the fixture carries none
+   and the page shows nothing rather than guessing. ESPN populates this
+   on every soccer and North American event seen so far, on both the
+   scoreboard and the per-team season schedule. */
+function venueOf(cp){
+  const v = cp && cp.venue;
+  if(!v) return null;
+  const a = v.address || {};
+  const out = {};
+  if(v.fullName) out.name = v.fullName;
+  if(a.city) out.city = a.city;
+  /* state is a US/Canadian field and is absent for English grounds;
+     country is absent for US ones. Both are kept when given because
+     "Kansas City" alone is two different places. */
+  if(a.state) out.state = a.state;
+  if(a.country) out.country = a.country;
+  return Object.keys(out).length ? out : null;
+}
+
 function parseEvent(ev, comp){
   const cp = (ev.competitions && ev.competitions[0]) || ev;
   const cs = cp.competitors || [];
@@ -152,13 +179,18 @@ function parseEvent(ev, comp){
     const t = c.team;
     return { id: idFor(t.displayName),
              name: t.displayName || t.name || "", abbr: (t.abbreviation||"?").slice(0,4),
-             // the home club's city is what names the venue in the UI, so it
-             // has to survive for clubs outside the followable roster too
+             /* ESPN's team.location is the club's own label, and for
+                soccer that is the club name rather than a town —
+                "Ipswich Town", "New York City FC". It is kept because
+                the roster matches against it, but it is NOT where the
+                page gets a location from: that comes from venueOf above,
+                which is a fact about the fixture. */
              city: t.location || "",
              color: t.color ? "#"+String(t.color).replace("#","") : null };
   };
   const sh = num(H.score && H.score.displayValue != null ? H.score.displayValue : H.score);
   const sa = num(A.score && A.score.displayValue != null ? A.score.displayValue : A.score);
+  const venue = venueOf(cp);
   return {
     /* The source's own event id. Team names drift, start times move, and
        a composite key built from them has to guess whether two records
@@ -166,6 +198,7 @@ function parseEvent(ev, comp){
        collides with the page's internal row ids. */
     eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, start, home: side(H), away: side(A), status,
+    ...(venue ? {venue} : {}),
     label: ty.shortDetail || ty.description || (status==="final" ? "Final" : ""),
     score: (status === "scheduled" || sh === null || sa === null) ? null : [sh, sa]
   };
@@ -186,7 +219,14 @@ function add(f){
   if(!f.home.id && !f.away.id) return;                 // nobody follows either club
   const i = fixtures.findIndex(x=>sameGame(x,f));
   if(i < 0){ fixtures.push(f); return; }
-  if(f.score && !fixtures[i].score) fixtures[i] = f;   // the copy with a score wins
+  if(f.score && !fixtures[i].score){
+    // the copy with a score wins, but must not lose a venue it lacks:
+    // the season schedule and the scoreboard do not always both state one
+    if(!f.venue && fixtures[i].venue) f.venue = fixtures[i].venue;
+    fixtures[i] = f;
+  } else if(!fixtures[i].venue && f.venue){
+    fixtures[i].venue = f.venue;
+  }
 }
 
 const comps = new Set();
