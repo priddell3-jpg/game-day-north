@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadFromPage } from "./helpers/page.mjs";
 
-const { sameGame, normName } = loadFromPage(["normName", "idKey", "sameGame", "SAME_WINDOW"]);
+const { sameGame, normName } = loadFromPage(
+  ["normName", "idKey", "ESPN_NAME", "clubKeys", "sameClub", "sameGame", "SAME_WINDOW"]);
 
 const T = Date.parse("2026-08-24T17:05:00Z");
 const g = (over = {}) => ({
@@ -61,6 +62,32 @@ test("clubs outside the roster match on name across id prefixes", () => {
   const a = g({home:{id:"feed:MLB:PIT", name:"Pittsburgh Pirates"}, away:{id:"nyy", name:"New York Yankees"}});
   const b = g({home:{id:"espn:MLB:23",  name:"Pittsburgh Pirates"}, away:{id:"nyy", name:"New York Yankees"}});
   assert.equal(sameGame(a, b), true);
+});
+
+test("a roster id and a synthetic one for the same club are one club", () => {
+  /* The case idKey alone could not answer, and the one that put a game
+     in Recent results twice: a live read resolves Kansas City to the
+     roster id `kcr`, while the committed file — which has no roster
+     entry for a club nobody follows — mints `feed:MLB:KC`. Neither
+     record is wrong; they are the same club described by two readers. */
+  const live = g({away:{id:"kcr", name:"Royals", city:"Kansas City"}});
+  const fed  = g({away:{id:"feed:MLB:KC", name:"Kansas City Royals", city:"Kansas City"}});
+  assert.equal(sameGame(live, fed), true);
+});
+
+test("a club is matched on the name the other reader happened to use", () => {
+  // the roster splits a club into a city and a name; the file writes it
+  // whole, and either description has to find the other
+  const split = g({home:{id:"feed:MLB:TOR", name:"Blue Jays", city:"Toronto"}});
+  const whole = g({home:{id:"feed:MLB:TOR2", name:"Toronto Blue Jays", city:""}});
+  assert.equal(sameGame(split, whole), true);
+});
+
+test("loosening the club test did not loosen the game test", () => {
+  // two clubs from one city, and the same clubs five hours apart
+  const mets = g({away:{id:"feed:MLB:NYM", name:"New York Mets", city:"New York"}});
+  assert.equal(sameGame(g(), mets), false);
+  assert.equal(sameGame(g(), g({start: T + 5*3600000})), false);
 });
 
 test("name normalisation ignores case, accents and punctuation", () => {
