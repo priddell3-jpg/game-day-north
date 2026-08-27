@@ -1144,6 +1144,31 @@ function parseEvent(ev, comp){
       : {status, label:label||(status==="final"?"Final":""), score:[sh,sa]}
   };
 }
+/* One event, asked about by its own id.
+
+   The date scoreboard is a page of a whole day, so every score on that
+   date depends on that one page being complete — and a fixture missing
+   from it is one the top-up cannot settle at all. Royals at Blue Jays on
+   26 Aug 2026 sat at "scheduled" long after the final out while this
+   endpoint, asked for that single event, had the full result.
+
+   So a fixture the page holds an event id for is asked about by that id.
+   Mirrors parseSummary in scripts/fetch-data.mjs, for the same reason
+   venueOf is mirrored: the committed file and the direct fetch must
+   describe a fixture the same way.
+
+   The response is very large — boxscore, play-by-play, odds, standings.
+   Only header.competitions[0] is read. A summary states no venue there,
+   filing one under gameInfo instead, so this returns a fixture with none
+   and applyScored's rule — fill a venue that is missing, never replace
+   one that is there with nothing — keeps the venue already on the row. */
+function parseSummary(sum, comp){
+  const h = sum && sum.header;
+  const cp = h && Array.isArray(h.competitions) && h.competitions[0];
+  if(!cp) return null;
+  return parseEvent({id: h.id != null ? h.id : cp.id, date: cp.date, competitions: [cp]}, comp);
+}
+
 /* ---- the repo's own prebuilt fixtures ----------------------------
    A scheduled job commits data.json next to this page, so the ordinary
    visit is one request to our own domain instead of a dozen to an
@@ -1707,11 +1732,25 @@ async function fillRugbyScores(){
   return changed;
 }
 
-/* Season schedules do not carry a reliable live score, and the scoreboard
-   only answers one day at a time. So: fetch schedules for the fixtures,
-   then top up scores from the scoreboard for just the handful of days
-   that actually need one. */
+/* Season schedules do not carry a reliable live score, so scores are
+   topped up separately from the fixtures themselves.
+
+   A fixture is asked about by its own event id, one request per game.
+   The day scoreboard was the obvious way to do this — one request buys
+   every game on it — but then a row is only as settled as that whole
+   page, and a fixture the page does not mention has nothing to correct
+   it. Asked for by id, a fixture answers for itself.
+
+   Fixtures with no event id still go by the day: it is all they have,
+   and one request covers however many of them share a date. */
 const scoredDays = new Set();   // competition|date pairs already asked about
+/* A budget for each path, per cycle. A scoreboard request buys a whole
+   day of games and a summary buys one, so the two are not comparable and
+   are not counted together. Neither cap binds on an ordinary evening;
+   what reaches them is a backlog of finished games waiting to be
+   settled, and a backlog can wait another minute. */
+const SUMMARY_CAP = 8;          // summary requests — one game each
+const DAY_CAP = 12;             // scoreboard requests — one whole day each
 async function fillScores(){
   const now = Date.now();
   // newest first: if the request budget runs out it must be the oldest
@@ -1720,9 +1759,32 @@ async function fillScores(){
     g.start > now - 4*DAY && g.start < now + 2*3600000 && needsScore(g, now)
   ).sort((a,b)=>b.start-a.start);
   if(!need.length) return 0;
+  let filled = 0;
+  const takeInto = (parsed) => {
+    if(!parsed || !parsed.result) return;
+    const match = findScored(parsed, GAMES);
+    if(match && applyScored(match, parsed)) filled++;
+  };
+
+  /* Games that have kicked off come first. `need` is newest-first, which
+     puts tonight's not-yet-started fixtures above a game currently being
+     played — fine when one request covered a whole day, wasteful when it
+     buys a single game that cannot have a score yet. The sort is stable,
+     so newest-first still decides within each group. */
+  const byId = need.filter(g => g.eid)
+    .sort((a,b) => (b.start <= now) - (a.start <= now))
+    .slice(0, SUMMARY_CAP);
+  await Promise.all(byId.map(async g=>{
+    let r;
+    // one unreachable game must not cost the others their scores
+    try{ r = await jget(ESPN+ESPN_PATH[g.comp]+"/summary?event="+encodeURIComponent(g.eid), 12000); }
+    catch(e){ return; }
+    takeInto(parseSummary(r, g.comp));
+  }));
+
   const todayKey = espnDate(now);
   const days = [];
-  need.forEach(g=>{
+  need.filter(g => !g.eid).forEach(g=>{
     const d = espnDate(g.start), k = g.comp+"|"+d;
     if(days.indexOf(k)>=0) return;
     /* A day already tried stays skipped unless it is today, where scores
@@ -1733,10 +1795,8 @@ async function fillScores(){
     const st = stateOf(g, now).status;
     const active = st === "live" || st === "unknown";
     if(scoredDays.has(k) && d !== todayKey && !active) return;
-    if(days.length < 12) days.push(k);
+    if(days.length < DAY_CAP) days.push(k);
   });
-  if(!days.length) return 0;
-  let filled = 0;
   const answered = [];
   await Promise.all(days.map(async k=>{
     const [comp, d] = k.split("|");
@@ -1745,12 +1805,7 @@ async function fillScores(){
     // one that answered — even with nothing — is settled
     try{ r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+d, 9000); }catch(e){ return; }
     answered.push(k);
-    (r.events||[]).forEach(ev=>{
-      const parsed = parseEvent(ev, comp);
-      if(!parsed || !parsed.result) return;
-      const match = findScored(parsed, GAMES);
-      if(match && applyScored(match, parsed)) filled++;
-    });
+    (r.events||[]).forEach(ev=>takeInto(parseEvent(ev, comp)));
   }));
   answered.forEach(k=>scoredDays.add(k));
   if(filled) GAMES.sort((a,b)=>a.start-b.start);
