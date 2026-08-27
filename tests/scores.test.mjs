@@ -204,9 +204,9 @@ function harness(){
   const page = loadFromPage(
     ["TEAM_ROWS", "GHOSTS", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
      "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "ESPN_NAME",
-     "norm", "espnTeamObj", "venueOf", "parseEvent", "clubKeys", "sameClub", "orientation",
-     "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore", "activeNow",
-     "scoredDays", "fillScores"], PREAMBLE);
+     "norm", "espnTeamObj", "venueOf", "parseEvent", "parseSummary", "clubKeys", "sameClub",
+     "orientation", "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore",
+     "activeNow", "scoredDays", "SUMMARY_CAP", "DAY_CAP", "fillScores"], PREAMBLE);
   // the shipped roster, built the way the page builds it
   page.TEAM_ROWS.forEach(r=>{
     const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
@@ -219,10 +219,18 @@ function harness(){
   });
   Object.values(TEAMS).forEach(t=>allTeams.push(t));
   const url = (comp, ms) => page.ESPN + page.ESPN_PATH[comp] + "/scoreboard?dates=" + page.espnDate(ms == null ? Date.now() : ms);
+  const summaryUrl = (comp, eid) => page.ESPN + page.ESPN_PATH[comp] + "/summary?event=" + eid;
   return {page, GAMES, TEAMS, asked,
     // `on` is any instant during the ESPN day being stubbed; today by default
     stub: (comp, events, on) => responses.set(url(comp, on), {events}),
-    url};
+    /* The summary answers for one event, and states it under `header`
+       rather than in a list of events. Anything else in a real response
+       — boxscore, plays, standings, most of a megabyte — is not stubbed
+       because nothing reads it. `atEid` is for the one case where the
+       answer is about a different game than the one asked for. */
+    stubSummary: (comp, ev, atEid) => responses.set(summaryUrl(comp, atEid == null ? ev.id : atEid),
+      {header: {id: ev.id, competitions: ev.competitions}}),
+    url, summaryUrl};
 }
 
 // Fulham 1 Chelsea 2, in progress — the payload ESPN was serving
@@ -250,30 +258,40 @@ const asCommitted = (h, start) => ({
   result: {status:"scheduled", label:"Scheduled", score:null}
 });
 
+/* The same fixture with no event id — a row from the hand-checked baked
+   fallback, which has nothing to ask the summary endpoint with and so
+   still goes by the day it falls on. That list is written against the
+   roster, so both clubs are roster rows: with no id to match on, the
+   composite key is all this has. */
+const asBaked = (h, start) => Object.assign(asCommitted(h, start),
+  {eid: null, fromFeed: false, baked: true, home: h.TEAMS.ful, away: h.TEAMS.che});
+
 test("fillScores() merges the live score onto the committed fixture", async () => {
   const h = harness();
   const start = Date.now() - 45*60000;                 // kicked off, still on
   const game = asCommitted(h, start);
   h.GAMES.push(game);
-  h.stub("EPL", [LIVE_EVENT(start)]);
+  h.stubSummary("EPL", LIVE_EVENT(start));
 
   const filled = await h.page.fillScores();
 
-  assert.equal(h.asked.length, 1, "asked the scoreboard for the right day");
+  assert.deepEqual(h.asked, [h.summaryUrl("EPL", "401879318")],
+    "asked for the one event, by the id the fixture already carried");
   assert.equal(filled, 1);
   assert.equal(game.result.status, "live");
   assert.deepEqual(game.result.score, [1, 2]);
   assert.equal(game.result.label, "62'");
 });
 
-test("fillScores() leaves a fixture alone when the scoreboard has a different event", async () => {
+test("fillScores() leaves a fixture alone when the answer is a different event", async () => {
   const h = harness();
   const start = Date.now() - 45*60000;
   const game = asCommitted(h, start);
   h.GAMES.push(game);
   const other = LIVE_EVENT(start);
   other.id = "401879999"; other.competitions[0].id = "401879999";
-  h.stub("EPL", [other]);
+  // asked about 401879318, answered about 401879999
+  h.stubSummary("EPL", other, "401879318");
 
   assert.equal(await h.page.fillScores(), 0);
   assert.equal(game.result.status, "scheduled");
@@ -288,10 +306,40 @@ test("fillScores() puts the score the right way round for the home side it holds
   game.home = h.TEAMS.che;
   game.away = {id:"feed:EPL:FUL", home:"EPL", city:"Fulham", name:"Fulham", abbr:"FUL", ghost:true, full:true};
   h.GAMES.push(game);
-  h.stub("EPL", [LIVE_EVENT(start)]);
+  h.stubSummary("EPL", LIVE_EVENT(start));
 
   assert.equal(await h.page.fillScores(), 1);
   assert.deepEqual(game.result.score, [2, 1]);         // Chelsea 2, Fulham 1
+});
+
+test("a fixture with no event id still goes by the day it falls on", async () => {
+  const h = harness();
+  const start = Date.now() - 45*60000;
+  const game = asBaked(h, start);
+  h.GAMES.push(game);
+  h.stub("EPL", [LIVE_EVENT(start)]);
+
+  assert.equal(await h.page.fillScores(), 1);
+  assert.deepEqual(h.asked, [h.url("EPL", start)]);
+  assert.deepEqual(game.result.score, [1, 2]);
+});
+
+test("the two paths run in the same cycle without either taking the other's work", async () => {
+  const h = harness();
+  const start = Date.now() - 45*60000;
+  const withId = asCommitted(h, start);
+  const withoutId = asBaked(h, start - 30*60000);
+  withoutId.home = h.TEAMS.ars;
+  withoutId.away = h.TEAMS.tot;
+  h.GAMES.push(withId, withoutId);
+  h.stubSummary("EPL", LIVE_EVENT(start));
+  h.stub("EPL", []);                                   // nothing for the baked row today
+
+  await h.page.fillScores();
+  assert.equal(h.asked.length, 2);
+  assert.ok(h.asked.includes(h.summaryUrl("EPL", "401879318")));
+  assert.ok(h.asked.includes(h.url("EPL", start)));
+  assert.deepEqual(withId.result.score, [1, 2]);
 });
 
 test("fillScores() asks for nothing when every fixture already has its score", async () => {
@@ -326,6 +374,27 @@ const FINAL_EVENT = start => {
   return ev;
 };
 
+/* ---- when the day has nothing to say about the game ----
+   The reason a fixture is now asked about by its own id: a row read off
+   a day's page is only as settled as that page, and one the page does
+   not mention has nothing to correct it. Royals at Blue Jays on 26 Aug
+   2026 stayed "scheduled" for hours after the final out while the
+   summary endpoint, asked for that event alone, had the result. */
+
+test("a fixture is settled from its own event even when its day lists nothing", async () => {
+  const h = harness();
+  const start = Date.now() - 3*3600000;
+  const game = asCommitted(h, start);
+  h.GAMES.push(game);
+  h.stub("EPL", []);                                   // the day has forgotten the game...
+  h.stubSummary("EPL", FINAL_EVENT(start));            // ...the event itself has not
+
+  assert.equal(await h.page.fillScores(), 1);
+  assert.equal(game.result.status, "final");
+  assert.deepEqual(game.result.score, [2, 3]);
+  assert.ok(!h.asked.some(u => u.includes("scoreboard")), "never had to ask the day at all");
+});
+
 test("a live score already on the page is still updated by the next refresh", async () => {
   const h = harness();
   const start = Date.now() - 60*60000;
@@ -333,7 +402,7 @@ test("a live score already on the page is still updated by the next refresh", as
   // what the committed file had: the halftime score
   game.result = {status:"live", label:"HT", score:[1, 2]};
   h.GAMES.push(game);
-  h.stub("EPL", [LATER_EVENT(start)]);
+  h.stubSummary("EPL", LATER_EVENT(start));
 
   assert.equal(await h.page.fillScores(), 1);
   assert.deepEqual(game.result.score, [2, 3]);
@@ -386,12 +455,12 @@ test("a live fixture is polled until ESPN says it is over, then stops", async ()
   game.result = {status:"live", label:"HT", score:[1, 2]};
   h.GAMES.push(game);
 
-  h.stub("EPL", [LATER_EVENT(start)]);
+  h.stubSummary("EPL", LATER_EVENT(start));
   assert.equal(await h.page.fillScores(), 1);
   assert.equal(game.result.status, "live");
   assert.equal(h.page.needsScore(game, Date.now()), true, "still going, still asked about");
 
-  h.stub("EPL", [FINAL_EVENT(start)]);
+  h.stubSummary("EPL", FINAL_EVENT(start));
   assert.equal(await h.page.fillScores(), 1);
   assert.equal(game.result.status, "final");
   assert.deepEqual(game.result.score, [2, 3]);
@@ -404,6 +473,10 @@ test("a live fixture is polled until ESPN says it is over, then stops", async ()
   assert.equal(h.page.activeNow(game, Date.now()), false);
 });
 
+/* The day throttle below only governs fixtures that go by the day, so
+   these use a row with no event id. One with an id is asked about
+   directly and never touches scoredDays at all. */
+
 test("a fixture still going is asked about even once its ESPN date is not today", async () => {
   const h = harness();
   /* 26 hours is the only offset that lands on a different Eastern date
@@ -412,7 +485,7 @@ test("a fixture still going is asked about even once its ESPN date is not today"
   const start = Date.now() - 26*3600000;
   assert.notEqual(h.page.espnDate(start), h.page.espnDate(Date.now()),
     "the fixture must sit on a different ESPN day for this to test anything");
-  const game = asCommitted(h, start);
+  const game = asBaked(h, start);
   game.result = {status:"live", label:"HT", score:[1, 2]};
   h.GAMES.push(game);
   h.stub("EPL", [LATER_EVENT(start)], start);
@@ -429,7 +502,7 @@ test("a fixture still going is asked about even once its ESPN date is not today"
 test("a settled fixture on an old day is left to the throttle", async () => {
   const h = harness();
   const start = Date.now() - 26*3600000;
-  const game = asCommitted(h, start);                     // status unknown, no score
+  const game = asBaked(h, start);                         // status unknown, no score
   h.GAMES.push(game);
   h.stub("EPL", [], start);                               // ESPN lists nothing that day
 

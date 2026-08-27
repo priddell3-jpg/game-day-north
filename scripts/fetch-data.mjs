@@ -203,6 +203,62 @@ function parseEvent(ev, comp){
     score: (status === "scheduled" || sh === null || sa === null) ? null : [sh, sa]
   };
 }
+/* ---- one event, asked about by its own id ------------------------------
+
+   A score used to be read only off the scoreboard for the day a fixture
+   falls on. That is one request for however many games are on, which is
+   why it was built that way, but it makes every result on that date
+   depend on one page being complete: whatever is not in it — not filed
+   there yet, served short — is a fixture nothing can settle, and the row
+   stays "scheduled" until something else happens to fix it.
+
+   Royals at Blue Jays on 26 Aug 2026 is the case this was written for.
+   It sat in data.json reading "scheduled" long after the final out,
+   while this endpoint, asked for that one event by id, had the complete
+   post-game record. Why the day route did not carry it was not
+   established; that it needed a second route was.
+
+   So a fixture whose event id we already hold is asked about by that id.
+   The scoreboard remains the source for fixtures that carry no id, and
+   for discovering games the season schedule omits.
+
+   The response is enormous — the boxscore, every pitch, odds, standings,
+   and 892 KB of it for one baseball game. Only header.competitions[0] is
+   read; the rest is parsed and dropped. Note that a summary states no
+   venue there (it files one under gameInfo), which is why applySummary
+   below patches a fixture in place instead of replacing it. */
+function parseSummary(sum, comp){
+  const h = sum && sum.header;
+  const cp = h && Array.isArray(h.competitions) && h.competitions[0];
+  if(!cp) return null;
+  return parseEvent({ id: h.id != null ? h.id : cp.id, date: cp.date, competitions: [cp] }, comp);
+}
+
+/* Take a summary's status and score into the fixture it was asked about.
+
+   The id was ours to begin with, so this is not an identity question —
+   but it is still a question of which way round the two copies list the
+   clubs, and a score whose orientation cannot be established is worse
+   than no score at all. Undecidable means nothing is applied.
+
+   A known final is never erased by a copy carrying no score: the same
+   rule the page applies wherever two records of one fixture meet. */
+function applySummary(f, s){
+  if(!f || !s) return false;
+  const k = t => t.id || norm(t.name);
+  const straight = k(s.home)===k(f.home) && k(s.away)===k(f.away);
+  const reversed = k(s.home)===k(f.away) && k(s.away)===k(f.home);
+  if(!straight && !reversed) return false;
+  if(f.status === "final" && f.score && !s.score) return false;
+  const sc = s.score && reversed ? [s.score[1], s.score[0]] : s.score;
+  if(f.status === s.status && f.label === s.label &&
+     JSON.stringify(f.score) === JSON.stringify(sc)) return false;
+  f.status = s.status;
+  f.label = s.label;
+  f.score = sc;
+  return true;
+}
+
 const SAME = 4*3600000;
 function sameGame(a,b){
   if(a.comp !== b.comp || Math.abs(a.start-b.start) >= SAME) return false;
@@ -250,8 +306,11 @@ for(const [id, meta] of Object.entries(espnIds)){
   (((sched||{}).events)||[]).forEach(ev=>add(parseEvent(ev, meta.comp)));
 }
 
-// ...and per-date scoreboards for the near window, which is the only
-// place a finished or in-progress game reliably carries its score
+// ...and per-date scoreboards for the near window, which carries scores
+// the season schedule does not and turns up games it omits entirely.
+// Since the summary top-up below, this is no longer the last word on a
+// score — it is what a fixture with no event id has, and a first answer
+// for everything else.
 const nearDays = [];
 for(let d=-BACK; d<=3; d++) nearDays.push(easternDate(now + d*DAY));
 for(const comp of [...comps].filter(c=>NA.has(c))){
@@ -268,6 +327,35 @@ for(const comp of [...comps].filter(c=>!NA.has(c))){
     const r = await get(ESPN + PATHS[comp] + "/scoreboard?dates=" + m + "&limit=400");
     (((r||{}).events)||[]).forEach(ev=>add(parseEvent(ev, comp)));
   }
+}
+
+/* Score top-up, one event at a time.
+
+   Everything that has started and is not settled gets asked about by its
+   own id, whatever the day's scoreboard said. A fixture already carrying
+   a final is left alone; so is one with no event id, which has nothing
+   to ask with and keeps whatever the scoreboard gave it.
+
+   Newest first, and capped: a postponement that never resolves would
+   otherwise be re-asked on every run for the eight days it stays in the
+   window. If the cap bites it is said out loud rather than quietly
+   leaving the oldest fixtures looking settled. */
+const SUMMARY_CAP = 40;
+const stale = fixtures
+  .filter(f => f.eid && PATHS[f.comp] && f.start <= now && !(f.status === "final" && f.score))
+  .sort((a,b) => b.start - a.start);
+if(stale.length > SUMMARY_CAP){
+  console.warn("  ! " + stale.length + " unsettled fixtures, asking about the " +
+    SUMMARY_CAP + " most recent — the rest keep what the scoreboard gave them");
+}
+let toppedUp = 0;
+for(const f of stale.slice(0, SUMMARY_CAP)){
+  const r = await get(ESPN + PATHS[f.comp] + "/summary?event=" + encodeURIComponent(f.eid));
+  if(applySummary(f, parseSummary(r, f.comp))) toppedUp++;
+}
+if(stale.length){
+  console.log("Summary top-up: " + toppedUp + " of " +
+    Math.min(stale.length, SUMMARY_CAP) + " unsettled fixtures moved on");
 }
 
 fixtures.sort((a,b)=>a.start-b.start);
