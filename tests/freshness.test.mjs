@@ -121,6 +121,14 @@ test("the sentinel asks the deployed site, not the repository", () => {
   assert.doesNotMatch(SENTINEL, /actions\/checkout/);
 });
 
+test("gh is told which repository it is working on", () => {
+  /* Which follows directly from the test above: gh reads the repository
+     off a git remote, and there is no checkout here to read one from.
+     The first real run failed on exactly this — "fatal: not a git
+     repository" — after the freshness check itself had passed. */
+  assert.match(SENTINEL, /GH_REPO: \$\{\{ github\.repository \}\}/);
+});
+
 test("nothing fetched over the network reaches a command line", () => {
   // the issue body is written by node from the environment; the detail
   // string carries text from a file this workflow did not write

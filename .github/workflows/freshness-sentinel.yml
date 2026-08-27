@@ -42,6 +42,11 @@ env:
   MAX_AGE_HOURS: "7"
   LABEL: stale-data
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # gh reads the repository off the git remote, and this job deliberately
+  # has no checkout — it is asking the deployed site about itself, not
+  # reading the source. Without this every gh call ends at "fatal: not a
+  # git repository", which is what the first real run did.
+  GH_REPO: ${{ github.repository }}
 
 jobs:
   check:
