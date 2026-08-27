@@ -201,7 +201,7 @@ Sources, in precedence order:
 2. **Live top-up.** Anything in progress is read straight from ESPN, because a file rebuilt every thirty minutes cannot follow a game.
 3. **Direct fetch**, if `data.json` is missing or more than 90 minutes old — a stalled job degrades to the old behaviour rather than an empty page.
 4. **`LIVE_FIXTURES`** — a small hand-checked set with Canadian listings, for when nothing can be reached.
-5. **Remembered results** — a final score, once seen, is kept in that browser for a week, so a game you missed still shows its score when the feed is down.
+5. **Remembered results** — a final score, once seen, is kept in that browser for a week, so a game you missed still shows its score when the feed is down. Each stored row carries the source's event id (store `v3`), so a recalled result meets the fed copy of the same fixture on the same primary key as everything else. A `v2` store is migrated rather than discarded — a row without an id reads correctly as a row that has none — and a store is deduplicated on load, which clears out the pairs written before the club comparison was fixed.
 
 Canadian carriage always comes from the rights table, never from ESPN, whose broadcast data is US-facing.
 
@@ -222,6 +222,8 @@ Each of these cost real debugging time and is handled in both the client and the
 
 Where neither copy carries an event id, two fixtures count as the same game only when both clubs match **and** they start within four hours — not merely on the same date, or a baseball doubleheader would collapse into one game.
 
+"Both clubs match" means **every name a club is known by**, not one id each. A single id could not answer it: the reader that resolves a club to the roster answers `kcr` and the reader that could not answer `feed:MLB:KC`, and those never compare equal. That is what put one game in Recent results twice — a live read and the committed file describing the same Royals fixture, neither of them wrong.
+
 ### What gets polled, and when
 
 A live score is a number that changes, so following one means asking again. Asking too often is rude to a free endpoint and flattens a phone battery, so the rules are narrow and all in one place:
@@ -237,6 +239,34 @@ A live score is a number that changes, so following one means asking again. Aski
 A fixture that has already been given a score is still polled while it is under way. Not doing that is what once froze a match at its halftime score for the rest of the night.
 
 Each poll spends **at most eight summary requests and twelve scoreboard requests**. The two are not comparable — a summary buys one game and a scoreboard buys a whole day — so they are budgeted separately. Fixtures that have kicked off are asked about first, since a game that has not started cannot have a score; neither cap binds on an ordinary evening, and what reaches one is a backlog of finished games, which can wait a minute.
+
+### Knowing when the refresh has stopped
+
+A dead cron looks exactly like a quiet week. On 27 August 2026 the **Refresh
+fixtures** schedule stopped firing after 14:31 the previous day; every
+workflow that did run was green, the site stayed up, and the only symptom was
+a person eventually noticing a finished game still reading "scheduled".
+Roughly eight runs were missed before anyone looked.
+
+`.github/workflows/freshness-sentinel.yml` runs hourly and asks **the deployed
+site** — not the repository — for `data.json`. A build that commits but never
+deploys is the same outage seen from outside, and reading the committed file
+would miss it. If `generated` is more than **seven hours** old, or the file is
+unreachable or unreadable, it opens a single pinned issue labelled
+`stale-data` and rewrites that issue's body on every subsequent check rather
+than commenting again. It closes the issue once the served file is current.
+
+Seven hours is two missed runs plus slack. It has to clear the build's own
+`MAX_AGE`, which rewrites the stamp at six hours even when no fixture moved,
+or the sentinel would be reporting the build working as designed; the tests
+assert those numbers still agree with each other rather than that any one of
+them is seven.
+
+The limit, stated because it would otherwise be mistaken for cover: the
+sentinel is itself a scheduled workflow. It catches a refresh that has stopped
+while Actions is otherwise working, which is the failure that happened. It
+cannot catch GitHub's scheduler stopping altogether, because then it stops
+too.
 
 ### Keeping the roster in step
 

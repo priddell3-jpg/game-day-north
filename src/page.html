@@ -830,6 +830,36 @@ function idKey(t){
   if(!t) return "";
   return (t.id && !/^(feed|espn):/.test(t.id)) ? t.id : normName(t.name);
 }
+// clubs whose ESPN name differs from city + name
+const ESPN_NAME = {
+  liv:"Liverpool", ars:"Arsenal", mci:"Manchester City", mun:"Manchester United",
+  che:"Chelsea", tot:"Tottenham Hotspur", new:"Newcastle United", nfo:"Nottingham Forest",
+  bou:"AFC Bournemouth", ips:"Ipswich Town", avl:"Aston Villa", bha:"Brighton & Hove Albion",
+  whu:"West Ham United", eve:"Everton", cry:"Crystal Palace", bre:"Brentford", ful:"Fulham",
+  rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Internazionale",
+  "van-mls":"Vancouver Whitecaps", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
+  lafc:"LAFC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
+};
+/* Every name a club is known by, normalised. The file writes a name in
+   full — "Toronto Blue Jays" — where the roster splits it into a city
+   and a name, so a club record matches on whichever of these two
+   descriptions the other side happened to use.
+
+   idKey alone is not enough, because it answers with the roster id for a
+   club the reader resolved and with the club's name for one it did not,
+   and those two never compare equal. That is not hypothetical: the
+   Royals arrive as `kcr` from a live read and as `feed:MLB:KC` from the
+   committed file, and one game stood in Recent results twice because of
+   it. Every description a club has been given is compared instead. */
+function clubKeys(t){
+  if(!t) return [];
+  const keys = [idKey(t)];
+  if(t.name) keys.push(normName(t.name), normName((t.city || "") + " " + t.name));
+  if(ESPN_NAME[t.id]) keys.push(normName(ESPN_NAME[t.id]));
+  return keys.filter(Boolean);
+}
+const sameClub = (a, b) => clubKeys(a).some(k => clubKeys(b).indexOf(k) >= 0);
+
 function sameGame(a, b){
   if(!a.away || !b.away || a.comp !== b.comp) return false;
   /* The source's own event id settles it outright where both copies have
@@ -839,8 +869,10 @@ function sameGame(a, b){
      close together they sit. */
   if(a.eid && b.eid) return a.eid === b.eid;
   if(Math.abs(a.start - b.start) >= SAME_WINDOW) return false;
-  const ah = idKey(a.home), aa = idKey(a.away), bh = idKey(b.home), ba = idKey(b.away);
-  return (ah === bh && aa === ba) || (ah === ba && aa === bh);
+  /* No id on one side, so the clubs have to answer it — and they answer
+     it through every name they are known by, not through one id each. */
+  return (sameClub(a.home, b.home) && sameClub(a.away, b.away))
+      || (sameClub(a.home, b.away) && sameClub(a.away, b.home));
 }
 function mergeReal(built){
   // Replace by identity. Without this a refresh re-added every fixture
@@ -913,7 +945,12 @@ function mergeReal(built){
    the viewer, like every other preference here.
    ------------------------------------------------------------------ */
 const RESULTS_KEY = "gdn.results";
-const RESULTS_VERSION = 2;
+const RESULTS_VERSION = 3;
+/* Versions this build can read. v3 added the event id to a row; v2 is
+   the same shape without it, which reads correctly as a row that has
+   none, so it is migrated rather than thrown away and a week of scores
+   survives the upgrade. */
+const RESULTS_READABLE = [3, 2];
 /* Stored results were a bare array with no version, so any change to the
    shape would have been read as if it were the current one. The store is
    versioned now, every row is validated before it is trusted, and a
@@ -925,6 +962,11 @@ function validResultRow(r, now){
   if(typeof r.c !== "string" || !r.c) return false;
   if(typeof r.t !== "number" || !isFinite(r.t)) return false;
   if(r.t < now - 8*DAY || r.t > now + DAY) return false;      // expired or absurd
+  /* The event id is optional — a v2 row predates it and a baked fixture
+     never had one — but a row that carries something other than an id
+     where the id goes is not the shape this build writes, and the point
+     of validating at all is to notice that. */
+  if(r.e !== undefined && (typeof r.e !== "string" || !r.e)) return false;
   if(!Array.isArray(r.s) || r.s.length !== 2) return false;
   if(!r.s.every(n => typeof n === "number" && isFinite(n))) return false;
   for(const side of [r.h, r.a]){
@@ -934,16 +976,61 @@ function validResultRow(r, now){
   }
   return true;
 }
+/* A stored row in the shape sameGame() reads, so that identity in the
+   store is the identity used everywhere else rather than a second rule
+   that can disagree with the first. */
+function resultRowAsGame(r){
+  const side = s => ({id: s[0], name: s[1], city: s[4] || ""});
+  return {comp: r.c, start: r.t, eid: r.e || null, home: side(r.h), away: side(r.a)};
+}
+const SYNTHETIC_ID = /^(feed|espn):/;
+const rowResolved = r => [r.h[0], r.a[0]].filter(id => id && !SYNTHETIC_ID.test(id)).length;
+
+/* One game must not stand in Recent results twice, and one did.
+
+   Rows are written from whatever is on the page, so until sameGame
+   compared clubs by every name they are known by, a fixture read live
+   (the Royals as `kcr`) and the same fixture read from the committed
+   file (`feed:MLB:KC`) were two rows on screen — and then two rows in
+   the store, where they stayed, because every reload replayed both.
+   Fixing the comparison stops new duplicates; this clears out the ones
+   already written.
+
+   Where two rows are one game, the row carrying an event id wins: that
+   is the key everything else matches on, and a row that has it can be
+   recognised without asking the club names at all. Failing that, the
+   more resolved row wins — the one whose clubs kept a roster id rather
+   than a synthetic one, which is also the one carrying the club's real
+   colour instead of the placeholder grey.
+
+   There is deliberately no "keep the newer row" rule. The store is
+   rewritten whole on every save, so every row in it was written at the
+   same instant and none is newer than any other; a rule that claimed
+   otherwise would just be picking one at random under a better name. */
+function betterResultRow(candidate, kept){
+  if(!!candidate.e !== !!kept.e) return !!candidate.e;
+  return rowResolved(candidate) > rowResolved(kept);
+}
+function dedupeResultRows(rows){
+  const out = [];
+  rows.forEach(r=>{
+    const i = out.findIndex(o => sameGame(resultRowAsGame(o), resultRowAsGame(r)));
+    if(i < 0) out.push(r);
+    else if(betterResultRow(r, out[i])) out[i] = r;
+  });
+  return out;
+}
 /* Returns the usable rows, whatever shape was on disk. A legacy bare
-   array is migrated; an unknown version is discarded, because guessing
-   at a shape written by a newer build is exactly how a wrong score
-   reaches the screen. */
+   array is migrated; a version this build has never heard of is
+   discarded, because guessing at a shape written by a newer build is
+   exactly how a wrong score reaches the screen. */
 function readResultStore(raw, now){
-  if(Array.isArray(raw)) return {rows: raw.filter(r=>validResultRow(r, now)), migrated: true};
+  const keep = rows => dedupeResultRows(rows.filter(r=>validResultRow(r, now)));
+  if(Array.isArray(raw)) return {rows: keep(raw), migrated: true};
   if(!raw || typeof raw !== "object") return {rows: [], migrated: false};
-  if(raw.v !== RESULTS_VERSION) return {rows: [], migrated: false, discarded: true};
+  if(RESULTS_READABLE.indexOf(raw.v) < 0) return {rows: [], migrated: false, discarded: true};
   if(!Array.isArray(raw.rows)) return {rows: [], migrated: false, discarded: true};
-  return {rows: raw.rows.filter(r=>validResultRow(r, now)), migrated: false};
+  return {rows: keep(raw.rows), migrated: raw.v !== RESULTS_VERSION};
 }
 function rememberResults(){
   try{
@@ -952,11 +1039,16 @@ function rememberResults(){
       if(!g.away || !g.result || !g.result.score) return;
       if(g.result.status !== "final") return;
       if(g.start < now - 8*DAY || g.start > now) return;
+      /* The event id goes in the store so a recalled result is matched
+         on the same primary key as everything else, rather than falling
+         back to club names the two readers spell differently. Absent
+         where the fixture never had one — the baked fallback has none. */
       rows.push({c:g.comp, t:g.start, s:g.result.score, l:g.result.label,
+        ...(g.eid ? {e:String(g.eid)} : {}),
         h:[g.home.id, fullName(g.home), g.home.abbr, g.home.color, g.home.city || ""],
         a:[g.away.id, fullName(g.away), g.away.abbr, g.away.color, g.away.city || ""]});
     });
-    LS.set(RESULTS_KEY, {v:RESULTS_VERSION, saved:now, rows:rows.slice(-80)});
+    LS.set(RESULTS_KEY, {v:RESULTS_VERSION, saved:now, rows:dedupeResultRows(rows).slice(-80)});
   }catch(e){}
 }
 function recallResults(){
@@ -973,6 +1065,11 @@ function recallResults(){
     abbr:r[2] || "?", color:r[3] || "#5A6478", ghost:true, full:true, comps:[comp]};
   rows.forEach(r=>{
     built.push({comp:r.c, home:team(r.h, r.c), away:team(r.a, r.c), start:r.t, moved:null,
+      /* Carried through so the recalled copy meets the fed one on the
+         event id, the key every other pair of copies is matched on.
+         Null where the row predates the id or the fixture never had one,
+         which sends the pair to the club comparison as before. */
+      eid: r.e || null,
       real:true, espn:true, listed:true, remembered:true,
       localDow:new Date(r.t).getUTCDay(), slotHour:new Date(r.t).getUTCHours(), stage:"",
       result:{status:"final", label:r.l || "Final", score:r.s}});
@@ -1037,16 +1134,7 @@ const ESPN_PATH = {
   EFL:"soccer/eng.league_cup", FAC:"soccer/eng.fa",
   LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1"
 };
-// clubs whose ESPN name differs from city + name
-const ESPN_NAME = {
-  liv:"Liverpool", ars:"Arsenal", mci:"Manchester City", mun:"Manchester United",
-  che:"Chelsea", tot:"Tottenham Hotspur", new:"Newcastle United", nfo:"Nottingham Forest",
-  bou:"AFC Bournemouth", ips:"Ipswich Town", avl:"Aston Villa", bha:"Brighton & Hove Albion",
-  whu:"West Ham United", eve:"Everton", cry:"Crystal Palace", bre:"Brentford", ful:"Fulham",
-  rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Internazionale",
-  "van-mls":"Vancouver Whitecaps", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
-  lafc:"LAFC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
-};
+// ESPN_NAME is declared with the identity helpers above, which need it.
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 let liveMode = null;          // null = not tried, true = reachable, false = blocked
 let liveNote = "", liveErr = "";
@@ -1425,18 +1513,8 @@ function espnDate(ms){
    one, the competition/clubs/start composite where they do not.
    ------------------------------------------------------------------ */
 
-/* Every name a club is known by, normalised. The file writes a name in
-   full — "Toronto Blue Jays" — where the roster splits it into a city
-   and a name, so a club record matches on whichever of these two
-   descriptions the other side happened to use. */
-function clubKeys(t){
-  if(!t) return [];
-  const keys = [idKey(t)];
-  if(t.name) keys.push(normName(t.name), normName((t.city || "") + " " + t.name));
-  if(ESPN_NAME[t.id]) keys.push(normName(ESPN_NAME[t.id]));
-  return keys.filter(Boolean);
-}
-const sameClub = (a, b) => clubKeys(a).some(k => clubKeys(b).indexOf(k) >= 0);
+/* clubKeys and sameClub are declared with the identity helpers above.
+   sameGame uses them too, and it runs before this point. */
 
 /* Which way round the two copies list the clubs. The event itself is
    settled by the time this runs, so this only has to tell one of two
