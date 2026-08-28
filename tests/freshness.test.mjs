@@ -121,6 +121,30 @@ test("the sentinel asks the deployed site, not the repository", () => {
   assert.doesNotMatch(SENTINEL, /actions\/checkout/);
 });
 
+test("the drill can only be asked for by hand", () => {
+  /* An alert nobody has watched fire is a hope, not a safety net, so the
+     stale path can be triggered deliberately. That must never be
+     something the hourly schedule can do to itself: `inputs.drill` is
+     empty on a scheduled run, and the comparison is against the string
+     "true", so an empty value takes the ordinary threshold. */
+  assert.match(SENTINEL, /DRILL: \$\{\{ inputs\.drill \}\}/);
+  assert.match(SENTINEL, /drill = process\.env\.DRILL === "true"/);
+  assert.match(SENTINEL, /default: false/);
+});
+
+test("a drill says so in the title as well as the body", () => {
+  /* The issue history outlives everyone's memory of running the drill.
+     A deliberate test that reads like a real outage six months later is
+     worse than not having tested. */
+  assert.match(SENTINEL, /DRILL — a deliberate test, not an outage/);
+  assert.match(SENTINEL, /This is a drill/);
+});
+
+test("a drill issue reused by a real outage stops calling itself a drill", () => {
+  // the title is rewritten on every check, not only when the issue opens
+  assert.match(SENTINEL, /gh issue edit "\$number" --title/);
+});
+
 test("gh is told which repository it is working on", () => {
   /* Which follows directly from the test above: gh reads the repository
      off a git remote, and there is no checkout here to read one from.

@@ -262,6 +262,17 @@ or the sentinel would be reporting the build working as designed; the tests
 assert those numbers still agree with each other rather than that any one of
 them is seven.
 
+An alert nobody has watched fire is a hope rather than a safety net, and this
+one cannot be exercised by waiting — it only opens an issue when the site is
+genuinely stale, which is the thing it exists to prevent. So the workflow
+takes a **`drill`** input: run it by hand with `drill` set and the threshold
+drops to zero for that run, the alert opens and pins as it would in earnest,
+and the next healthy hourly check closes it. A drill issue says so in its
+first line and in its title, so that nobody reading the issue history later
+takes a deliberate test for an outage that happened; if a real outage were to
+reuse that issue, both are rewritten and it stops calling itself a drill. The
+schedule cannot trigger a drill — `inputs.drill` is empty on a scheduled run.
+
 The limit, stated because it would otherwise be mistaken for cover: the
 sentinel is itself a scheduled workflow. It catches a refresh that has stopped
 while Actions is otherwise working, which is the failure that happened. It

@@ -24,6 +24,13 @@ on:
     # run in progress has finished before its output is judged.
     - cron: "40 * * * *"
   workflow_dispatch:
+    inputs:
+      drill:
+        description: >-
+          Fire the stale path on purpose, to prove the alert still works.
+          The issue it opens says in its first line that it is a drill.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -40,6 +47,14 @@ env:
   # enough not to cry about one skipped slot, early enough that a dead
   # cron is named the same morning rather than the next day.
   MAX_AGE_HOURS: "7"
+  # An alert nobody has ever seen fire is a hope, not a safety net, and
+  # this one cannot be exercised by waiting: it only opens an issue when
+  # the site is genuinely stale, which is the thing being prevented. A
+  # drill lowers the threshold to zero for one manual run so the whole
+  # cycle — open, pin, close — can be watched end to end. It is off
+  # unless someone asks for it by hand: `inputs.drill` is empty on a
+  # scheduled run, which is not the string "true".
+  DRILL: ${{ inputs.drill }}
   LABEL: stale-data
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # gh reads the repository off the git remote, and this job deliberately
@@ -107,10 +122,16 @@ jobs:
             } else {
               const hours = (Date.now() - t) / 3600000;
               const age = hours.toFixed(1) + " h";
-              const max = Number(process.env.MAX_AGE_HOURS);
-              put({generated: new Date(t).toISOString(), age,
+              const drill = process.env.DRILL === "true";
+              const max = drill ? 0 : Number(process.env.MAX_AGE_HOURS);
+              put({generated: new Date(t).toISOString(), age, drill: drill,
                    state: hours > max ? "stale" : "fresh",
-                   detail: hours > max
+                   detail: drill
+                     ? "This is a drill. The threshold was lowered to zero for this run on " +
+                       "purpose, so the file below is reported stale at whatever age it is. " +
+                       "The site is fine: data.json was generated " + age + " ago, well " +
+                       "inside the " + process.env.MAX_AGE_HOURS + " h an ordinary run allows."
+                     : hours > max
                      ? "The served data.json was generated " + age + " ago, past the " +
                        max + " h a working refresh should never exceed."
                      : "Generated " + age + " ago."});
@@ -129,6 +150,7 @@ jobs:
           GENERATED: ${{ steps.check.outputs.generated }}
           AGE: ${{ steps.check.outputs.age }}
           STATE: ${{ steps.check.outputs.state }}
+          IS_DRILL: ${{ steps.check.outputs.drill }}
         run: |
           set -euo pipefail
           gh label create "$LABEL" --color B60205 \
@@ -137,8 +159,25 @@ jobs:
           node -e '
             const fs = require("fs");
             const e = process.env, dash = v => v || "—";
+            const drill = e.IS_DRILL === "true";
+            /* A drill says so before anything else, and says so again in
+               the title, so that nobody reading this repository months
+               later reads a deliberate test as an outage that happened. */
+            fs.writeFileSync("title.txt", drill
+              ? "Data freshness DRILL — a deliberate test, not an outage"
+              : "Data freshness: the refresh has stopped");
+            const opening = drill ? [
+              "> ### 🧪 This is a drill — no outage happened",
+              ">",
+              "> Someone ran this workflow by hand with the threshold lowered to zero, so",
+              "> that the alert could be watched opening, pinning and closing at least once.",
+              "> The site was fine at the time and the figures below say so. The next",
+              "> healthy hourly check closes this issue by itself."
+            ] : [
+              "**The deployed data.json is not being refreshed.**"
+            ];
             fs.writeFileSync("body.md", [
-              "**The deployed data.json is not being refreshed.**",
+              ...opening,
               "",
               e.DETAIL,
               "",
@@ -159,19 +198,22 @@ jobs:
               "`schedule` trigger in the Actions tab, whether Actions is disabled or out of",
               "minutes for this repository, and whether the last run pushed or was rejected.",
               "",
-              "This body is rewritten on every hourly check. The issue closes itself once",
-              "the served file is current again."
+              "This body is rewritten on every hourly check, and so is the title — a",
+              "drill that a real outage later reuses stops calling itself a drill. The",
+              "issue closes itself once the served file is current again."
             ].join("\n") + "\n");
           '
 
           number=$(gh issue list --label "$LABEL" --state open --limit 1 \
                      --json number --jq '.[0].number // empty')
 
+          # The title is rewritten alongside the body. A drill issue that a
+          # real outage later reuses must stop calling itself a drill.
           if [ -n "$number" ]; then
-            gh issue edit "$number" --body-file body.md
+            gh issue edit "$number" --title "$(cat title.txt)" --body-file body.md
             echo "Updated #$number"
           else
-            url=$(gh issue create --title "Data freshness: the refresh has stopped" \
+            url=$(gh issue create --title "$(cat title.txt)" \
                     --label "$LABEL" --body-file body.md)
             number="${url##*/}"
             echo "Opened #$number"
@@ -195,5 +237,5 @@ jobs:
                      --json number --jq '.[0].number // empty')
           [ -n "$number" ] || exit 0
           gh issue close "$number" \
-            --comment "Refreshed again — data.json is now $AGE old (\`$GENERATED\`)."
+            --comment "Closed by the hourly check: data.json is $AGE old (\`$GENERATED\`), inside the $MAX_AGE_HOURS h threshold. If this was a drill, that is the drill completing."
           echo "Closed #$number"
