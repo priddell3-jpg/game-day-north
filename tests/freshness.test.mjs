@@ -145,6 +145,14 @@ test("a drill issue reused by a real outage stops calling itself a drill", () =>
   assert.match(SENTINEL, /gh issue edit "\$number" --title/);
 });
 
+test("a resolved alert stops being pinned", () => {
+  /* Closing is not enough: a pinned issue stays at the top of the issues
+     page after it closes, so a settled alert — or a drill — goes on
+     looking live to anyone glancing at the repository, and it holds one
+     of only three pin slots. The drill run is what showed this. */
+  assert.match(SENTINEL, /unpinIssue\(input:\{issueId:\$id\}\)/);
+});
+
 test("gh is told which repository it is working on", () => {
   /* Which follows directly from the test above: gh reads the repository
      off a git remote, and there is no checkout here to read one from.
