@@ -9,7 +9,7 @@ Schedules are easy to find. "Where is this on, in Canada?" is not — no sports 
 - **Multiple teams at once**, across NHL, NBA, NFL, MLB, MLS, the Premier League and UEFA club competitions
 - **Men's international rugby union** as a single follow — the Six Nations, the Nations Championship, the Pacific Nations Cup, test matches and Lions Tests, with nations you can star
 - **Where to watch** per game — Sportsnet, TSN, Prime Video, Fubo, DAZN, Apple TV, RDS, TVA Sports, CTV, MLB.TV, NBA League Pass, Premier Sports
-- **Coverage check** — mark the services you subscribe to and every game is flagged *You have it* or *Needs DAZN*
+- **Coverage check** — mark the services you subscribe to under **My services** in the header, and every game is flagged *You have it* or *Needs DAZN*
 - **Scores with a global on/off switch**, spoiler-safe: a hidden game still shows that it's live and where it's carried, with a per-game reveal
 - **Agenda by day and a month calendar**, league-coloured
 - **Honest unknowns** — `Time TBC` with the date it gets confirmed, `Opponent TBD` with the draw date, `Carrier TBC` where no Canadian rights holder could be verified, and no location at all where the source states none
@@ -239,6 +239,46 @@ A live score is a number that changes, so following one means asking again. Aski
 A fixture that has already been given a score is still polled while it is under way. Not doing that is what once froze a match at its halftime score for the rest of the night.
 
 Each poll spends **at most eight summary requests and twelve scoreboard requests**. The two are not comparable — a summary buys one game and a scoreboard buys a whole day — so they are budgeted separately. Fixtures that have kicked off are asked about first, since a game that has not started cannot have a score; neither cap binds on an ordinary evening, and what reaches one is a backlog of finished games, which can wait a minute.
+
+### What the list puts first
+
+The page answers one question — what is on, and where can I watch it — so the
+list is ordered to answer it and then get out of the way.
+
+1. The welcome banner, for a first visit only.
+2. The competition filters.
+3. A one-line hint pointing at **My services**, until a first subscription is
+   marked. Then never again.
+4. **Recent results**, collapsed. Its summary is written to be useful while it
+   is shut — "last 3 days · 4 games · 4 final scores" — so opening it is a
+   choice rather than the only way to learn anything. That summary is
+   spoiler-safe: **with scores hidden it counts games and stops**, because how
+   many have a final score is itself a fact about the outcomes. Three settled
+   out of four says the fourth was postponed, and a count that moves while a
+   game is on says it just finished. Whether it is open is remembered per
+   viewer in `localStorage`, under `gdn.results.open`.
+5. The day sections, today first.
+6. The rights table and the data note — reference, not answer.
+
+Results used to sit below the schedule, which meant scrolling past every
+fixture in the window to see last night's score, which is the thing people
+check first in the morning.
+
+**Configuration lives in the header.** *My teams* and *My services* are two
+buttons side by side, each opening a full-width drawer under the header — one
+at a time, because two of those strips open together leave a phone with no
+schedule on screen. The services drawer holds the checkboxes with their
+per-service game counts, the coverage summary ("47 of 76 games in the next 90
+days are covered by what you have"), and the unconfirmed-carrier note. That
+was a panel in the page body, below every fixture: it is set up once and then
+almost never touched, which is exactly what should not occupy the answer to
+"what is on tonight". The per-row *You have it* / *Needs X* chips are
+unchanged.
+
+At 320px the bar wraps to two rows: the wordmark and the view switch, then the
+score eye and the two drawer buttons with their short labels. The score
+toggle drops to its icon there and keeps an `aria-label`, since it is the
+control that decides whether the page spoils a result.
 
 ### Knowing when the refresh has stopped
 
