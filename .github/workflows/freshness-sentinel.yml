@@ -236,6 +236,16 @@ jobs:
           number=$(gh issue list --label "$LABEL" --state open --limit 1 \
                      --json number --jq '.[0].number // empty')
           [ -n "$number" ] || exit 0
+          # Unpin first. A pinned issue stays at the top of the issues
+          # page after it is closed, which is how a resolved alert — or a
+          # drill — goes on looking like a live outage to anyone glancing
+          # at the repository, and it holds one of only three pin slots.
+          # Best-effort, like the pin itself: failing to unpin must not
+          # stop the issue being closed.
+          id=$(gh issue view "$number" --json id --jq .id)
+          gh api graphql -f query='mutation($id:ID!){ unpinIssue(input:{issueId:$id}){ issue { number } } }' \
+            -f id="$id" > /dev/null \
+            || echo "Could not unpin #$number — closing it anyway."
           gh issue close "$number" \
             --comment "Closed by the hourly check: data.json is $AGE old (\`$GENERATED\`), inside the $MAX_AGE_HOURS h threshold. If this was a drill, that is the drill completing."
           echo "Closed #$number"
