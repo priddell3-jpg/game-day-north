@@ -17,8 +17,8 @@
  */
 import { writeFileSync, readFileSync } from "node:fs";
 import { easternDate } from "./lib/dates.mjs";
-import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, stageSections,
-         titleWords, titleMatches } from "./lib/cycling.mjs";
+import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, freshestLeader,
+         stageSections, titleWords, titleMatches } from "./lib/cycling.mjs";
 import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
 
@@ -453,7 +453,11 @@ try{
     const settled = d => prevStages.find(x=>x.date===d && Array.isArray(x.top3) && x.top3.length===3);
     const due = rc.dates.filter(d=>d <= todayISO && !(settled(d) && d < todayISO));
     let stages = rc.dates.filter(d=>d <= todayISO).map(settled).filter(Boolean);
+    /* The leader carries forward with the stage it was read after, so a
+       value kept from a previous run can be compared for freshness
+       against anything parsed this run rather than outranking it. */
     let leader = prev.leader || null;
+    let leaderStage = Number.isFinite(prev.leaderStage) ? prev.leaderStage : null;
     if(due.length){
       const texts = [];
       for(const pg of rc.pages){ const t = await wikitextOf(pg); if(t) texts.push(t); }
@@ -469,32 +473,53 @@ try{
           const sections = {};
           texts.forEach(t=>Object.assign(sections, stageSections(t)));
           const fresh = [];
-          let leadStage = 0;
+          /* Every source offers a leader together with the stage its
+             standings are current to, and the freshest offer wins.
+             Freshness is compared, not assumed. */
+          const offers = [];
           rc.dates.forEach((date, i)=>{
             if(date > todayISO) return;
+            const sec = sections[i+1];
+            const blocks = sec ? resultBlocks(sec) : [];
+            /* The GC is read from every stage section present, including
+               one whose podium is already settled. A podium cannot
+               change once ridden but the standings under it can, and
+               returning early on a settled stage meant only the current
+               day's GC was ever consulted — which froze the leader at a
+               rider who had since abandoned the race. */
+            const gcBlock = blocks.filter(isGCBlock)[0];
+            if(gcBlock) offers.push([ridersInBlock(gcBlock, 1)[0], i + 1]);
             const kept = settled(date);
             if(kept && date < todayISO){ fresh.push(kept); return; }
-            const sec = sections[i+1];
-            if(!sec) return;
-            const blocks = resultBlocks(sec);
+            if(!blocks.length) return;
             const notGC = blocks.filter(b=>!isGCBlock(b));
             // prefer the block actually titled as the stage result; a
             // neutralised stage carries a "time gaps" block instead
             const res = notGC.filter(b=>/result/i.test(b.slice(0,240)))[0] || notGC[0] || "";
             const top3 = ridersInBlock(res, 3);
             if(top3.length === 3) fresh.push({date, top3});
-            const gcBlock = blocks.filter(isGCBlock)[0];
-            if(gcBlock && i+1 > leadStage){
-              const gc = ridersInBlock(gcBlock, 1);
-              if(gc.length){ leader = gc[0]; leadStage = i+1; }
-            }
           });
           if(fresh.length) stages = fresh;
-          // before any split article exists there are no stage sections
-          // at all; the main article still carries the standings
-          if(!leader){
-            for(const t of texts){ const l = gcLeaderFrom(t); if(l){ leader = l; break; } }
+          /* The main article carries the standings too, and before any
+             split article exists it is the only place they appear. It
+             competes on the stage number in its caption rather than
+             filling in only when nothing else was found: gated behind a
+             leader that had been carried forward, it could never be
+             reached, because a carried value is always truthy. */
+          for(const t of texts){
+            const at = gcStageFrom(t);
+            if(at) offers.push([gcLeaderFrom(t), at]);
           }
+          /* The value carried from the previous run competes rather than
+             being replaced by whatever happened to parse. It is offered
+             last, so a fresh reading of the same stage supersedes it
+             while an older one cannot: stages 12 onwards live in a split
+             article that does not exist until the race reaches them, and
+             on a run that reaches only the stage 1-11 article, its "GC
+             after stage 11" must not walk a stage-12 leader backwards. */
+          offers.push([leader, leaderStage]);
+          const pick = freshestLeader(offers);
+          if(pick){ leader = pick.leader; leaderStage = pick.leaderStage; }
         }
       }
     }
@@ -558,7 +583,7 @@ try{
       }
     }
     stages.sort((a,b)=>a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-    if(stages.length || leader) cyclingOut.push({race:rc.name, oneDay:!!rc.oneDay, leader, stages});
+    if(stages.length || leader) cyclingOut.push({race:rc.name, oneDay:!!rc.oneDay, leader, leaderStage, stages});
   }
   const podiums = cyclingOut.reduce((a,r)=>a+podiumCount(r), 0);
   console.log("Cycling (Wikipedia): " + podiums + " stage podium" + (podiums===1?"":"s")

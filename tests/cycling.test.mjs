@@ -2,13 +2,27 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  resultBlocks, ridersInBlock, isGCBlock, gcLeaderFrom, stageSections,
-  titleWords, titleMatches
+  resultBlocks, ridersInBlock, isGCBlock, gcLeaderFrom, gcStageFrom, freshestLeader,
+  stageSections, titleWords, titleMatches
 } from "../scripts/lib/cycling.mjs";
 
 const here = new URL(".", import.meta.url);
 const stagesText = readFileSync(new URL("fixtures/vuelta-2025-stages.wikitext", here), "utf8");
 const gcText     = readFileSync(new URL("fixtures/vuelta-2026-main-gc.wikitext", here), "utf8");
+/* Saved verbatim from the MediaWiki API on 1 September 2026, the day the
+   site was showing a leader who had abandoned the race five stages
+   earlier. These two are the known answers that pin the regression. */
+const v26Text    = readFileSync(new URL("fixtures/vuelta-2026-stages-1-11.wikitext", here), "utf8");
+const v26GcText  = readFileSync(new URL("fixtures/vuelta-2026-main-gc-stage10.wikitext", here), "utf8");
+
+/** The leader as the fetch script reads one: the first rider of the
+    general-classification block inside a stage's section. */
+function gcLeader(text, n){
+  const sec = stageSections(text)[n];
+  if(!sec) return null;
+  const block = resultBlocks(sec).filter(isGCBlock)[0];
+  return block ? (ridersInBlock(block, 1)[0] || null) : null;
+}
 
 /* Real wikitext, saved from the pages these parsers actually read. The
    first assertion is the known answer that caught the original bug: a
@@ -100,4 +114,124 @@ test("an identical title matches, accents and commas included", () => {
 
 test("nothing distinctive to compare is accepted rather than dropped", () => {
   assert.equal(titleMatches("2026", "2026 UCI World Tour"), true);
+});
+
+/* --- the 2026 Vuelta regression --- */
+
+test("2026 Vuelta: the GC after stage 9 is Enric Mas, not the abandoned leader", () => {
+  assert.equal(gcLeader(v26Text, 9), "Enric Mas");
+});
+
+test("2026 Vuelta: every stage section that has run yields a GC leader", () => {
+  // the leader was frozen because settled stages were never re-read;
+  // each of these blocks parses, so nothing excuses a stale value
+  for(const n of [1,2,3,4,5,6,7,8,9,10]){
+    assert.ok(gcLeader(v26Text, n), `stage ${n} produced no GC leader`);
+  }
+});
+
+test("2026 Vuelta: the lead changes hands at stage 8 and stays changed", () => {
+  assert.equal(gcLeader(v26Text, 7), "Tadej Pogačar");
+  assert.equal(gcLeader(v26Text, 8), "Enric Mas");
+  assert.equal(gcLeader(v26Text, 10), "Enric Mas");
+});
+
+test("2026 Vuelta stage 3 was cancelled: a GC but no podium", () => {
+  // hail stopped the stage 15km out, so Wikipedia carries standings and
+  // no result. Nothing to report is the right answer, not a guess.
+  assert.deepEqual(stagePodium(v26Text, 3), []);
+  assert.equal(gcLeader(v26Text, 3), "Tadej Pogačar");
+});
+
+test("2026 Vuelta: a stage that has been ridden still yields its podium", () => {
+  assert.deepEqual(stagePodium(v26Text, 9),
+    ["Enric Mas", "Oscar Onley", "Primož Roglič"]);
+  assert.deepEqual(stagePodium(v26Text, 10),
+    ["Bastien Tronchon", "Magnus Cort", "Thibau Nys"]);
+});
+
+test("2026 Vuelta: a stage not yet ridden yields nothing at all", () => {
+  assert.deepEqual(stagePodium(v26Text, 11), []);
+  assert.equal(gcLeader(v26Text, 11), null);
+});
+
+/* --- the main article competes on freshness --- */
+
+test("gcStageFrom reads the stage the standings table is current to", () => {
+  assert.equal(gcStageFrom(v26GcText), 10);
+  assert.equal(gcLeaderFrom(v26GcText), "Enric Mas");
+});
+
+test("the main article's own table knew the leader the stage blocks did", () => {
+  assert.equal(gcLeaderFrom(v26GcText), gcLeader(v26Text, gcStageFrom(v26GcText)));
+});
+
+test("gcStageFrom returns null when there is no standings table", () => {
+  assert.equal(gcStageFrom("== Route ==\nNothing to see."), null);
+});
+
+test("a standings table with no readable stage number yields no stage", () => {
+  // freshness cannot be compared without it, so the leader is not used
+  assert.equal(gcStageFrom("|+ General classification after stage (1-10)"), null);
+});
+
+test("the earlier snapshot still reads as stage 1", () => {
+  assert.equal(gcStageFrom(gcText), 1);
+  assert.equal(gcLeaderFrom(gcText), "Tadej Pogačar");
+});
+
+/* --- which leader a run settles on --- */
+
+/* The fetch script offers every source it parsed, then the value it
+   carried from the previous run, and takes the freshest. These pin the
+   ordering, because getting it wrong is silent: the site goes on
+   showing a name, just the wrong one. */
+
+test("a carried stage-12 leader survives a run that only reads stage 11", () => {
+  // stages 12+ live in a split article that is not created until the
+  // race reaches them, and the redirect guard rejects the unborn title.
+  // A run that reads only the stage 1-11 article must not walk back.
+  const parsedFromStages11 = ["Enric Mas", 11];
+  const carriedFromLastRun = ["Jonas Vingegaard", 12];
+  assert.deepEqual(freshestLeader([parsedFromStages11, carriedFromLastRun]),
+    {leader: "Jonas Vingegaard", leaderStage: 12});
+});
+
+test("a fresher parse still outranks the carried value", () => {
+  assert.deepEqual(freshestLeader([["Enric Mas", 12], ["Jonas Vingegaard", 11]]),
+    {leader: "Enric Mas", leaderStage: 12});
+});
+
+test("a re-read of the same stage supersedes the carried value", () => {
+  // the carried value is offered last, so a correction Wikipedia makes
+  // to standings already read is not locked out
+  assert.deepEqual(freshestLeader([["Corrected", 10], ["Stale", 10]]),
+    {leader: "Corrected", leaderStage: 10});
+});
+
+test("a carried leader of unknown age cannot outrank anything", () => {
+  assert.deepEqual(freshestLeader([["Parsed", 1], ["Carried", null]]),
+    {leader: "Parsed", leaderStage: 1});
+  assert.deepEqual(freshestLeader([["Parsed", 1], ["Carried", undefined]]),
+    {leader: "Parsed", leaderStage: 1});
+});
+
+test("nothing usable yields nothing, so the caller keeps what it had", () => {
+  assert.equal(freshestLeader([]), null);
+  assert.equal(freshestLeader([[null, 9], ["", 3]]), null);
+  assert.equal(freshestLeader([["Nameless stage", 0]]), null);
+  assert.equal(freshestLeader(), null);
+});
+
+test("a stage number that is not a number is not a stage number", () => {
+  assert.equal(freshestLeader([["Someone", "11"]]), null);
+  assert.equal(freshestLeader([["Someone", NaN]]), null);
+});
+
+test("the whole order of offers a real run makes, in one go", () => {
+  // stage blocks ascending, then the main article, then the carried value
+  const offers = [["Pogačar", 7], ["Mas", 8], ["Mas", 9], ["Mas", 10],
+                  ["Mas", 10],            // main article's caption
+                  ["Vingegaard", 12]];    // carried from the previous run
+  assert.deepEqual(freshestLeader(offers), {leader: "Vingegaard", leaderStage: 12});
 });

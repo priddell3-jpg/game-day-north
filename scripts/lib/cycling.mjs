@@ -31,13 +31,51 @@ export function ridersInBlock(block, n){
   return out.slice(0, n);
 }
 
+/* The main article's standings are a wikitable, captioned "General
+   classification after stage 10". The caption is read for both the
+   leader and the stage it is current to, because a leader whose age is
+   unknown cannot be compared against one read from a stage section. */
+const GC_CAPTION = /\|\+\s*General classification after stage\s*(\d+)?/i;
+
 export function gcLeaderFrom(text){
-  const at = text.search(/\|\+\s*General classification after stage/i);
+  const at = text.search(GC_CAPTION);
   if(at < 0) return null;
   const seg = text.slice(at, at + 4000);
   const m = seg.match(/\{\{\s*Flag athlete\s*\|\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/i);
   if(!m) return null;
   return (m[2] || m[1]).replace(/\s+/g," ").trim();
+}
+
+/** Which stage the standings table is current to. A table whose caption
+    carries no readable stage number yields nothing rather than a leader
+    of unknown age: the same rule as a podium that cannot be parsed
+    cleanly, applied to freshness instead of to names. */
+export function gcStageFrom(text){
+  const m = text.match(GC_CAPTION);
+  const n = m && m[1] ? Number(m[1]) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** The freshest leader among everything a run has to offer. Each
+    candidate is [name, stage]; the highest stage number wins, and a
+    candidate carrying no usable stage number cannot compete at all —
+    standings of unknown age are not evidence about the present.
+
+    Ties go to whichever was offered first, so the value carried from
+    the previous run is offered last: a fresh parse of the same stage
+    supersedes it, an older parse does not. That ordering is the whole
+    point. A Grand Tour splits its stages across articles that are only
+    created once the race reaches them, so a run can easily read "GC
+    after stage 11" while the article holding stage 12 onwards is still
+    unborn, and letting any successful parse overwrite the carried
+    leader would walk the standings backwards. */
+export function freshestLeader(candidates){
+  let name = null, stage = 0;
+  for(const c of (candidates || [])){
+    const n = c && c[0], s = c && c[1];
+    if(n && Number.isFinite(s) && s > stage){ name = n; stage = s; }
+  }
+  return name ? {leader:name, leaderStage:stage} : null;
 }
 
 export function stageSections(text){

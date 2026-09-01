@@ -1,0 +1,367 @@
+{{Short description|Vuelta a España stages (cycling)}}
+The '''[[2026 Vuelta a España]]''' is a three-week cycling race which will take place in [[Monaco]], [[France]], [[Andorra]] and [[Spain]]. It was the 81st edition of the [[Vuelta a España]] and the third and final [[Grand Tour (cycling)|grand tour]] of the [[2026 in men's road cycling|2026 men's road cycling season]]. It started on 22 August in [[Monaco]], and will finish on 13 September in [[Granada]].<ref name="route">{{cite web |title=Official route of La Vuelta 2025 |url=https://www.lavuelta.es/es/recorrido-general |website=lavuelta.es |access-date=25 July 2026}}</ref>
+
+== Classification standings ==
+{| class="wikitable"
+|-
+! scope="col" colspan="4" | Legend
+|-
+| {{cjersey|red}}
+| Denotes the leader of the [[General classification in the Vuelta a España|general classification]]
+| {{cjersey|white}}
+| Denotes the leader of the [[Young rider classification in the Vuelta a España|young rider classification]]
+|-
+| {{cjersey|dark green}}
+| Denotes the leader of the [[Points classification in the Vuelta a España|points classification]]
+| {{cjersey|red number}}
+| Denotes the leader of the [[Team classification in the Vuelta a España|team classification]]
+|-
+| {{cjersey|blue polkadot}}
+| Denotes the leader of the [[Mountains classification in the Vuelta a España|mountains classification]]
+| {{cjersey|yellow number}}
+| Denotes the winner of the combativity award
+|-
+|}
+
+== Stage 1 ==
+;22 August 2026 – [[Monaco]] to Monaco, {{convert|9|km|abbr=on}} ([[Individual time trial|ITT]])
+
+{|
+|-
+||
+{{cyclingresult start|title=Stage 1 Result<ref name="CN-1">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-tadej-pogacar-claims-stage-1-time-trial-and-takes-the-first-leaders-jersey-in-monaco/|title=Vuelta a España: Tadej Pogačar claims stage 1 time trial and takes the first leader's jersey in Monaco|first=Kirsten|last=Frattini|work=Cycling News|date=22 August 2026|access-date=22 August 2026}}</ref><ref name="Stage-1">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-1/rankings|title=La Vuelta – 1 – Monaco > Monaco|publisher=[[Tissot Timing]]|date=22 August 2026|access-date=22 August 2026}}</ref>}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|10' 57"}}
+{{cyclingresult|2|[[Ethan Hayter]]|GBR|{{UCI team code|SOQ|2026}}|+ 0"}}
+{{cyclingresult|3|[[Joshua Tarling]]|GBR|{{UCI team code|NCI|2026b}}|+ 4"}}
+{{cyclingresult|4|[[Callum Thornley]]|GBR|{{UCI team code|RBH|2026}}|+ 5"}}
+{{cyclingresult|5|[[Christophe Laporte]]|FRA|{{UCI team code|TVL men|2026}}|+ 6"}}
+{{cyclingresult|6|[[Oscar Chamberlain]]|AUS|{{UCI team code|DCT|2026}}|+ 8"}}
+{{cyclingresult|7|[[Léo Bisiaux]]|FRA|{{UCI team code|DCT|2026}}|+ 9"}}
+{{cyclingresult|8|[[Wout van Aert]]|BEL|{{UCI team code|TVL men|2026}}|+ 9"}}
+{{cyclingresult|9|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 10"}}
+{{cyclingresult|10|[[Arthur Kluckers]]|LUX|{{UCI team code|TUD|2026}}|+ 11"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 1<ref name="CN-1" /><ref name="Stage-1" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|10' 57"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|red number}}}}
+{{cyclingresult|2|[[Ethan Hayter]]|GBR|{{UCI team code|SOQ|2026}}|+ 0"}}
+{{cyclingresult|3|[[Joshua Tarling]]|GBR|{{UCI team code|NCI|2026b}}|+ 4"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Callum Thornley]]|GBR|{{UCI team code|RBH|2026}}|+ 5"|{{cjersey|blue polkadot}}}}
+{{cyclingresult|5|[[Christophe Laporte]]|FRA|{{UCI team code|TVL men|2026}}|+ 6"}}
+{{cyclingresult|6|[[Oscar Chamberlain]]|AUS|{{UCI team code|DCT|2026}}|+ 8"}}
+{{cyclingresult|7|[[Léo Bisiaux]]|FRA|{{UCI team code|DCT|2026}}|+ 9"}}
+{{cyclingresult|8|[[Wout van Aert]]|BEL|{{UCI team code|TVL men|2026}}|+ 9"}}
+{{cyclingresult|9|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 10"}}
+{{cyclingresult|10|[[Arthur Kluckers]]|LUX|{{UCI team code|TUD|2026}}|+ 11"}}
+{{cyclingresult end}}
+|}
+
+== Stage 2 ==
+;23 August 2026 – Monaco to [[Manosque]] (France), {{convert|215.5|km|abbr=on}}
+{|
+|-
+||
+{{cyclingresult start|title=Stage 2 Result<ref name="CN-2">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-powerful-sprint-nets-matthew-brennan-stage-2-victory-as-tadej-pogacar-fends-off-attacks-to-keep-leaders-jersey/|title=Vuelta a España: Powerful sprint nets Matthew Brennan stage 2 victory as Tadej Pogačar fends off attacks to keep leader's jersey|first=James|last=Moultrie|work=Cycling News|date=23 August 2026|access-date=23 August 2026}}</ref><ref name="Stage-2">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-2/rankings|title=La Vuelta – 2 – Monaco > Manosque|publisher=[[Tissot Timing]]|date=23 August 2026|access-date=23 August 2026}}</ref>}}
+{{cyclingresult|1|[[Matthew Brennan (cyclist)|Matthew Brennan]]|GBR|{{UCI team code|TVL men|2026}}|4h 47' 47"}}
+{{cyclingresult|2|[[Pau Miquel]]|ESP|{{UCI team code|TBV|2026}}|+ 0"}}
+{{cyclingresult|3|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|+ 0"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|red number}}}}
+{{cyclingresult|4|[[Mads Pedersen]]|DEN|{{UCI team code|LTK men|2026}}|+ 0"}}
+{{cyclingresult|5|[[Hugo Hofstetter]]|FRA|{{UCI team code|NSN|2026}}|+ 0"}}
+{{cyclingresult|6|[[Tobias Halland Johannessen]]|NOR|{{UCI team code|UXM men|2026}}|+ 0"}}
+{{cyclingresult|7|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 0"}}
+{{cyclingresult|8|[[Axel Laurance]]|FRA|{{UCI team code|NCI|2026b}}|+ 0"}}
+{{cyclingresult|9|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 0"}}
+{{cyclingresult|10|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2026}}|+ 0"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 2<ref name="CN-2" /><ref name="Stage-2" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|4h 58' 40"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|red number}}}}
+{{cyclingresult|2|[[Wout van Aert]]|BEL|{{UCI team code|TVL men|2026}}|+ 9"}}
+{{cyclingresult|3|[[Matthew Brennan (cyclist)|Matthew Brennan]]|GBR|{{UCI team code|TVL men|2026}}|+ 10"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Léo Bisiaux]]|FRA|{{UCI team code|DCT|2026}}|+ 12"}}
+{{cyclingresult|5|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 14"}}
+{{cyclingresult|6|[[Stefan Küng]]|SUI|{{UCI team code|TUD|2026}}|+ 18"}}
+{{cyclingresult|7|[[Jay Vine]]|AUS|{{UCI team code|UEX|2026}}|+ 18"|{{cjersey|red number}}}}
+{{cyclingresult|8|[[Mads Pedersen]]|DEN|{{UCI team code|LTK men|2026}}|+ 20"}}
+{{cyclingresult|9|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 26"}}
+{{cyclingresult|10|[[Jordan Labrosse]]|FRA|{{UCI team code|DCT|2026}}|+ 27"}}
+{{cyclingresult end}}
+|}
+
+== Stage 3 ==
+;24 August 2026 – [[Gruissan]] (France) to [[Font-Romeu-Odeillo-Via|Font Romeu]] (France), {{convert|166.7|km|abbr=on}}
+The stage was neutralised and then cancelled with around {{convert|15|km|abbr=on}} remaining due to a severe hailstorm.<ref>{{Cite news |last= |date=2026-08-24 |title=Vuelta a España: giant hail forces stage three abandonment in Pyrenees |url=https://www.theguardian.com/sport/2026/aug/24/vuelta-a-espana-giant-hail-forces-stage-three-abandonment-in-pyrenees |access-date=2026-08-24 |work=The Guardian |language=en-GB |issn=0261-3077}}</ref>
+{|
+|-
+||
+{{cyclingresult start|title=General classification after Stage 3<ref name="CN-2" /><ref name="Stage-3" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|4h 58' 40"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|red number}}}}
+{{cyclingresult|2|[[Wout van Aert]]|BEL|{{UCI team code|TVL men|2026}}|+ 9"}}
+{{cyclingresult|3|[[Matthew Brennan (cyclist)|Matthew Brennan]]|GBR|{{UCI team code|TVL men|2026}}|+ 10"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Léo Bisiaux]]|FRA|{{UCI team code|DCT|2026}}|+ 12"}}
+{{cyclingresult|5|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 14"}}
+{{cyclingresult|6|[[Stefan Küng]]|SUI|{{UCI team code|TUD|2026}}|+ 18"}}
+{{cyclingresult|7|[[Jay Vine]]|AUS|{{UCI team code|UEX|2026}}|+ 18"|{{cjersey|red number}}}}
+{{cyclingresult|8|[[Mads Pedersen]]|DEN|{{UCI team code|LTK men|2026}}|+ 20"}}
+{{cyclingresult|9|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 26"}}
+{{cyclingresult|10|[[Jordan Labrosse]]|FRA|{{UCI team code|DCT|2026}}|+ 27"}}
+{{cyclingresult end}}
+|}
+
+== Stage 4 ==
+;25 August 2026 – [[Andorra la Vella]] (Andorra) to Andorra la Vella (Andorra), {{convert|104.9|km|abbr=on}}
+{|
+|-
+||
+{{cyclingresult start|title=Stage 4 Result<ref name="CN-4">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-tadej-pogacar-twists-the-knife-with-solo-raid-in-andorra-to-win-stage-4/|title=Vuelta a España: Tadej Pogačar twists the knife with 50km solo raid in Andorra to win stage 4|first=James|last=Moultrie|work=Cycling News|date=25 August 2026|access-date=25 August 2026}}</ref><ref name="Stage-4">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-4/rankings|title=La Vuelta – 4 – Andorra La Vella > Andorra La Vella|publisher=[[Tissot Timing]]|date=25 August 2026|access-date=25 August 2026}}</ref>}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|2h 40' 25"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|red number}}}}
+{{cyclingresult|2|[[Jarno Widar]]|BEL|{{UCI team code|LOI|2026}}|+ 2' 39"}}
+{{cyclingresult|3|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 2' 39"}}
+{{cyclingresult|4|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 2' 39"}}
+{{cyclingresult|5|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 2' 39"}}
+{{cyclingresult|6|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|+ 2' 39"}}
+{{cyclingresult|7|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 2' 39"}}
+{{cyclingresult|8|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 2' 57"}}
+{{cyclingresult|9|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 3' 17"}}
+{{cyclingresult|10|[[Gregor Mühlberger]]|AUT|{{UCI team code|DCT|2026}}|+ 3' 17"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 4<ref name="CN-4" /><ref name="Stage-4" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|7h 38' 59"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|blue polkadot}}{{cjersey|red number}}{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 3' 21"}}
+{{cyclingresult|3|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|+ 3' 32"}}
+{{cyclingresult|4|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 3' 44"}}
+{{cyclingresult|5|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 3' 45"|{{cjersey|white}}}}
+{{cyclingresult|6|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 3' 50"}}
+{{cyclingresult|7|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 3' 57"}}
+{{cyclingresult|8|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 4' 06"}}
+{{cyclingresult|9|[[Jarno Widar]]|BEL|{{UCI team code|LOI|2026}}|+ 4' 06"}}
+{{cyclingresult|10|[[Jay Vine]]|AUS|{{UCI team code|UEX|2026}}|+ 4' 11"|{{cjersey|red number}}}}
+{{cyclingresult end}}
+|}
+
+== Stage 5 ==
+;26 August 2026 – [[Falset, Spain|Falset]] to [[Roquetes, Spain|Roquetes]], {{convert|171.1|km|abbr=on}}
+{|
+|-
+||
+{{cyclingresult start|title=Stage 5 Result<ref name="CN-5">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-matthew-brennan-sprints-to-second-win-on-stage-5-as-late-climb-fails-to-drop-sprinters/|title=Vuelta a España: Matthew Brennan sprints to second win on stage 5 as late climb fails to drop sprinter|first=Dani|last=Ostanek|work=Cycling News|date=26 August 2026|access-date=26 August 2026}}</ref><ref name="Stage-5">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-5/rankings|title=La Vuelta – 5 – Falset > Roquetes|publisher=[[Tissot Timing]]|date=26 August 2026|access-date=26 August 2026}}</ref>}}
+{{cyclingresult|1|[[Matthew Brennan (cyclist)|Matthew Brennan]]|GBR|{{UCI team code|TVL men|2026}}|3h 47' 02"}}
+{{cyclingresult|2|[[Jordi Meeus]]|BEL|{{UCI team code|RBH|2026}}|+ 0"}}
+{{cyclingresult|3|[[Vincenzo Albanese]]|ITA|{{UCI team code|EFE|2026}}|+ 0"}}
+{{cyclingresult|4|[[Alessandro Romele]]|ITA|{{UCI team code|XAT|2026}}|+ 0"}}
+{{cyclingresult|5|[[Axel Laurance]]|FRA|{{UCI team code|NCI|2026b}}|+ 0"}}
+{{cyclingresult|6|[[Christophe Laporte]]|FRA|{{UCI team code|TVL men|2026}}|+ 0"}}
+{{cyclingresult|7|[[Alberto Dainese]]|ITA|{{UCI team code|SOQ|2026}}|+ 0"}}
+{{cyclingresult|8|[[Vito Braet]]|BEL|{{UCI team code|LOI|2026}}|+ 0"}}
+{{cyclingresult|9|[[David González (cyclist)|David González]]|ESP|{{UCI team code|PQT|2026}}|+ 0"}}
+{{cyclingresult|10|[[Wout van Aert]]|BEL|{{UCI team code|TVL men|2026}}|+ 0"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 5<ref name="CN-5" /><ref name="Stage-5" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|11h 26' 01"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|blue polkadot}}{{cjersey|red number}}}}
+{{cyclingresult|2|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 3' 21"}}
+{{cyclingresult|3|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|+ 3' 32"}}
+{{cyclingresult|4|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 3' 44"}}
+{{cyclingresult|5|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 3' 45"|{{cjersey|white}}}}
+{{cyclingresult|6|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 3' 50"}}
+{{cyclingresult|7|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 3' 57"}}
+{{cyclingresult|8|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 4' 06"}}
+{{cyclingresult|9|[[Jarno Widar]]|BEL|{{UCI team code|LOI|2026}}|+ 4' 06"}}
+{{cyclingresult|10|[[Jay Vine]]|AUS|{{UCI team code|UEX|2026}}|+ 4' 11"|{{cjersey|red number}}}}
+{{cyclingresult end}}
+|}
+
+== Stage 6 ==
+;27 August 2026 – [[Alcossebre]] to [[Castellón de la Plana|Castellón]], {{convert|176.8|km|abbr=on}}
+{|
+|-
+||
+{{cyclingresult start|title=Stage 6 Result<ref name="CN-6">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-tadej-pogacar-survives-near-crash-on-descent-for-third-victory-of-the-race-on-stage-6/|title=Vuelta a España: Tadej Pogačar survives near-crash on descent for third victory of the race on stage 6|first=James|last=Moultrie|work=Cycling News|date=27 August 2026|access-date=27 August 2026}}</ref><ref name="Stage-6">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-6/rankings|title=La Vuelta – 6 – Alcossebre > Castellón|publisher=[[Tissot Timing]]|date=27 August 2026|access-date=27 August 2026}}</ref>}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|4h 12' 40"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|blue polkadot}}{{cjersey|red number}}}}
+{{cyclingresult|2|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|+ 0"}}
+{{cyclingresult|3|[[Ramses Debruyne]]|BEL|{{UCI team code|APT|2026}}|+ 46"}}
+{{cyclingresult|4|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 46"}}
+{{cyclingresult|5|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 46"}}
+{{cyclingresult|6|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 46"}}
+{{cyclingresult|7|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 46"}}
+{{cyclingresult|8|[[Cristián Rodríguez]]|ESP|{{UCI team code|XAT|2026}}|+ 1' 38"}}
+{{cyclingresult|9|[[Clément Berthet]]|FRA|{{UCI team code|GFC|2026}}|+ 1' 38"}}
+{{cyclingresult|10|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 1' 38"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 6<ref name="CN-6" /><ref name="Stage-6" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|15h 38' 27"|{{cjersey|red}}{{cjersey|dark green}}{{cjersey|blue polkadot}}{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|+ 3' 34"}}
+{{cyclingresult|3|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 4' 21"}}
+{{cyclingresult|4|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 4' 50"}}
+{{cyclingresult|5|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 4' 55"|{{cjersey|red number}}}}
+{{cyclingresult|6|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 5' 36"}}
+{{cyclingresult|7|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 5' 37"|{{cjersey|white}}}}
+{{cyclingresult|8|[[Ramses Debruyne]]|BEL|{{UCI team code|APT|2026}}|+ 5' 40"}}
+{{cyclingresult|9|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 5' 58"}}
+{{cyclingresult|10|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 6' 30"}}
+{{cyclingresult end}}
+|}
+
+== Stage 7 ==
+;28 August 2026 – [[Vall d'Alba]] to [[Valdelinares|Aramón Valdelinares]], {{convert|149.9|km|abbr=on}}
+[[Andreas Leknessund]] won stage seven, leading a Norwegian one-two ahead of [[Tobias Halland Johannessen]]. The victory came one day after the [[Death and state funeral of Harald V|death of King Harald V of Norway]], with both Norwegian riders wearing [[black armband]]s in his memory. [[Tadej Pogačar]] extended his overall lead in the general classification.<ref>{{cite news |last1=Marshall-Bell |first1=Chris |title=Vuelta a Espana stage 7: Norwegian duo seal emotional 1-2 finish on day King Harald V dies |url=https://www.nytimes.com/athletic/7546096/2026/08/28/vuelta-stage-seven-leknessund-king-harald/ |access-date=1 September 2026 |agency=The Athletic |date=28 August 2026}}</ref>
+{|
+|-
+||
+{{cyclingresult start|title=Stage 7 Result<ref name="CN-7">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-andreas-leknessund-tobias-johannessen-solo-away-from-wout-van-aert-in-uno-x-mobility-1-2-on-stage-7/|title=Vuelta a España: Andreas Leknessund, Tobias Johannessen solo away from Wout van Aert in Uno-X Mobility 1-2 on stage 7|first=James|last=Moultrie|work=Cycling News|date=28 August 2026|access-date=28 August 2026}}</ref><ref name="Stage-7">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-7/rankings|title=La Vuelta – 7 – Vall d'Alba > Aramón Valdelinares|publisher=[[Tissot Timing]]|date=28 August 2026|access-date=28 August 2026}}</ref>}}
+{{cyclingresult|1|[[Andreas Leknessund]]|NOR|{{UCI team code|UXM men|2026}}|3h 49' 47"}}
+{{cyclingresult|2|[[Tobias Halland Johannessen ]]|NOR|{{UCI team code|UXM men|2026}}|+ 34"}}
+{{cyclingresult|3|[[Wout van Aert]]|BEL|{{UCI team code|TVL men|2026}}|+ 47"}}
+{{cyclingresult|4|[[Jakob Omrzel]]|SLO|{{UCI team code|TBV|2026}}|+ 58"}}
+{{cyclingresult|5|[[Juan Felipe Rodríguez]]|COL|{{UCI team code|EFE|2026}}|+ 1' 13"}}
+{{cyclingresult|6|[[Iván Sosa]]|COL|{{UCI team code|EKP|2026}}|+ 1' 16"}}
+{{cyclingresult|7|[[Alexey Lutsenko]]|KAZ|{{UCI team code|NSN|2026}}|+ 1' 44"}}
+{{cyclingresult|8|[[Eddie Dunbar]]|IRL|{{UCI team code|PQT|2026}}|+ 1' 51"}}
+{{cyclingresult|9|[[Léo Bisiaux]]|FRA|{{UCI team code|DCT|2026}}|+ 1' 53"|{{cjersey|red number}}}}
+{{cyclingresult|10|[[Raúl García Pierna]]|ESP|{{UCI team code|MOV men|2026}}|+ 2' 14"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 7<ref name="CN-7" /><ref name="Stage-7" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|19h 32' 37"|{{cjersey|red}}{{cjersey|blue polkadot}}}}
+{{cyclingresult|2|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|+ 3' 50"}}
+{{cyclingresult|3|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 4' 50"}}
+{{cyclingresult|4|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 5' 01"|{{cjersey|red number}}}}
+{{cyclingresult|5|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 6' 05"}}
+{{cyclingresult|6|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 6' 06"|{{cjersey|white}}}}
+{{cyclingresult|7|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 6' 12"}}
+{{cyclingresult|8|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 7' 17"}}
+{{cyclingresult|9|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 7' 46"}}
+{{cyclingresult|10|[[Gregor Mühlberger]]|AUT|{{UCI team code|DCT|2026}}|+ 9' 29"|{{cjersey|red number}}}}
+{{cyclingresult end}}
+|}
+
+== Stage 8 ==
+;29 August 2026 – [[Puçol]] to [[Xeraco]], {{convert|176.4|km|abbr=on}}
+[[Tadej Pogačar]] crashed after hitting a rock in the road about 33 km from the finish and was unable to continue, forcing him to abandon the race. He was later diagnosed with a fractured left clavicle and a C7 cervical fracture.<ref>{{cite news |last1=Ben |first1=Grounds |title=Pundit Matt Stephens shows rock in new footage that may explain Tadej Pogacar's Stage 8 crash and Vuelta abandonment |url=https://www.tntsports.co.uk/cycling/vuelta-a-espana/2026/tadej-pogacar-abandons-race-crash-cavernous-vacuum-pundit-matt-stephens_sto23332402/story.shtml |access-date=1 September 2026 |agency=TNT Sports |date=29 August 2026}}</ref>
+{|
+|-
+||
+{{cyclingresult start|title=Stage 8 Result<ref name="CN-8">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-bryan-coquard-edges-mads-pedersen-to-win-crash-marred-stage-8-as-tadej-pogacar-abandons/|title=Vuelta a España: Bryan Coquard edges out Mads Pedersen to win crash-marred stage 8 as Tadej Pogačar abandons|first=Dani|last=Ostanek|work=Cycling News|date=29 August 2026|access-date=29 August 2026}}</ref><ref name="Stage-8">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-8/rankings|title=La Vuelta – 8 – Puçol > Xeraco|publisher=[[Tissot Timing]]|date=29 August 2026|access-date=29 August 2026}}</ref>}}
+{{cyclingresult|1|[[Bryan Coquard]]|FRA|{{UCI team code|COF men|2026}}|3h 47' 06"}}
+{{cyclingresult|2|[[Mads Pedersen]]|DEN|{{UCI team code|LTK men|2026}}|+ 0"}}
+{{cyclingresult|3|[[Jordi Meeus]]|BEL|{{UCI team code|RBH|2026}}|+ 0"}}
+{{cyclingresult|4|[[Ben Turner (cyclist)|Ben Turner]]|GBR|{{UCI team code|NCI|2026b}}|+ 0"}}
+{{cyclingresult|5|[[Jordan Labrosse]]|FRA|{{UCI team code|DCT|2026}}|+ 0"|{{cjersey|red number}}}}
+{{cyclingresult|6|[[Alessandro Romele]]|ITA|{{UCI team code|XAT|2026}}|+ 0"}}
+{{cyclingresult|7|[[Bastien Tronchon]]|FRA|{{UCI team code|GFC|2026}}|+ 0"}}
+{{cyclingresult|8|[[Hugo Hofstetter]]|FRA|{{UCI team code|NSN|2026}}|+ 0"}}
+{{cyclingresult|9|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2026}}|+ 0"}}
+{{cyclingresult|10|[[Matthew Brennan (cyclist)|Matthew Brennan]]|GBR|{{UCI team code|TVL men|2026}}|+ 0"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 8<ref name="CN-8" /><ref name="Stage-8" />}}
+{{cyclingresult|1|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|23h 23' 33"|{{cjersey|red}}}}
+{{cyclingresult|2|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 1' 00"}}
+{{cyclingresult|3|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 1' 11"|{{cjersey|red number}}}}
+{{cyclingresult|4|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 2' 15"}}
+{{cyclingresult|5|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 2' 16"|{{cjersey|white}}}}
+{{cyclingresult|6|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 2' 22"}}
+{{cyclingresult|7|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 3' 27"}}
+{{cyclingresult|8|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 3' 56"}}
+{{cyclingresult|9|[[Gregor Mühlberger]]|AUT|{{UCI team code|DCT|2026}}|+ 5' 39"|{{cjersey|red number}}}}
+{{cyclingresult|10|[[Jakob Omrzel]]|SLO|{{UCI team code|TBV|2026}}|+ 6' 04"}}
+{{cyclingresult end}}
+|}
+
+== Stage 9 ==
+;30 August 2026 – [[Villajoyosa]] to [[Aitana (mountain)|Alto de Aitana]], {{convert|187.5|km|abbr=on}}
+{|
+|-
+||
+{{cyclingresult start|title=Stage 9 Result<ref name="CN-9">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-race-leader-enric-mas-outsprints-oscar-onley-to-win-stage-9-on-alto-de-aitana/|title=Vuelta a España: Race leader Enric Mas outsprints Oscar Onley to win stage 9 on Alto de Aitana|first=Dani|last=Ostanek|work=Cycling News|date=30 August 2026|access-date=30 August 2026}}</ref><ref name="Stage-9">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-9/rankings|title=La Vuelta – 9 – La Vila Joiosa/ Villajoyosa > Alto de Aitana. Costa Blanca|publisher=[[Tissot Timing]]|date=30 August 2026|access-date=30 August 2026}}</ref>}}
+{{cyclingresult|1|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|5h 10' 40"|{{cjersey|red}}}}
+{{cyclingresult|2|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 0"|{{cjersey|white}}}}
+{{cyclingresult|3|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 12"}}
+{{cyclingresult|4|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 18"|{{cjersey|red number}}}}
+{{cyclingresult|5|[[Cristián Rodríguez (cyclist)|Cristián Rodríguez]]|ESP|{{UCI team code|XAT|2026}}|+ 20"}}
+{{cyclingresult|6|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 20"}}
+{{cyclingresult|7|[[Jarno Widar]]|BEL|{{UCI team code|LOI|2026}}|+ 25"}}
+{{cyclingresult|8|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 33"}}
+{{cyclingresult|9|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 54"}}
+{{cyclingresult|10|[[Santiago Buitrago]]|COL|{{UCI team code|TBV|2026}}|+ 1 '41"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 9<ref name="CN-9" /><ref name="Stage-9" />}}
+{{cyclingresult|1|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|28h 34' 03"|{{cjersey|red}}}}
+{{cyclingresult|2|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 1' 18"}}
+{{cyclingresult|3|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 1' 39"|{{cjersey|red number}}}}
+{{cyclingresult|4|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 2' 20"|{{cjersey|white}}}}
+{{cyclingresult|5|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 3' 26"}}
+{{cyclingresult|6|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 3' 55"}}
+{{cyclingresult|7|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 4' 09"}}
+{{cyclingresult|8|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 4' 39"}}
+{{cyclingresult|9|[[Gregor Mühlberger]]|AUT|{{UCI team code|DCT|2026}}|+ 7' 33"|{{cjersey|red number}}}}
+{{cyclingresult|10|[[Jakob Omrzel]]|SLO|{{UCI team code|TBV|2026}}|+ 8' 05"}}
+{{cyclingresult end}}
+|}
+
+== Rest day 1 ==
+;31 August 2026  
+
+== Stage 10 ==
+;1 September 2026 – [[Alcaraz, Spain|Alcaraz]] to [[Elche de la Sierra]], {{convert|184.5|km|abbr=on}}
+
+{|
+|-
+||
+{{cyclingresult start|title=Stage 10 Result<ref name="CN-10">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/vuelta-a-espana-bastien-tronchon-stuns-field-with-stage-10-victory/|title=Vuelta a España: Bastien Tronchon stuns field with stage 10 victory|first=Matilde|last=Price|work=Cycling News|date=1 September 2026|access-date=1 September 2026}}</ref><ref name="Stage-10">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-10/rankings|title=La Vuelta – 10 – Alcaraz > Elche de la Sierra|publisher=[[Tissot Timing]]|date=1 September 2026|access-date=1 September 2026}}</ref>}}
+{{cyclingresult|1|[[Bastien Tronchon]]|FRA|{{UCI team code|GFC|2026}}|4h 07' 41"}}
+{{cyclingresult|2|[[Magnus Cort]]|DEN|{{UCI team code|UXT men|2026}}|+ 0"}}
+{{cyclingresult|3|[[Thibau Nys]]|BEL|{{UCI team code|LTK men|2026}}|+ 0"}}
+{{cyclingresult|4|[[Wout van Aert]]|BEL|{{UCI team code|TVL men|2026}}|+ 0"|{{cjersey|dark green}}}}
+{{cyclingresult|5|[[Alessandro Romele]]|ITA|{{UCI team code|XAT|2026}}|+ 0"}}
+{{cyclingresult|6|[[Xabier Azparren]]|ESP|{{UCI team code|Q36|2026}}|+ 0"}}
+{{cyclingresult|7|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 0"}}
+{{cyclingresult|8|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2026}}|+ 0"}}
+{{cyclingresult|9|[[Jordan Labrosse]]|FRA|{{UCI team code|DAT|2026}}|+ 0"|{{cjersey|red number}}}}
+{{cyclingresult|10|[[Hugo Hofstetter]]|FRA|{{UCI team code|NSN|2026}}|+ 0"}}
+{{cyclingresult end}}
+||
+||
+{{cyclingresult start|title=General classification after Stage 10<ref name="CN-10" /><ref name="Stage-10" />}}
+{{cyclingresult|1|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|32h 41' 44"|{{cjersey|red}}}}
+{{cyclingresult|2|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 1' 18"}}
+{{cyclingresult|3|[[Felix Gall]]|AUT|{{UCI team code|DCT|2026}}|+ 1' 39"|{{cjersey|red number}}}}
+{{cyclingresult|4|[[Oscar Onley]]|GBR|{{UCI team code|NCI|2026b}}|+ 2' 20"|{{cjersey|white}}}}
+{{cyclingresult|5|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 3' 26"}}
+{{cyclingresult|6|[[Mattias Skjelmose]]|DEN|{{UCI team code|LTK men|2026}}|+ 3' 55"}}
+{{cyclingresult|7|[[Sepp Kuss]]|USA|{{UCI team code|TVL men|2026}}|+ 4' 09"}}
+{{cyclingresult|8|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 4' 39"}}
+{{cyclingresult|9|[[Gregor Mühlberger]]|AUT|{{UCI team code|DCT|2026}}|+ 7' 33"|{{cjersey|red number}}}}
+{{cyclingresult|10|[[Jakob Omrzel]]|SLO|{{UCI team code|TBV|2026}}|+ 8' 05"}}
+{{cyclingresult end}}
+|}
+
+== Stage 11 ==
+;2 September 2026 – [[Cartagena, Spain|Cartagena]] to [[Lorca, Spain|Lorca]], {{convert|156.1|km|abbr=on}}
+
+== Stage 12 ==
+;3 September 2026 – [[Vera, Spain|Vera]] to [[Calar Alto]], {{convert|166.5|km|abbr=on}}
+== References ==
+{{reflist|30em|refs=
+}}
+
+== External links ==
+{{Cycling stage recaps|2026 Vuelta a España|1|11|12|21}}
+
+[[Category:2026 Vuelta a España]]
+[[Category:Vuelta a España stages]]
+[[Category:August 2026 sports events in France]]
+[[Category:Cycle races in Andorra]]
+[[Category:Cycle races in France]]
+[[Category:2026 in Andorran sport]]

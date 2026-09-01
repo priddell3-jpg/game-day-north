@@ -1479,10 +1479,14 @@ function attachRugby(rows){
   return built.length;
 }
 
+/* "Stage 10" and "Stage 18 (ITT)" both name a stage number; a one-day
+   race names none. Matching on the number rather than on position in
+   the list keeps the mapping right when a day carries no entry. */
+const stageNumber = g => { const m = /^Stage\s+(\d+)/.exec((g && g.stage) || ""); return m ? +m[1] : null; };
+
 /* Stage podiums and the race lead are results: they arrive from the
    committed file or they don't exist. Nothing here invents one. */
 function attachCycling(races){
-  const today = ymd(new Date());
   // "Vuelta a España" must match "La Vuelta Ciclista a España" — plain
   // substring fails on the word in the middle, so match on tokens: every
   // significant word of the shorter name appearing in the longer one.
@@ -1508,10 +1512,14 @@ function attachCycling(races){
       if(st.finishUtc) g.finishUtc = st.finishUtc;
     });
     if(moved) GAMES.sort((a,b)=>a.start-b.start);
-    // the current lead belongs on the most recent stage that has happened
-    if(rc.leader && !rc.oneDay){
-      const past = mine.filter(x=>localKey(x.start)<=today).sort((a,b)=>b.start-a.start);
-      if(past[0]) past[0].leader = rc.leader;
+    /* The lead belongs on the stage the standings were actually read
+       after, which is not always the most recent stage that has
+       happened — Wikipedia publishes a finished stage's result before
+       its standings. A leader with no known stage is not a current fact
+       and is attached to nothing. */
+    if(rc.leader && rc.leaderStage && !rc.oneDay){
+      const g = mine.find(x=>stageNumber(x) === rc.leaderStage);
+      if(g){ g.leader = rc.leader; g.leaderStage = rc.leaderStage; }
     }
   });
 }
@@ -2292,6 +2300,13 @@ function orderedTeams(g){
 }
 const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
 
+/* The lead is only ever shown with the stage it was read after, so a
+   reader can tell a standing from this morning apart from one that has
+   not moved in days. Without that stage it is not shown at all. */
+const leadNote = g => (g.leader && g.leaderStage)
+  ? '<span class="conf-note leader">'+esc(g.leader)+' · leads after stage '+g.leaderStage+'</span>'
+  : '';
+
 /* A race is an event, not a matchup: one name, a stage, a route, and no
    scoreline. It shares the row grid so the columns still line up. */
 function eventRow(g, now){
@@ -2332,7 +2347,7 @@ function eventRow(g, now){
     // the stage has a result — today or not, that beats a status line
     if(reveal){
       right += '<span class="podium">'+g.podium.map((n,i)=>(i+1)+'. '+esc(n)).join('<br>')+'</span>'
-        + (g.leader ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>' : '');
+        + leadNote(g);
     } else {
       right += '<button class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal</button>'
         + '<span class="score-state">Result &middot; hidden</span>';
@@ -2343,17 +2358,17 @@ function eventRow(g, now){
         + '<span class="score-state">'+(g.finishUtc ? 'Est. finish '+esc(fmtTime(g.finishUtc)) : 'Race day')+'</span>';
     } else if(g.finishUtc && now > g.finishUtc){
       right += '<span class="score-state">Finished</span>'
-        + (g.leader && reveal ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>'
+        + ((g.leader && g.leaderStage && reveal) ? leadNote(g)
                               : '<span class="conf-note">Awaiting result</span>');
     } else {
       right += '<span class="score-state live"><span class="dot-live"></span>Racing now</span>'
-        + (g.leader && reveal ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>'
+        + ((g.leader && g.leaderStage && reveal) ? leadNote(g)
           : g.finishUtc ? '<span class="conf-note">Est. finish '+esc(fmtTime(g.finishUtc))+'</span>'
           : '<span class="conf-note">Start times vary</span>');
     }
   } else {
     right += '<span class="score-state">Finished</span>'
-      + (g.leader && reveal ? '<span class="conf-note leader">Race lead: '+esc(g.leader)+'</span>' : '');
+      + (reveal ? leadNote(g) : '');
   }
   right += '</div>';
 
@@ -2872,6 +2887,16 @@ function renderCalendar(now, todayKey){
   return welcomeBanner()+renderFilters()+head+grid+detail;
 }
 
+/* A stage on today's card is not racing all day. The rail follows the
+   same clock the row does: the start time until it starts, a live dot
+   only while it is actually on, and "Finished" once the expected
+   arrival has passed. With no published timetable there is no clock to
+   follow, and the day is all that is honestly known. */
+const railEventMeta = (g, now) => (g.timeKnown && now < g.start) ? esc(fmtTime(g.start))
+  : (g.finishUtc && now > g.finishUtc) ? "Finished"
+  : (g.timeKnown || g.finishUtc) ? '<span class="dot-live"></span>Racing now'
+  : "Racing today";
+
 function renderRail(now, todayKey){
   const el=document.getElementById("rail");
   const today=myGames().filter(g=>localKey(g.start)===todayKey);
@@ -2892,7 +2917,7 @@ function renderRail(now, todayKey){
       const r=resolveRights(g);
       return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
         + '<div class="rail-row"><span class="t" style="color:var(--panel-muted)">'+esc(g.stage||"")+'</span></div>'
-        + '<div class="rail-meta"><span class="dot-live"></span>Racing today<span>&middot;</span><span>'
+        + '<div class="rail-meta">'+railEventMeta(g, now)+'<span>&middot;</span><span>'
         + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
     }
     const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
