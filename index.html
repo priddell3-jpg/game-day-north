@@ -1479,13 +1479,13 @@ function attachRugby(rows){
   return built.length;
 }
 
-/* Stage podiums and the race lead are results: they arrive from the
-   committed file or they don't exist. Nothing here invents one. */
 /* "Stage 10" and "Stage 18 (ITT)" both name a stage number; a one-day
    race names none. Matching on the number rather than on position in
    the list keeps the mapping right when a day carries no entry. */
 const stageNumber = g => { const m = /^Stage\s+(\d+)/.exec((g && g.stage) || ""); return m ? +m[1] : null; };
 
+/* Stage podiums and the race lead are results: they arrive from the
+   committed file or they don't exist. Nothing here invents one. */
 function attachCycling(races){
   // "Vuelta a España" must match "La Vuelta Ciclista a España" — plain
   // substring fails on the word in the middle, so match on tokens: every
