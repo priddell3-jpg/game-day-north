@@ -56,6 +56,28 @@ export function gcStageFrom(text){
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/** The freshest leader among everything a run has to offer. Each
+    candidate is [name, stage]; the highest stage number wins, and a
+    candidate carrying no usable stage number cannot compete at all —
+    standings of unknown age are not evidence about the present.
+
+    Ties go to whichever was offered first, so the value carried from
+    the previous run is offered last: a fresh parse of the same stage
+    supersedes it, an older parse does not. That ordering is the whole
+    point. A Grand Tour splits its stages across articles that are only
+    created once the race reaches them, so a run can easily read "GC
+    after stage 11" while the article holding stage 12 onwards is still
+    unborn, and letting any successful parse overwrite the carried
+    leader would walk the standings backwards. */
+export function freshestLeader(candidates){
+  let name = null, stage = 0;
+  for(const c of (candidates || [])){
+    const n = c && c[0], s = c && c[1];
+    if(n && Number.isFinite(s) && s > stage){ name = n; stage = s; }
+  }
+  return name ? {leader:name, leaderStage:stage} : null;
+}
+
 export function stageSections(text){
   // "==Stage 4==" headings, tolerant of spacing and === depth
   const found = {};

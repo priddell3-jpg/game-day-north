@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  resultBlocks, ridersInBlock, isGCBlock, gcLeaderFrom, gcStageFrom, stageSections,
-  titleWords, titleMatches
+  resultBlocks, ridersInBlock, isGCBlock, gcLeaderFrom, gcStageFrom, freshestLeader,
+  stageSections, titleWords, titleMatches
 } from "../scripts/lib/cycling.mjs";
 
 const here = new URL(".", import.meta.url);
@@ -178,4 +178,60 @@ test("a standings table with no readable stage number yields no stage", () => {
 test("the earlier snapshot still reads as stage 1", () => {
   assert.equal(gcStageFrom(gcText), 1);
   assert.equal(gcLeaderFrom(gcText), "Tadej Pogačar");
+});
+
+/* --- which leader a run settles on --- */
+
+/* The fetch script offers every source it parsed, then the value it
+   carried from the previous run, and takes the freshest. These pin the
+   ordering, because getting it wrong is silent: the site goes on
+   showing a name, just the wrong one. */
+
+test("a carried stage-12 leader survives a run that only reads stage 11", () => {
+  // stages 12+ live in a split article that is not created until the
+  // race reaches them, and the redirect guard rejects the unborn title.
+  // A run that reads only the stage 1-11 article must not walk back.
+  const parsedFromStages11 = ["Enric Mas", 11];
+  const carriedFromLastRun = ["Jonas Vingegaard", 12];
+  assert.deepEqual(freshestLeader([parsedFromStages11, carriedFromLastRun]),
+    {leader: "Jonas Vingegaard", leaderStage: 12});
+});
+
+test("a fresher parse still outranks the carried value", () => {
+  assert.deepEqual(freshestLeader([["Enric Mas", 12], ["Jonas Vingegaard", 11]]),
+    {leader: "Enric Mas", leaderStage: 12});
+});
+
+test("a re-read of the same stage supersedes the carried value", () => {
+  // the carried value is offered last, so a correction Wikipedia makes
+  // to standings already read is not locked out
+  assert.deepEqual(freshestLeader([["Corrected", 10], ["Stale", 10]]),
+    {leader: "Corrected", leaderStage: 10});
+});
+
+test("a carried leader of unknown age cannot outrank anything", () => {
+  assert.deepEqual(freshestLeader([["Parsed", 1], ["Carried", null]]),
+    {leader: "Parsed", leaderStage: 1});
+  assert.deepEqual(freshestLeader([["Parsed", 1], ["Carried", undefined]]),
+    {leader: "Parsed", leaderStage: 1});
+});
+
+test("nothing usable yields nothing, so the caller keeps what it had", () => {
+  assert.equal(freshestLeader([]), null);
+  assert.equal(freshestLeader([[null, 9], ["", 3]]), null);
+  assert.equal(freshestLeader([["Nameless stage", 0]]), null);
+  assert.equal(freshestLeader(), null);
+});
+
+test("a stage number that is not a number is not a stage number", () => {
+  assert.equal(freshestLeader([["Someone", "11"]]), null);
+  assert.equal(freshestLeader([["Someone", NaN]]), null);
+});
+
+test("the whole order of offers a real run makes, in one go", () => {
+  // stage blocks ascending, then the main article, then the carried value
+  const offers = [["Pogačar", 7], ["Mas", 8], ["Mas", 9], ["Mas", 10],
+                  ["Mas", 10],            // main article's caption
+                  ["Vingegaard", 12]];    // carried from the previous run
+  assert.deepEqual(freshestLeader(offers), {leader: "Vingegaard", leaderStage: 12});
 });

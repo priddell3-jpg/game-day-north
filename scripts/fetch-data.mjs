@@ -17,8 +17,8 @@
  */
 import { writeFileSync, readFileSync } from "node:fs";
 import { easternDate } from "./lib/dates.mjs";
-import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, stageSections,
-         titleWords, titleMatches } from "./lib/cycling.mjs";
+import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, freshestLeader,
+         stageSections, titleWords, titleMatches } from "./lib/cycling.mjs";
 import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
 
@@ -473,14 +473,10 @@ try{
           const sections = {};
           texts.forEach(t=>Object.assign(sections, stageSections(t)));
           const fresh = [];
-          /* Every source that parses this run offers a leader together
-             with the stage its standings are current to, and the highest
-             stage number wins. Freshness is compared, not assumed: the
-             carried value is only used when nothing at all parsed. */
-          let bestLeader = null, bestStage = 0;
-          const offer = (name, stage) => {
-            if(name && stage > bestStage){ bestLeader = name; bestStage = stage; }
-          };
+          /* Every source offers a leader together with the stage its
+             standings are current to, and the freshest offer wins.
+             Freshness is compared, not assumed. */
+          const offers = [];
           rc.dates.forEach((date, i)=>{
             if(date > todayISO) return;
             const sec = sections[i+1];
@@ -492,7 +488,7 @@ try{
                day's GC was ever consulted — which froze the leader at a
                rider who had since abandoned the race. */
             const gcBlock = blocks.filter(isGCBlock)[0];
-            if(gcBlock) offer(ridersInBlock(gcBlock, 1)[0], i + 1);
+            if(gcBlock) offers.push([ridersInBlock(gcBlock, 1)[0], i + 1]);
             const kept = settled(date);
             if(kept && date < todayISO){ fresh.push(kept); return; }
             if(!blocks.length) return;
@@ -512,9 +508,18 @@ try{
              reached, because a carried value is always truthy. */
           for(const t of texts){
             const at = gcStageFrom(t);
-            if(at) offer(gcLeaderFrom(t), at);
+            if(at) offers.push([gcLeaderFrom(t), at]);
           }
-          if(bestLeader){ leader = bestLeader; leaderStage = bestStage; }
+          /* The value carried from the previous run competes rather than
+             being replaced by whatever happened to parse. It is offered
+             last, so a fresh reading of the same stage supersedes it
+             while an older one cannot: stages 12 onwards live in a split
+             article that does not exist until the race reaches them, and
+             on a run that reaches only the stage 1-11 article, its "GC
+             after stage 11" must not walk a stage-12 leader backwards. */
+          offers.push([leader, leaderStage]);
+          const pick = freshestLeader(offers);
+          if(pick){ leader = pick.leader; leaderStage = pick.leaderStage; }
         }
       }
     }
