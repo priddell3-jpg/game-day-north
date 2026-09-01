@@ -31,13 +31,29 @@ export function ridersInBlock(block, n){
   return out.slice(0, n);
 }
 
+/* The main article's standings are a wikitable, captioned "General
+   classification after stage 10". The caption is read for both the
+   leader and the stage it is current to, because a leader whose age is
+   unknown cannot be compared against one read from a stage section. */
+const GC_CAPTION = /\|\+\s*General classification after stage\s*(\d+)?/i;
+
 export function gcLeaderFrom(text){
-  const at = text.search(/\|\+\s*General classification after stage/i);
+  const at = text.search(GC_CAPTION);
   if(at < 0) return null;
   const seg = text.slice(at, at + 4000);
   const m = seg.match(/\{\{\s*Flag athlete\s*\|\s*\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/i);
   if(!m) return null;
   return (m[2] || m[1]).replace(/\s+/g," ").trim();
+}
+
+/** Which stage the standings table is current to. A table whose caption
+    carries no readable stage number yields nothing rather than a leader
+    of unknown age: the same rule as a podium that cannot be parsed
+    cleanly, applied to freshness instead of to names. */
+export function gcStageFrom(text){
+  const m = text.match(GC_CAPTION);
+  const n = m && m[1] ? Number(m[1]) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
 export function stageSections(text){
