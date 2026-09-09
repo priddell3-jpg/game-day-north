@@ -280,7 +280,11 @@ test("a copy with no venue cannot erase one already known", () => {
 });
 
 test("the build fills a venue when only one of the two endpoints states it", () => {
-  const add = /function add\(f\)\{[\s\S]*?\n\}/.exec(build)[0];
-  assert.match(add, /f\.venue = fixtures\[i\]\.venue/);
-  assert.match(add, /fixtures\[i\]\.venue = f\.venue/);
+  /* Two readings of one fixture are reconciled in merge(), which add()
+     calls from both the id-keyed path and the scan it kept for records
+     that carry no id. The assertion moved with the code; what it
+     protects has not changed. */
+  const merge = /function merge\(held, f\)\{[\s\S]*?\n\}/.exec(build)[0];
+  assert.match(merge, /if\(!f\.venue && held\.venue\) f\.venue = held\.venue;/);
+  assert.match(merge, /if\(!held\.venue && f\.venue\) held\.venue = f\.venue;/);
 });
