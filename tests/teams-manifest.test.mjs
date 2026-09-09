@@ -201,16 +201,27 @@ test("the validator's tables match the page's own", () => {
   assert.deepEqual(SOCCER_COMPS, Object.keys(P.SOCCER));
 });
 
-test("nothing reads the manifest yet", () => {
-  /* This is what makes this change behaviour-neutral, and it is the
-     thing most likely to be broken by accident in the next commit. The
-     migration is its own reviewed change; until it happens the six lists
-     stay exactly where they are. */
-  for(const file of ["src/page.html", "scripts/fetch-data.mjs", "build.js"]){
-    const src = readFileSync(new URL(file, root), "utf8");
-    assert.ok(!/teams\.json/.test(src), file + " reads the manifest — that is the migration, not this change");
-    assert.ok(!/lib\/teams\.mjs/.test(src), file + " imports the manifest module");
-  }
+test("the page carries the manifest inline, and asks for nothing at run time", () => {
+  /* This test used to assert the opposite — that nothing read the
+     manifest — because #18 deliberately shipped it with no consumers.
+     That was its whole purpose and this change is the migration it was
+     waiting for, so the assertion inverts rather than disappears.
+
+     What it protects now is the property that made inlining the right
+     answer: the page is one self-contained file and fetches no team data
+     of its own. */
+  const built = readFileSync(new URL("index.html", root), "utf8");
+  const inlined = /const TEAM_MANIFEST = (\{[\s\S]*?\});/.exec(built);
+  assert.ok(inlined, "the built page must carry the manifest");
+  const carried = JSON.parse(inlined[1]);
+  assert.equal(carried.teams.length, manifest.teams.length);
+  assert.deepEqual(carried, manifest, "and it must be the committed manifest, unaltered");
+  assert.ok(!/fetch\([^)]*teams\.json/.test(built), "and never fetch it");
+
+  /* The test helper performs the same substitution, so what these tests
+     evaluate is what ships rather than the empty placeholder. */
+  const src = readFileSync(new URL("src/page.html", root), "utf8");
+  assert.match(src, /\/\*__TEAMS_MANIFEST__\*\//, "the placeholder marker must survive");
 });
 
 /* ============================ the generator cannot clobber ============================ */

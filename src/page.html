@@ -598,6 +598,18 @@ main{padding:22px 0 80px}
 "use strict";
 
 /* ============================================================
+   THE TEAM MANIFEST
+
+   data/teams.json, substituted in at build time by build.js. One
+   self-contained file, no request for its own team data.
+
+   In src/page.html this is a placeholder; scripts/lib/inline.cjs puts
+   the real thing here, and tests/helpers/page.mjs performs the same
+   substitution so the tests evaluate what ships.
+   ============================================================ */
+const TEAM_MANIFEST = /*__TEAMS_MANIFEST__*/null;
+
+/* ============================================================
    COMPETITIONS — the rights-bearing entity, not the team.
    A club like Liverpool enters several of these in one season
    and lands on a different Canadian service in each.

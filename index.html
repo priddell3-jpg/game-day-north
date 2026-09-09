@@ -609,6 +609,782 @@ main{padding:22px 0 80px}
 "use strict";
 
 /* ============================================================
+   THE TEAM MANIFEST
+
+   data/teams.json, substituted in at build time by build.js. One
+   self-contained file, no request for its own team data.
+
+   In src/page.html this is a placeholder; scripts/lib/inline.cjs puts
+   the real thing here, and tests/helpers/page.mjs performs the same
+   substitution so the tests evaluate what ships.
+   ============================================================ */
+const TEAM_MANIFEST = {
+ "version": 1,
+ "checked": "2026-09-09",
+ "source": "Generated from TEAM_ROWS, ROSTER, CLUB_NAMES, ESPN_NAME, ALIASES, EXTRA and DEFAULT_TEAMS by scripts/generate-teams.mjs. ESPN team ids read from the /teams endpoint of each league.",
+ "defaults": [
+  "van-nhl",
+  "van-mls",
+  "tor-mlb",
+  "tor-nba",
+  "liv"
+ ],
+ "teams": [
+  {
+   "id": "tor-nhl",
+   "comp": "NHL",
+   "espn": "21",
+   "city": "Toronto",
+   "name": "Maple Leafs",
+   "abbr": "TOR",
+   "tz": "ET",
+   "color": "#00205B",
+   "feedName": "Toronto Maple Leafs"
+  },
+  {
+   "id": "van-nhl",
+   "comp": "NHL",
+   "espn": "22",
+   "city": "Vancouver",
+   "name": "Canucks",
+   "abbr": "VAN",
+   "tz": "PT",
+   "color": "#00205B",
+   "feedName": "Vancouver Canucks"
+  },
+  {
+   "id": "edm",
+   "comp": "NHL",
+   "espn": "6",
+   "city": "Edmonton",
+   "name": "Oilers",
+   "abbr": "EDM",
+   "tz": "MT",
+   "color": "#FF4C00",
+   "feedName": "Edmonton Oilers"
+  },
+  {
+   "id": "cgy",
+   "comp": "NHL",
+   "espn": "3",
+   "city": "Calgary",
+   "name": "Flames",
+   "abbr": "CGY",
+   "tz": "MT",
+   "color": "#C8102E",
+   "feedName": "Calgary Flames"
+  },
+  {
+   "id": "ott",
+   "comp": "NHL",
+   "espn": "14",
+   "city": "Ottawa",
+   "name": "Senators",
+   "abbr": "OTT",
+   "tz": "ET",
+   "color": "#B01034",
+   "feedName": "Ottawa Senators"
+  },
+  {
+   "id": "mtl-nhl",
+   "comp": "NHL",
+   "espn": "10",
+   "city": "Montréal",
+   "name": "Canadiens",
+   "abbr": "MTL",
+   "tz": "ET",
+   "color": "#AF1E2D",
+   "feedName": "Montreal Canadiens"
+  },
+  {
+   "id": "wpg",
+   "comp": "NHL",
+   "espn": "28",
+   "city": "Winnipeg",
+   "name": "Jets",
+   "abbr": "WPG",
+   "tz": "CT",
+   "color": "#041E42",
+   "feedName": "Winnipeg Jets"
+  },
+  {
+   "id": "bos-nhl",
+   "comp": "NHL",
+   "espn": "1",
+   "city": "Boston",
+   "name": "Bruins",
+   "abbr": "BOS",
+   "tz": "ET",
+   "color": "#1B1B1B",
+   "feedName": "Boston Bruins"
+  },
+  {
+   "id": "nyr",
+   "comp": "NHL",
+   "espn": "13",
+   "city": "New York",
+   "name": "Rangers",
+   "abbr": "NYR",
+   "tz": "ET",
+   "color": "#0038A8",
+   "feedName": "New York Rangers"
+  },
+  {
+   "id": "vgk",
+   "comp": "NHL",
+   "espn": "37",
+   "city": "Vegas",
+   "name": "Golden Knights",
+   "abbr": "VGK",
+   "tz": "PT",
+   "color": "#8C7443",
+   "feedName": "Vegas Golden Knights"
+  },
+  {
+   "id": "sea-nhl",
+   "comp": "NHL",
+   "espn": "124292",
+   "city": "Seattle",
+   "name": "Kraken",
+   "abbr": "SEA",
+   "tz": "PT",
+   "color": "#001628",
+   "feedName": "Seattle Kraken"
+  },
+  {
+   "id": "col",
+   "comp": "NHL",
+   "espn": "17",
+   "city": "Colorado",
+   "name": "Avalanche",
+   "abbr": "COL",
+   "tz": "MT",
+   "color": "#6F263D",
+   "feedName": "Colorado Avalanche"
+  },
+  {
+   "id": "tor-nba",
+   "comp": "NBA",
+   "espn": "28",
+   "city": "Toronto",
+   "name": "Raptors",
+   "abbr": "TOR",
+   "tz": "ET",
+   "color": "#CE1141",
+   "feedName": "Toronto Raptors"
+  },
+  {
+   "id": "gsw",
+   "comp": "NBA",
+   "espn": "9",
+   "city": "Golden State",
+   "name": "Warriors",
+   "abbr": "GSW",
+   "tz": "PT",
+   "color": "#1D428A",
+   "feedName": "Golden State Warriors"
+  },
+  {
+   "id": "lal",
+   "comp": "NBA",
+   "espn": "13",
+   "city": "Los Angeles",
+   "name": "Lakers",
+   "abbr": "LAL",
+   "tz": "PT",
+   "color": "#552583",
+   "feedName": "Los Angeles Lakers"
+  },
+  {
+   "id": "bos-nba",
+   "comp": "NBA",
+   "espn": "2",
+   "city": "Boston",
+   "name": "Celtics",
+   "abbr": "BOS",
+   "tz": "ET",
+   "color": "#007A33",
+   "feedName": "Boston Celtics"
+  },
+  {
+   "id": "den",
+   "comp": "NBA",
+   "espn": "7",
+   "city": "Denver",
+   "name": "Nuggets",
+   "abbr": "DEN",
+   "tz": "MT",
+   "color": "#0E2240",
+   "feedName": "Denver Nuggets"
+  },
+  {
+   "id": "okc",
+   "comp": "NBA",
+   "espn": "25",
+   "city": "Oklahoma City",
+   "name": "Thunder",
+   "abbr": "OKC",
+   "tz": "CT",
+   "color": "#0F5E96",
+   "feedName": "Oklahoma City Thunder"
+  },
+  {
+   "id": "nyk",
+   "comp": "NBA",
+   "espn": "18",
+   "city": "New York",
+   "name": "Knicks",
+   "abbr": "NYK",
+   "tz": "ET",
+   "color": "#D55118",
+   "feedName": "New York Knicks"
+  },
+  {
+   "id": "sea-nfl",
+   "comp": "NFL",
+   "espn": "26",
+   "city": "Seattle",
+   "name": "Seahawks",
+   "abbr": "SEA",
+   "tz": "PT",
+   "color": "#002244",
+   "feedName": "Seattle Seahawks"
+  },
+  {
+   "id": "buf",
+   "comp": "NFL",
+   "espn": "2",
+   "city": "Buffalo",
+   "name": "Bills",
+   "abbr": "BUF",
+   "tz": "ET",
+   "color": "#00338D",
+   "feedName": "Buffalo Bills"
+  },
+  {
+   "id": "sf",
+   "comp": "NFL",
+   "espn": "25",
+   "city": "San Francisco",
+   "name": "49ers",
+   "abbr": "SF",
+   "tz": "PT",
+   "color": "#8E0000",
+   "feedName": "San Francisco 49ers"
+  },
+  {
+   "id": "kc",
+   "comp": "NFL",
+   "espn": "12",
+   "city": "Kansas City",
+   "name": "Chiefs",
+   "abbr": "KC",
+   "tz": "CT",
+   "color": "#C41230",
+   "feedName": "Kansas City Chiefs"
+  },
+  {
+   "id": "dal",
+   "comp": "NFL",
+   "espn": "6",
+   "city": "Dallas",
+   "name": "Cowboys",
+   "abbr": "DAL",
+   "tz": "CT",
+   "color": "#041E42",
+   "feedName": "Dallas Cowboys"
+  },
+  {
+   "id": "phi",
+   "comp": "NFL",
+   "espn": "21",
+   "city": "Philadelphia",
+   "name": "Eagles",
+   "abbr": "PHI",
+   "tz": "ET",
+   "color": "#004C54",
+   "feedName": "Philadelphia Eagles"
+  },
+  {
+   "id": "det",
+   "comp": "NFL",
+   "espn": "8",
+   "city": "Detroit",
+   "name": "Lions",
+   "abbr": "DET",
+   "tz": "ET",
+   "color": "#0076B6",
+   "feedName": "Detroit Lions"
+  },
+  {
+   "id": "tor-mlb",
+   "comp": "MLB",
+   "espn": "14",
+   "city": "Toronto",
+   "name": "Blue Jays",
+   "abbr": "TOR",
+   "tz": "ET",
+   "color": "#134A8E",
+   "feedName": "Toronto Blue Jays"
+  },
+  {
+   "id": "sea-mlb",
+   "comp": "MLB",
+   "espn": "12",
+   "city": "Seattle",
+   "name": "Mariners",
+   "abbr": "SEA",
+   "tz": "PT",
+   "color": "#0C2C56",
+   "feedName": "Seattle Mariners"
+  },
+  {
+   "id": "lad",
+   "comp": "MLB",
+   "espn": "19",
+   "city": "Los Angeles",
+   "name": "Dodgers",
+   "abbr": "LAD",
+   "tz": "PT",
+   "color": "#005A9C",
+   "feedName": "Los Angeles Dodgers"
+  },
+  {
+   "id": "nyy",
+   "comp": "MLB",
+   "espn": "10",
+   "city": "New York",
+   "name": "Yankees",
+   "abbr": "NYY",
+   "tz": "ET",
+   "color": "#132448",
+   "feedName": "New York Yankees"
+  },
+  {
+   "id": "bos-mlb",
+   "comp": "MLB",
+   "espn": "2",
+   "city": "Boston",
+   "name": "Red Sox",
+   "abbr": "BOS",
+   "tz": "ET",
+   "color": "#A72A38",
+   "feedName": "Boston Red Sox"
+  },
+  {
+   "id": "cle",
+   "comp": "MLB",
+   "espn": "5",
+   "city": "Cleveland",
+   "name": "Guardians",
+   "abbr": "CLE",
+   "tz": "ET",
+   "color": "#00385D",
+   "feedName": "Cleveland Guardians"
+  },
+  {
+   "id": "liv",
+   "comp": "EPL",
+   "espn": "364",
+   "city": "Liverpool",
+   "name": "Liverpool",
+   "abbr": "LIV",
+   "tz": "UK",
+   "color": "#B3122B",
+   "feedName": "Liverpool",
+   "extraComps": [
+    "EFL",
+    "FAC",
+    "UCL"
+   ]
+  },
+  {
+   "id": "ars",
+   "comp": "EPL",
+   "espn": "359",
+   "city": "London",
+   "name": "Arsenal",
+   "abbr": "ARS",
+   "tz": "UK",
+   "color": "#C60912",
+   "feedName": "Arsenal",
+   "extraComps": [
+    "EFL",
+    "FAC",
+    "UCL"
+   ]
+  },
+  {
+   "id": "mci",
+   "comp": "EPL",
+   "espn": "382",
+   "city": "Manchester",
+   "name": "Man City",
+   "abbr": "MCI",
+   "tz": "UK",
+   "color": "#2A87C8",
+   "feedName": "Manchester City",
+   "extraComps": [
+    "EFL",
+    "FAC",
+    "UCL"
+   ]
+  },
+  {
+   "id": "mun",
+   "comp": "EPL",
+   "espn": "360",
+   "city": "Manchester",
+   "name": "Man United",
+   "abbr": "MUN",
+   "tz": "UK",
+   "color": "#C42318",
+   "feedName": "Manchester United",
+   "extraComps": [
+    "EFL",
+    "FAC",
+    "UCL"
+   ]
+  },
+  {
+   "id": "che",
+   "comp": "EPL",
+   "espn": "363",
+   "city": "London",
+   "name": "Chelsea",
+   "abbr": "CHE",
+   "tz": "UK",
+   "color": "#034694",
+   "feedName": "Chelsea",
+   "extraComps": [
+    "EFL",
+    "FAC",
+    "UCL"
+   ]
+  },
+  {
+   "id": "tot",
+   "comp": "EPL",
+   "espn": "367",
+   "city": "London",
+   "name": "Tottenham",
+   "abbr": "TOT",
+   "tz": "UK",
+   "color": "#132257",
+   "feedName": "Tottenham Hotspur",
+   "extraComps": [
+    "EFL",
+    "FAC",
+    "UCL"
+   ]
+  },
+  {
+   "id": "new",
+   "comp": "EPL",
+   "espn": "361",
+   "city": "Newcastle",
+   "name": "Newcastle",
+   "abbr": "NEW",
+   "tz": "UK",
+   "color": "#241F20",
+   "feedName": "Newcastle United",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "rma",
+   "comp": "LALIGA",
+   "espn": "86",
+   "city": "Madrid",
+   "name": "Real Madrid",
+   "abbr": "RMA",
+   "tz": "CET",
+   "color": "#123A78",
+   "feedName": "Real Madrid",
+   "aliases": [
+    "Real Madrid CF"
+   ],
+   "extraComps": [
+    "UCL"
+   ]
+  },
+  {
+   "id": "bar",
+   "comp": "LALIGA",
+   "espn": "83",
+   "city": "Barcelona",
+   "name": "Barcelona",
+   "abbr": "BAR",
+   "tz": "CET",
+   "color": "#8A0038",
+   "feedName": "Barcelona",
+   "aliases": [
+    "FC Barcelona"
+   ],
+   "extraComps": [
+    "UCL"
+   ]
+  },
+  {
+   "id": "bay",
+   "comp": "BUNDES",
+   "espn": "132",
+   "city": "Munich",
+   "name": "Bayern Munich",
+   "abbr": "BAY",
+   "tz": "CET",
+   "color": "#C6052D",
+   "feedName": "Bayern Munich",
+   "aliases": [
+    "Bayern München",
+    "FC Bayern München"
+   ],
+   "extraComps": [
+    "UCL"
+   ]
+  },
+  {
+   "id": "psg",
+   "comp": "LIGUE1",
+   "espn": "160",
+   "city": "Paris",
+   "name": "Paris SG",
+   "abbr": "PSG",
+   "tz": "CET",
+   "color": "#004170",
+   "feedName": "Paris Saint-Germain",
+   "aliases": [
+    "PSG",
+    "Paris SG"
+   ],
+   "extraComps": [
+    "UCL"
+   ]
+  },
+  {
+   "id": "int",
+   "comp": "SERIEA",
+   "espn": "110",
+   "city": "Milan",
+   "name": "Inter Milan",
+   "abbr": "INT",
+   "tz": "CET",
+   "color": "#0B1560",
+   "feedName": "Internazionale",
+   "aliases": [
+    "Inter Milan",
+    "Inter"
+   ],
+   "extraComps": [
+    "UCL"
+   ]
+  },
+  {
+   "id": "van-mls",
+   "comp": "MLS",
+   "espn": "9727",
+   "city": "Vancouver",
+   "name": "Whitecaps FC",
+   "abbr": "VAN",
+   "tz": "PT",
+   "color": "#00245E",
+   "feedName": "Vancouver Whitecaps",
+   "aliases": [
+    "Vancouver Whitecaps FC"
+   ],
+   "displayName": "Vancouver Whitecaps"
+  },
+  {
+   "id": "tfc",
+   "comp": "MLS",
+   "espn": "7318",
+   "city": "Toronto",
+   "name": "Toronto FC",
+   "abbr": "TOR",
+   "tz": "ET",
+   "color": "#A5122B",
+   "feedName": "Toronto FC",
+   "displayName": "Toronto FC"
+  },
+  {
+   "id": "mtl-mls",
+   "comp": "MLS",
+   "espn": "9720",
+   "city": "Montréal",
+   "name": "CF Montréal",
+   "abbr": "MTL",
+   "tz": "ET",
+   "color": "#00214E",
+   "feedName": "CF Montreal",
+   "aliases": [
+    "CF Montréal",
+    "Montreal Impact"
+   ],
+   "displayName": "CF Montréal"
+  },
+  {
+   "id": "lafc",
+   "comp": "MLS",
+   "espn": "18966",
+   "city": "Los Angeles",
+   "name": "LAFC",
+   "abbr": "LAFC",
+   "tz": "PT",
+   "color": "#1B1B1B",
+   "feedName": "LAFC",
+   "aliases": [
+    "Los Angeles FC"
+   ],
+   "displayName": "LAFC"
+  },
+  {
+   "id": "mia",
+   "comp": "MLS",
+   "espn": "20232",
+   "city": "Miami",
+   "name": "Inter Miami",
+   "abbr": "MIA",
+   "tz": "ET",
+   "color": "#B23A6E",
+   "feedName": "Inter Miami CF",
+   "aliases": [
+    "Inter Miami"
+   ],
+   "displayName": "Inter Miami"
+  },
+  {
+   "id": "sou",
+   "comp": "MLS",
+   "espn": "9726",
+   "city": "Seattle",
+   "name": "Sounders",
+   "abbr": "SEA",
+   "tz": "PT",
+   "color": "#005595",
+   "feedName": "Seattle Sounders FC",
+   "aliases": [
+    "Seattle Sounders"
+   ],
+   "displayName": "Seattle Sounders"
+  }
+ ],
+ "events": [
+  {
+   "id": "uci-wt",
+   "comp": "UCI",
+   "name": "Men's WorldTour",
+   "abbr": "WT",
+   "tz": "CET",
+   "color": "#8A6D1F",
+   "feedName": "Men's WorldTour",
+   "displayName": "Men's WorldTour"
+  }
+ ],
+ "ghosts": [
+  {
+   "id": "kcr",
+   "comp": "MLB",
+   "city": "Kansas City",
+   "name": "Royals",
+   "abbr": "KC",
+   "tz": "CT",
+   "color": "#004687",
+   "feedName": "Kansas City Royals"
+  },
+  {
+   "id": "ips",
+   "comp": "EPL",
+   "city": "Ipswich",
+   "name": "Ipswich Town",
+   "abbr": "IPS",
+   "tz": "UK",
+   "color": "#3A64A3",
+   "feedName": "Ipswich Town",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "bou",
+   "comp": "EPL",
+   "city": "Bournemouth",
+   "name": "Bournemouth",
+   "abbr": "BOU",
+   "tz": "UK",
+   "color": "#B50E12",
+   "feedName": "AFC Bournemouth",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "nfo",
+   "comp": "EPL",
+   "city": "Nottingham",
+   "name": "Nottm Forest",
+   "abbr": "NFO",
+   "tz": "UK",
+   "color": "#DD0000",
+   "feedName": "Nottingham Forest",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "ful",
+   "comp": "EPL",
+   "city": "London",
+   "name": "Fulham",
+   "abbr": "FUL",
+   "tz": "UK",
+   "color": "#1B1B1B",
+   "feedName": "Fulham",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  }
+ ],
+ "feedOnly": [
+  {
+   "id": "avl",
+   "comp": "EPL",
+   "feedName": "Aston Villa"
+  },
+  {
+   "id": "bha",
+   "comp": "EPL",
+   "feedName": "Brighton & Hove Albion"
+  },
+  {
+   "id": "whu",
+   "comp": "EPL",
+   "feedName": "West Ham United"
+  },
+  {
+   "id": "eve",
+   "comp": "EPL",
+   "feedName": "Everton"
+  },
+  {
+   "id": "cry",
+   "comp": "EPL",
+   "feedName": "Crystal Palace"
+  },
+  {
+   "id": "bre",
+   "comp": "EPL",
+   "feedName": "Brentford"
+  }
+ ]
+};
+
+/* ============================================================
    COMPETITIONS — the rights-bearing entity, not the team.
    A club like Liverpool enters several of these in one season
    and lands on a different Canadian service in each.

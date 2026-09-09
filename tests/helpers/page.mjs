@@ -1,11 +1,19 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 
 /* The app is one HTML file by design — no bundler, no modules, nothing to
    import. To test its logic without changing that, pull the named
    top-level declarations out of the source and evaluate just those. The
    test therefore runs the code that actually ships, rather than a copy
    that can drift from it. */
-const SRC = readFileSync(new URL("../../src/page.html", import.meta.url), "utf8");
+/* The manifest is inlined here exactly as build.js inlines it, so these
+   tests evaluate the page that ships rather than one whose manifest is
+   still the empty placeholder. */
+const require_ = createRequire(import.meta.url);
+const { inlineManifest } = require_("../../scripts/lib/inline.cjs");
+const SRC = inlineManifest(
+  readFileSync(new URL("../../src/page.html", import.meta.url), "utf8"),
+  readFileSync(new URL("../../data/teams.json", import.meta.url), "utf8"));
 
 function declarationOf(name){
   // [async] function NAME(...) { ... }  — closing brace at column 0
