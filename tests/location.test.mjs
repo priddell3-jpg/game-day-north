@@ -163,7 +163,7 @@ const ROW_PREAMBLE = `
   const isNarrow = () => false;
 `;
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
-  "resolveRights","SOCCER","CLUB_NAMES","fullName","esc","inkOn","pad","ymd","normName",
+  "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf",
   "venueTag","gameRow"];

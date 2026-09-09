@@ -15,7 +15,7 @@ import { CLINCH, RACE_KINDS, groupsFrom, STANDINGS_HOLD } from "../scripts/lib/r
    parser, the page's model and this app's own team matcher are all
    checked against each other rather than against a hand-made object. */
 
-const NAMES = ["esc", "COMPS", "SOCCER", "CLUB_NAMES", "TEAM_ROWS", "TEAMS", "fullName",
+const NAMES = ["esc", "COMPS", "SOCCER", "TEAM_ROWS", "TEAMS", "fullName",
   "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "attachStandings", "raceZoneHit", "raceCutoff",
   "racePhase", "RACE_PHASES", "racePhaseOf", "raceRelevance", "RACE_PRIORITY",
   "racePriority", "raceAutoAllowed", "RACE_GAP_TOLERANCE", "RACE_AUTO", "racePrefOf",

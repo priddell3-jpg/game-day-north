@@ -42,9 +42,18 @@ function declarationOf(name){
 
 /** Evaluate the named page declarations and hand them back.
     `preamble` supplies whatever they close over. */
+/* The manifest underpins the team declarations now, so it is always in
+   scope — the same way it is always in scope in the built page, where
+   build.js has inlined it. Without this, asking for anything that reads
+   it would fail on a name the shipped page has and this evaluation does
+   not. */
+const MANIFEST_DECL = declarationOf("TEAM_MANIFEST");
+
 export function loadFromPage(names, preamble = ""){
-  const body = names.map(declarationOf).join("\n\n");
-  const factory = new Function(preamble + "\n" + body + "\nreturn {" + names.join(",") + "};");
+  const wanted = names.filter(n => n !== "TEAM_MANIFEST");
+  const body = wanted.map(declarationOf).join("\n\n");
+  const factory = new Function(preamble + "\n" + MANIFEST_DECL + "\n" + body
+    + "\nreturn {" + names.join(",") + "};");
   return factory();
 }
 
