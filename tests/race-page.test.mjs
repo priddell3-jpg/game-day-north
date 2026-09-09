@@ -17,7 +17,8 @@ import { CLINCH, RACE_KINDS, groupsFrom, STANDINGS_HOLD } from "../scripts/lib/r
 
 const NAMES = ["esc", "COMPS", "SOCCER", "CLUB_NAMES", "TEAM_ROWS", "TEAMS", "fullName",
   "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "attachStandings", "raceZoneHit", "raceCutoff",
-  "racePhase", "RACE_PHASES", "racePhaseOf", "raceRelevance", "RACE_AUTO", "racePrefOf",
+  "racePhase", "RACE_PHASES", "racePhaseOf", "raceRelevance", "RACE_PRIORITY",
+  "racePriority", "raceAutoAllowed", "RACE_GAP_TOLERANCE", "RACE_AUTO", "racePrefOf",
   "setRacePref", "raceCardId", "racePrefBtnId", "raceFollowsComp", "raceGroupsFor", "raceSlice",
   "RACE_PER_COMP", "raceCandidates", "racePrimaries", "raceAssignClubs", "raceCards",
   "RACE_CLINCH",
@@ -632,15 +633,16 @@ test("a club gets the one line it is nearest to", () => {
     "and one club does not carry four cards");
 });
 
-test("a tie between two lines goes to the race declared first", () => {
+test("two lines the same distance away go to the one worth more", () => {
   const P = page({ picks: ["mun"] });
   P.attachStandings(EPL_PREV);
   const mun = grp(EPL_PREV, "table").rows.find(r => r.id === "mun");
   assert.equal(mun.pos, 3, "two places off the title and two off the Champions League line");
   const cards = P.raceCards(NOW, new Set(["mun"]));
   assert.equal(cards.length, 1);
-  assert.equal(cards[0].view.id, "epl-title",
-    "RACES is written title, then Europe, then survival, and the tie follows that order");
+  assert.equal(cards[0].view.id, "epl-title");
+  assert.ok(P.racePriority(view(P, "epl-title")) < P.racePriority(view(P, "epl-ucl")),
+    "and it is the declared value that decides, not the order they happen to sit in");
 });
 
 /* ============ pin and hide ============ */
@@ -791,4 +793,106 @@ test("a club with no primary at all still appears in its competition's race", ()
     "Seattle are further from the line than the band reaches, so they claim nothing");
   assert.ok(card.own.some(r => r.id === "sea-mlb"), "and are on the card anyway");
   assert.ok(P.raceCardHtml(card, NOW).includes("Seattle Mariners"));
+});
+
+/* ============ value, once distance has decided who is in a race ============ */
+
+test("every race says what it is worth", () => {
+  const P = page();
+  for(const v of P.RACES){
+    assert.equal(typeof P.racePriority(v), "number", v.id + " has no priority");
+    assert.ok(P.racePriority(v) >= 1 && P.racePriority(v) <= P.RACE_PRIORITY, v.id);
+  }
+  const pr = id => P.racePriority(view(P, id));
+  assert.ok(pr("epl-rel") < pr("epl-title"), "survival outranks the title");
+  assert.ok(pr("epl-title") < pr("epl-ucl"), "the title outranks Champions League qualification");
+  assert.ok(pr("epl-ucl") < pr("epl-euro"), "which outranks the European places");
+  assert.equal(P.raceAutoAllowed(view(P, "epl-euro")), false);
+  assert.ok(P.RACES.filter(v => !P.raceAutoAllowed(v)).every(v => v.id === "epl-euro"),
+    "and it is the only race kept out of Auto, so this is a decision rather than a habit");
+});
+
+test("a club fifth on the Europa line is chasing the Champions League", () => {
+  /* The 2026-27 table puts the Champions League places at 1-4 and a
+     single Europa place at 5, so a club in fifth sits exactly on the
+     Europa line and one place off the Champions League one. The real
+     table is used; only which followed club occupies fifth is arranged,
+     because no club on this app's roster happens to sit there. */
+  const table = JSON.parse(JSON.stringify(grp(EPL, "table")));
+  table.played = { min: 34, max: 34 };                 // late in the same season
+  table.rows.forEach(r => { if(r.id === "liv") delete r.id; });
+  table.rows.find(r => r.pos === 5).id = "liv";
+  assert.equal(table.zones.find(z => z.label === "Champions League").to, 4);
+  assert.equal(table.zones.find(z => z.label === "Europa League").from, 5);
+
+  const P = page({ picks: ["liv"] });
+  P.attachStandings([table]);
+  const cards = P.raceCards(NOW, new Set(["liv"]));
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].view.id, "epl-ucl",
+    "the story is the place being chased, not the one being stood on");
+  assert.ok(!cards.some(c => c.view.id === "epl-euro"));
+  assert.match(P.raceCardHtml(cards[0], NOW), /Champions League places/);
+});
+
+test("the European places never surface on their own", () => {
+  const table = JSON.parse(JSON.stringify(grp(EPL_PREV, "table")));
+  const P = page({ picks: ["liv", "ars", "che", "new", "tot", "mun", "mci"] });
+  P.attachStandings([table]);
+  const cards = P.raceCards(NOW, new Set(["liv", "ars", "che", "new", "tot", "mun", "mci"]));
+  assert.ok(cards.length, "there are races to show");
+  assert.ok(!cards.some(c => c.view.id === "epl-euro"),
+    "with seven clubs spread through the table, still not this one");
+  /* Nor may it quietly claim a club and take a card off something else. */
+  const claimed = P.racePrimaries(P.raceCandidates(NOW, new Set(["che"])));
+  assert.ok([...claimed.values()].every(v => v.card.view.id !== "epl-euro"));
+});
+
+test("pinning the European places renders them", () => {
+  const P = page({ picks: ["che"], prefs: { "epl-euro": "pin" } });
+  P.attachStandings(EPL_PREV);
+  const cards = P.raceCards(NOW, new Set(["che"]));
+  const euro = cards.find(c => c.view.id === "epl-euro");
+  assert.ok(euro, "a race kept out of Auto is still a race someone can ask for");
+  assert.ok(euro.pinned);
+  assert.match(P.raceCardHtml(euro, NOW), /European places/);
+  /* And Customize says why it never turned up by itself. */
+  assert.match(P.racePrefsHtml(NOW), /European places<i>EPL &middot; pin to see it<\/i>/);
+});
+
+test("relegation still wins when a club is genuinely in danger", () => {
+  const P = page({ picks: ["tot"] });
+  P.attachStandings(EPL_PREV);
+  const tot = grp(EPL_PREV, "table").rows.find(r => r.id === "tot");
+  assert.equal(tot.pos, 17, "one place above the drop");
+  const cards = P.raceCards(NOW, new Set(["tot"]));
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].view.id, "epl-rel");
+  assert.deepEqual(cards[0].own.map(r => r.id), ["tot"]);
+});
+
+test("value does not reach past a line a club is standing on", () => {
+  /* Priority alone would hand Liverpool, exactly on the Champions
+     League line, to the title race four places above them. */
+  const P = page({ picks: ["liv"] });
+  const claimed = P.racePrimaries(P.raceCandidates(NOW, new Set(["liv"])));
+  P.attachStandings(EPL_PREV);
+  const again = P.racePrimaries(P.raceCandidates(NOW, new Set(["liv"])));
+  const pick = again.get("liv");
+  assert.ok(pick, "Liverpool are in a race");
+  assert.equal(pick.card.view.id, "epl-ucl");
+  assert.equal(pick.gap, 0);
+  assert.equal(P.RACE_GAP_TOLERANCE, 2);
+});
+
+test("a more valuable race at the same distance takes the club", () => {
+  /* Buffalo are one place off the last playoff spot and one place off
+     the division lead. Both are equally near; one matters more. */
+  const P = page({ picks: ["buf"] });
+  P.attachStandings(NFL.concat(NFL_DIV));
+  const cards = P.raceCards(NOW, new Set(["buf"]));
+  const forBuf = cards.find(c => c.own.some(r => r.id === "buf"));
+  assert.ok(forBuf);
+  assert.equal(forBuf.view.id, "nfl-afc", "the playoff picture, not the division it shares a gap with");
+  assert.ok(P.racePriority(view(P, "nfl-afc")) < P.racePriority(view(P, "nfl-div")));
 });

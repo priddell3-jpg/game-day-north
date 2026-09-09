@@ -864,54 +864,58 @@ const RACE_CHECKED = "2026-09-08";
    race is worth showing to someone whose team is nowhere near it, and
    `seasonal` allows a handful of races to stand on their own late on. */
 const RACES = [
-  {id:"epl-title", comp:"EPL", group:"table", title:"Title race",
+  {id:"epl-title", comp:"EPL", group:"table", title:"Title race", priority:2,
    cut:{kind:"rule", at:1, label:"Top of the table", short:"the title", inside:"top of the table",
         origin:"First place is the title; the line is the definition, not a rule that can change."},
    length:38, lateAt:0.5, near:3},
-  {id:"epl-ucl", comp:"EPL", group:"table", title:"Champions League places",
+  {id:"epl-ucl", comp:"EPL", group:"table", title:"Champions League places", priority:3,
    cut:{kind:"zoneEnd", match:"champions league", label:"Champions League", short:"the UCL places"},
    length:38, lateAt:0.35, near:3},
-  {id:"epl-euro", comp:"EPL", group:"table", title:"European places",
+  /* Auto never surfaces this one. A club sitting on the Europa line is
+     usually chasing the Champions League, and saying "European places"
+     at them describes where they are rather than what they are playing
+     for. It stays in Customize and it works when pinned. */
+  {id:"epl-euro", comp:"EPL", group:"table", title:"European places", priority:4, auto:false,
    cut:{kind:"zoneRun", match:["champions league","europa league","conference league"],
         label:"European places", short:"Europe"},
    length:38, lateAt:0.5, near:2},
-  {id:"epl-rel", comp:"EPL", group:"table", title:"Relegation battle",
+  {id:"epl-rel", comp:"EPL", group:"table", title:"Relegation battle", priority:1,
    cut:{kind:"zoneStart", match:"relegation", label:"Safety", short:"safety"},
    length:38, lateAt:0.35, near:3},
 
-  {id:"ucl-top8", comp:"UCL", group:"league", title:"Top eight",
+  {id:"ucl-top8", comp:"UCL", group:"league", title:"Top eight", priority:2,
    cut:{kind:"zoneEnd", match:"round of 16", label:"Straight to the round of 16", short:"the top eight"},
    length:8, lateAt:0.5, near:3, seasonal:true},
-  {id:"ucl-top24", comp:"UCL", group:"league", title:"Knockout play-off places",
+  {id:"ucl-top24", comp:"UCL", group:"league", title:"Knockout play-off places", priority:1,
    cut:{kind:"zoneRun", match:["round of 16","knockout phase playoffs"], label:"Through to the play-offs", short:"the play-offs"},
    length:8, lateAt:0.5, near:3},
 
-  {id:"mlb-wc-al", comp:"MLB", group:"AL", title:"AL Wild Card",
+  {id:"mlb-wc-al", comp:"MLB", group:"AL", title:"AL Wild Card", priority:1,
    cut:{kind:"line", label:"Last wild card", short:"a wild card"}, length:162, lateAt:0.6, near:3},
-  {id:"mlb-wc-nl", comp:"MLB", group:"NL", title:"NL Wild Card",
+  {id:"mlb-wc-nl", comp:"MLB", group:"NL", title:"NL Wild Card", priority:1,
    cut:{kind:"line", label:"Last wild card", short:"a wild card"}, length:162, lateAt:0.6, near:3},
 
   /* The one hand-held number in this table. No page on the league's own
      site could be found that states it in text a fetch can read, so it
      carries a note and a checked date and no link, rather than a link to
      a page that may not say it. */
-  {id:"nfl-afc", comp:"NFL", group:"AFC", title:"AFC playoff picture",
+  {id:"nfl-afc", comp:"NFL", group:"AFC", title:"AFC playoff picture", priority:1,
    cut:{kind:"rule", at:7, label:"Last playoff place", short:"the playoffs",
         origin:"Seven teams per conference reach the playoffs, the format since 2020.",
         checked:RACE_CHECKED},
    length:17, lateAt:0.35, near:3},
-  {id:"nfl-nfc", comp:"NFL", group:"NFC", title:"NFC playoff picture",
+  {id:"nfl-nfc", comp:"NFL", group:"NFC", title:"NFC playoff picture", priority:1,
    cut:{kind:"rule", at:7, label:"Last playoff place", short:"the playoffs",
         origin:"Seven teams per conference reach the playoffs, the format since 2020.",
         checked:RACE_CHECKED},
    length:17, lateAt:0.35, near:3},
   /* The top seed is the only one with a bye, so it is a race of its own
      — but only once enough has been played for it to mean anything. */
-  {id:"nfl-afc-top", comp:"NFL", group:"AFC", title:"AFC top seed",
+  {id:"nfl-afc-top", comp:"NFL", group:"AFC", title:"AFC top seed", priority:3,
    cut:{kind:"rule", at:1, label:"First seed", short:"the top seed",
         origin:"Only the first seed gets a bye.", checked:RACE_CHECKED},
    length:17, lateAt:0.65, near:2},
-  {id:"nfl-nfc-top", comp:"NFL", group:"NFC", title:"NFC top seed",
+  {id:"nfl-nfc-top", comp:"NFL", group:"NFC", title:"NFC top seed", priority:3,
    cut:{kind:"rule", at:1, label:"First seed", short:"the top seed",
         origin:"Only the first seed gets a bye.", checked:RACE_CHECKED},
    length:17, lateAt:0.65, near:2},
@@ -919,7 +923,7 @@ const RACES = [
   /* One view covering all eight divisions: the line is whatever the
      source's own games-behind column measures against, which in a
      division is the lead. */
-  {id:"nfl-div", comp:"NFL", kindIs:"division", title:null,
+  {id:"nfl-div", comp:"NFL", kindIs:"division", title:null, priority:2,
    cut:{kind:"line", label:"Division lead", short:"the division"}, length:17, lateAt:0.4, near:2}
 ];
 
@@ -1077,6 +1081,29 @@ function raceRelevance(view, grp, now, followed){
    which is stable across seasons and across a rewritten source: hiding
    the European places stays hidden when the zone that defines its line
    moves from fifth to eighth. */
+/* What a race is worth, as a property of the race rather than a rule
+   somewhere about one league.
+
+   Position in a table is a poor guide to this on its own. A club fifth
+   in the Premier League sits exactly on the Europa line and one place
+   off the Champions League line, and the story is the one it is chasing,
+   not the one it happens to be standing on. So distance decides which
+   races a club is IN, and this decides which of those is worth the card.
+
+   Lower is more valuable. Survival first, then the prize at the top of
+   the competition, then the places below it. `auto:false` keeps a race
+   out of automatic selection entirely while leaving it available to
+   anyone who pins it. */
+const RACE_PRIORITY = 5;
+const racePriority = view => view && view.priority != null ? view.priority : RACE_PRIORITY;
+const raceAutoAllowed = view => !view || view.auto !== false;
+
+/* How much further than the nearest line a race may be and still be
+   judged on value rather than on distance. Without it, priority alone
+   would hand a club sitting exactly on the Champions League line to the
+   title race four places above it. */
+const RACE_GAP_TOLERANCE = 2;
+
 const RACE_AUTO = "auto", RACE_PIN = "pin", RACE_HIDE = "hide";
 function racePrefOf(id){
   const v = racePrefs && racePrefs[id];
@@ -1146,15 +1173,28 @@ function raceCandidates(now, followed){
    then survival. */
 const RACE_PER_COMP = 2, RACE_TOTAL = 4, RACE_APART = 3;
 function racePrimaries(candidates){
-  const byClub = new Map();
+  /* Every race each club is genuinely in, by distance. */
+  const inRace = new Map();
   for(const c of candidates){
     if(!c.rel || c.rel.reason !== "near") continue;
+    if(!raceAutoAllowed(c.view)) continue;
     for(const row of c.rel.focus){
-      const gap = Math.abs(row.pos - c.rel.at);
-      const held = byClub.get(row.id);
-      if(!held || gap < held.gap) byClub.set(row.id, {gap, card:c});
+      const bid = {gap: Math.abs(row.pos - c.rel.at), prio: racePriority(c.view),
+                   order: RACES.indexOf(c.view), card: c};
+      if(!inRace.has(row.id)) inRace.set(row.id, []);
+      inRace.get(row.id).push(bid);
     }
   }
+  /* Then the most valuable of those, among the ones that are actually
+     close. A race further away than the tolerance is not competing on
+     value with one the club is sitting on. */
+  const byClub = new Map();
+  inRace.forEach((bids, id) => {
+    const nearest = Math.min(...bids.map(b => b.gap));
+    const contenders = bids.filter(b => b.gap <= nearest + RACE_GAP_TOLERANCE);
+    contenders.sort((a, b) => a.prio - b.prio || a.gap - b.gap || a.order - b.order);
+    byClub.set(id, contenders[0]);
+  });
   return byClub;
 }
 
@@ -1204,10 +1244,15 @@ function raceCards(now, followed){
       continue;
     }
     if(!c.rel) continue;
+    if(!raceAutoAllowed(c.view)) continue;         // pin-only, by design
     if(c.rel.reason === "near" && !primary.has(c.id)) continue;
     out.push(Object.assign({}, c, c.rel));
   }
-  out.sort((a,b)=>a.rank - b.rank || a.id.localeCompare(b.id));
+  /* Value first, so that when the caps bite it is the least valuable
+     race that goes. A pinned race was asked for by name and leads. */
+  out.sort((a,b)=> (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)
+    || racePriority(a.view) - racePriority(b.view)
+    || a.rank - b.rank || a.id.localeCompare(b.id));
   const perComp = {}, kept = [];
   for(const c of out){
     /* Two lines a place or two apart in the same table are two names for
@@ -3502,7 +3547,8 @@ function racePrefsHtml(now){
     + 'whenever there is a table; hide one to stop it appearing. This changes nothing about '
     + 'which teams you follow.</p>'
     + rows.map(c => '<div class="race-opt-row"><span class="race-opt-name">'
-        + esc(c.title) + '<i>' + esc((COMPS[c.comp] || {short:c.comp}).short) + '</i></span>'
+        + esc(c.title) + '<i>' + esc((COMPS[c.comp] || {short:c.comp}).short)
+        + (raceAutoAllowed(c.view) ? "" : " &middot; pin to see it") + '</i></span>'
         + '<span class="race-opt-set">' + button(c, RACE_AUTO, "Auto")
         + button(c, RACE_PIN, "Pin") + button(c, RACE_HIDE, "Hide") + '</span></div>').join("")
     + '</div></details>';

@@ -235,15 +235,36 @@ and relegation are all in scope. Following one hockey team shows no baseball
 table, and a club that has played no matches is not in a race yet whatever
 position a freshly seeded table gives it.
 
-### One primary race per club
+### One primary race per club, chosen by value
 
 A club near the foot of a table is in a relegation battle. It is not also in
 the title race merely because the two share a table, and listing both is
-noise. So each followed club claims **the one line it is nearest to** — top of
-the table, the Champions League places, safety — and a card survives only if
+noise. So each followed club claims **one** race, and a card survives only if
 some club claimed it, or it was pinned, or the closing weeks make it worth
-watching on its own. Ties go to whichever race is declared first, which is the
-order a season is usually talked about: the title, then Europe, then survival.
+watching on its own.
+
+Distance decides which races a club is *in*. It is a poor guide to which one
+matters, because a club fifth in the Premier League sits exactly on the Europa
+line and one place off the Champions League line — and the story is the place
+it is chasing, not the one it is standing on. So each race carries a declared
+value and the most valuable of the close ones wins:
+
+| Premier League race | Value | In Auto |
+| --- | --- | --- |
+| Relegation battle | 1 | yes |
+| Title race | 2 | yes |
+| Champions League places | 3 | yes |
+| European places | 4 | **no — pin only** |
+
+Value cannot reach past a line a club is standing on: a race more than two
+places further away than the nearest one is not competing on value at all,
+which is what stops the title race claiming a club that is level with the
+Champions League cutoff four places below it. The same two numbers order the
+board, so when the caps bite it is the least valuable race that goes.
+
+Every competition declares its own values in the same table — survival before
+the prize at the top, the prize before the places under it — so nothing here
+is a rule about one league.
 
 A card then shows the clubs it is actually for, not every club you follow in
 that table. Showing all of them produced a relegation card that opened on the
@@ -257,10 +278,14 @@ The default is Auto and needs no setting up. Inside the open section a
 **Customize** list offers every race you could have, for the competitions you
 follow, with three states each:
 
-- **Auto** — the bands above decide.
+- **Auto** — the bands and values above decide.
 - **Pin** — show it whenever there is a table to draw. A pin overrides the
-  season phase; it cannot invent standings nobody has played for.
+  season phase and the Auto exclusions; it cannot invent standings nobody has
+  played for. This is how the European places are seen.
 - **Hide** — never show it.
+
+A race Auto never surfaces says so in the list, so one that does not appear is
+a decision rather than a mystery.
 
 Preferences live in `gdn.races.prefs`, keyed on the stable race id, so hiding
 the European places stays hidden when the zone that defines its line moves
