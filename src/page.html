@@ -229,6 +229,16 @@ main{padding:22px 0 80px}
 .lg-sub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
 .slam{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);border:1px solid currentColor;border-radius:3px;padding:0 3px;white-space:nowrap}
 .sets{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+/* The side that took the set, picked out inside it. Weight and ink only:
+   the set score is already small and a colour would make a scoreboard of
+   the row. */
+.set b{font-weight:700;color:var(--ink)}
+/* Where the winner goes next. As quiet as the notes beside it: it is
+   context on a finished match, not the finished match. */
+.next-up{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+/* The beaten player. Greyed rather than struck through or moved, so the
+   row reads the same shape whether or not the result is showing. */
+.g-team.pl-lost{color:var(--ink-2);font-weight:500}
 .set{white-space:nowrap}
 .g-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
 .lg-tag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 6px;border-radius:4px;color:#fff}
@@ -408,6 +418,9 @@ main{padding:22px 0 80px}
 .fchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
 .fchip i{width:7px;height:7px;border-radius:50%;flex:none;opacity:.35}
 .fchip[aria-pressed="true"]{color:var(--ink);border-color:var(--line-strong)}
+/* Not a competition, so it does not carry a colour dot and does not sit
+   in the pressed/unpressed language the chips beside it use. */
+.fchip-all{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border-style:dashed}
 .fchip[aria-pressed="true"] i{opacity:1}
 
 /* Coverage lives in the My services drawer, not in the page body. These
@@ -3189,6 +3202,106 @@ function spoiledTeams(now){
   return out;
 }
 
+/* ---- and the same thing in tennis, keyed on the player ----
+
+   A draw publishes the next round as soon as it is known, which means a
+   later-round row NAMES the winner of an earlier one. Hide the fourth
+   round and the quarterfinal still reads "Frances Tiafoe v Alex
+   Michelsen", which says who won it. Eighty-five finals in the committed
+   file are given away this way.
+
+   Tennis needs its own set because spoiledTeams cannot help: a tennis
+   row carries no team ids at all. The shape is the same — final,
+   unrevealed, inside the same three days the board reaches — and the
+   key is the player within their tournament, so a hidden result at one
+   event does not blank a player's name at another.
+
+   The value is WHEN, because only a match published after the hidden one
+   can give it away. The hidden match's own row still names both players:
+   it is the row the person chose not to look at, and blanking it would
+   say something about it. */
+let SPOILED_PLAYERS = new Map();
+function spoiledPlayers(now){
+  const out = new Map();
+  if(showScores) return out;
+  const midnight = new Date(now); midnight.setHours(0, 0, 0, 0);
+  const from = midnight.getTime() - RESULTS_DAYS * DAY;
+  for(const g of myGames()){
+    if(!g.tennis || !g.match) continue;
+    if(g.start < from) continue;
+    if(revealed.has(g.id)) continue;
+    /* A winner is the thing that can be given away. A cancelled or
+       postponed match has none and puts nobody in the draw. Both players
+       go in, not only the winner: a semifinal reading "TBD v Ben
+       Shelton" would say Shelton came through his. */
+    if(g.match.winner == null) continue;
+    for(const pl of g.match.players || []){
+      if(!pl || pl.id == null) continue;
+      const k = g.match.tid + "|" + pl.id;
+      if(!(out.get(k) >= g.start)) out.set(k, g.start);
+    }
+  }
+  return out;
+}
+/* Whether naming this player on this row would give away a result the
+   person has not seen. TBD is the honest word rather than a fiction: to
+   someone who has not looked at the quarterfinal, the semifinal opponent
+   genuinely is undetermined, and TBD is the feed's own word for a slot
+   whose occupant is not yet known. */
+function playerSpoiled(m, pl){
+  if(!m || !pl || pl.id == null) return false;
+  const at = SPOILED_PLAYERS.get(m.tid + "|" + pl.id);
+  return at != null && m.start > at;
+}
+const TBD_PLAYER = {id:null, name:"TBD", short:"TBD", country:"", tbd:true};
+
+/* ---- who the winner plays next ----
+
+   Read from the draw rather than worked out: the next match is whichever
+   published match in the same tournament names the winner and starts
+   after this one. Ordered by start time, because rounds are not
+   orderable — this draw carries Round 1, Round 2, Round 4, Qualifying
+   Final, Quarterfinal and Semifinal, which is neither contiguous nor
+   sortable by name.
+
+   Searched over every tennis match in hand, not only the ones on the
+   board: a tournament filter or the top-25 view can leave the next match
+   off the screen while the draw still publishes it, and the answer is
+   the same either way.
+
+   Returns nothing where no later match exists, which is the ordinary
+   case for a champion and for a round the draw has not reached. */
+function nextMatchFor(m){
+  if(!m || m.winner == null) return null;
+  const w = (m.players || [])[m.winner];
+  if(!w || w.id == null) return null;
+  let best = null;
+  for(const g of GAMES){
+    if(!g.tennis || !g.match || g.match.tid !== m.tid) continue;
+    const n = g.match;
+    if(n.id === m.id || n.start <= m.start) continue;
+    if(!(n.players || []).some(p=>p && p.id != null && p.id === w.id)) continue;
+    if(!best || n.start < best.start) best = n;
+  }
+  return best;
+}
+/* "Faces C. Alcaraz in the Semifinal", or "Faces TBD" where the draw has
+   the slot but not yet the opponent. The opponent is subject to the same
+   spoiler rule as everything else: naming them would say they came
+   through their own match. */
+function nextOpponentLine(m){
+  const n = nextMatchFor(m);
+  if(!n) return null;
+  const w = (m.players || [])[m.winner];
+  const other = (n.players || []).find(p=>!p || p.id == null || p.id !== w.id) || TBD_PLAYER;
+  const named = (!other.tbd && other.id != null && !playerSpoiled(n, other));
+  /* "in the Semifinal", but "in Round 2": the draw's own names are a
+     mix of titles and numbered rounds, and an article in front of a
+     numbered one reads as a mistake. */
+  const round = n.round ? (/^round\b/i.test(n.round) ? " in " + n.round : " in the " + n.round) : "";
+  return "Faces " + (named ? (other.short || other.name) : "TBD") + round;
+}
+
 /* ============================ coverage ============================ */
 function servicesFor(g){
   const r = resolveRights(g);
@@ -3510,6 +3623,30 @@ const TENNIS_STATE = {
 };
 /* One set as it is actually written: games, and the tiebreak in
    parentheses where there was one. */
+/* One set with the side that took it picked out, so that reading a live
+   match does not mean doing arithmetic. `setWins` names the winner of
+   each set outright; a set still in progress carries null and is left
+   plain. */
+function setHtml(m, i){
+  const txt = setText(m, i);
+  if(!txt) return "";
+  const w = (m.setWins || [])[i];
+  const parts = /^(\d+|-)-(\d+|-)(\(\d+\))?$/.exec(txt);
+  if((w !== 0 && w !== 1) || !parts) return '<span class="set">' + esc(txt) + '</span>';
+  return '<span class="set">'
+    + (w === 0 ? '<b>' + esc(parts[1]) + '</b>' : esc(parts[1])) + '-'
+    + (w === 1 ? '<b>' + esc(parts[2]) + '</b>' : esc(parts[2]))
+    + (parts[3] ? esc(parts[3]) : "") + '</span>';
+}
+/* Sets won, in the order the names are written. Two completed sets each
+   way reads "1-1" without the reader counting anything, which is what
+   was missing: a match at 6-3 1-6 4-3 says who is ahead in the set being
+   played and nothing at all about the match. */
+function setTally(m){
+  const wins = (m.setWins || []).filter(w => w === 0 || w === 1);
+  if(!wins.length) return null;
+  return wins.filter(w=>w===0).length + "\u2013" + wins.filter(w=>w===1).length;
+}
 function setText(m, i){
   const [a, b] = (m.sets || [])[i] || [null, null];
   if(a == null && b == null) return "";
@@ -3521,6 +3658,9 @@ function tennisRow(g, now){
   const m = g.match, c = COMPS[g.comp], rights = resolveRights(g);
   const state = TENNIS_STATE[m.status] || TENNIS_STATE.unknown;
   const started = now >= m.start;
+  /* Everything that says how the match went — the score, which name is
+     greyed, who the winner plays next — turns on this one answer. */
+  const reveal = showScores || revealed.has(g.id);
 
   /* ESPN says outright whether a match has a usable time. Most of a draw
      does not — an unplayed third round carries a placeholder — so the day
@@ -3529,15 +3669,26 @@ function tennisRow(g, now){
     + (m.timeKnown ? esc(fmtTime(g.start)) : '<span class="tbd">Time TBD</span>')
     + '</div>';
 
-  const nameOf = (p, i) => '<span class="g-team pl'
+  /* Greying the loser IS the result, so it waits on the same reveal the
+     score does. A finished match nobody has looked at renders both names
+     exactly as a scheduled one does. */
+  const nameOf = (p, i, settle) => '<span class="g-team pl'
     + (p.tbd ? " tbd-slot" : "")
-    + (m.winner === i ? " pl-win" : "")
+    + (settle && m.winner === i ? " pl-win" : "")
+    + (settle && m.winner != null && m.winner !== i ? " pl-lost" : "")
     + '">'
     + esc(p.name) + (p.country ? '<span class="pl-flag">' + esc(p.country) + '</span>' : '')
     + '</span>';
+  const sideOf = i => {
+    const p = m.players[i];
+    /* A player whose earlier match is sitting hidden becomes the slot
+       they were before it: naming them here would announce that they
+       won it. */
+    return playerSpoiled(m, p) ? nameOf(TBD_PLAYER, i, false) : nameOf(p, i, reveal);
+  };
   // "v", never "at": neither player is at home
-  const title = '<div class="g-teams">' + nameOf(m.players[0], 0)
-    + '<span class="vs">v</span>' + nameOf(m.players[1], 1) + '</div>';
+  const title = '<div class="g-teams">' + sideOf(0)
+    + '<span class="vs">v</span>' + sideOf(1) + '</div>';
 
   const t = tourneyOf(g);
   const meta = '<div class="g-meta">'
@@ -3562,7 +3713,6 @@ function tennisRow(g, now){
       + cov + '</div>';
   }
 
-  const reveal = showScores || revealed.has(g.id);
   const played = (m.sets || []).some((_, i) => setText(m, i));
   let right = '<div class="g-score">';
   if(!started && m.status === "scheduled"){
@@ -3578,20 +3728,36 @@ function tennisRow(g, now){
       + (state.live ? '<span class="dot-live"></span>' : "") + state.text + '</span>';
     if(played){
       right += '<span class="sets">'
-        + (m.sets || []).map((_, i) => setText(m, i)).filter(Boolean)
-            .map(t=>'<span class="set">' + esc(t) + '</span>').join("")
+        + (m.sets || []).map((_, i) => setHtml(m, i)).filter(Boolean).join("")
         + '</span>';
     }
     /* The label is ESPN's own words for where the match is — "3rd Set",
        "End of 2nd Set". Shown rather than paraphrased, because between
-       sets is a real state and guessing at it would be worse. */
-    if(m.status === "live" && m.label) right += '<span class="conf-note">' + esc(m.label) + '</span>';
+       sets is a real state and guessing at it would be worse.
+
+       The tally goes beside it while a match is live, because that is
+       when the row has to answer "who is winning" and the set scores
+       alone do not. A finished match does not need it: the loser's name
+       is already greyed. */
+    const tally = (state.live && played) ? setTally(m) : null;
+    if(m.status === "live" && (m.label || tally))
+      right += '<span class="conf-note">'
+        + [m.label ? esc(m.label) : "", tally ? tally + " in sets" : ""].filter(Boolean).join(" &middot; ")
+        + '</span>';
     else if(state.note) right += '<span class="conf-note">' + state.note + '</span>';
     else if(!played && m.status !== "scheduled") right += '<span class="conf-note">No score published</span>';
+    /* Only once the match is settled and its result is being shown:
+       naming a next opponent says who won, so it waits on the same
+       reveal the score does. */
+    const nxt = m.winner != null ? nextOpponentLine(m) : null;
+    if(nxt) right += '<span class="next-up">' + esc(nxt) + '</span>';
   }
   right += '</div>';
 
-  const label = m.players.map(p=>p.name).join(" v ");
+  /* The reminder button carries the match name in its label, so it has
+     to go through the same substitution the row did — a name blanked in
+     the title and left in the button is not blanked. */
+  const label = m.players.map(p=>playerSpoiled(m, p) ? TBD_PLAYER.name : p.name).join(" v ");
   const bell = saveButton(g.id, alerts.has(g.id), label);
   return '<div class="game' + (state.live ? " is-live" : "") + '">' + timeCell
     + '<div class="g-match">' + title + meta + '</div>' + watch + right + bell + '</div>';
@@ -3720,13 +3886,46 @@ function welcomeBanner(){
 }
 
 /* ---------- competition filter ---------- */
+/* The chips stay toggles, and that is the point rather than an
+   oversight. Making a tap mean "only this" would make the common case —
+   hockey and baseball together — impossible, or at least worse than it
+   is now: two competitions would take a tap plus thirteen more to put
+   back what the first tap removed.
+
+   What is actually slow is starting from all fifteen on and wanting one.
+   That is one control, not a new meaning for fourteen: clear them all,
+   then tap the one. The button flips to put them back, so nothing is
+   lost by pressing it.
+
+     only baseball        clear, tap MLB
+     hockey and baseball  clear, tap NHL, tap MLB
+     everything but NHL   tap NHL off, exactly as before
+
+   `hiddenComps` is untouched underneath — the same set, written the same
+   way — so an x= share link made before this existed still decodes. */
 function renderFilters(){
   const comps = myComps();
   if(comps.length<2) return "";
+  const allHidden = comps.every(c=>hiddenComps.has(c));
   return '<div class="filters"><span class="lbl">Competitions</span>'
     + comps.map(c=>'<button class="fchip" data-comp="'+c+'" aria-pressed="'+(!hiddenComps.has(c))+'">'
         + '<i style="background:'+COMPS[c].color+'"></i>'+esc(COMPS[c].short)+'</button>').join("")
+    /* A stable id, because the attribute below flips on every press and
+       focus is restored by whatever identified the element before the
+       redraw. Keyboard focus has to stay on the button, not vanish
+       because its own label changed. */
+    + '<button class="fchip fchip-all" id="compsAll" data-comps-all="'+(allHidden ? "show" : "clear")+'">'
+    + (allHidden ? "Show all" : "Clear all") + '</button>'
     + '</div>';
+}
+/* Clearing hides every competition currently offered; showing empties
+   the set outright, so a competition that arrives later is on rather
+   than silently missing. An empty board while cleared is a state
+   somebody asked for, not an outage, and the empty view already says so
+   in its own words. */
+function setAllComps(hide){
+  if(hide) myComps().forEach(c=>hiddenComps.add(c));
+  else hiddenComps.clear();
 }
 
 /* ---------- coverage, in the My services drawer ----------
@@ -4507,6 +4706,7 @@ function render(){
   /* Decided once, before anything is drawn, so every row of the board
      agrees about which records are being held back. */
   SPOILED = spoiledTeams(now);
+  SPOILED_PLAYERS = spoiledPlayers(now);
   main.innerHTML = view==="list"?renderList(now,todayKey):renderCalendar(now,todayKey);
   if(focusKey){
     const [kind, val] = [focusKey.slice(0, focusKey.indexOf(":")), focusKey.slice(focusKey.indexOf(":")+1)];
@@ -4640,6 +4840,8 @@ document.getElementById("main").addEventListener("click",function(e){
   const rc=e.target.closest("[data-race]"); if(rc){ const id=rc.getAttribute("data-race");
     raceFull.has(id)?raceFull.delete(id):raceFull.add(id); render(); return; }
   const al=e.target.closest("[data-alert]"); if(al){ const id=al.getAttribute("data-alert"); alerts.has(id)?alerts.delete(id):alerts.add(id); persist(); render(); return; }
+  const ca=e.target.closest("[data-comps-all]");
+  if(ca){ setAllComps(ca.getAttribute("data-comps-all")==="clear"); persist(); render(); return; }
   const cp=e.target.closest("[data-comp]"); if(cp){ const id=cp.getAttribute("data-comp"); hiddenComps.has(id)?hiddenComps.delete(id):hiddenComps.add(id); persist(); render(); return; }
   const day=e.target.closest("[data-day]"); if(day){ selDay=day.getAttribute("data-day"); render(); return; }
   if(e.target.closest("#prevMonth")){ calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1); render(); return; }
