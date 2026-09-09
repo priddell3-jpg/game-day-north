@@ -50,35 +50,6 @@ const NA = new Set(["NHL","NBA","NFL","MLB"]);
 const DAY = 86400000;
 const BACK = 8, FORWARD = 75;          // days of history / lookahead to keep
 
-/* The followable roster. Kept in step with TEAM_ROWS in src/page.html —
-   if you add a team there, add it here or its fixtures won't be built. */
-const ROSTER = [
-["tor-nhl","NHL","Toronto Maple Leafs"],["van-nhl","NHL","Vancouver Canucks"],
-["edm","NHL","Edmonton Oilers"],["cgy","NHL","Calgary Flames"],
-["ott","NHL","Ottawa Senators"],["mtl-nhl","NHL","Montreal Canadiens"],
-["wpg","NHL","Winnipeg Jets"],["bos-nhl","NHL","Boston Bruins"],
-["nyr","NHL","New York Rangers"],["vgk","NHL","Vegas Golden Knights"],
-["sea-nhl","NHL","Seattle Kraken"],["col","NHL","Colorado Avalanche"],
-["tor-nba","NBA","Toronto Raptors"],["gsw","NBA","Golden State Warriors"],
-["lal","NBA","Los Angeles Lakers"],["bos-nba","NBA","Boston Celtics"],
-["den","NBA","Denver Nuggets"],["okc","NBA","Oklahoma City Thunder"],
-["nyk","NBA","New York Knicks"],
-["sea-nfl","NFL","Seattle Seahawks"],["buf","NFL","Buffalo Bills"],
-["sf","NFL","San Francisco 49ers"],["kc","NFL","Kansas City Chiefs"],
-["dal","NFL","Dallas Cowboys"],["phi","NFL","Philadelphia Eagles"],
-["det","NFL","Detroit Lions"],
-["tor-mlb","MLB","Toronto Blue Jays"],["sea-mlb","MLB","Seattle Mariners"],
-["lad","MLB","Los Angeles Dodgers"],["nyy","MLB","New York Yankees"],
-["bos-mlb","MLB","Boston Red Sox"],["cle","MLB","Cleveland Guardians"],
-["liv","EPL","Liverpool"],["ars","EPL","Arsenal"],["mci","EPL","Manchester City"],
-["mun","EPL","Manchester United"],["che","EPL","Chelsea"],["tot","EPL","Tottenham Hotspur"],
-["new","EPL","Newcastle United"],
-["rma","LALIGA","Real Madrid"],["bar","LALIGA","Barcelona"],
-["bay","BUNDES","Bayern Munich"],["psg","LIGUE1","Paris Saint-Germain"],["int","SERIEA","Internazionale"],
-["van-mls","MLS","Vancouver Whitecaps"],["tfc","MLS","Toronto FC"],
-["mtl-mls","MLS","CF Montreal"],["lafc","MLS","LAFC"],
-["mia","MLS","Inter Miami CF"],["sou","MLS","Seattle Sounders FC"]
-];
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
 /* Match on the name, and on the name minus a club suffix. ESPN says
    "Vancouver Whitecaps" where the roster said "Vancouver Whitecaps FC",
@@ -89,9 +60,9 @@ const trimSuffix = n => n.replace(/\b(fc|cf|sc|afc)\b/gi, "").replace(/\s+/g," "
    club in the manifest. Each of them silently detached a club until the
    unmatched-team warning caught it. */
 const NAME_TO_ID = new Map();
-for(const [id,,name] of ROSTER){
-  const entry = TEAMS.teams.find(t => t.id === id);
-  const variants = [name].concat((entry && entry.aliases) || []);
+for(const t of TEAMS.teams){
+  const id = t.id;
+  const variants = [t.feedName].concat(t.aliases || []);
   for(const v of variants){
     if(!NAME_TO_ID.has(norm(v))) NAME_TO_ID.set(norm(v), id);
     const bare = norm(trimSuffix(v));
@@ -390,7 +361,7 @@ for(const t of TEAMS.teams){
   (t.extraComps || []).forEach(c => comps.add(c));
 }
 
-console.log("Building fixtures for " + ROSTER.length + " teams across " + comps.size + " competitions");
+console.log("Building fixtures for " + TEAMS.teams.length + " teams across " + comps.size + " competitions");
 
 /* One ranged request per competition, covering the whole window.
 
@@ -952,7 +923,7 @@ if(standingsUnavailable.length){
    never plays. */
 const matched = new Set();
 fixtures.forEach(f=>{ if(f.home.id) matched.add(f.home.id); if(f.away.id) matched.add(f.away.id); });
-const unmatched = ROSTER.filter(([id])=>!matched.has(id)).map(([id,comp,name])=>id+" ("+name+", "+comp+")");
+const unmatched = TEAMS.teams.filter(t=>!matched.has(t.id)).map(t=>t.id+" ("+t.feedName+", "+t.comp+")");
 if(unmatched.length){
   console.warn("\n  !! " + unmatched.length + " roster team(s) matched no fixture — check the name against the feed:");
   unmatched.forEach(u=>console.warn("     " + u));
