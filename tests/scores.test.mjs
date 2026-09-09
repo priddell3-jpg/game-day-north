@@ -328,10 +328,25 @@ test("the two paths run in the same cycle without either taking the other's work
   const h = harness();
   const start = Date.now() - 45*60000;
   const withId = asCommitted(h, start);
-  /* Half an hour earlier than the fixture with an id, which between
-     00:45 and 01:15 Eastern is the previous ESPN day. Named, so the stub
-     and the assertion below both mean the day this row actually falls
-     on rather than the other row's. */
+  /* Half an hour earlier than the fixture with an id, and that gap is
+     the whole reason this test breaks separately from the one above it.
+
+     Both break because a stub registered without a day defaults to the
+     day the test RUNS on, while the code correctly asks for the day its
+     fixture FALLS on. After midnight Eastern those differ, and they
+     differ at different times for different offsets:
+
+       00:00-00:45  the test above fails. Its fixture is 45 minutes back,
+                    which is the previous Eastern day for the whole first
+                    three quarters of an hour.
+       00:45-01:15  this test fails. bakedStart is 75 minutes back, so it
+                    has crossed into the previous day while `start`, 45
+                    minutes back, has not.
+
+     So the window is roughly 00:00 to 01:15 taken together, not the
+     narrower band this row alone accounts for. Naming the instant is
+     what makes the stub and the assertion below both mean the day this
+     row actually falls on rather than the other row's. */
   const bakedStart = start - 30*60000;
   const withoutId = asBaked(h, bakedStart);
   withoutId.home = h.TEAMS.ars;
