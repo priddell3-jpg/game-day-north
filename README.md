@@ -11,6 +11,7 @@ Schedules are easy to find. "Where is this on, in Canada?" is not — no sports 
 - **Where to watch** per game — Sportsnet, TSN, Prime Video, Fubo, DAZN, Apple TV, RDS, TVA Sports, CTV, MLB.TV, NBA League Pass, Premier Sports
 - **Coverage check** — mark the services you subscribe to under **My services** in the header, and every game is flagged *You have it* or *Needs DAZN*
 - **Scores with a global on/off switch**, spoiler-safe: a hidden game still shows that it's live and where it's carried, with a per-game reveal
+- **In the Race** — a collapsed strip under recent results: where your club sits against the line that decides its season, opening into the places either side of it
 - **Agenda by day and a month calendar**, league-coloured
 - **Honest unknowns** — `Time TBC` with the date it gets confirmed, `Opponent TBD` with the draw date, `Carrier TBC` where no Canadian rights holder could be verified, and no location at all where the source states none
 
@@ -191,6 +192,181 @@ carriage, so it is recorded as **unknown** with the old listing named in the
 note rather than carried forward. Anything unverified shows **Coverage TBD**
 and is never marked *You have it*.
 
+## Race — why a game matters
+
+Three questions, one page. **Games** is what is happening, **Where to watch**
+is where you can see it, and **Race** is why it is worth watching at all.
+
+A Race card is never a standings table. It shows the line that decides a
+season — the last wild card, the fourth Champions League place, the last safe
+position above relegation — with the places either side of it and the clubs
+you follow. A button opens the full table for anyone who wants it. On a phone
+a card is four or five rows.
+
+The section sits **under recent results and above the schedule**, and it
+arrives **shut**. Closed it costs one row, and that row does the work:
+
+```
+In the Race   2 RELEVANT
+Blue Jays 1.5 back · Liverpool 2 pts from the UCL places
+```
+
+Whether it is open is remembered. Which cards are expanded to a full table is
+not — that is a momentary "let me see the rest" rather than a preference.
+
+### It appears because of your teams, not because standings exist
+
+Standings exist all year for every league and almost none of that is worth a
+place on your schedule. Visibility is one table of season-progress bands,
+applied to every competition rather than written per league. Progress is games
+played over season length, never a calendar date, so the rule is the
+competition's own shape.
+
+| Band | Season played | Behaviour |
+| --- | --- | --- |
+| early | under a quarter | Auto shows nothing at all |
+| mid | a quarter | a club within **2** places of the line |
+| late | three fifths | within **3** places |
+| final | seven eighths | within **4**, and a race may stand on its own |
+
+So three matches into a Premier League season nothing is drawn, however close
+the table looks; by the run-in the title, the Champions League places, Europe
+and relegation are all in scope. Following one hockey team shows no baseball
+table, and a club that has played no matches is not in a race yet whatever
+position a freshly seeded table gives it.
+
+### One primary race per club, chosen by value
+
+A club near the foot of a table is in a relegation battle. It is not also in
+the title race merely because the two share a table, and listing both is
+noise. So each followed club claims **one** race, and a card survives only if
+some club claimed it, or it was pinned, or the closing weeks make it worth
+watching on its own.
+
+Distance decides which races a club is *in*. It is a poor guide to which one
+matters, because a club fifth in the Premier League sits exactly on the Europa
+line and one place off the Champions League line — and the story is the place
+it is chasing, not the one it is standing on. So each race carries a declared
+value and the most valuable of the close ones wins:
+
+| Premier League race | Value | In Auto |
+| --- | --- | --- |
+| Relegation battle | 1 | yes |
+| Title race | 2 | yes |
+| Champions League places | 3 | yes |
+| European places | 4 | **no — pin only** |
+
+Value cannot reach past a line a club is standing on: a race more than two
+places further away than the nearest one is not competing on value at all,
+which is what stops the title race claiming a club that is level with the
+Champions League cutoff four places below it. The same two numbers order the
+board, so when the caps bite it is the least valuable race that goes.
+
+Every competition declares its own values in the same table — survival before
+the prize at the top, the prize before the places under it — so nothing here
+is a rule about one league.
+
+A card then shows the clubs it is actually for, not every club you follow in
+that table. Showing all of them produced a relegation card that opened on the
+league leader with two rows of ellipsis before reaching the actual fight. A
+club whose own race did not survive the caps joins the nearest surviving one
+rather than disappearing. At most two cards per competition and four in total.
+
+### Auto, pin, hide
+
+The default is Auto and needs no setting up. Inside the open section a
+**Customize** list offers every race you could have, for the competitions you
+follow, with three states each:
+
+- **Auto** — the bands and values above decide.
+- **Pin** — show it whenever there is a table to draw. A pin overrides the
+  season phase and the Auto exclusions; it cannot invent standings nobody has
+  played for. This is how the European places are seen.
+- **Hide** — never show it.
+
+A race Auto never surfaces says so in the list, so one that does not appear is
+a decision rather than a mystery.
+
+Preferences live in `gdn.races.prefs`, keyed on the stable race id, so hiding
+the European places stays hidden when the zone that defines its line moves
+from fifth to eighth. They are kept well away from team selection: changing
+one never changes which teams you follow. A hidden race keeps its row in the
+list, because otherwise there is no way back.
+
+### Cutoffs are read from the source wherever the source states one
+
+How many places qualify is not a constant. The Premier League sent **five**
+clubs to the Champions League in 2025-26 and sends **four** in 2026-27, and
+both numbers are in this repo's test fixtures precisely so that neither can be
+hardcoded. So:
+
+| Race | Where the line comes from |
+| --- | --- |
+| Champions League places, European places, relegation | ESPN's own per-position qualification notes |
+| Champions League top 8 and top 24 | the same notes, read as a run of qualifying zones from the top |
+| MLB wild card | the published games-behind column, which is measured *against the line* — the club reading `-` is the line |
+| NFL division races | the same column, which in a division measures against the lead |
+| NFL playoff places, top seed | **the only hand-held numbers**, carried with a note and a checked date the way a rights row is |
+
+Every card says underneath it which of these it used.
+
+### A zone label describes a position, not a team
+
+At matchday one the Champions League table labels ranks 25 to 36 **Eliminated**
+— and six of those clubs have played no match at all. The label is true about
+the position and false about the club, so labels are used to find where a line
+falls and are **never printed against a club**. The one per-team verdict shown
+is ESPN's clinch letter, because that one is published per team; a letter that
+is not in the known set is shown as nothing rather than guessed at.
+
+### A carried table says that it is carried
+
+If a standings source misses a run, its last good answer is kept so that one
+outage does not empty the board. That kindness has a hard end at **48 hours**,
+which is the same number in the build and in the page, so the file never ships
+a group the page would refuse to draw and nobody is ever looking at standings
+older than that however long a source stays down.
+
+Below that limit the card is drawn, and it says on its face what it is: an
+amber **Not current** chip with how long ago the table was actually read, and
+a line under it saying this is where the table stood, not where it stands. If
+the leading card is a carried one, the shut panel's headline says so too,
+because a headline read at a glance is exactly where a stale figure would pass
+for a live one. The age is measured from the last time the source answered,
+not the last time the build ran, so a group cannot be quietly refreshed into
+looking new.
+
+A new season ends it immediately, whatever the age. A league answering in
+February with a table nothing has been played in produces no usable group and
+looks exactly like an outage, and carrying last season's final table into that
+gap would be the most confident wrong answer this app could give.
+
+### When there is nothing to say, it says nothing
+
+A competition whose standings are missing, unreadable, or older than the
+browser is willing to trust produces **no card** — not a card announcing a
+problem. The home page has one job and an error panel is not it. The build
+records what it could not read in `counts.standingsUnavailable`, which is
+where a fuller standings view will surface it later.
+
+The section is also hidden entirely while **scores are off**. Every figure in
+it is a result, and a table that moved overnight tells you the outcome as
+surely as a scoreline does.
+
+### How it is built
+
+`scripts/lib/race.mjs` normalises a standings payload into groups; the build
+writes them to `data.json` under `standings`, structurally separate from the
+fixtures and sharing nothing with them but the team id. No browser asks a
+standings endpoint. Six requests per build cover four competitions, and the
+volatile figures ESPN publishes beside them — playoff percentages, magic
+numbers — are deliberately not read, because they move on every run whether or
+not a game has been played and would put a commit and a site rebuild on the
+schedule rather than on the results.
+
+Adding the NHL, the NBA or MLS is a row in `RACE_SOURCES` and a row in the
+page's `RACES` table. Nothing else changes.
+
 ## Data
 
 **Every fixture on this page is a real one.** There is no schedule generator: what you see came from a published feed, and where the feed has nothing, the page shows nothing.
@@ -218,6 +394,10 @@ Each of these cost real debugging time and is handled in both the client and the
 - Sources fail independently. Out-of-season cup competitions 404 as a matter of course, and one of those must never be able to blank the rest of the page.
 - A fixture and a scoreboard event are matched on **the source's own event id first**, never on team ids. The committed file mints a synthetic id for any club it could not map to the roster, so one club reads `feed:EPL:FUL` in the file and `ful` from ESPN; comparing those raw left a game showing as scheduled while it was live at 1-2. Team identity decides only which way round the score goes, and a score whose orientation cannot be established is dropped rather than guessed.
 - **A fixture's location is a fact about the fixture, not the home club.** ESPN states `competitions[0].venue` on every soccer and North American event seen — 1206 soccer events scanned, all with one — on both the scoreboard and the per-team season schedule. That is what the location line uses. It previously read the home team's nominal city and showed it only when that city happened to differ textually from the club's name, which was wrong twice: an English club is usually named after its town, so `Liverpool` hosting at `Liverpool` compared equal and the line vanished while `Vancouver Whitecaps` kept it; and a club's city is not the match's location — the 2026 League Cup final is filed as "Manchester City at Arsenal" and played at Wembley. There is deliberately **no club-to-ground mapping**, because a mapping is exactly what breaks when a match moves. Stated by the source, or blank. ESPN's `team.location` is not a town for soccer (it reads "Ipswich Town", "New York City FC"); it is kept only because the roster matches against it.
+- **A standings response is not in standings order.** Eliminated teams are hoisted to the front of the array: the American League list opens on a fifteenth seed, and a completed AFC season closes on the first. A group is ordered by a published seed, rank or games-behind figure, and one that has none of those is dropped rather than shown in the order it arrived — which is why the NFL shows no playoff picture in week one, when every seed is `0`.
+- **The same stat name means different things in different standings views.** In the wild-card view the overall record is blank, division win percentage reads `0.000`, and games behind is measured against the third wild-card place with a *negative* value for a club holding a cushion. Each source in `RACE_SOURCES` records which view it reads.
+- **The MLB response disagrees with itself about the season**, saying 2027 at the top of the payload while its own standings block says 2026. The standings block is the one read, and it is what stops last season's final table being carried over an empty new one during an outage.
+- **A qualification colour can arrive malformed.** The Premier League's Europa League zone currently comes back as `##B5E7CE`, with two hashes. It is repaired if it can be, and dropped if it cannot.
 - **`data.json` is served with `max-age=600`.** The page re-reads it every minute while a game is on, so it asks for a revalidation instead of accepting a copy the browser may hold for ten minutes — otherwise a score the scheduled job has already committed stays invisible. An unchanged file costs a 304 and no body; the API calls keep ordinary caching.
 
 Where neither copy carries an event id, two fixtures count as the same game only when both clubs match **and** they start within four hours — not merely on the same date, or a baseball doubleheader would collapse into one game.
