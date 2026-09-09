@@ -33,7 +33,7 @@ import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
 import { TABLE_SOURCES, tableProblem } from "./lib/records.mjs";
 import { MAX_LIMIT, planRanges, splitRange, dateKey, compFloorProblems, describeFloor,
          nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
-import { normalizeTennis, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
+import { normalizeTennis, normalizeRankings, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
          HORIZON_DAYS as TENNIS_FORWARD_DAYS } from "./lib/tennis.mjs";
 
 /* Every club this build knows about, and every name each answers to.
@@ -1008,6 +1008,13 @@ if(tablesSkipped.length){
    The reasoning is with the constants in scripts/lib/tennis.mjs.
    ============================================================ */
 const TENNIS_FEEDS = { ATP: "atp", WTA: "wta" };
+/* The rankings live under the site API rather than the scoreboard host.
+   Both tours answer the same shape. */
+const SITE_RANKINGS = "https://site.api.espn.com/apis/site/v2/sports/tennis/";
+/* The tours publish a new list every Monday, so a held one is stale
+   rather than wrong for a few days and worth complaining about after
+   more than a week. */
+const RANK_STALE_DAYS = 8;
 let tennisOut = { matches: [], tournaments: [] };
 try{
   const payloads = [];
@@ -1024,6 +1031,56 @@ try{
   console.log("Tennis: " + tennisOut.matches.length + " singles match(es) across "
     + tennisOut.tournaments.length + " tournament(s), keeping "
     + TENNIS_BACK_DAYS + "d back and " + TENNIS_FORWARD_DAYS + "d forward");
+
+  /* World rankings, so the page can show the top of the draw rather than
+     all of it. Two more requests, about two kilobytes, and keyed on the
+     same athlete id the scoreboard uses.
+
+     A tour that cannot be read keeps the list from the previous file,
+     dated as it was: a ranking list is a week old the moment it is
+     published and being a few days stale changes almost nothing, while
+     replacing it with nothing would widen the draw back out under
+     somebody with no idea why. The page treats an absent list as "do not
+     narrow", so the worst case is more tennis rather than none. */
+  const prevRanks = ((previous && previous.tennis) || {}).rankings || {};
+  const prevRankedAt = ((previous && previous.tennis) || {}).rankedAt || {};
+  const rankings = {}, rankedAt = {};
+  for(const [tour, slug] of Object.entries(TENNIS_FEEDS)){
+    let fresh = null;
+    const r = await get(SITE_RANKINGS + slug + "/rankings");
+    if(r && r !== FAILED) fresh = normalizeRankings(r);
+    if(fresh){
+      rankings[tour] = fresh;
+      rankedAt[tour] = new Date(now).toISOString();
+      continue;
+    }
+    if(prevRanks[tour]){
+      rankings[tour] = prevRanks[tour];
+      rankedAt[tour] = prevRankedAt[tour] || prevGenerated;
+      const age = Math.round((now - Date.parse(rankedAt[tour])) / DAY);
+      console.warn("  ! " + tour + " rankings could not be read — holding the list from "
+        + rankedAt[tour] + " (" + age + "d old)");
+    } else {
+      console.warn("  ! " + tour + " rankings could not be read and none were held — "
+        + "the page will show the whole draw rather than the top of it");
+    }
+  }
+  /* A list nobody has been able to refresh for over a week is no longer
+     "current rankings", and the tours publish weekly. Said out loud
+     rather than left to be noticed. */
+  for(const [tour, at] of Object.entries(rankedAt)){
+    const age = (now - Date.parse(at)) / DAY;
+    if(age > RANK_STALE_DAYS)
+      console.warn("  ! " + tour + " rankings are " + Math.round(age) + " days old — "
+        + "the tours publish weekly, so this list has stopped being current");
+  }
+  if(Object.keys(rankings).length){
+    tennisOut.rankings = rankings;
+    tennisOut.rankedAt = rankedAt;
+    console.log("  rankings: " + Object.entries(rankings)
+      .map(([t, r]) => t + " " + Object.keys(r).length + (rankedAt[t] === new Date(now).toISOString() ? "" : " (held)"))
+      .join(", "));
+  }
 }catch(err){
   console.warn("  ! tennis skipped — " + (err && err.message || err));
 }
