@@ -6913,10 +6913,12 @@ function matchupLabel(g){
   const o = orderedTeams(g);
   return fullName(o.a) + " " + o.sep + " " + fullName(o.b);
 }
-/* Defensive on the optional parts of the contract. The page and the
-   endpoint deploy together, but a browser holding a cached page while a
-   new endpoint answers it — or the reverse — is a real state, and an
-   older answer missing a field must not throw the whole render away. */
+/* Defensive on the optional parts of the contract. A browser holding a
+   cached page while a newer data.json answers it — or the reverse — is a
+   real state, and an older answer missing a field must not throw the
+   whole render away. (This guarded the tennis endpoint's contract before
+   the build took the fetch over; the skew it guards against is the same
+   one, now between the page and the committed file.) */
 const setsWon = (m, i) => (m.setWins || []).filter(w => w === i).length;
 
 function renderRail(now, todayKey){
@@ -6945,38 +6947,36 @@ function renderRail(now, todayKey){
   el.innerHTML=label+'<div class="rail-scroll">'+today.map(card).join("")+'</div>';
 }
 function railCard(g, now){
-  {
-    if(g.event){
-      const r=resolveRights(g);
-      return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
-        + '<div class="rail-row"><span class="t" style="color:var(--panel-muted)">'+esc(g.stage||"")+'</span></div>'
-        + '<div class="rail-meta">'+railEventMeta(g, now)+'<span>&middot;</span><span>'
-        + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
-    }
-    if(g.tennis){
-      /* A card of its own. Sets won per player is a real tennis number —
-         ESPN says who took each set — where a single scoreline would not
-         be. The set-by-set line stays on the row in the list. */
-      const m=g.match, r=resolveRights(g), stt=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
-      const reveal=showScores||revealed.has(g.id);
-      const played=(m.sets||[]).some((_,i)=>setText(m,i));
-      const line=i=>'<div class="rail-row"><span class="t">'+esc(m.players[i].short||m.players[i].name)+'</span>'
-        +'<span class="s">'+(m.status==="scheduled"?"&nbsp;":!played?"&ndash;":reveal?setsWon(m,i):"&bull;")+'</span></div>';
-      const meta=stt.live?'<span class="dot-live"></span>'+esc(m.label||stt.text)
-        : m.status==="scheduled"?esc(m.timeKnown?fmtTime(g.start):"Time TBD") : esc(stt.text);
-      return '<div class="rail-card">'+line(0)+line(1)
-        +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'
-        +esc(r.carriers.length?r.carriers[0].name:"TBD")+'</span></div></div>';
-    }
-
-    const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
-    const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
-    const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
-      +(s.status==="scheduled"?"&nbsp;":!sc?"&ndash;":reveal?(first?sc[0]:sc[1]):"&bull;")+'</span></div>';
-    const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
-    return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
-      +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
+  if(g.event){
+    const r=resolveRights(g);
+    return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
+      + '<div class="rail-row"><span class="t" style="color:var(--panel-muted)">'+esc(g.stage||"")+'</span></div>'
+      + '<div class="rail-meta">'+railEventMeta(g, now)+'<span>&middot;</span><span>'
+      + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
   }
+  if(g.tennis){
+    /* A card of its own. Sets won per player is a real tennis number —
+       ESPN says who took each set — where a single scoreline would not
+       be. The set-by-set line stays on the row in the list. */
+    const m=g.match, r=resolveRights(g), stt=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
+    const reveal=showScores||revealed.has(g.id);
+    const played=(m.sets||[]).some((_,i)=>setText(m,i));
+    const line=i=>'<div class="rail-row"><span class="t">'+esc(m.players[i].short||m.players[i].name)+'</span>'
+      +'<span class="s">'+(m.status==="scheduled"?"&nbsp;":!played?"&ndash;":reveal?setsWon(m,i):"&bull;")+'</span></div>';
+    const meta=stt.live?'<span class="dot-live"></span>'+esc(m.label||stt.text)
+      : m.status==="scheduled"?esc(m.timeKnown?fmtTime(g.start):"Time TBD") : esc(stt.text);
+    return '<div class="rail-card">'+line(0)+line(1)
+      +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'
+      +esc(r.carriers.length?r.carriers[0].name:"TBD")+'</span></div></div>';
+  }
+
+  const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
+  const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
+  const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
+    +(s.status==="scheduled"?"&nbsp;":!sc?"&ndash;":reveal?(first?sc[0]:sc[1]):"&bull;")+'</span></div>';
+  const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
+  return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
+    +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
 }
 
 /* Rugby is followed as a competition and starred as a nation, and those
