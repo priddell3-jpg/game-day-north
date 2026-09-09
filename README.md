@@ -562,6 +562,58 @@ A scheduled task refreshes `LIVE_FIXTURES` daily and re-checks the rights table 
 - [ ] Web push for pre-game alerts and time changes (iOS 16.4+, home-screen installs only)
 - [ ] Cache API responses so a reload isn't a cold fetch
 - [ ] Resolve FA Cup Canadian carriage before the third round in January
+- [ ] Show the round, not the table position, once the Champions League
+      reaches the knockout in February — see below
+- [ ] Six Nations table for the rugby rows, in January — see below
+
+### The Champions League from February, and why it is not built yet
+
+2026-27 is the third season under the league phase format and there is no
+group stage at any point. The league phase runs to January; knockout
+play-offs are in February, the round of 16 in March, quarter-finals in
+April, semi-finals into May, and the final on 5 June in Madrid.
+Confirmed with UEFA.
+
+From February a table position stops meaning anything for a club in a
+two-legged tie. The row wants the round — "Round of 16",
+"Quarter-final" — where today it says a place in a table that has
+finished.
+
+**The constraint, recorded so it is not rediscovered in February: no
+fixture carries a round.** Zero of 1853 fixtures in the committed file
+have a `stage` field, and `label` holds status strings like "FT" and
+"Final/11" rather than a round name. Showing a round therefore needs
+round extraction added to `scripts/fetch-data.mjs` first, not a change to
+the page. It costs nothing to leave until January, because the league
+phase has a table and every knockout tie is months away.
+
+Tennis already does this, and its `nextOpponentLine` is the shape to
+copy: it reads `round` off the match and orders by start time, because
+rounds are not orderable by name.
+
+### Rugby tables: one competition's worth, and not the one in season
+
+Assessed against the sources already in use. `site.api.espn.com/apis/v2`
+is the host the Race and record tables already come from, and the league
+ids are already in `RUGBY_COMPS`, so nothing new would be introduced.
+
+| Competition | Standings | Usable |
+|---|---|---|
+| Six Nations | 6 rows, ranks 1-6 | yes |
+| Nations Championship | 12 rows in one node, ranks repeat | no, two conferences are merged and the normaliser rejects a group whose ranks collide |
+| The Rugby Championship | 200, no standings block at all | no |
+| International Test | none, correctly | n/a |
+
+Two further things a rugby record would need. The feeds publish
+`gamesWon`, `gamesDrawn` and `gamesLost` rather than the `wins`, `ties`
+and `losses` every other sport uses, so `rowFrom` would need the mapping.
+And `overall` is a form string — "WWLWL" — not a record, so it cannot be
+passed through.
+
+So it is one competition, fifteen matches over seven weekends, for two
+extra requests and a field mapping. Worth doing in January before the
+Six Nations, not worth doing now: the competition actually in season, the
+Rugby Championship, is the one that cannot be done at all.
 
 ## License
 
