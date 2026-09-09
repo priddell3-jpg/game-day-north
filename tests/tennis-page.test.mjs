@@ -294,7 +294,9 @@ test("a match with no usable time says so rather than printing one", () => {
 });
 
 test("set scores are rendered as sets, not as one scoreline", () => {
-  const at = SRC.indexOf("function setText");
+  /* From setHtml rather than setText: the set markup moved there when
+     the winning side started being picked out inside each set. */
+  const at = SRC.indexOf("function setHtml");
   const body = SRC.slice(at, SRC.indexOf("\nfunction gameRow", at));
   assert.match(body, /class="sets"/);
   assert.match(body, /class="set"/);
