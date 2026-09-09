@@ -35,4 +35,8 @@ jobs:
         with:
           node-version: "20"
       - name: Run tests
-        run: node --test tests/
+        # The glob rather than the directory: `node --test tests/` works on
+        # node 20 and fails on 22 with MODULE_NOT_FOUND, because the
+        # directory form changed underneath it. Naming the files works on
+        # both and says exactly what is being run.
+        run: node --test tests/*.test.mjs
