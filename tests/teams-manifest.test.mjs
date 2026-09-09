@@ -60,8 +60,11 @@ test("the manifest still holds every club the old lists had", () => {
   assert.equal(manifest.version, 1);
   assert.ok(manifest.teams.length >= LEGACY.ROSTER.length, "clubs may be added, never dropped");
   assert.equal(manifest.events.length, 1);
-  assert.equal(manifest.ghosts.length, 5);
-  assert.equal(manifest.feedOnly.length, 6);
+  /* The ghosts and the feed-only clubs shrink as the roster grows: a
+     club that was only ever somebody's opponent becomes followable and
+     is promoted, keeping its id. They may never grow. */
+  assert.ok(manifest.ghosts.length <= 5);
+  assert.ok(manifest.feedOnly.length <= 6);
 });
 
 /* ============================ it reproduces all six ============================ */
@@ -78,8 +81,19 @@ test("it reproduces every row of TEAM_ROWS, element for element", () => {
   assert.deepEqual(differed, []);
 });
 
-test("it reproduces GHOSTS", () => {
-  assert.deepEqual(toGhostRows(manifest), LEGACY.GHOSTS);
+test("every ghost club is still here, promoted or not", () => {
+  /* A ghost that has become followable is no longer a ghost row, so the
+     assertion is that the club survives with its id and its name, not
+     that it stayed in the same list. */
+  const rows = new Map(toGhostRows(manifest).map(r => [r[0], r]));
+  const byId = new Map(allEntries(manifest).map(e => [e.id, e]));
+  for(const was of LEGACY.GHOSTS){
+    const still = byId.get(was[0]);
+    assert.ok(still, was[0] + " has gone entirely");
+    assert.equal(still.name, was[3], was[0] + " changed name");
+    const row = rows.get(was[0]);
+    if(row) assert.deepEqual(row, was, was[0] + " is still a ghost but has changed");
+  }
 });
 
 test("it reproduces every row of ROSTER", () => {
@@ -205,9 +219,11 @@ test("the five clubs the baked fixtures name keep their exact ids", () => {
   /* These appear in LIVE_FIXTURES, the hand-checked set the page falls
      back to when nothing can be fetched. Renaming one would break the
      fallback silently. */
+  const byId = new Map(allEntries(manifest).map(e => [e.id, e]));
   for(const id of ["kcr", "ips", "bou", "nfo", "ful"]){
-    assert.equal(frozen.ids[id].group, "ghosts", id);
-    assert.ok(manifest.ghosts.some(g => g.id === id), id + " is missing from the manifest");
+    assert.ok(byId.has(id), id + " is missing from the manifest entirely");
+    assert.ok(["ghosts", "teams"].includes(frozen.ids[id].group),
+      id + " belongs in the fallback set or the followable one, nowhere else");
   }
 });
 

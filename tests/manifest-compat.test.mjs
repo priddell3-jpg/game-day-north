@@ -216,6 +216,7 @@ function drawer(opts = {}){
   return new Function(body)();
 }
 const chips = html => (html.match(/data-team="/g) || []).length;
+const PICKER_CAP_VALUE = loadFromPage(["PICKER_CAP"]).PICKER_CAP;
 
 test("a big league does not render as a wall of chips", () => {
   const P = board();
@@ -230,11 +231,20 @@ test("a big league does not render as a wall of chips", () => {
 
 test("searching lifts the cap, because you asked for something by name", () => {
   const all = drawer();
-  const searched = drawer({ search: "a" });
-  assert.ok(chips(searched) > chips(all), "a broad search shows more, not the same twelve");
+  /* A search that matches one whole league returns all of it, where an
+     unsearched league stops at the cap. */
+  const searched = drawer({ search: "united" });
+  assert.ok(chips(searched) > 0);
+  assert.ok(!/more &mdash; search/.test(searched), "nothing is held back from a search");
+  const oneLeague = drawer({ search: "fc" });
+  assert.ok(chips(oneLeague) > PICKER_CAP_VALUE,
+    "a search matching more than a capped group still shows them all");
+  /* A search crosses leagues, which is the point of it being the way in
+     at this size: two clubs are called the Cardinals and both come back. */
   const one = drawer({ search: "cardinals" });
-  assert.equal(chips(one), 1);
+  assert.equal(chips(one), 2);
   assert.match(one, /Arizona Cardinals/);
+  assert.match(one, /St. Louis Cardinals/);
   assert.ok(!/more &mdash; search/.test(one), "nothing is held back from a search");
 });
 
