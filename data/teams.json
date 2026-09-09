@@ -1125,12 +1125,13 @@
    "id": "ath",
    "comp": "MLB",
    "espn": "11",
-   "city": "Athletics",
+   "city": "",
    "name": "Athletics",
    "abbr": "ATH",
    "tz": "PT",
    "color": "#003831",
-   "feedName": "Athletics"
+   "feedName": "Athletics",
+   "displayName": "Athletics"
   },
   {
    "id": "atl-mlb",
@@ -1486,6 +1487,188 @@
    ]
   },
   {
+   "id": "bou",
+   "comp": "EPL",
+   "espn": "349",
+   "name": "AFC Bournemouth",
+   "abbr": "BOU",
+   "tz": "UK",
+   "color": "#F42727",
+   "feedName": "AFC Bournemouth",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "avl",
+   "comp": "EPL",
+   "espn": "362",
+   "name": "Aston Villa",
+   "abbr": "AVL",
+   "tz": "UK",
+   "color": "#660E36",
+   "feedName": "Aston Villa",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "bre",
+   "comp": "EPL",
+   "espn": "337",
+   "name": "Brentford",
+   "abbr": "BRE",
+   "tz": "UK",
+   "color": "#F42727",
+   "feedName": "Brentford",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "bha",
+   "comp": "EPL",
+   "espn": "331",
+   "name": "Brighton & Hove Albion",
+   "abbr": "BHA",
+   "tz": "UK",
+   "color": "#0606FA",
+   "feedName": "Brighton & Hove Albion",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "cov",
+   "comp": "EPL",
+   "espn": "388",
+   "name": "Coventry City",
+   "abbr": "COV",
+   "tz": "UK",
+   "color": "#87CCED",
+   "feedName": "Coventry City",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "cry",
+   "comp": "EPL",
+   "espn": "384",
+   "name": "Crystal Palace",
+   "abbr": "CRY",
+   "tz": "UK",
+   "color": "#0202FB",
+   "feedName": "Crystal Palace",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "eve",
+   "comp": "EPL",
+   "espn": "368",
+   "name": "Everton",
+   "abbr": "EVE",
+   "tz": "UK",
+   "color": "#0606FA",
+   "feedName": "Everton",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "ful",
+   "comp": "EPL",
+   "espn": "370",
+   "name": "Fulham",
+   "abbr": "FUL",
+   "tz": "UK",
+   "color": "#FFFFFF",
+   "feedName": "Fulham",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "hul",
+   "comp": "EPL",
+   "espn": "306",
+   "name": "Hull City",
+   "abbr": "HUL",
+   "tz": "UK",
+   "color": "#F28800",
+   "feedName": "Hull City",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "ips",
+   "comp": "EPL",
+   "espn": "373",
+   "name": "Ipswich Town",
+   "abbr": "IPS",
+   "tz": "UK",
+   "color": "#0000FA",
+   "feedName": "Ipswich Town",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "lee",
+   "comp": "EPL",
+   "espn": "357",
+   "name": "Leeds United",
+   "abbr": "LEE",
+   "tz": "UK",
+   "color": "#FFFFFF",
+   "feedName": "Leeds United",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "nfo",
+   "comp": "EPL",
+   "espn": "393",
+   "name": "Nottingham Forest",
+   "abbr": "NFO",
+   "tz": "UK",
+   "color": "#C8102E",
+   "feedName": "Nottingham Forest",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
+   "id": "sun",
+   "comp": "EPL",
+   "espn": "366",
+   "name": "Sunderland",
+   "abbr": "SUN",
+   "tz": "UK",
+   "color": "#EB172B",
+   "feedName": "Sunderland",
+   "extraComps": [
+    "EFL",
+    "FAC"
+   ]
+  },
+  {
    "id": "rma",
    "comp": "LALIGA",
    "espn": "86",
@@ -1520,6 +1703,186 @@
    ]
   },
   {
+   "id": "ala",
+   "comp": "LALIGA",
+   "espn": "96",
+   "name": "Alavés",
+   "abbr": "ALA",
+   "tz": "CET",
+   "color": "#0000FF",
+   "feedName": "Alavés"
+  },
+  {
+   "id": "ath-laliga",
+   "comp": "LALIGA",
+   "espn": "93",
+   "name": "Athletic Club",
+   "abbr": "ATH",
+   "tz": "CET",
+   "color": "#C8142F",
+   "feedName": "Athletic Club"
+  },
+  {
+   "id": "atm",
+   "comp": "LALIGA",
+   "espn": "1068",
+   "name": "Atlético Madrid",
+   "abbr": "ATM",
+   "tz": "CET",
+   "color": "#CA3624",
+   "feedName": "Atlético Madrid"
+  },
+  {
+   "id": "cel",
+   "comp": "LALIGA",
+   "espn": "85",
+   "name": "Celta Vigo",
+   "abbr": "CEL",
+   "tz": "CET",
+   "color": "#6CACE4",
+   "feedName": "Celta Vigo"
+  },
+  {
+   "id": "dep",
+   "comp": "LALIGA",
+   "espn": "90",
+   "name": "Deportivo",
+   "abbr": "DEP",
+   "tz": "CET",
+   "color": "#3366CC",
+   "feedName": "Deportivo"
+  },
+  {
+   "id": "elc",
+   "comp": "LALIGA",
+   "espn": "3751",
+   "name": "Elche",
+   "abbr": "ELC",
+   "tz": "CET",
+   "color": "#288A00",
+   "feedName": "Elche"
+  },
+  {
+   "id": "esp",
+   "comp": "LALIGA",
+   "espn": "88",
+   "name": "Espanyol",
+   "abbr": "ESP",
+   "tz": "CET",
+   "color": "#3366CC",
+   "feedName": "Espanyol"
+  },
+  {
+   "id": "get",
+   "comp": "LALIGA",
+   "espn": "2922",
+   "name": "Getafe",
+   "abbr": "GET",
+   "tz": "CET",
+   "color": "#0000FF",
+   "feedName": "Getafe"
+  },
+  {
+   "id": "lev",
+   "comp": "LALIGA",
+   "espn": "1538",
+   "name": "Levante",
+   "abbr": "LEV",
+   "tz": "CET",
+   "color": "#C8142F",
+   "feedName": "Levante"
+  },
+  {
+   "id": "mcf",
+   "comp": "LALIGA",
+   "espn": "99",
+   "name": "Málaga",
+   "abbr": "MCF",
+   "tz": "CET",
+   "color": "#B9E8F0",
+   "feedName": "Málaga"
+  },
+  {
+   "id": "osa",
+   "comp": "LALIGA",
+   "espn": "97",
+   "name": "Osasuna",
+   "abbr": "OSA",
+   "tz": "CET",
+   "color": "#CD0000",
+   "feedName": "Osasuna"
+  },
+  {
+   "id": "rac",
+   "comp": "LALIGA",
+   "espn": "87",
+   "name": "Racing Santander",
+   "abbr": "RAC",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Racing Santander"
+  },
+  {
+   "id": "ray",
+   "comp": "LALIGA",
+   "espn": "101",
+   "name": "Rayo Vallecano",
+   "abbr": "RAY",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Rayo Vallecano"
+  },
+  {
+   "id": "bet",
+   "comp": "LALIGA",
+   "espn": "244",
+   "name": "Real Betis",
+   "abbr": "BET",
+   "tz": "CET",
+   "color": "#288A00",
+   "feedName": "Real Betis"
+  },
+  {
+   "id": "rso",
+   "comp": "LALIGA",
+   "espn": "89",
+   "name": "Real Sociedad",
+   "abbr": "RSO",
+   "tz": "CET",
+   "color": "#3366CC",
+   "feedName": "Real Sociedad"
+  },
+  {
+   "id": "sev",
+   "comp": "LALIGA",
+   "espn": "243",
+   "name": "Sevilla",
+   "abbr": "SEV",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Sevilla"
+  },
+  {
+   "id": "val",
+   "comp": "LALIGA",
+   "espn": "94",
+   "name": "Valencia",
+   "abbr": "VAL",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Valencia"
+  },
+  {
+   "id": "vil",
+   "comp": "LALIGA",
+   "espn": "102",
+   "name": "Villarreal",
+   "abbr": "VIL",
+   "tz": "CET",
+   "color": "#FFFF00",
+   "feedName": "Villarreal"
+  },
+  {
    "id": "bay",
    "comp": "BUNDES",
    "espn": "132",
@@ -1536,6 +1899,176 @@
    "extraComps": [
     "UCL"
    ]
+  },
+  {
+   "id": "fcu",
+   "comp": "BUNDES",
+   "espn": "598",
+   "name": "1. FC Union Berlin",
+   "abbr": "FCU",
+   "tz": "CET",
+   "color": "#DA0308",
+   "feedName": "1. FC Union Berlin"
+  },
+  {
+   "id": "b04",
+   "comp": "BUNDES",
+   "espn": "131",
+   "name": "Bayer Leverkusen",
+   "abbr": "B04",
+   "tz": "CET",
+   "color": "#DA0308",
+   "feedName": "Bayer Leverkusen"
+  },
+  {
+   "id": "dor",
+   "comp": "BUNDES",
+   "espn": "124",
+   "name": "Borussia Dortmund",
+   "abbr": "DOR",
+   "tz": "CET",
+   "color": "#FFEE00",
+   "feedName": "Borussia Dortmund"
+  },
+  {
+   "id": "bmg",
+   "comp": "BUNDES",
+   "espn": "268",
+   "name": "Borussia Mönchengladbach",
+   "abbr": "BMG",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Borussia Mönchengladbach"
+  },
+  {
+   "id": "sge",
+   "comp": "BUNDES",
+   "espn": "125",
+   "name": "Eintracht Frankfurt",
+   "abbr": "SGE",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Eintracht Frankfurt"
+  },
+  {
+   "id": "fca",
+   "comp": "BUNDES",
+   "espn": "3841",
+   "name": "FC Augsburg",
+   "abbr": "FCA",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "FC Augsburg"
+  },
+  {
+   "id": "koe",
+   "comp": "BUNDES",
+   "espn": "122",
+   "name": "FC Cologne",
+   "abbr": "KOE",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "FC Cologne"
+  },
+  {
+   "id": "hsv",
+   "comp": "BUNDES",
+   "espn": "127",
+   "name": "Hamburg SV",
+   "abbr": "HSV",
+   "tz": "CET",
+   "color": "#1A26AF",
+   "feedName": "Hamburg SV"
+  },
+  {
+   "id": "m05",
+   "comp": "BUNDES",
+   "espn": "2950",
+   "name": "Mainz",
+   "abbr": "M05",
+   "tz": "CET",
+   "color": "#DA0308",
+   "feedName": "Mainz"
+  },
+  {
+   "id": "rbl",
+   "comp": "BUNDES",
+   "espn": "11420",
+   "name": "RB Leipzig",
+   "abbr": "RBL",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "RB Leipzig"
+  },
+  {
+   "id": "scf",
+   "comp": "BUNDES",
+   "espn": "126",
+   "name": "SC Freiburg",
+   "abbr": "SCF",
+   "tz": "CET",
+   "color": "#DA0308",
+   "feedName": "SC Freiburg"
+  },
+  {
+   "id": "scp",
+   "comp": "BUNDES",
+   "espn": "3307",
+   "name": "SC Paderborn 07",
+   "abbr": "SCP",
+   "tz": "CET",
+   "color": "#0000DD",
+   "feedName": "SC Paderborn 07"
+  },
+  {
+   "id": "elv",
+   "comp": "BUNDES",
+   "espn": "10388",
+   "name": "SV Elversberg",
+   "abbr": "ELV",
+   "tz": "CET",
+   "color": "#000000",
+   "feedName": "SV Elversberg"
+  },
+  {
+   "id": "s04",
+   "comp": "BUNDES",
+   "espn": "133",
+   "name": "Schalke 04",
+   "abbr": "S04",
+   "tz": "CET",
+   "color": "#0000DD",
+   "feedName": "Schalke 04"
+  },
+  {
+   "id": "tsg",
+   "comp": "BUNDES",
+   "espn": "7911",
+   "name": "TSG Hoffenheim",
+   "abbr": "TSG",
+   "tz": "CET",
+   "color": "#003399",
+   "feedName": "TSG Hoffenheim"
+  },
+  {
+   "id": "vfb",
+   "comp": "BUNDES",
+   "espn": "134",
+   "name": "VfB Stuttgart",
+   "abbr": "VFB",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "VfB Stuttgart"
+  },
+  {
+   "id": "svw",
+   "comp": "BUNDES",
+   "espn": "137",
+   "name": "Werder Bremen",
+   "abbr": "SVW",
+   "tz": "CET",
+   "color": "#03915C",
+   "feedName": "Werder Bremen"
   },
   {
    "id": "psg",
@@ -1556,6 +2089,176 @@
    ]
   },
   {
+   "id": "aux",
+   "comp": "LIGUE1",
+   "espn": "172",
+   "name": "AJ Auxerre",
+   "abbr": "AUX",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "AJ Auxerre"
+  },
+  {
+   "id": "mon-ligue1",
+   "comp": "LIGUE1",
+   "espn": "174",
+   "name": "AS Monaco",
+   "abbr": "MON",
+   "tz": "CET",
+   "color": "#E91514",
+   "feedName": "AS Monaco"
+  },
+  {
+   "id": "ang",
+   "comp": "LIGUE1",
+   "espn": "7868",
+   "name": "Angers",
+   "abbr": "ANG",
+   "tz": "CET",
+   "color": "#1A1A1A",
+   "feedName": "Angers"
+  },
+  {
+   "id": "bre-ligue1",
+   "comp": "LIGUE1",
+   "espn": "6997",
+   "name": "Brest",
+   "abbr": "BRE",
+   "tz": "CET",
+   "color": "#EF2F24",
+   "feedName": "Brest"
+  },
+  {
+   "id": "hac",
+   "comp": "LIGUE1",
+   "espn": "3236",
+   "name": "Le Havre AC",
+   "abbr": "HAC",
+   "tz": "CET",
+   "color": "#011F68",
+   "feedName": "Le Havre AC"
+  },
+  {
+   "id": "mns",
+   "comp": "LIGUE1",
+   "espn": "2697",
+   "name": "Le Mans",
+   "abbr": "MNS",
+   "tz": "CET",
+   "color": "#D62B11",
+   "feedName": "Le Mans"
+  },
+  {
+   "id": "rcl",
+   "comp": "LIGUE1",
+   "espn": "175",
+   "name": "Lens",
+   "abbr": "RCL",
+   "tz": "CET",
+   "color": "#E91514",
+   "feedName": "Lens"
+  },
+  {
+   "id": "lill",
+   "comp": "LIGUE1",
+   "espn": "166",
+   "name": "Lille",
+   "abbr": "LILL",
+   "tz": "CET",
+   "color": "#C2051B",
+   "feedName": "Lille"
+  },
+  {
+   "id": "lor",
+   "comp": "LIGUE1",
+   "espn": "273",
+   "name": "Lorient",
+   "abbr": "LOR",
+   "tz": "CET",
+   "color": "#F46100",
+   "feedName": "Lorient"
+  },
+  {
+   "id": "lyon",
+   "comp": "LIGUE1",
+   "espn": "167",
+   "name": "Lyon",
+   "abbr": "LYON",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Lyon"
+  },
+  {
+   "id": "olm",
+   "comp": "LIGUE1",
+   "espn": "176",
+   "name": "Marseille",
+   "abbr": "OLM",
+   "tz": "CET",
+   "color": "#FFFFFF",
+   "feedName": "Marseille"
+  },
+  {
+   "id": "nice",
+   "comp": "LIGUE1",
+   "espn": "2502",
+   "name": "Nice",
+   "abbr": "NICE",
+   "tz": "CET",
+   "color": "#EF2F24",
+   "feedName": "Nice"
+  },
+  {
+   "id": "par-ligue1",
+   "comp": "LIGUE1",
+   "espn": "6851",
+   "name": "Paris FC",
+   "abbr": "PAR",
+   "tz": "CET",
+   "color": "#000000",
+   "feedName": "Paris FC"
+  },
+  {
+   "id": "ren",
+   "comp": "LIGUE1",
+   "espn": "169",
+   "name": "Stade Rennais",
+   "abbr": "REN",
+   "tz": "CET",
+   "color": "#EF2F24",
+   "feedName": "Stade Rennais"
+  },
+  {
+   "id": "str",
+   "comp": "LIGUE1",
+   "espn": "180",
+   "name": "Strasbourg",
+   "abbr": "STR",
+   "tz": "CET",
+   "color": "#0000BF",
+   "feedName": "Strasbourg"
+  },
+  {
+   "id": "tou",
+   "comp": "LIGUE1",
+   "espn": "179",
+   "name": "Toulouse",
+   "abbr": "TOU",
+   "tz": "CET",
+   "color": "#560080",
+   "feedName": "Toulouse"
+  },
+  {
+   "id": "try",
+   "comp": "LIGUE1",
+   "espn": "170",
+   "name": "Troyes",
+   "abbr": "TRY",
+   "tz": "CET",
+   "color": "#0000BF",
+   "feedName": "Troyes"
+  },
+  {
    "id": "int",
    "comp": "SERIEA",
    "espn": "110",
@@ -1572,6 +2275,196 @@
    "extraComps": [
     "UCL"
    ]
+  },
+  {
+   "id": "mil-seriea",
+   "comp": "SERIEA",
+   "espn": "103",
+   "name": "AC Milan",
+   "abbr": "MIL",
+   "tz": "CET",
+   "color": "#E4002B",
+   "feedName": "AC Milan"
+  },
+  {
+   "id": "roma",
+   "comp": "SERIEA",
+   "espn": "104",
+   "name": "AS Roma",
+   "abbr": "ROMA",
+   "tz": "CET",
+   "color": "#990A2C",
+   "feedName": "AS Roma"
+  },
+  {
+   "id": "ata",
+   "comp": "SERIEA",
+   "espn": "105",
+   "name": "Atalanta",
+   "abbr": "ATA",
+   "tz": "CET",
+   "color": "#1157BF",
+   "feedName": "Atalanta"
+  },
+  {
+   "id": "bol",
+   "comp": "SERIEA",
+   "espn": "107",
+   "name": "Bologna",
+   "abbr": "BOL",
+   "tz": "CET",
+   "color": "#04043D",
+   "feedName": "Bologna"
+  },
+  {
+   "id": "cag",
+   "comp": "SERIEA",
+   "espn": "2925",
+   "name": "Cagliari",
+   "abbr": "CAG",
+   "tz": "CET",
+   "color": "#282846",
+   "feedName": "Cagliari"
+  },
+  {
+   "id": "como",
+   "comp": "SERIEA",
+   "espn": "2572",
+   "name": "Como",
+   "abbr": "COMO",
+   "tz": "CET",
+   "color": "#4169E1",
+   "feedName": "Como"
+  },
+  {
+   "id": "fio",
+   "comp": "SERIEA",
+   "espn": "109",
+   "name": "Fiorentina",
+   "abbr": "FIO",
+   "tz": "CET",
+   "color": "#4C1D84",
+   "feedName": "Fiorentina"
+  },
+  {
+   "id": "fro",
+   "comp": "SERIEA",
+   "espn": "4057",
+   "name": "Frosinone",
+   "abbr": "FRO",
+   "tz": "CET",
+   "color": "#FACF08",
+   "feedName": "Frosinone"
+  },
+  {
+   "id": "gen",
+   "comp": "SERIEA",
+   "espn": "3263",
+   "name": "Genoa",
+   "abbr": "GEN",
+   "tz": "CET",
+   "color": "#08305D",
+   "feedName": "Genoa"
+  },
+  {
+   "id": "juv",
+   "comp": "SERIEA",
+   "espn": "111",
+   "name": "Juventus",
+   "abbr": "JUV",
+   "tz": "CET",
+   "color": "#000000",
+   "feedName": "Juventus"
+  },
+  {
+   "id": "laz",
+   "comp": "SERIEA",
+   "espn": "112",
+   "name": "Lazio",
+   "abbr": "LAZ",
+   "tz": "CET",
+   "color": "#74BDE7",
+   "feedName": "Lazio"
+  },
+  {
+   "id": "lec",
+   "comp": "SERIEA",
+   "espn": "113",
+   "name": "Lecce",
+   "abbr": "LEC",
+   "tz": "CET",
+   "color": "#FCED0B",
+   "feedName": "Lecce"
+  },
+  {
+   "id": "mon",
+   "comp": "SERIEA",
+   "espn": "4007",
+   "name": "Monza",
+   "abbr": "MON",
+   "tz": "CET",
+   "color": "#C8142F",
+   "feedName": "Monza"
+  },
+  {
+   "id": "nap",
+   "comp": "SERIEA",
+   "espn": "114",
+   "name": "Napoli",
+   "abbr": "NAP",
+   "tz": "CET",
+   "color": "#0677D2",
+   "feedName": "Napoli"
+  },
+  {
+   "id": "par",
+   "comp": "SERIEA",
+   "espn": "115",
+   "name": "Parma",
+   "abbr": "PAR",
+   "tz": "CET",
+   "color": "#19161D",
+   "feedName": "Parma"
+  },
+  {
+   "id": "sas",
+   "comp": "SERIEA",
+   "espn": "3997",
+   "name": "Sassuolo",
+   "abbr": "SAS",
+   "tz": "CET",
+   "color": "#0FA653",
+   "feedName": "Sassuolo"
+  },
+  {
+   "id": "tor",
+   "comp": "SERIEA",
+   "espn": "239",
+   "name": "Torino",
+   "abbr": "TOR",
+   "tz": "CET",
+   "color": "#9F0000",
+   "feedName": "Torino"
+  },
+  {
+   "id": "udi",
+   "comp": "SERIEA",
+   "espn": "118",
+   "name": "Udinese",
+   "abbr": "UDI",
+   "tz": "CET",
+   "color": "#19161D",
+   "feedName": "Udinese"
+  },
+  {
+   "id": "ven",
+   "comp": "SERIEA",
+   "espn": "17530",
+   "name": "Venezia",
+   "abbr": "VEN",
+   "tz": "CET",
+   "color": "#000000",
+   "feedName": "Venezia"
   },
   {
    "id": "van-mls",
@@ -1914,94 +2807,12 @@
    "displayName": "Men's WorldTour"
   }
  ],
- "ghosts": [
-  {
-   "id": "ips",
-   "comp": "EPL",
-   "city": "Ipswich",
-   "name": "Ipswich Town",
-   "abbr": "IPS",
-   "tz": "UK",
-   "color": "#3A64A3",
-   "feedName": "Ipswich Town",
-   "extraComps": [
-    "EFL",
-    "FAC"
-   ]
-  },
-  {
-   "id": "bou",
-   "comp": "EPL",
-   "city": "Bournemouth",
-   "name": "Bournemouth",
-   "abbr": "BOU",
-   "tz": "UK",
-   "color": "#B50E12",
-   "feedName": "AFC Bournemouth",
-   "extraComps": [
-    "EFL",
-    "FAC"
-   ]
-  },
-  {
-   "id": "nfo",
-   "comp": "EPL",
-   "city": "Nottingham",
-   "name": "Nottm Forest",
-   "abbr": "NFO",
-   "tz": "UK",
-   "color": "#DD0000",
-   "feedName": "Nottingham Forest",
-   "extraComps": [
-    "EFL",
-    "FAC"
-   ]
-  },
-  {
-   "id": "ful",
-   "comp": "EPL",
-   "city": "London",
-   "name": "Fulham",
-   "abbr": "FUL",
-   "tz": "UK",
-   "color": "#1B1B1B",
-   "feedName": "Fulham",
-   "extraComps": [
-    "EFL",
-    "FAC"
-   ]
-  }
- ],
+ "ghosts": [],
  "feedOnly": [
-  {
-   "id": "avl",
-   "comp": "EPL",
-   "feedName": "Aston Villa"
-  },
-  {
-   "id": "bha",
-   "comp": "EPL",
-   "feedName": "Brighton & Hove Albion"
-  },
   {
    "id": "whu",
    "comp": "EPL",
    "feedName": "West Ham United"
-  },
-  {
-   "id": "eve",
-   "comp": "EPL",
-   "feedName": "Everton"
-  },
-  {
-   "id": "cry",
-   "comp": "EPL",
-   "feedName": "Crystal Palace"
-  },
-  {
-   "id": "bre",
-   "comp": "EPL",
-   "feedName": "Brentford"
   }
  ]
 }
