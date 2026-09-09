@@ -168,12 +168,17 @@ const ROW_PREAMBLE = `
 const TOURNEYS = new Map();
 const tourneyOf = () => null;
 const isStarredPlayer = () => false;
+
+/* The full tables the record under a team name is read from. Empty here:
+   these tests are about where a match is played, and a row with no
+   record is the same row. The record has its own file. */
+let RECORDS = new Map();
 `;
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf",
-  "venueTag","gameRow"];
+  "venueTag","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope","gameRow"];
 const rows = () => loadFromPage(ROW_NAMES, ROW_PREAMBLE);
 
 const NOW = Date.parse("2026-09-20T12:00:00Z");

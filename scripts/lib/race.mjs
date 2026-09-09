@@ -163,6 +163,11 @@ export function rowFrom(entry, opts = {}){
   put(row, "w", numStat(entry, "wins"));
   put(row, "d", numStat(entry, "ties"));
   put(row, "l", numStat(entry, "losses"));
+  /* Hockey alone, and it is not a tie: a team losing in overtime keeps a
+     point, so a record written 12-4 would be a different season from the
+     one written 12-4-2. Only the NHL publishes it, so only the NHL row
+     carries it. */
+  put(row, "otl", numStat(entry, "otLosses"));
   /* League points and goal difference belong to a ranked table and to
      nothing else. The North American views answer `points` too, but it
      means something entirely different there — ESPN describes it as the
