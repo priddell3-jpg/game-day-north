@@ -161,6 +161,13 @@ const ROW_PREAMBLE = `
   const crest = t => "";
   const fmtDayLong = k => k;
   const isNarrow = () => false;
+
+/* gameRow dispatches to tennisRow, which reads the tournament list.
+   This harness never renders a tennis row, but the declaration has to
+   exist for the ones it does. */
+const TOURNEYS = new Map();
+const tourneyOf = () => null;
+const isStarredPlayer = () => false;
 `;
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",

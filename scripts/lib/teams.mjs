@@ -18,7 +18,7 @@
    against the page's own tables by the tests, which turns the
    duplication into a drift check instead of a second source of truth. */
 export const KNOWN_COMPS = ["NHL", "NBA", "NFL", "MLB", "MLS", "EPL", "UCL", "EFL", "FAC",
-  "LALIGA", "SERIEA", "BUNDES", "LIGUE1", "UCI"];
+  "LALIGA", "SERIEA", "BUNDES", "LIGUE1", "UCI", "ATP", "WTA"];
 export const KNOWN_ZONES = ["ET", "CT", "MT", "MST", "PT", "UK", "CET", "UTC"];
 export const SOCCER_COMPS = ["EPL", "UCL", "EFL", "FAC", "MLS", "LALIGA", "SERIEA", "BUNDES", "LIGUE1"];
 

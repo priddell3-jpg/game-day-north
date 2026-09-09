@@ -24,11 +24,16 @@ function initWith(hash, store){
                  set(k, v){ store[k] = v; } };
     const DEFAULT_TEAMS = ${JSON.stringify(decls.DEFAULT_TEAMS)};
     const RUGBY_FOLLOW = ${JSON.stringify(decls.RUGBY_FOLLOW)};
-    let selected, services, hiddenComps, showScores, rugbyStars;
+    const keptFrom = (list, ok) => Array.isArray(list) ? list.map(String).filter(ok) : [];
+    const isTour = v => v === "ATP" || v === "WTA";
+    const isEventId = v => /^\\d{1,6}-\\d{4}$/.test(v);
+    let selected, services, hiddenComps, showScores, tennisTours, tennisEvents;
+    let rugbyStars, tennisStars;
     ${block[0]}
     const rugbyOn = () => selected.has(RUGBY_FOLLOW);
     return {selected:[...selected], services:[...services], hidden:[...hiddenComps],
-            showScores, stars:[...rugbyStars], rugbyOn: rugbyOn()};`;
+            showScores, stars:[...rugbyStars], rugbyOn: rugbyOn(),
+            tours:[...tennisTours], events:[...tennisEvents], tennisStars:[...tennisStars]};`;
   return new Function(body)();
 }
 
@@ -124,7 +129,12 @@ function shareWith(selected, services, hidden, scores, stars){
      const services = new Set(${JSON.stringify(services)});
      const hiddenComps = new Set(${JSON.stringify(hidden)});
      const showScores = ${scores};
-     const rugbyStars = new Set(${JSON.stringify(stars)});`);
+     const rugbyStars = new Set(${JSON.stringify(stars)});
+     /* shareLink now appends the tennis keys too. Empty sets, because
+        this is about what a link looks like with tennis switched off. */
+     const tennisTours = new Set();
+     const tennisEvents = new Set();
+     const tennisStars = new Set();`);
   return page.shareLink();
 }
 

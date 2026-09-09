@@ -1,0 +1,255 @@
+{
+ "_note": "CONSTRUCTED, not extracted. Suspended, walkover and a cancellation between two named players are all in ESPN's vocabulary, but at the time these fixtures were taken (2026-08-24) the ATP and WTA scoreboards were publishing none of them: every STATUS_CANCELED entry in the live feeds was an unplayed TBD-vs-TBD draw line, and there was no suspended or walkover match anywhere. Every field around the status block is copied from a real competition in tennis-atp-scoreboard.json; only status.type, wasSuspended and the notes line are written by hand, using ESPN's own naming. Treat any assertion resting on these three states as unconfirmed against live data.",
+ "leagues": [
+  {
+   "id": "851",
+   "name": "ATP",
+   "abbreviation": "ATP",
+   "slug": "atp"
+  }
+ ],
+ "events": [
+  {
+   "id": "363-2026",
+   "name": "Winston-Salem Open",
+   "shortName": "Winston-Salem",
+   "major": false,
+   "groupings": [
+    {
+     "grouping": {
+      "id": "1",
+      "slug": "mens-singles",
+      "displayName": "Men's Singles"
+     },
+     "competitions": [
+      {
+       "id": "900001",
+       "date": "2026-08-24T17:00Z",
+       "startDate": "2026-08-24T17:00Z",
+       "timeValid": true,
+       "status": {
+        "period": 2,
+        "type": {
+         "id": "22",
+         "name": "STATUS_SUSPENDED",
+         "state": "in",
+         "completed": false,
+         "description": "Suspended",
+         "detail": "Suspended",
+         "shortDetail": "Susp."
+        }
+       },
+       "venue": {
+        "fullName": "Winston-Salem, USA",
+        "court": "Court 2"
+       },
+       "notes": [
+        {
+         "text": "Rain suspended play",
+         "type": "event"
+        }
+       ],
+       "competitors": [
+        {
+         "id": "11399",
+         "type": "athlete",
+         "order": 1,
+         "homeAway": "home",
+         "linescores": [
+          {
+           "value": 6
+          },
+          {
+           "value": 3
+          }
+         ],
+         "athlete": {
+          "displayName": "Sebastian Gorzny",
+          "shortName": "S. Gorzny",
+          "flag": {
+           "href": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+           "alt": "United States"
+          }
+         }
+        },
+        {
+         "id": "15548",
+         "type": "athlete",
+         "order": 2,
+         "homeAway": "away",
+         "linescores": [
+          {
+           "value": 4
+          },
+          {
+           "value": 2
+          }
+         ],
+         "athlete": {
+          "displayName": "Cruz Hewitt",
+          "shortName": "C. Hewitt",
+          "flag": {
+           "href": "https://a.espncdn.com/i/teamlogos/countries/500/aus.png",
+           "alt": "Australia"
+          }
+         }
+        }
+       ],
+       "wasSuspended": true,
+       "round": {
+        "id": "3",
+        "displayName": "Round 2"
+       },
+       "type": {
+        "id": "1",
+        "text": "Men's Singles",
+        "slug": "mens-singles"
+       }
+      },
+      {
+       "id": "900002",
+       "date": "2026-08-25T15:00Z",
+       "startDate": "2026-08-25T15:00Z",
+       "timeValid": false,
+       "status": {
+        "period": 0,
+        "type": {
+         "id": "39",
+         "name": "STATUS_WALKOVER",
+         "state": "post",
+         "completed": true,
+         "description": "Walkover",
+         "detail": "Walkover",
+         "shortDetail": "W/O"
+        }
+       },
+       "venue": {
+        "fullName": "Winston-Salem, USA"
+       },
+       "notes": [
+        {
+         "text": "Marc Polmans bt Felix Balshaw w/o",
+         "type": "event"
+        }
+       ],
+       "competitors": [
+        {
+         "id": "3810",
+         "type": "athlete",
+         "order": 1,
+         "homeAway": "home",
+         "winner": true,
+         "linescores": [],
+         "athlete": {
+          "displayName": "Marc Polmans",
+          "shortName": "M. Polmans",
+          "flag": {
+           "href": "https://a.espncdn.com/i/teamlogos/countries/500/aus.png",
+           "alt": "Australia"
+          }
+         }
+        },
+        {
+         "id": "16108",
+         "type": "athlete",
+         "order": 2,
+         "homeAway": "away",
+         "winner": false,
+         "linescores": [],
+         "athlete": {
+          "displayName": "Felix Balshaw",
+          "shortName": "F. Balshaw",
+          "flag": {
+           "href": "https://a.espncdn.com/i/teamlogos/countries/500/gbr.png",
+           "alt": "Great Britain"
+          }
+         }
+        }
+       ],
+       "wasSuspended": false,
+       "round": {
+        "id": "3",
+        "displayName": "Round 2"
+       },
+       "type": {
+        "id": "1",
+        "text": "Men's Singles",
+        "slug": "mens-singles"
+       }
+      },
+      {
+       "id": "900003",
+       "date": "2026-08-25T18:30Z",
+       "startDate": "2026-08-25T18:30Z",
+       "timeValid": true,
+       "status": {
+        "period": 0,
+        "type": {
+         "id": "5",
+         "name": "STATUS_CANCELED",
+         "state": "post",
+         "completed": false,
+         "description": "Canceled",
+         "detail": "Canceled",
+         "shortDetail": "Canceled"
+        }
+       },
+       "venue": {
+        "fullName": "Winston-Salem, USA",
+        "court": "Court 3"
+       },
+       "notes": [
+        {
+         "text": "Match canceled",
+         "type": "event"
+        }
+       ],
+       "competitors": [
+        {
+         "id": "8814",
+         "type": "athlete",
+         "order": 1,
+         "homeAway": "home",
+         "linescores": [],
+         "athlete": {
+          "displayName": "Luca Van Assche",
+          "shortName": "L. Van Assche",
+          "flag": {
+           "href": "https://a.espncdn.com/i/teamlogos/countries/500/fra.png",
+           "alt": "France"
+          }
+         }
+        },
+        {
+         "id": "7886",
+         "type": "athlete",
+         "order": 2,
+         "homeAway": "away",
+         "linescores": [],
+         "athlete": {
+          "displayName": "Remy Bertola",
+          "shortName": "R. Bertola",
+          "flag": {
+           "href": "https://a.espncdn.com/i/teamlogos/countries/500/sui.png",
+           "alt": "Switzerland"
+          }
+         }
+        }
+       ],
+       "wasSuspended": false,
+       "round": {
+        "id": "3",
+        "displayName": "Round 2"
+       },
+       "type": {
+        "id": "1",
+        "text": "Men's Singles",
+        "slug": "mens-singles"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

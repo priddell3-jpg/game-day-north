@@ -36,6 +36,13 @@ const PREAMBLE = `
   const normName = x => String(x||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const fmtDayLong = k => k;
   const isNarrow = () => false;
+
+/* gameRow dispatches to tennisRow, which reads the tournament list.
+   These harnesses never render a tennis row, but the declaration has to
+   exist for the ones they do render. */
+const TOURNEYS = new Map();
+const tourneyOf = () => null;
+const isStarredPlayer = () => false;
 `;
 const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","RUGBY_ACTIVE","RUGBY_TERMINAL","rugbyIsActive","rugbyIsTerminal",

@@ -32,6 +32,8 @@ import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
          STANDINGS_HOLD } from "./lib/race.mjs";
 import { MAX_LIMIT, planRanges, splitRange, dateKey, compFloorProblems, describeFloor,
          nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
+import { normalizeTennis, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
+         HORIZON_DAYS as TENNIS_FORWARD_DAYS } from "./lib/tennis.mjs";
 
 /* Every club this build knows about, and every name each answers to.
    One committed file, shared with the page, so the two cannot drift —
@@ -917,6 +919,44 @@ if(standingsUnavailable.length){
   standingsUnavailable.forEach(x=>console.warn("     " + x));
 }
 
+/* ============================================================
+   TENNIS — ATP and WTA singles.
+
+   The two scoreboards come to about 3.6 MB together and carry every
+   doubles draw nobody asked for, with a Grand Slam published in full
+   under both tours. That is why this happens here and not in a browser:
+   one machine reads it, keeps the singles, deduplicates the Slam by
+   ESPN's own competition id, and writes a few tens of kilobytes.
+
+   This replaces a serverless endpoint the paused branch used. The
+   endpoint existed because the reduction had to happen somewhere other
+   than the browser; the scheduled build is somewhere other than the
+   browser, and it is already here.
+
+   Tennis keeps its own retention window rather than the fixture one.
+   The reasoning is with the constants in scripts/lib/tennis.mjs.
+   ============================================================ */
+const TENNIS_FEEDS = { ATP: "atp", WTA: "wta" };
+let tennisOut = { matches: [], tournaments: [] };
+try{
+  const payloads = [];
+  for(const [tour, slug] of Object.entries(TENNIS_FEEDS)){
+    const r = await get(ESPN + "tennis/" + slug + "/scoreboard");
+    /* Unreachable is not fatal here the way a fixture league is: tennis
+       ships dark, and a tour that could not be read is a tour with no
+       matches rather than a competition silently missing from a board
+       somebody is looking at. */
+    if(r && r !== FAILED) payloads.push(r);
+    else console.warn("  ! tennis " + tour + " could not be read");
+  }
+  tennisOut = normalizeTennis(payloads, { now });
+  console.log("Tennis: " + tennisOut.matches.length + " singles match(es) across "
+    + tennisOut.tournaments.length + " tournament(s), keeping "
+    + TENNIS_BACK_DAYS + "d back and " + TENNIS_FORWARD_DAYS + "d forward");
+}catch(err){
+  console.warn("  ! tennis skipped — " + (err && err.message || err));
+}
+
 /* A roster entry that matched no fixture at all is almost always a name
    that drifted, not a team with an empty schedule. Say so loudly: this
    failure is invisible in the app, where it just looks like a team that
@@ -985,7 +1025,8 @@ const MAX_AGE = 6*3600000;
 const cyclingSame = previous && JSON.stringify(previous.cycling || []) === JSON.stringify(cyclingOut);
 const rugbySame = previous && JSON.stringify(previous.rugby || []) === JSON.stringify(rugbyOut);
 const standingsSame = previous && JSON.stringify(previous.standings || []) === JSON.stringify(standings);
-if(previous && cyclingSame && rugbySame && standingsSame &&
+const tennisSame = previous && JSON.stringify(previous.tennis || {matches:[],tournaments:[]}) === JSON.stringify(tennisOut);
+if(previous && cyclingSame && rugbySame && standingsSame && tennisSame &&
    JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
@@ -1021,14 +1062,16 @@ const out = {
             /* Carried run to run so a competition that has been absent
                for a while is still guarded. Lapses on its own, so a
                season that genuinely ended stops guarding. */
-            peakByComp: peaks },
+            peakByComp: peaks,
+            tennis: tennisOut.matches.length },
   fixtures,
   cycling: cyclingOut,
   rugby: rugbyOut,
   /* Standings live beside the fixtures, not inside them. Nothing in the
      Race model is keyed on a fixture and nothing in a fixture is keyed
      on a standing; the only thing they share is the team id. */
-  standings
+  standings,
+  tennis: tennisOut
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +

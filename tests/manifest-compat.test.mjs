@@ -33,10 +33,15 @@ function initWith(hash, store){
                  set(k, v){ store[k] = v; } };
     const DEFAULT_TEAMS = ${JSON.stringify(decls.DEFAULT_TEAMS)};
     const RUGBY_FOLLOW = ${JSON.stringify(decls.RUGBY_FOLLOW)};
-    let selected, services, hiddenComps, showScores, rugbyStars;
+    const keptFrom = (list, ok) => Array.isArray(list) ? list.map(String).filter(ok) : [];
+    const isTour = v => v === "ATP" || v === "WTA";
+    const isEventId = v => /^\\d{1,6}-\\d{4}$/.test(v);
+    let selected, services, hiddenComps, showScores, tennisTours, tennisEvents;
+    let rugbyStars, tennisStars;
     ${block[0]}
     return {selected:[...selected], services:[...services], hidden:[...hiddenComps],
-            showScores, stars:[...rugbyStars]};`;
+            showScores, stars:[...rugbyStars],
+            tours:[...tennisTours], events:[...tennisEvents], tennisStars:[...tennisStars]};`;
   return new Function(body)();
 }
 
@@ -207,6 +212,11 @@ function drawer(opts = {}){
     const CLUB = ${JSON.stringify(Object.fromEntries(Object.values(P.TEAMS).map(t => [t.id, P.fullName(t)])))};
     const fullName = t => CLUB[t.id];
     const renderRugbyPicker = () => "";
+    /* The drawer now also draws the tennis picker, which this harness is
+       not about; it renders nothing so the team chips can be counted. */
+    const tennisPicker = () => "";
+    const tennisTours = new Set();
+    const tennisEvents = new Set();
     const shareLink = () => "";
     let html = "";
     const document = { getElementById: () => ({ set innerHTML(v){ html = v; }, set textContent(v){} }) };
