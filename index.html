@@ -441,14 +441,18 @@ main{padding:22px 0 80px}
    Built to the same shape as the history panel above it, so the two read
    as one column of context rather than two different ideas. */
 .races{margin:14px 0 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
-.races summary{padding:13px 16px;cursor:pointer;font-weight:800;font-stretch:112%;font-size:14px;list-style:none;display:flex;gap:10px;align-items:baseline}
+/* Shut, this is one row: a title and a count on the first line and the
+   standings line under it, both clipped rather than wrapped so the row
+   cannot grow into a paragraph on a narrow screen. */
+.races summary{padding:11px 16px;cursor:pointer;list-style:none;
+  display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
 .races summary::-webkit-details-marker{display:none}
-.races summary::after{content:"\25BE";margin-left:auto;color:var(--muted);font-size:11px;align-self:center}
+.races summary::after{content:"\25BE";grid-column:2;grid-row:1;color:var(--muted);font-size:11px}
 .races[open] summary{border-bottom:1px solid var(--line)}
 .races[open] summary::after{content:"\25B4"}
-.races summary .conf-note{text-transform:none;letter-spacing:.02em;font-size:11px;
-  /* the headline is a sentence, so it wraps rather than pushing the
-     chevron off a narrow screen */
+.races-head{display:flex;gap:10px;align-items:baseline;min-width:0}
+.races-head b{font-weight:800;font-stretch:112%;font-size:14px}
+.races-line{grid-column:1;font-family:var(--mono);font-size:11px;color:var(--muted);
   min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .races-in{padding:12px 14px 14px;display:grid;gap:12px}
 .race-card{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface-2);overflow:hidden}
@@ -485,10 +489,33 @@ main{padding:22px 0 80px}
   font-family:var(--mono);font-size:12px;text-align:center;letter-spacing:.3em}
 .race-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;
   border-top:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.45}
-.race-foot span{flex:1 1 180px;min-width:0}
-.race-more{flex:none;margin-left:auto;border:1px solid var(--line-strong);background:var(--surface);
+.race-foot > span{flex:1 1 180px;min-width:0}
+.race-acts{display:flex;gap:6px;flex:none;margin-left:auto}
+.race-more,.race-pref{flex:none;border:1px solid var(--line-strong);background:var(--surface);
   color:var(--ink-2);border-radius:999px;padding:4px 11px;font:inherit;font-size:11px;cursor:pointer}
-.race-more:hover{border-color:var(--accent);color:var(--accent)}
+.race-more:hover,.race-pref:hover{border-color:var(--accent);color:var(--accent)}
+.race-pref[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);
+  background:var(--accent-soft)}
+/* Customize is a way back as much as a way in: a hidden race has no card
+   left to act on, so every race the reader could have lives in here. */
+.race-prefs{border:1px dashed var(--line-strong);border-radius:var(--radius);background:transparent}
+.race-prefs summary{padding:8px 12px;cursor:pointer;list-style:none;font-family:var(--mono);
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.race-prefs summary::-webkit-details-marker{display:none}
+.race-prefs summary::after{content:"\25BE";float:right}
+.race-prefs[open] summary::after{content:"\25B4"}
+.race-prefs-in{padding:0 12px 10px}
+.race-prefs-note{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.5}
+.race-opt-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:5px 0;
+  border-top:1px solid var(--line)}
+.race-opt-name{flex:1 1 150px;min-width:0;font-size:12px}
+.race-opt-name i{display:block;font-style:normal;font-family:var(--mono);font-size:9px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.race-opt-set{display:flex;gap:4px;flex:none}
+.race-opt{border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  border-radius:999px;padding:3px 9px;font:inherit;font-size:10.5px;cursor:pointer}
+.race-opt[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);
+  background:var(--accent-soft);font-weight:600}
 .race-more[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
 /* Expanded, a full table can run to 36 rows, so it scrolls inside the
    card rather than pushing the schedule off the screen. Where :has is
@@ -849,54 +876,54 @@ const RACE_CHECKED = "2026-09-08";
    `seasonal` allows a handful of races to stand on their own late on. */
 const RACES = [
   {id:"epl-title", comp:"EPL", group:"table", title:"Title race",
-   cut:{kind:"rule", at:1, label:"Top of the table",
+   cut:{kind:"rule", at:1, label:"Top of the table", short:"the title", inside:"top of the table",
         origin:"First place is the title; the line is the definition, not a rule that can change."},
    length:38, lateAt:0.5, near:3},
   {id:"epl-ucl", comp:"EPL", group:"table", title:"Champions League places",
-   cut:{kind:"zoneEnd", match:"champions league", label:"Champions League"},
+   cut:{kind:"zoneEnd", match:"champions league", label:"Champions League", short:"the UCL places"},
    length:38, lateAt:0.35, near:3},
   {id:"epl-euro", comp:"EPL", group:"table", title:"European places",
    cut:{kind:"zoneRun", match:["champions league","europa league","conference league"],
-        label:"European places"},
+        label:"European places", short:"Europe"},
    length:38, lateAt:0.5, near:2},
   {id:"epl-rel", comp:"EPL", group:"table", title:"Relegation battle",
-   cut:{kind:"zoneStart", match:"relegation", label:"Safety"},
+   cut:{kind:"zoneStart", match:"relegation", label:"Safety", short:"safety"},
    length:38, lateAt:0.35, near:3},
 
   {id:"ucl-top8", comp:"UCL", group:"league", title:"Top eight",
-   cut:{kind:"zoneEnd", match:"round of 16", label:"Straight to the round of 16"},
+   cut:{kind:"zoneEnd", match:"round of 16", label:"Straight to the round of 16", short:"the top eight"},
    length:8, lateAt:0.5, near:3, seasonal:true},
   {id:"ucl-top24", comp:"UCL", group:"league", title:"Knockout play-off places",
-   cut:{kind:"zoneRun", match:["round of 16","knockout phase playoffs"], label:"Through to the play-offs"},
+   cut:{kind:"zoneRun", match:["round of 16","knockout phase playoffs"], label:"Through to the play-offs", short:"the play-offs"},
    length:8, lateAt:0.5, near:3},
 
   {id:"mlb-wc-al", comp:"MLB", group:"AL", title:"AL Wild Card",
-   cut:{kind:"line", label:"Last wild card"}, length:162, lateAt:0.6, near:3},
+   cut:{kind:"line", label:"Last wild card", short:"a wild card"}, length:162, lateAt:0.6, near:3},
   {id:"mlb-wc-nl", comp:"MLB", group:"NL", title:"NL Wild Card",
-   cut:{kind:"line", label:"Last wild card"}, length:162, lateAt:0.6, near:3},
+   cut:{kind:"line", label:"Last wild card", short:"a wild card"}, length:162, lateAt:0.6, near:3},
 
   /* The one hand-held number in this table. No page on the league's own
      site could be found that states it in text a fetch can read, so it
      carries a note and a checked date and no link, rather than a link to
      a page that may not say it. */
   {id:"nfl-afc", comp:"NFL", group:"AFC", title:"AFC playoff picture",
-   cut:{kind:"rule", at:7, label:"Last playoff place",
+   cut:{kind:"rule", at:7, label:"Last playoff place", short:"the playoffs",
         origin:"Seven teams per conference reach the playoffs, the format since 2020.",
         checked:RACE_CHECKED},
    length:17, lateAt:0.35, near:3},
   {id:"nfl-nfc", comp:"NFL", group:"NFC", title:"NFC playoff picture",
-   cut:{kind:"rule", at:7, label:"Last playoff place",
+   cut:{kind:"rule", at:7, label:"Last playoff place", short:"the playoffs",
         origin:"Seven teams per conference reach the playoffs, the format since 2020.",
         checked:RACE_CHECKED},
    length:17, lateAt:0.35, near:3},
   /* The top seed is the only one with a bye, so it is a race of its own
      — but only once enough has been played for it to mean anything. */
   {id:"nfl-afc-top", comp:"NFL", group:"AFC", title:"AFC top seed",
-   cut:{kind:"rule", at:1, label:"First seed",
+   cut:{kind:"rule", at:1, label:"First seed", short:"the top seed",
         origin:"Only the first seed gets a bye.", checked:RACE_CHECKED},
    length:17, lateAt:0.65, near:2},
   {id:"nfl-nfc-top", comp:"NFL", group:"NFC", title:"NFC top seed",
-   cut:{kind:"rule", at:1, label:"First seed",
+   cut:{kind:"rule", at:1, label:"First seed", short:"the top seed",
         origin:"Only the first seed gets a bye.", checked:RACE_CHECKED},
    length:17, lateAt:0.65, near:2},
 
@@ -904,7 +931,7 @@ const RACES = [
      source's own games-behind column measures against, which in a
      division is the lead. */
   {id:"nfl-div", comp:"NFL", kindIs:"division", title:null,
-   cut:{kind:"line", label:"Division lead"}, length:17, lateAt:0.4, near:2}
+   cut:{kind:"line", label:"Division lead", short:"the division"}, length:17, lateAt:0.4, near:2}
 ];
 
 /* Normalised standings from data.json. Empty until the file arrives, and
@@ -965,10 +992,39 @@ function raceCutoff(view, grp){
 }
 
 /* How far into the season, as a fraction, or null when it cannot be
-   known. Only ever used to decide whether to show a race. */
+   known. Games played over season length, never a calendar date: a
+   competition's shape is its own, and August means nothing to a league
+   that starts in October. */
 function racePhase(view, grp){
   if(!grp.played || !view.length) return null;
   return grp.played.max / view.length;
+}
+
+/* When a race is worth a place on the page, as one table rather than as
+   a rule per competition.
+
+   `near` is how many places either side of the line still count as being
+   in the race, and it widens as a season runs out: three points in
+   November is nothing and in May it is everything. `near: null` means
+   Auto shows this race at all — early on, a table says so little that
+   the honest answer is not to draw one. Pinning overrides that.
+
+   `solo` allows a race with none of your clubs near the line to stand on
+   its own, and only in the final stretch, because that is the only point
+   at which a race is the story regardless of who is in it. */
+const RACE_PHASES = [
+  {id:"early", from:0.00, near:null, solo:false},
+  {id:"mid",   from:0.25, near:2,    solo:false},
+  {id:"late",  from:0.60, near:3,    solo:false},
+  {id:"final", from:0.85, near:4,    solo:true}
+];
+function racePhaseOf(view, grp){
+  const at = racePhase(view, grp);
+  if(at == null) return null;
+  const bands = view.phases || RACE_PHASES;
+  let band = null;
+  for(const b of bands) if(at >= b.from) band = b;
+  return band ? Object.assign({progress: at}, band) : null;
 }
 
 /* Should this race be on the page, and around whom?
@@ -1000,28 +1056,54 @@ function raceRelevance(view, grp, now, followed){
   }
   const at = raceCutoff(view, grp);
   if(at == null) return null;
-  const near = view.near == null ? 3 : view.near;
+  const band = racePhaseOf(view, grp);
+  if(!band) return null;
   const mine = grp.rows.filter(r=>r.id && followed.has(r.id));
   /* A table can be published before anyone in it has kicked a ball —
      the Champions League seeds all 36 clubs on matchday one, half of
      them on nothing played. A followed club with no games behind it is
      not yet in a race, whatever position the table gives them. */
   const started = mine.filter(r=>r.gp == null || r.gp > 0);
-  const inTouch = started.filter(r=>r.pos >= at - near + 1 && r.pos <= at + near);
-  const phase = racePhase(view, grp);
-  const late = phase != null && phase >= (view.lateAt == null ? 0.6 : view.lateAt);
-  if(inTouch.length){
-    const gap = Math.min(...inTouch.map(r=>Math.abs(r.pos - at)));
-    return {at, mine, focus:inTouch, reason:"near", rank:gap};
+  const base = {at, mine, band, at0:at};
+  if(band.near != null){
+    const inTouch = started.filter(r=>r.pos >= at - band.near && r.pos <= at + band.near);
+    if(inTouch.length){
+      /* How near the nearest of your clubs is to this line. It is what
+         decides which race is a club's primary one, so it is carried
+         rather than recomputed. */
+      const gap = Math.min(...inTouch.map(r=>Math.abs(r.pos - at)));
+      return Object.assign(base, {focus:inTouch, reason:"near", rank:gap});
+    }
   }
-  if(started.length && late) return {at, mine, focus:started, reason:"late", rank:50};
-  /* A race with none of your clubs in it may still be the story of the
-     week, but only in a competition you actually follow. Without that
-     gate, following one hockey team put a baseball table on the page. */
-  if(view.seasonal && late && raceFollowsComp(grp.comp, followed))
-    return {at, mine, focus:[], reason:"seasonal", rank:90};
+  /* A race with none of your clubs near the line may still be the story
+     of the season's last weeks — but only in a competition you actually
+     follow. Without that gate, following one hockey team put a baseball
+     table on the page. */
+  if(band.solo && view.seasonal && raceFollowsComp(grp.comp, followed))
+    return Object.assign(base, {focus:[], reason:"seasonal", rank:90});
   return null;
 }
+
+/* Auto, pinned or hidden, for one race. Preferences key on the card id,
+   which is stable across seasons and across a rewritten source: hiding
+   the European places stays hidden when the zone that defines its line
+   moves from fifth to eighth. */
+const RACE_AUTO = "auto", RACE_PIN = "pin", RACE_HIDE = "hide";
+function racePrefOf(id){
+  const v = racePrefs && racePrefs[id];
+  return v === RACE_PIN || v === RACE_HIDE ? v : RACE_AUTO;
+}
+function setRacePref(id, pref){
+  if(pref === RACE_AUTO) delete racePrefs[id];
+  else racePrefs[id] = pref;
+  LS.set(RACES_PREFS_KEY, racePrefs);
+}
+const raceCardId = (view, grp) => view.id + (view.kindIs ? ":" + grp.group : "");
+/* Preference buttons get real ids rather than a focus rule of their own.
+   render() already restores focus by id, and a card that changes shape
+   under someone part-way through pinning it should not drop them back to
+   the top of the document. */
+const racePrefBtnId = (raceId, pref, kind) => "rp-" + (kind || "card") + "-" + pref + "-" + raceId;
 
 /* The groups a view applies to: one named group, or every division of a
    competition where the view covers all of them. */
@@ -1044,22 +1126,97 @@ function raceSlice(grp, at, focus, full){
   return rows.length ? rows : grp.rows.slice(0, 4);
 }
 
-/* Every race worth showing, best first and deliberately few. Two cards
-   from one competition is already a lot on a phone, and four on the page
-   is the point at which this stops being context and starts being a
-   standings site. */
-const RACE_PER_COMP = 2, RACE_TOTAL = 4, RACE_APART = 3;
-function raceCards(now, followed){
+/* Every candidate race, whatever the preferences say. Shared by the card
+   selection below and by the Customize list, so the list can offer a race
+   that Auto is currently declining to show. */
+function raceCandidates(now, followed){
   const out = [];
   for(const view of RACES){
     for(const grp of raceGroupsFor(view)){
-      if(hiddenComps.has(grp.comp)) continue;
+      const id = raceCardId(view, grp);
       const rel = raceRelevance(view, grp, now, followed);
-      if(!rel) continue;
-      out.push({id:view.id + (view.kindIs ? ":" + grp.group : ""), view, grp,
-                at:rel.at, mine:rel.mine, focus:rel.focus, reason:rel.reason, rank:rel.rank,
-                title:view.title || grp.scope});
+      out.push({id, view, grp, rel, title: view.title || grp.scope,
+                comp: grp.comp, off: hiddenComps.has(grp.comp)});
     }
+  }
+  return out;
+}
+
+/* Every race worth showing, best first and deliberately few.
+
+   The shape of this is one primary race per followed club. A club near
+   the foot of a table is in a relegation battle, not in four races at
+   once, and listing the title race beside it because the club is
+   technically in the same table is noise. So each club claims the one
+   line it is nearest to, and a card survives only if some club claimed
+   it — or the reader pinned it, or it is a race the closing weeks make
+   worth watching on its own.
+
+   Ties go to whichever race is declared first in RACES, which is written
+   in the order a season is usually talked about: the title, then Europe,
+   then survival. */
+const RACE_PER_COMP = 2, RACE_TOTAL = 4, RACE_APART = 3;
+function racePrimaries(candidates){
+  const byClub = new Map();
+  for(const c of candidates){
+    if(!c.rel || c.rel.reason !== "near") continue;
+    for(const row of c.rel.focus){
+      const gap = Math.abs(row.pos - c.rel.at);
+      const held = byClub.get(row.id);
+      if(!held || gap < held.gap) byClub.set(row.id, {gap, card:c});
+    }
+  }
+  return byClub;
+}
+
+/* Which followed clubs each surviving card is actually for.
+
+   A relegation battle that opens on the league leader is not a
+   relegation battle, and that is what showing every followed club on
+   every card of a table produced: Arsenal first, two rows of ellipsis,
+   then the fight at the bottom. So a club stands on its own primary
+   race, and on another only when that race did not survive the caps —
+   in which case it joins whichever surviving card of the same table its
+   position is nearest to, rather than disappearing. */
+function raceAssignClubs(kept, byClub){
+  const groups = new Map();
+  kept.forEach(c => { c.own = []; if(!groups.has(c.grp)) groups.set(c.grp, []); groups.get(c.grp).push(c); });
+  groups.forEach(cards => {
+    (cards[0].mine || []).forEach(row => {
+      const pref = byClub.get(row.id);
+      const home = (pref && cards.filter(c => c.id === pref.card.id)[0])
+        || cards.slice().sort((a, b) => Math.abs(row.pos - a.at) - Math.abs(row.pos - b.at))[0];
+      if(home) home.own.push(row);
+    });
+  });
+  /* A card nobody's club landed on still needs something to centre on:
+     a pinned race, or one showing on the season's own account. */
+  kept.forEach(c => { if(!c.own.length) c.own = c.focus || []; });
+  return kept;
+}
+function raceCards(now, followed){
+  const candidates = raceCandidates(now, followed);
+  const byClub = racePrimaries(candidates);
+  const primary = new Set([...byClub.values()].map(v => v.card.id));
+  const out = [];
+  for(const c of candidates){
+    if(c.off) continue;                                  // competition filtered off
+    const pref = racePrefOf(c.id);
+    if(pref === RACE_HIDE) continue;
+    /* Pinning asks for a race whenever there is a table to draw, which
+       is the whole point of it: it overrides the season-phase rules but
+       cannot invent standings that are not there. */
+    if(pref === RACE_PIN){
+      const at = raceCutoff(c.view, c.grp);
+      if(at == null || !c.grp.played || c.grp.played.max <= 0) continue;
+      const mine = c.grp.rows.filter(r=>r.id && followed.has(r.id));
+      out.push(Object.assign({}, c, {at, mine, focus:mine, reason:"pinned", rank:-1,
+                                     pinned:true}));
+      continue;
+    }
+    if(!c.rel) continue;
+    if(c.rel.reason === "near" && !primary.has(c.id)) continue;
+    out.push(Object.assign({}, c, c.rel));
   }
   out.sort((a,b)=>a.rank - b.rank || a.id.localeCompare(b.id));
   const perComp = {}, kept = [];
@@ -1067,14 +1224,15 @@ function raceCards(now, followed){
     /* Two lines a place or two apart in the same table are two names for
        one card: the Champions League places and the European places sit
        at 4th and 5th in September and drew the same five clubs twice.
-       Keep the more relevant one and drop the echo. */
-    if(kept.some(k=>k.grp === c.grp && Math.abs(k.at - c.at) < RACE_APART)) continue;
+       Keep the more relevant one and drop the echo. A pinned race is
+       never dropped this way — it was asked for by name. */
+    if(!c.pinned && kept.some(k=>k.grp === c.grp && Math.abs(k.at - c.at) < RACE_APART)) continue;
     perComp[c.grp.comp] = (perComp[c.grp.comp] || 0) + 1;
-    if(perComp[c.grp.comp] > RACE_PER_COMP) continue;
+    if(!c.pinned && perComp[c.grp.comp] > RACE_PER_COMP) continue;
     kept.push(c);
     if(kept.length >= RACE_TOTAL) break;
   }
-  return kept;
+  return raceAssignClubs(kept, byClub);
 }
 
 // id | league | city | name | abbr | tz | colour | ucl
@@ -2564,12 +2722,22 @@ let rightsOpen = false;
    that key is not a value this build wrote. */
 const RESULTS_OPEN_KEY = "gdn.results.open";
 let resultsOpen = LS.get(RESULTS_OPEN_KEY, false) === true;
-/* The Race panel arrives open, unlike history: it is context for what is
-   about to happen rather than a record of what already did, and it is
-   only ever a few rows. Which races are expanded to a full table is not
-   kept — that is a momentary "let me see the rest", not a preference. */
+/* The Race panel arrives shut, like history. Open it costs one line and
+   the line it costs says what is in there, which is the trade the
+   schedule below it deserves. Which races are expanded to a full table
+   is NOT kept — that is a momentary "let me see the rest" rather than a
+   preference — but whether the panel itself is open is.
+
+   Race preferences are kept apart from team selection on purpose:
+   hiding a race must never quietly stop following a club, and the share
+   link carries teams rather than this. Keyed on the stable card id. */
 const RACES_OPEN_KEY = "gdn.races.open";
-let racesOpen = LS.get(RACES_OPEN_KEY, true) !== false;
+const RACES_PREFS_KEY = "gdn.races.prefs";
+let racesOpen = LS.get(RACES_OPEN_KEY, false) === true;
+let racePrefs = (function(){
+  const v = LS.get(RACES_PREFS_KEY, {});
+  return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
+})();
 let raceFull = new Set();
 let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the sample set   // panels keep their open/closed state across re-renders
 
@@ -3227,12 +3395,14 @@ function raceCardHtml(card, now){
      alike otherwise, and only one of them is current. */
   const heldAt = raceHeldAt(grp);
   const full = raceFull.has(card.id);
-  /* Every followed club in this table gets a window, not just the ones
-     near the line. `focus` decides whether the card is worth drawing;
-     who appears on it is everybody you follow. A Mariners fan looking at
-     the wild-card race wants to see the Mariners in it, eight places
-     back and all. */
-  const rows = raceSlice(grp, at, card.mine.length ? card.mine : card.focus, full);
+  /* The clubs this card is for: the ones whose nearest line it draws,
+     plus any whose own race did not survive the caps. A Mariners fan
+     looking at the wild-card race sees the Mariners in it, eight places
+     back and all, but a relegation battle does not open on the club
+     that won the league. */
+  const on = (card.own && card.own.length) ? card.own
+    : (card.mine && card.mine.length ? card.mine : card.focus);
+  const rows = raceSlice(grp, at, on, full);
   const comp = COMPS[grp.comp] || {short:grp.comp, color:"#5A6478"};
   const one = SOCCER[grp.comp] ? "match" : "game";
   const many = SOCCER[grp.comp] ? "matches" : "games";
@@ -3265,20 +3435,88 @@ function raceCardHtml(card, now){
     + (heldAt ? '<b class="stale-h">The source has not answered since then.</b> This is where '
         + 'the table stood when it was last read, not where it stands now. ' : "")
     + esc(raceOrigin(card.view)) + '</span>'
+    + '<div class="race-acts">'
     + '<button class="race-more" data-race="' + esc(card.id) + '" aria-pressed="' + full + '">'
-    + (full ? "Show the race" : "Full table") + '</button></div></section>';
+    + (full ? "Show the race" : "Full table") + '</button>'
+    /* Two plain buttons rather than a menu. A menu would hide both
+       behind a tap and cost a popover this page has nowhere to put. */
+    + '<button class="race-pref" id="' + esc(racePrefBtnId(card.id, RACE_PIN)) + '"'
+    + ' data-race-pref="' + esc(card.id) + '" data-pref="'
+    + (card.pinned ? RACE_AUTO : RACE_PIN) + '" aria-pressed="' + !!card.pinned + '">'
+    + (card.pinned ? "Pinned" : "Pin") + '</button>'
+    + '<button class="race-pref" id="' + esc(racePrefBtnId(card.id, RACE_HIDE)) + '"'
+    + ' data-race-pref="' + esc(card.id) + '" data-pref="' + RACE_HIDE + '">Hide</button>'
+    + '</div></div></section>';
 }
 
-/* One line worth reading while the panel is shut, built only from
-   published figures. */
-function raceHeadline(card){
-  const r = (card.focus[0] || card.mine[0]);
-  if(!r) return esc(card.title);
-  const gap = r.gbv != null
-    ? (r.gbv < 0 ? (-r.gbv) + " ahead" : r.gbv > 0 ? (r.gb || r.gbv) + " back" : "level")
-    : (r.pts != null ? r.pts + " pts" : null);
-  return esc(raceRowName(r) + " " + raceOrdinal(r.pos) + (gap ? ", " + gap : "")
-    + " · " + card.title);
+/* The club's own name for a compact line: "Blue Jays", not "Toronto
+   Blue Jays", which is most of the width a phone has for this. */
+function raceShortName(row){
+  const t = row && row.id ? TEAMS[row.id] : null;
+  return t ? (t.name || t.abbr) : ((row && (row.abbr || row.name)) || "?");
+}
+
+/* Where one followed club stands relative to this race's line, in as
+   few words as it can honestly be put.
+
+   A seed race says it in games, because the source publishes games
+   behind and that is the currency of the thing. A table says it in
+   points, and the gap is the difference between two published points
+   totals — arithmetic over stated figures, not an estimate. A club with
+   nobody above it to chase is simply said to be there. */
+function raceGapPhrase(card, row){
+  const short = (card.view.cut && card.view.cut.short) || "the line";
+  if(row.gbv != null){
+    if(row.gbv > 0) return (row.gb || row.gbv) + " back";
+    if(row.gbv < 0) return (-row.gbv) + " up";
+    return "on the line";
+  }
+  if(row.pts == null) return raceOrdinal(row.pos);
+  /* Above the line the phrase is "in Europe" or "in safety", which
+     reads — except at the top of a table, where "in the title" does not.
+     A view that needs its own wording says so. */
+  if(row.pos <= card.at) return (card.view.cut && card.view.cut.inside) || ("in " + short);
+  const online = card.grp.rows.find(r=>r.pos === card.at);
+  if(!online || online.pts == null) return raceOrdinal(row.pos);
+  const d = online.pts - row.pts;
+  if(d <= 0) return raceOrdinal(row.pos);
+  return d + (d === 1 ? " pt from " : " pts from ") + short;
+}
+
+/* One card, in a handful of words: the club you follow and where it
+   stands. With nobody of yours in it, the race names itself. */
+function raceShort(card){
+  const r = (card.focus && card.focus[0]) || (card.mine && card.mine[0]);
+  if(!r) return card.title;
+  return raceShortName(r) + " " + raceGapPhrase(card, r);
+}
+
+/* The Customize list. Every race the app could draw for the teams being
+   followed, whatever Auto currently thinks of it — which is the point,
+   because a hidden race has no card left to act on and a race Auto is
+   declining still needs a way to be pinned. */
+function racePrefsHtml(now){
+  /* Only races in competitions this viewer actually follows. Offering
+     all eight NFL divisions to someone following baseball and Liverpool
+     is a settings screen, which is the thing this is trying not to be. */
+  const rows = raceCandidates(now, selected)
+    .filter(c => raceFollowsComp(c.comp, selected))
+    .filter(c => c.rel || racePrefOf(c.id) !== RACE_AUTO || raceCutoff(c.view, c.grp) != null);
+  if(!rows.length) return "";
+  const button = (c, pref, label) => '<button class="race-opt" id="'
+    + esc(racePrefBtnId(c.id, pref, "opt")) + '" data-race-pref="' + esc(c.id)
+    + '" data-pref="' + pref + '" aria-pressed="' + (racePrefOf(c.id) === pref) + '">'
+    + label + '</button>';
+  return '<details class="race-prefs"><summary>Customize</summary><div class="race-prefs-in">'
+    + '<p class="race-prefs-note">Auto shows a race when a club you follow is near the line, or '
+    + 'when a season is far enough along that the race matters on its own. Pin one to see it '
+    + 'whenever there is a table; hide one to stop it appearing. This changes nothing about '
+    + 'which teams you follow.</p>'
+    + rows.map(c => '<div class="race-opt-row"><span class="race-opt-name">'
+        + esc(c.title) + '<i>' + esc((COMPS[c.comp] || {short:c.comp}).short) + '</i></span>'
+        + '<span class="race-opt-set">' + button(c, RACE_AUTO, "Auto")
+        + button(c, RACE_PIN, "Pin") + button(c, RACE_HIDE, "Hide") + '</span></div>').join("")
+    + '</div></details>';
 }
 
 function renderRaces(now){
@@ -3289,15 +3527,19 @@ function renderRaces(now){
   if(!showScores) return "";
   const cards = raceCards(now, selected);
   if(!cards.length) return "";
-  /* If the leading card is being carried, the shut panel has to say so
-     too: a headline read at a glance is exactly where a stale figure
-     would pass for a current one. */
-  const held = raceHeldAt(cards[0].grp);
+  /* Shut, this is one row, and the row has to earn it. The count says
+     how much is in there and the second line says the thing you would
+     have opened it to find out. */
+  const held = cards.some(c => raceHeldAt(c.grp));
+  const line = cards.slice(0, 2).map(raceShort).join(" \u00b7 ")
+    + (cards.length > 2 ? " \u00b7 +" + (cards.length - 2) + " more" : "");
   return '<details class="races"' + (racesOpen ? " open" : "") + '>'
-    + '<summary>Race<span class="conf-note">' + raceHeadline(cards[0])
-    + (held ? ' <span class="warn">&middot; not current</span>' : "")
-    + '</span></summary>'
-    + '<div class="races-in">' + cards.map(c => raceCardHtml(c, now)).join("") + '</div></details>';
+    + '<summary><span class="races-head"><b>In the Race</b>'
+    + '<span class="conf-note">' + cards.length + ' relevant'
+    + (held ? ' <span class="warn">&middot; not all current</span>' : "") + '</span></span>'
+    + '<span class="races-line">' + esc(line) + '</span></summary>'
+    + '<div class="races-in">' + cards.map(c => raceCardHtml(c, now)).join("")
+    + racePrefsHtml(now) + '</div></details>';
 }
 
 /* ---------- rights table ---------- */
@@ -3367,22 +3609,23 @@ function renderList(now, todayKey){
   /* One reading order, whether or not there is anything scheduled: what
      you set up, then what already happened, then what is on.
 
-     Race sits above history because it is about what is coming: it
-     frames every fixture below it, which is the one thing that has to be
-     true of anything placed before the schedule.
-
      Recent results sits above the schedule but arrives collapsed, so it
-     costs one line rather than a screenful. Putting it below meant
+     costs one line rather than a screenful.
+
+     In the Race sits under it and arrives collapsed too. It is context
+     rather than an answer, and context does not get to stand between
+     someone and tonight's game: shut, it is one row saying where your
+     clubs stand, and opening it is a choice. Putting it below meant
      scrolling past every fixture in the window to see last night's
      score, which is the thing people check first in the morning. The
      rights table and the data note stay at the bottom: reference, not
      answer. */
   if(!games.length){
     return welcomeBanner() + renderFilters() + servicesHint()
-      + renderRaces(now) + renderResults(now, todayKey) + emptyState();
+      + renderResults(now, todayKey) + renderRaces(now) + emptyState();
   }
   let out = welcomeBanner() + renderFilters() + servicesHint()
-    + renderRaces(now) + renderResults(now, todayKey);
+    + renderResults(now, todayKey) + renderRaces(now);
   groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
   return out + renderRights() + noteBlock();
 }
@@ -3677,6 +3920,12 @@ document.getElementById("teamGroups").addEventListener("click",function(e){
 });
 document.getElementById("main").addEventListener("click",function(e){
   const rev=e.target.closest("[data-reveal]"); if(rev){ revealed.add(rev.getAttribute("data-reveal")); render(); return; }
+  const rp=e.target.closest("[data-race-pref]"); if(rp){
+    const id=rp.getAttribute("data-race-pref"), want=rp.getAttribute("data-pref");
+    /* Pressing the state a race is already in returns it to Auto, so the
+       three buttons behave as one setting rather than as a trap. */
+    setRacePref(id, racePrefOf(id) === want ? RACE_AUTO : want);
+    render(); return; }
   const rc=e.target.closest("[data-race]"); if(rc){ const id=rc.getAttribute("data-race");
     raceFull.has(id)?raceFull.delete(id):raceFull.add(id); render(); return; }
   const al=e.target.closest("[data-alert]"); if(al){ const id=al.getAttribute("data-alert"); alerts.has(id)?alerts.delete(id):alerts.add(id); persist(); render(); return; }

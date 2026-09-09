@@ -11,7 +11,7 @@ Schedules are easy to find. "Where is this on, in Canada?" is not — no sports 
 - **Where to watch** per game — Sportsnet, TSN, Prime Video, Fubo, DAZN, Apple TV, RDS, TVA Sports, CTV, MLB.TV, NBA League Pass, Premier Sports
 - **Coverage check** — mark the services you subscribe to under **My services** in the header, and every game is flagged *You have it* or *Needs DAZN*
 - **Scores with a global on/off switch**, spoiler-safe: a hidden game still shows that it's live and where it's carried, with a per-game reveal
-- **Race** — the slice of a table that says why a fixture matters: where your club sits against the line that decides its season, with the places either side of it
+- **In the Race** — a collapsed strip under recent results: where your club sits against the line that decides its season, opening into the places either side of it
 - **Agenda by day and a month calendar**, league-coloured
 - **Honest unknowns** — `Time TBC` with the date it gets confirmed, `Opponent TBD` with the draw date, `Carrier TBC` where no Canadian rights holder could be verified, and no location at all where the source states none
 
@@ -199,25 +199,74 @@ is where you can see it, and **Race** is why it is worth watching at all.
 
 A Race card is never a standings table. It shows the line that decides a
 season — the last wild card, the fourth Champions League place, the last safe
-position above relegation — with the places either side of it and any club you
-follow, wherever they happen to be. A button opens the full table for anyone
-who wants it. On a phone the whole thing is four or five rows.
+position above relegation — with the places either side of it and the clubs
+you follow. A button opens the full table for anyone who wants it. On a phone
+a card is four or five rows.
+
+The section sits **under recent results and above the schedule**, and it
+arrives **shut**. Closed it costs one row, and that row does the work:
+
+```
+In the Race   2 RELEVANT
+Blue Jays 1.5 back · Liverpool 2 pts from the UCL places
+```
+
+Whether it is open is remembered. Which cards are expanded to a full table is
+not — that is a momentary "let me see the rest" rather than a preference.
 
 ### It appears because of your teams, not because standings exist
 
-Standings exist all year for every league. Almost none of that is worth a
-place above your schedule, so a card is drawn only when:
+Standings exist all year for every league and almost none of that is worth a
+place on your schedule. Visibility is one table of season-progress bands,
+applied to every competition rather than written per league. Progress is games
+played over season length, never a calendar date, so the rule is the
+competition's own shape.
 
-- a club you follow is **within a few places of the line**; or
-- a club you follow is **in the table and the season has got late**; or
-- for a small number of races marked seasonal, **the season is late and you
-  follow that competition** — a Champions League club knocked out of the field
-  still follows the competition, and might still want the race.
+| Band | Season played | Behaviour |
+| --- | --- | --- |
+| early | under a quarter | Auto shows nothing at all |
+| mid | a quarter | a club within **2** places of the line |
+| late | three fifths | within **3** places |
+| final | seven eighths | within **4**, and a race may stand on its own |
 
-Nothing else qualifies. Following one hockey team shows no baseball table.
-A club that has played no matches is not in a race yet, whatever position a
-freshly seeded table gives them. And at most two cards come from any one
-competition, four in total, because past that this stops being a schedule.
+So three matches into a Premier League season nothing is drawn, however close
+the table looks; by the run-in the title, the Champions League places, Europe
+and relegation are all in scope. Following one hockey team shows no baseball
+table, and a club that has played no matches is not in a race yet whatever
+position a freshly seeded table gives it.
+
+### One primary race per club
+
+A club near the foot of a table is in a relegation battle. It is not also in
+the title race merely because the two share a table, and listing both is
+noise. So each followed club claims **the one line it is nearest to** — top of
+the table, the Champions League places, safety — and a card survives only if
+some club claimed it, or it was pinned, or the closing weeks make it worth
+watching on its own. Ties go to whichever race is declared first, which is the
+order a season is usually talked about: the title, then Europe, then survival.
+
+A card then shows the clubs it is actually for, not every club you follow in
+that table. Showing all of them produced a relegation card that opened on the
+league leader with two rows of ellipsis before reaching the actual fight. A
+club whose own race did not survive the caps joins the nearest surviving one
+rather than disappearing. At most two cards per competition and four in total.
+
+### Auto, pin, hide
+
+The default is Auto and needs no setting up. Inside the open section a
+**Customize** list offers every race you could have, for the competitions you
+follow, with three states each:
+
+- **Auto** — the bands above decide.
+- **Pin** — show it whenever there is a table to draw. A pin overrides the
+  season phase; it cannot invent standings nobody has played for.
+- **Hide** — never show it.
+
+Preferences live in `gdn.races.prefs`, keyed on the stable race id, so hiding
+the European places stays hidden when the zone that defines its line moves
+from fifth to eighth. They are kept well away from team selection: changing
+one never changes which teams you follow. A hidden race keeps its row in the
+list, because otherwise there is no way back.
 
 ### Cutoffs are read from the source wherever the source states one
 

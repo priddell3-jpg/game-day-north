@@ -17,10 +17,13 @@ import { CLINCH, RACE_KINDS, groupsFrom, STANDINGS_HOLD } from "../scripts/lib/r
 
 const NAMES = ["esc", "COMPS", "SOCCER", "CLUB_NAMES", "TEAM_ROWS", "TEAMS", "fullName",
   "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "attachStandings", "raceZoneHit", "raceCutoff",
-  "racePhase", "raceRelevance", "raceFollowsComp", "raceGroupsFor", "raceSlice",
-  "RACE_PER_COMP", "raceCards", "RACE_CLINCH", "raceAge", "raceHeldAt", "raceOrdinal",
-  "raceRowName", "raceFigures",
-  "raceOrigin", "raceLineHtml", "raceRowHtml", "raceCardHtml", "raceHeadline", "renderRaces"];
+  "racePhase", "RACE_PHASES", "racePhaseOf", "raceRelevance", "RACE_AUTO", "racePrefOf",
+  "setRacePref", "raceCardId", "racePrefBtnId", "raceFollowsComp", "raceGroupsFor", "raceSlice",
+  "RACE_PER_COMP", "raceCandidates", "racePrimaries", "raceAssignClubs", "raceCards",
+  "RACE_CLINCH",
+  "raceAge", "raceHeldAt", "raceOrdinal", "raceRowName", "raceShortName", "raceFigures",
+  "raceOrigin", "raceLineHtml", "raceRowHtml", "raceCardHtml", "raceGapPhrase", "raceShort",
+  "racePrefsHtml", "renderRaces"];
 
 /* A fresh page scope per case. `showScores` and the followed set are read
    by the code under test and never written by it, so they are baked into
@@ -28,7 +31,14 @@ const NAMES = ["esc", "COMPS", "SOCCER", "CLUB_NAMES", "TEAM_ROWS", "TEAMS", "fu
 function page(opts = {}){
   const pre = "let STANDINGS = [];\n"
     + "let raceFull = new Set(" + JSON.stringify(opts.full || []) + ");\n"
-    + "let racesOpen = true;\n"
+    + "let racesOpen = " + (opts.open === false ? "false" : "true") + ";\n"
+    /* Preferences are read and written through the same store the page
+       uses; the test supplies a stub so a case can start from a chosen
+       state and still observe what a click would have written. */
+    + "const RACES_PREFS_KEY = \"gdn.races.prefs\";\n"
+    + "const written = {};\n"
+    + "const LS = {get:(k,d)=>d, set:(k,v)=>{ written[k] = v; }};\n"
+    + "let racePrefs = " + JSON.stringify(opts.prefs || {}) + ";\n"
     + "const selected = new Set(" + JSON.stringify(opts.picks || []) + ");\n"
     + "const hiddenComps = new Set(" + JSON.stringify(opts.hidden || []) + ");\n"
     + "const showScores = " + (opts.scores === false ? "false" : "true") + ";\n";
@@ -323,12 +333,17 @@ test("a club name from the feed is escaped", () => {
   assert.ok(html.includes("&lt;script&gt;"));
 });
 
-test("the headline is readable with the panel shut", () => {
-  const P = page({ picks: ["tor-mlb"] });
+test("the shut panel is one row that says something", () => {
+  const P = page({ picks: ["tor-mlb"], open: false });
   P.attachStandings(MLB);
   const html = P.renderRaces(NOW);
-  assert.ok(html.startsWith('<details class="races" open>'));
-  assert.match(html, /Toronto Blue Jays 4th, 1\.5 back &middot; AL Wild Card|Toronto Blue Jays \d+\w\w, .*AL Wild Card/);
+  assert.ok(html.startsWith('<details class="races">'), "shut on arrival");
+  const summary = html.split("</summary>")[0];
+  assert.match(summary, /In the Race/);
+  assert.match(summary, /1 relevant/);
+  assert.match(summary, /Blue Jays/, "and names the club rather than the race");
+  assert.ok(!/Toronto Blue Jays/.test(summary),
+    "with the short name, which is most of the width a phone has for this");
 });
 
 test("attaching nothing empties what was there", () => {
@@ -409,11 +424,11 @@ test("a carried group is drawn, and says on its face that it is not current", ()
 });
 
 test("a shut panel does not present a carried figure as a current one", () => {
-  const P = page({ picks: ["tor-mlb"] });
+  const P = page({ picks: ["tor-mlb"], open: false });
   P.attachStandings(heldCopy(MLB, 26 * HOUR));
   const summary = P.renderRaces(NOW).split("</summary>")[0];
-  assert.ok(/not current/.test(summary),
-    "the headline is exactly where a stale figure would pass for a live one");
+  assert.ok(/not all current/.test(summary),
+    "the one row a shut panel costs is exactly where a stale figure would pass for a live one");
 });
 
 test("a group read this run says nothing about age", () => {
@@ -503,4 +518,277 @@ test("below 360 the figures move under the name rather than truncating it", () =
     "the club name stops being clipped once it has the width");
   assert.equal(ruleFor(narrow, ".race-pos"), null,
     "the place stays on the same line as the club it belongs to");
+});
+
+/* ============ where the section sits, and how much it costs shut ============ */
+
+test("history comes before the race, and both come before the schedule", () => {
+  const src = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
+  const list = src.slice(src.indexOf("function renderList("));
+  const results = list.indexOf("renderResults(now, todayKey)");
+  const races = list.indexOf("renderRaces(now)");
+  const days = list.indexOf("groupByDay(games)");
+  assert.ok(results > -1 && races > -1 && days > -1);
+  assert.ok(results < races, "Recent results is above In the Race");
+  assert.ok(races < days, "and In the Race is above the schedule");
+});
+
+test("the section arrives shut and remembers being opened", () => {
+  const src = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
+  assert.match(src, /let racesOpen = LS\.get\(RACES_OPEN_KEY, false\) === true;/,
+    "shut unless the reader has said otherwise");
+  assert.match(src, /LS\.set\(RACES_OPEN_KEY, rc\.open\)/, "and the choice is kept");
+  const P = page({ picks: ["tor-mlb"], open: true });
+  P.attachStandings(MLB);
+  assert.ok(P.renderRaces(NOW).startsWith('<details class="races" open>'));
+});
+
+test("the shut row names the club and the gap, not the table", () => {
+  const P = page({ picks: ["tor-mlb"], open: false });
+  P.attachStandings(MLB);
+  const summary = P.renderRaces(NOW).split("</summary>")[0];
+  assert.match(summary, /Blue Jays 1 back/);
+});
+
+test("a points gap is said in points and a games gap in games", () => {
+  const P = page({ picks: ["liv"] });
+  const epl = grp(EPL_PREV, "table");
+  const card = { view: view(P, "epl-ucl"), grp: epl, at: 5 };
+  const liv = epl.rows.find(r => r.id === "liv");
+  assert.equal(P.raceGapPhrase(card, liv), "in the UCL places", "fifth of five is in");
+  const che = epl.rows.find(r => r.id === "che");
+  assert.equal(P.raceGapPhrase(card, che), "8 pts from the UCL places",
+    "and the gap is the difference between two published totals");
+
+  const al = grp(MLB, "AL");
+  const seed = { view: view(P, "mlb-wc-al"), grp: al, at: 3 };
+  assert.equal(P.raceGapPhrase(seed, al.rows.find(r => r.abbr === "TOR")), "1 back");
+  assert.equal(P.raceGapPhrase(seed, al.rows.find(r => r.abbr === "CLE")), "on the line");
+  assert.equal(P.raceGapPhrase(seed, al.rows.find(r => r.abbr === "NYY")), "9 up");
+});
+
+/* ============ season progress decides, not the calendar ============ */
+
+const atProgress = (groups, fraction, length) =>
+  JSON.parse(JSON.stringify(groups)).map(g =>
+    Object.assign(g, { played: { min: Math.round(fraction * length), max: Math.round(fraction * length) } }));
+
+test("the bands are one table, applied to every competition", () => {
+  const P = page();
+  assert.deepEqual(P.RACE_PHASES.map(b => b.id), ["early", "mid", "late", "final"]);
+  assert.equal(P.RACE_PHASES[0].near, null, "early shows nothing under Auto");
+  const nears = P.RACE_PHASES.slice(1).map(b => b.near);
+  assert.deepEqual(nears, [...nears].sort((a, b) => a - b), "and the band widens as a season runs out");
+  assert.deepEqual(P.RACE_PHASES.map(b => b.solo), [false, false, false, true],
+    "a race stands on its own only in the closing stretch");
+});
+
+test("three matches into a Premier League season, Auto shows nothing", () => {
+  const P = page({ picks: ["liv", "ars", "mci", "tot"] });
+  P.attachStandings(EPL);
+  const band = P.racePhaseOf(view(P, "epl-ucl"), grp(EPL, "table"));
+  assert.equal(band.id, "early");
+  assert.deepEqual(P.raceCards(NOW, new Set(["liv", "ars", "mci", "tot"])), [],
+    "a table after three matches is not a race, however close the lines look");
+  assert.equal(P.renderRaces(NOW), "");
+});
+
+test("late in a season the same clubs and the same code produce races", () => {
+  const picks = ["ars", "tot", "liv"];
+  const P = page({ picks });
+  P.attachStandings(EPL_PREV);
+  assert.equal(P.racePhaseOf(view(P, "epl-title"), grp(EPL_PREV, "table")).id, "final");
+  const cards = P.raceCards(NOW, new Set(picks));
+  assert.ok(cards.length, "the final stretch is exactly when this matters");
+  assert.ok(cards.every(c => c.grp.comp === "EPL"));
+});
+
+test("mid-season shows a club that is close and not one that is not", () => {
+  const picks = ["ars", "new"];
+  const P = page({ picks });
+  const mid = atProgress(EPL_PREV, 0.5, 38);
+  P.attachStandings(mid);
+  assert.equal(P.racePhaseOf(view(P, "epl-title"), mid[0]).id, "mid");
+  const cards = P.raceCards(NOW, new Set(picks));
+  const claimed = new Set(cards.flatMap(c => c.focus.map(r => r.id)));
+  assert.ok(claimed.has("ars"), "Arsenal are top, which is a title race");
+  assert.ok(!claimed.has("new"),
+    "Newcastle in twelfth are four places off the nearest line in either direction, "
+    + "which mid-season is not a race");
+});
+
+/* ============ one primary race per club ============ */
+
+test("a club gets the one line it is nearest to", () => {
+  const picks = ["ars", "tot"];
+  const P = page({ picks });
+  P.attachStandings(EPL_PREV);
+  const cards = P.raceCards(NOW, new Set(picks));
+  const forClub = id => cards.find(c => c.focus.some(r => r.id === id));
+  assert.equal(forClub("ars").view.id, "epl-title", "top of the table is a title race");
+  assert.equal(forClub("tot").view.id, "epl-rel",
+    "seventeenth is a relegation battle, not a title race it happens to share a table with");
+  assert.equal(cards.filter(c => c.focus.some(r => r.id === "ars")).length, 1,
+    "and one club does not carry four cards");
+});
+
+test("a tie between two lines goes to the race declared first", () => {
+  const P = page({ picks: ["mun"] });
+  P.attachStandings(EPL_PREV);
+  const mun = grp(EPL_PREV, "table").rows.find(r => r.id === "mun");
+  assert.equal(mun.pos, 3, "two places off the title and two off the Champions League line");
+  const cards = P.raceCards(NOW, new Set(["mun"]));
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].view.id, "epl-title",
+    "RACES is written title, then Europe, then survival, and the tie follows that order");
+});
+
+/* ============ pin and hide ============ */
+
+test("pinning shows a race Auto is declining to show", () => {
+  const picks = ["liv"];
+  const plain = page({ picks });
+  plain.attachStandings(EPL);
+  assert.deepEqual(plain.raceCards(NOW, new Set(picks)), [], "early season, nothing");
+
+  const pinned = page({ picks, prefs: { "epl-ucl": "pin" } });
+  pinned.attachStandings(EPL);
+  const cards = pinned.raceCards(NOW, new Set(picks));
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].id, "epl-ucl");
+  assert.equal(cards[0].reason, "pinned");
+  assert.ok(cards[0].pinned);
+  assert.ok(pinned.raceCardHtml(cards[0], NOW).includes("Pinned"));
+});
+
+test("pinning cannot invent a table that is not there", () => {
+  const P = page({ picks: ["buf"], prefs: { "nfl-afc": "pin" } });
+  P.attachStandings([]);
+  assert.deepEqual(P.raceCards(NOW, new Set(["buf"])), []);
+  const zeroed = JSON.parse(JSON.stringify(NFL)).map(g =>
+    Object.assign(g, { played: { min: 0, max: 0 } }));
+  const Q = page({ picks: ["buf"], prefs: { "nfl-afc": "pin" } });
+  Q.attachStandings(zeroed);
+  assert.deepEqual(Q.raceCards(NOW, new Set(["buf"])), [],
+    "a pin asks for a race, not for standings nobody has played for");
+});
+
+test("hiding removes a race Auto would have shown", () => {
+  const picks = ["tor-mlb"];
+  const shown = page({ picks });
+  shown.attachStandings(MLB);
+  assert.equal(shown.raceCards(NOW, new Set(picks)).length, 1);
+
+  const hidden = page({ picks, prefs: { "mlb-wc-al": "hide" } });
+  hidden.attachStandings(MLB);
+  assert.deepEqual(hidden.raceCards(NOW, new Set(picks)), []);
+  assert.equal(hidden.renderRaces(NOW), "", "and with nothing left, the section goes too");
+});
+
+test("a hidden race is still reachable, or there is no way back", () => {
+  const P = page({ picks: ["tor-mlb"], prefs: { "mlb-wc-al": "hide" } });
+  P.attachStandings(MLB);
+  const html = P.racePrefsHtml(NOW);
+  assert.match(html, /Customize/);
+  assert.match(html, /AL Wild Card/);
+  assert.match(html, /data-race-pref="mlb-wc-al"[^>]*data-pref="hide" aria-pressed="true"/,
+    "showing the state it is actually in");
+  assert.match(html, /data-pref="auto"/, "with a way back to Auto");
+});
+
+test("preferences key on the race, live in their own store, and leave teams alone", () => {
+  const P = page({ picks: ["tor-mlb", "liv"] });
+  assert.equal(P.racePrefOf("mlb-wc-al"), P.RACE_AUTO);
+  P.setRacePref("mlb-wc-al", "pin");
+  assert.equal(P.racePrefOf("mlb-wc-al"), "pin");
+  /* Pressing the state a race is already in is how the page returns it
+     to Auto, so the three buttons behave as one setting. */
+  P.setRacePref("mlb-wc-al", P.RACE_AUTO);
+  assert.equal(P.racePrefOf("mlb-wc-al"), P.RACE_AUTO);
+
+  const src = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
+  assert.match(src, /const RACES_PREFS_KEY = "gdn\.races\.prefs";/);
+  const setter = src.slice(src.indexOf("function setRacePref"));
+  assert.match(setter.slice(0, 300), /LS\.set\(RACES_PREFS_KEY/);
+  assert.ok(!/gdn\.teams/.test(setter.slice(0, 300)),
+    "changing a race preference must never touch which teams are followed");
+});
+
+test("a race id is stable and is what a preference is keyed on", () => {
+  const P = page();
+  const single = P.RACES.find(v => v.id === "mlb-wc-al");
+  assert.equal(P.raceCardId(single, { group: "AL" }), "mlb-wc-al");
+  const many = P.RACES.find(v => v.kindIs === "division");
+  assert.equal(P.raceCardId(many, { group: "afc-east" }), "nfl-div:afc-east",
+    "one view over eight divisions still gives each its own id");
+  assert.equal(P.racePrefBtnId("nfl-div:afc-east", "pin"), "rp-card-pin-nfl-div:afc-east");
+});
+
+test("Customize offers the races you could have, not every race there is", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(MLB.concat(EPL).concat(NFL_DIV));
+  const html = P.racePrefsHtml(NOW);
+  assert.match(html, /AL Wild Card/);
+  assert.ok(!/AFC East/.test(html), "eight football divisions for a baseball follower is a settings screen");
+  assert.ok(!/Title race/.test(html), "and a league they follow no club in is not their race either");
+});
+
+test("a club above the line is described in words that are English", () => {
+  const P = page({ picks: ["ars", "liv", "tot"] });
+  const epl = grp(EPL_PREV, "table");
+  const row = id => epl.rows.find(r => r.id === id);
+  const say = (vid, at, id) => P.raceGapPhrase({ view: view(P, vid), grp: epl, at }, row(id));
+  assert.equal(say("epl-title", 1, "ars"), "top of the table",
+    "and not 'in the title', which is what a generic phrasing produced");
+  assert.equal(say("epl-ucl", 5, "liv"), "in the UCL places");
+  assert.equal(say("epl-rel", 17, "tot"), "in safety");
+  /* Every view that a table row can reach must read either way round. */
+  for(const v of P.RACES.filter(v => v.comp === "EPL" || v.comp === "UCL")){
+    const phrase = (v.cut.inside || ("in " + v.cut.short));
+    assert.ok(!/^in the title$/.test(phrase), v.id + " reads badly above the line");
+    assert.ok(phrase.length > 2, v.id + " has no wording for a club above the line");
+  }
+});
+
+test("a relegation battle does not open on the club that won the league", () => {
+  /* Showing every followed club on every card of a table produced a
+     relegation card that led with Arsenal first, two rows of ellipsis,
+     and only then the fight at the bottom. */
+  const picks = ["ars", "tot", "liv"];
+  const P = page({ picks });
+  P.attachStandings(EPL_PREV);
+  const cards = P.raceCards(NOW, new Set(picks));
+  const rel = cards.find(c => c.view.id === "epl-rel");
+  const title = cards.find(c => c.view.id === "epl-title");
+  assert.ok(rel && title);
+  assert.deepEqual(rel.own.map(r => r.id), ["tot"], "the relegation card is Tottenham's");
+  assert.ok(title.own.some(r => r.id === "ars"), "the title card is Arsenal's");
+  assert.ok(!/Arsenal/.test(P.raceCardHtml(rel, NOW)),
+    "and the league winners do not appear in the relegation battle");
+});
+
+test("a club whose own race was dropped joins the nearest one that survived", () => {
+  const picks = ["ars", "tot", "liv"];
+  const P = page({ picks });
+  P.attachStandings(EPL_PREV);
+  const cards = P.raceCards(NOW, new Set(picks));
+  /* Liverpool sit exactly on the Champions League line, but only two
+     Premier League cards survive the per-competition cap and that is not
+     one of them. They must land somewhere rather than vanish. */
+  assert.ok(!cards.some(c => c.view.id === "epl-ucl"));
+  const home = cards.find(c => c.own.some(r => r.id === "liv"));
+  assert.ok(home, "Liverpool appear on some card");
+  assert.equal(home.view.id, "epl-title", "the surviving line their position is nearest to");
+});
+
+test("a club with no primary at all still appears in its competition's race", () => {
+  const picks = ["tor-mlb", "sea-mlb"];
+  const P = page({ picks });
+  P.attachStandings(MLB);
+  const card = P.raceCards(NOW, new Set(picks))[0];
+  const sea = card.grp.rows.find(r => r.id === "sea-mlb");
+  assert.ok(Math.abs(sea.pos - card.at) > card.band.near,
+    "Seattle are further from the line than the band reaches, so they claim nothing");
+  assert.ok(card.own.some(r => r.id === "sea-mlb"), "and are on the card anyway");
+  assert.ok(P.raceCardHtml(card, NOW).includes("Seattle Mariners"));
 });
