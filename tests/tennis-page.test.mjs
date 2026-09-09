@@ -430,6 +430,30 @@ test("the rail names the players too", () => {
   assert.match(body, /g\.match\.players/);
 });
 
+/* matchupLabel replaced a line that reached for `home` and `away`
+   directly while taking its separator from orderedTeams. For soccer that
+   read correctly by accident; for a North American game it did not,
+   because "at" means the first club is visiting and orderedTeams puts the
+   away side first for exactly that reason. Tennis is why the helper
+   exists, but every sport now goes through it, so the ordering is
+   asserted here rather than left to the sport that prompted it. */
+test("a team matchup keeps the order its separator claims", () => {
+  const { matchupLabel } = loadFromPage(["matchupLabel", "orderedTeams", "fullName", "SOCCER"]);
+  /* Teams as the page holds them: `home` is the club's own competition,
+     which is how fullName knows whether to prefix a city. */
+  const leafs = {home: "NHL", city: "Toronto", name: "Maple Leafs"};
+  const bruins = {home: "NHL", city: "Boston", name: "Bruins"};
+  const arsenal = {home: "EPL", city: "Arsenal", name: "Arsenal"};
+  const chelsea = {home: "EPL", city: "Chelsea", name: "Chelsea"};
+
+  // away at home, the North American convention
+  assert.equal(matchupLabel({comp: "NHL", home: bruins, away: leafs}),
+    "Toronto Maple Leafs at Boston Bruins");
+  // home vs away, the soccer one
+  assert.equal(matchupLabel({comp: "EPL", home: arsenal, away: chelsea}),
+    "Arsenal vs Chelsea");
+});
+
 /* ---------------- the picker ---------------- */
 
 test("the picker offers tours first, then the tournaments inside them", () => {
