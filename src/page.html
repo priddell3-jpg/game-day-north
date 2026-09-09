@@ -1131,22 +1131,46 @@ function shortScope(scope){
   return t;
 }
 
+/* Which order a league writes its three figures in.
+
+   Soccer's record is three numbers everywhere and the middle one is not
+   the same number everywhere. Europe writes won-drawn-lost. MLS writes
+   won-lost-drawn, the way every North American league orders a record,
+   and a Whitecaps line in European order would read as five draws and
+   four defeats when it is the other way about.
+
+   ESPN itself publishes `overall` as won-drawn-lost for BOTH — Chicago
+   Fire arrives as "11-5-6" against 11 wins, 5 draws, 6 defeats and 38
+   points, which is 3x11+5 and settles it. So this is not correcting the
+   source; it is writing MLS the way MLS writes itself, which is why the
+   figures are composed here rather than the published string being
+   passed through. */
+const REC_ORDER = { MLS: ["w", "l", "d"] };
+const REC_ORDER_DEFAULT = ["w", "d", "l"];
+
 /* The record itself, composed from published figures rather than read
    from the source's own `overall` string, because that string is not one
    thing. The NHL writes "0-0-0, 0 PTS" into it and the NBA does not
-   publish it at all, so the two numbers everyone does publish are the
-   honest common ground. */
+   publish it at all.
+
+   Points are deliberately not here. "5 pts" is a standings figure, not a
+   record, and the position beside it already says what the points came
+   to. */
 function recordText(row, group){
   if(!row || !group) return null;
-  if(group.kind === "table"){
-    if(row.pts == null) return null;
-    return row.pts + (row.pts === 1 ? " pt" : " pts");
-  }
   if(row.w == null || row.l == null) return null;
+  if(group.kind === "table"){
+    /* A league table's record is three numbers and always three, zeros
+       included: a club with no draws has drawn none, which is a fact
+       about their season rather than a column that does not apply. */
+    if(row.d == null) return null;
+    return (REC_ORDER[group.comp] || REC_ORDER_DEFAULT).map(k => row[k]).join("-");
+  }
   let t = row.w + "-" + row.l;
-  /* Hockey keeps a point for an overtime loss, so 12-4 and 12-4-2 are
-     different seasons. Football ties are rare enough that a third number
-     is only shown when there is one. */
+  /* The third figure only where the sport has one. Hockey keeps a point
+     for an overtime loss, so 12-4 and 12-4-2 are different seasons.
+     Football ties happen and are shown when they do. Baseball has
+     neither, and "86-0-58" would be a nought nobody can play for. */
   if(row.otl != null) t += "-" + row.otl;
   else if(row.d) t += "-" + row.d;
   return t;
