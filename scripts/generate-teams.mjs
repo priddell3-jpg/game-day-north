@@ -7,6 +7,10 @@
  * the artefact; this script is the provenance, so anyone can see exactly
  * how today's data became the file rather than having to trust it.
  *
+ * It reproduces the manifest as it FIRST existed, fifty clubs. The
+ * roster has grown since, so its output no longer matches the committed
+ * file and is not meant to — this is provenance, not a build step.
+ *
  * It is NOT a codegen step to be re-run. Ids in particular are data, not
  * a derivation: `den` is the Nuggets and `buf` is the Bills because that
  * is what people's saved boards and share links already say, and a rule

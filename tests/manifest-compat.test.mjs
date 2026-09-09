@@ -184,3 +184,77 @@ test("every club keeps its colour, abbreviation and timezone", () => {
   }
   assert.deepEqual(differed, []);
 });
+
+/* ============================ the picker at scale ============================ */
+
+/* The drawer, rendered against a chosen search term and selection. */
+function drawer(opts = {}){
+  const SRC2 = readFileSync(new URL("src/page.html", root), "utf8");
+  const fn = /function renderDrawer\(\)\{[\s\S]*?\n\}/.exec(SRC2);
+  assert.ok(fn, "renderDrawer must exist");
+  const P = board();
+  const pickable = Object.values(P.TEAMS).filter(t => !t.ghost);
+  const body = `
+    const PICKER_CAP = ${loadFromPage(["PICKER_CAP"]).PICKER_CAP};
+    const COMPS = ${JSON.stringify(loadFromPage(["COMPS"]).COMPS)};
+    const TEAMS = ${JSON.stringify(P.TEAMS)};
+    const SOCCER = ${JSON.stringify(P.SOCCER)};
+    const pickable = ${JSON.stringify(pickable)};
+    const selected = new Set(${JSON.stringify(opts.selected || [])});
+    const search = ${JSON.stringify(opts.search || "")};
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+    const crest = t => "";
+    const CLUB = ${JSON.stringify(Object.fromEntries(Object.values(P.TEAMS).map(t => [t.id, P.fullName(t)])))};
+    const fullName = t => CLUB[t.id];
+    const renderRugbyPicker = () => "";
+    const shareLink = () => "";
+    let html = "";
+    const document = { getElementById: () => ({ set innerHTML(v){ html = v; }, set textContent(v){} }) };
+    ${fn[0]}
+    renderDrawer();
+    return html;`;
+  return new Function(body)();
+}
+const chips = html => (html.match(/data-team="/g) || []).length;
+
+test("a big league does not render as a wall of chips", () => {
+  const P = board();
+  const nfl = Object.values(P.TEAMS).filter(t => t.home === "NFL" && !t.ghost).length;
+  assert.ok(nfl > 12, "this test is pointless unless the league is actually big, got " + nfl);
+  const html = drawer();
+  assert.ok(chips(html) < Object.values(P.TEAMS).filter(t => !t.ghost).length,
+    "something must be held back");
+  assert.match(html, /more &mdash; search to find them/);
+  assert.match(html, /class="lg-count"/, "and the group says how many it has");
+});
+
+test("searching lifts the cap, because you asked for something by name", () => {
+  const all = drawer();
+  const searched = drawer({ search: "a" });
+  assert.ok(chips(searched) > chips(all), "a broad search shows more, not the same twelve");
+  const one = drawer({ search: "cardinals" });
+  assert.equal(chips(one), 1);
+  assert.match(one, /Arizona Cardinals/);
+  assert.ok(!/more &mdash; search/.test(one), "nothing is held back from a search");
+});
+
+test("a club you follow is never hidden behind the cap", () => {
+  /* The picker is also how you stop following something, so a followed
+     club that the cap swallowed would be unreachable without searching
+     for a name you were trying to remove. */
+  const P = board();
+  const nfl = Object.values(P.TEAMS).filter(t => t.home === "NFL" && !t.ghost).map(t => t.id);
+  const last = nfl.slice(-3);
+  const html = drawer({ selected: last });
+  for(const id of last)
+    assert.match(html, new RegExp('data-team="' + id + '" aria-pressed="true"'), id + " is hidden");
+});
+
+test("every club is still reachable, cap or no cap", () => {
+  const P = board();
+  for(const t of Object.values(P.TEAMS)){
+    if(t.ghost) continue;
+    const html = drawer({ search: (t.city + " " + t.name).trim().toLowerCase() });
+    assert.match(html, new RegExp('data-team="' + t.id + '"'), t.id + " cannot be found by its own name");
+  }
+});
