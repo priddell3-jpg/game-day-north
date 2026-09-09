@@ -5968,6 +5968,55 @@ const isStarredPlayer = p => !!(p && p.id && tennisStars.has(String(p.id)));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
 const myComps = () => { const s=new Set(); GAMES.forEach(g=>{ if(isMine(g)) s.add(g.comp); }); return Object.keys(COMPS).filter(c=>s.has(c)); };
 
+/* ---- whose record would give the game away ----
+
+   The record under a team name is suppressed where a hidden result sits
+   behind it, and the thing being protected belongs to the TEAM rather
+   than to the row. Suppressing only the row of the hidden game leaks it
+   on every other row that team appears on: the Yankees played last night
+   and play again on Thursday, and Thursday's row is scheduled, so its
+   record renders — and that record already counts last night. 82-62
+   becoming 83-62 tells someone the result on a row about a game that has
+   not been played.
+
+   So it is decided once per render, over the games already in hand, and
+   applies to the team wherever it appears. Revealing the game that
+   caused it brings the record back everywhere at once.
+
+   Scores switched on ends the question: nothing is hidden, so nothing
+   needs protecting. */
+let SPOILED = new Set();
+/* How far back the board reaches. Recent results shows three days and
+   the schedule starts at midnight, so this is every finished game a
+   person can actually see sitting hidden — and every one they can click
+   Reveal on.
+
+   It is deliberately not the whole eight-day fetch window. A game five
+   days ago is on nobody's screen: there is no row for it, no Reveal
+   button, and no result being withheld from anyone. Counting it would
+   suppress a team's record permanently, since in daily sport there is
+   almost always something back there, and a record that never appears is
+   not a spoiler rule but a missing feature. */
+const RESULTS_DAYS = 3;
+function spoiledTeams(now){
+  const out = new Set();
+  if(showScores) return out;
+  const midnight = new Date(now); midnight.setHours(0, 0, 0, 0);
+  const from = midnight.getTime() - RESULTS_DAYS * DAY;
+  for(const g of myGames()){
+    if(g.start < from) continue;
+    /* Only a team fixture carries a record to give away. Tennis has no
+       team ids at all, a race has no opponent, and rugby's nations have
+       no table here. */
+    if(g.tennis || g.event || g.rugby) continue;
+    if(revealed.has(g.id)) continue;
+    if(stateOf(g, now).status !== "final") continue;
+    if(g.home && g.home.id) out.add(g.home.id);
+    if(g.away && g.away.id) out.add(g.away.id);
+  }
+  return out;
+}
+
 /* ============================ coverage ============================ */
 function servicesFor(g){
   const r = resolveRights(g);
@@ -6394,14 +6443,13 @@ function gameRow(g, now){
   timeCell += '</div>';
 
   /* A record cannot move during a match, so a game in progress is not a
-     spoiler and both records stay up. A game that has FINISHED with its
-     result hidden is the one case where they have to come down: the
-     record already counts it, so showing it would announce the result
-     the person asked not to see. Revealing that game brings them back,
-     because the thing being protected is no longer hidden. */
-  const spoiler = st.status === "final" && !reveal;
+     spoiler and both records stay up. A team with a FINISHED game whose
+     result is hidden is the one case where its record has to come down:
+     the record already counts that game, so showing it anywhere would
+     announce the result the person asked not to see. The judgement is
+     per team and made once per render, in spoiledTeams above. */
   const side = (t, mine, tbd) => {
-    const line = spoiler ? null : recordLine(t, g.comp);
+    const line = (t && SPOILED.has(t.id)) ? null : recordLine(t, g.comp);
     return '<span class="g-side">'
       + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+crest(t)+esc(fullName(t))+'</span>'
       + (line ? '<span class="g-rec">'+esc(line)+'</span>' : '')
@@ -6564,7 +6612,10 @@ function renderResults(now, todayKey){
   // and the welcome banner already explains what to do.
   if(!selected.size) return "";
   const midnight = new Date(); midnight.setHours(0,0,0,0);
-  const from = midnight.getTime() - 3*DAY;   // whole calendar days, so a day never appears half-shown
+  // whole calendar days, so a day never appears half-shown. The same
+  // three days spoiledTeams reads, from the same constant, so the games
+  // that can suppress a record are exactly the ones that can be revealed.
+  const from = midnight.getTime() - RESULTS_DAYS*DAY;
   // Only real fixtures can be results.
   // a finished stage has no scoreline, so races don't belong in results
   const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime()
@@ -7281,6 +7332,9 @@ function render(){
       : active.getAttribute("data-race") ? "race:" + active.getAttribute("data-race")
       : active.id ? "id:" + active.id : null)
     : null;
+  /* Decided once, before anything is drawn, so every row of the board
+     agrees about which records are being held back. */
+  SPOILED = spoiledTeams(now);
   main.innerHTML = view==="list"?renderList(now,todayKey):renderCalendar(now,todayKey);
   if(focusKey){
     const [kind, val] = [focusKey.slice(0, focusKey.indexOf(":")), focusKey.slice(focusKey.indexOf(":")+1)];

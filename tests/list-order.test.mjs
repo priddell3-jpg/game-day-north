@@ -120,7 +120,10 @@ function results(over = {}){
     const daySection = (k, gs) => "<section class=\\"day\\">" + gs.length + "</section>";
     const stateOf = g => ({status: g.result.status, score: g.result.score});
   `;
-  return loadFromPage(["renderResults"], pre).renderResults(Date.now(), "today");
+  /* RESULTS_DAYS is shared with the record's spoiler rule, so it is
+     pulled from the page rather than restated here — the two must not be
+     able to drift apart. */
+  return loadFromPage(["RESULTS_DAYS", "renderResults"], pre).renderResults(Date.now(), "today");
 }
 const isOpen = html => /<details class="results" open>/.test(html);
 
