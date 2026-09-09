@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   RACE_KINDS, RACE_SOURCES, groupsFrom, groupFrom, zonesFrom, sanitizeHex,
-  clinchPhrase, clincherOf, numStat, textStat, playedBy, standingsNodes, groupIdFor
+  clinchPhrase, clincherOf, numStat, textStat, playedBy, standingsNodes, groupIdFor,
+  heldGroups, STANDINGS_HOLD, seasonOf
 } from "../scripts/lib/race.mjs";
 
 /* Every fixture here was recorded from the live ESPN standings API on
@@ -310,4 +311,107 @@ test("league points stay in the tables that have them", () => {
   }
   assert.equal(al.rows.find(r => r.abbr === "TOR").gb, "1",
     "what a baseball row does carry is the published games behind");
+});
+
+/* ============ carrying a last good answer, and letting go of it ============ */
+
+const HOUR = 3600000, DAY = 24 * HOUR;
+const SRC = { comp: "MLB", view: "wild card, by league" };
+const oldGroup = (over = {}) => Object.assign(
+  { comp: "MLB", view: "wild card, by league", group: "AL", kind: RACE_KINDS.SEED,
+    season: 2026, rows: [{ tid: "1", name: "A", pos: 1 }] }, over);
+const NOW = Date.parse("2026-09-08T21:00:00Z");
+const ago = ms => new Date(NOW - ms).toISOString();
+
+test("a source that misses one run keeps its last answer, stamped when it was read", () => {
+  const held = heldGroups([oldGroup()], SRC, { now: NOW, since: ago(3 * HOUR) });
+  assert.equal(held.length, 1);
+  assert.equal(held[0].heldFrom, ago(3 * HOUR),
+    "stamped with when the file was last built, which is when the source last answered");
+  assert.deepEqual(held[0].rows, oldGroup().rows, "and unchanged otherwise");
+});
+
+test("the stamp is the last real read, not the last run", () => {
+  /* Re-stamping on every run would make a group that has been stale for
+     a week look an hour old, and it would never expire. */
+  const first = ago(30 * HOUR);
+  const held = heldGroups([oldGroup({ heldFrom: first })], SRC,
+    { now: NOW, since: ago(1 * HOUR) });
+  assert.equal(held[0].heldFrom, first);
+});
+
+test("a source that stops answering for good stops being shown", () => {
+  assert.equal(heldGroups([oldGroup({ heldFrom: ago(47 * HOUR) })], SRC, { now: NOW }).length, 1,
+    "just inside the limit");
+  assert.equal(heldGroups([oldGroup({ heldFrom: ago(49 * HOUR) })], SRC, { now: NOW }).length, 0,
+    "just outside it");
+  assert.equal(heldGroups([oldGroup({ heldFrom: ago(30 * DAY) })], SRC, { now: NOW }).length, 0,
+    "and a month later there is certainly nothing to show");
+  assert.equal(STANDINGS_HOLD, 48 * HOUR, "the limit is two days");
+});
+
+test("a group with no usable stamp is not carried", () => {
+  assert.equal(heldGroups([oldGroup()], SRC, { now: NOW }).length, 0,
+    "no heldFrom and no file stamp to fall back on");
+  assert.equal(heldGroups([oldGroup({ heldFrom: "not a date" })], SRC, { now: NOW }).length, 0);
+});
+
+test("last season's table never survives into the new season", () => {
+  const prev = [oldGroup({ heldFrom: ago(2 * HOUR), season: 2026 })];
+  assert.equal(heldGroups(prev, SRC, { now: NOW, answeredSeason: 2026 }).length, 1,
+    "the same season is carried");
+  assert.equal(heldGroups(prev, SRC, { now: NOW, answeredSeason: 2027 }).length, 0,
+    "a new season drops it however fresh it is");
+  /* This is the case it exists for: a league answers in February with a
+     table nothing has been played in, which produces no usable group and
+     looks exactly like an outage. */
+  const rolled = JSON.parse(JSON.stringify(NFL_WEEK1));
+  assert.equal(seasonOf(rolled), 2026);
+  assert.deepEqual(groupsFrom(rolled, { comp: "NFL", kind: RACE_KINDS.SEED }), [],
+    "nothing orderable, so the build reaches for what it held");
+  const lastSeason = [oldGroup({ comp: "NFL", view: "conference seeds",
+    heldFrom: ago(2 * HOUR), season: 2025 })];
+  assert.deepEqual(heldGroups(lastSeason, { comp: "NFL", view: "conference seeds" },
+    { now: NOW, answeredSeason: seasonOf(rolled) }), [],
+    "and must not find last season's finished standings there");
+});
+
+test("a held group only ever stands in for the source it came from", () => {
+  const prev = [oldGroup({ heldFrom: ago(HOUR) })];
+  assert.equal(heldGroups(prev, { comp: "NFL", view: "conference seeds" }, { now: NOW }).length, 0);
+  assert.equal(heldGroups(prev, { comp: "MLB", view: "divisions" }, { now: NOW }).length, 0,
+    "same competition, different view, different meaning for the same field names");
+});
+
+/* ====== a zone label and a team's own status are different claims ====== */
+
+test("occupying a zone the source calls Eliminated is not being eliminated", () => {
+  const ucl = groupsFrom(UCL, { comp: "UCL", kind: RACE_KINDS.TABLE, group: "league" })[0];
+  const zone = ucl.zones.find(z => z.label === "Eliminated");
+  assert.deepEqual([zone.from, zone.to], [25, 36], "the zone is a range of positions");
+
+  const sporting = ucl.rows.find(r => r.name === "Sporting CP");
+  assert.ok(sporting.pos >= zone.from && sporting.pos <= zone.to, "a club stands in it");
+  assert.equal(sporting.gp, 0, "having played no match in the competition at all");
+  assert.ok(!("clinch" in sporting),
+    "and the source states no status for them, because there is none to state");
+
+  /* The two claims, side by side. The zone says what finishing 28th
+     would mean. Nothing says anything about this club's season. */
+  for(const r of ucl.rows) assert.ok(!("clinch" in r),
+    "no club in a soccer table carries a per-team verdict; that field is not published here");
+});
+
+test("a status the source does state for a team is shown", () => {
+  const al = byGroup(groupsFrom(MLB_WC, { comp: "MLB", kind: RACE_KINDS.SEED,
+    groupFor: n => ({ "American League": "AL", "National League": "NL" })[n.name] }), "AL");
+  const angels = al.rows.find(r => r.abbr === "LAA");
+  assert.equal(angels.clinch, "e", "ESPN publishes this one per team");
+  assert.equal(clinchPhrase(angels.clinch), "eliminated");
+  /* And the clubs it does not state one for carry nothing, even though
+     they sit below the wild-card line. */
+  const below = al.rows.filter(r => r.pos > 3 && r.abbr !== "LAA");
+  assert.ok(below.length > 5);
+  for(const r of below) assert.ok(!("clinch" in r),
+    r.abbr + " is behind the line, which is not the same as being out");
 });

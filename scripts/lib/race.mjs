@@ -367,6 +367,49 @@ export const RACE_SOURCES = [
     group: "league" }
 ];
 
+/* ---- carrying a last good answer forward, and letting go of it -------
+
+   A source that cannot be reached for one run should not empty the
+   board, so its previous answer is kept. That kindness has to have a
+   hard end, or a source that stops answering for good leaves a table on
+   the page for ever, looking exactly like a current one.
+
+   Two things end it:
+
+     - AGE. A held group is dropped once it passes STANDINGS_HOLD. The
+       page refuses to show anything older than the same limit, so the
+       file never ships a group the page would decline to draw, and a
+       reader can never be looking at standings older than this however
+       long the source stays down.
+
+     - A NEW SEASON. A league answering with a table nothing has been
+       played in looks identical to an unreachable one: both yield no
+       usable group. Carrying last season's final table into that gap
+       would be the most confident wrong answer this file could give, so
+       a held group whose season differs from the one the source just
+       named is dropped immediately, whatever its age.
+
+   `heldFrom` is stamped the first time a group is carried and then left
+   alone, so age is measured from the last time the source actually
+   answered rather than from the last time this ran. */
+export const STANDINGS_HOLD = 48 * 3600000;
+
+export function heldGroups(previous, src, opts = {}){
+  const now = opts.now == null ? Date.now() : opts.now;
+  const limit = opts.limit == null ? STANDINGS_HOLD : opts.limit;
+  const since = opts.since || null;
+  const answeredSeason = opts.answeredSeason == null ? null : opts.answeredSeason;
+  return (previous || []).filter(g => {
+    if(!g || g.comp !== src.comp || g.view !== src.view) return false;
+    if(answeredSeason != null && g.season != null && g.season !== answeredSeason) return false;
+    const from = Date.parse(g.heldFrom || since);
+    /* No usable stamp at all means no way to tell how old this is, and
+       an age that cannot be established is not one worth trusting. */
+    if(!Number.isFinite(from)) return false;
+    return now - from < limit;
+  }).map(g => Object.assign({}, g, { heldFrom: g.heldFrom || since }));
+}
+
 /* The group id for a node, from the source's own map where it has one.
    A source without a map keys on the slug, which is what the eight NFL
    divisions use: "AFC East" becomes "afc-east". */

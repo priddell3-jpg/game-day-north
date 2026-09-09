@@ -352,6 +352,15 @@ main{padding:22px 0 80px}
      aria-label saying which it is, so the word is the one thing here
      that can go without taking meaning with it. */
   #scoreToggleLabel{display:none}
+  /* At 320 a club name and its record cannot share a line: "Toronto Blue
+     Jays" came out as "Toronto Blu…" on the very row the reader opened
+     the card for. The figures drop to their own line, indented to clear
+     the position column so the pair still reads as one row. The place
+     stays beside the club — splitting those two costs a line and buys
+     nothing. At 390 everything still fits across, so this stops here. */
+  .race-row{flex-wrap:wrap;row-gap:1px;padding-top:7px;padding-bottom:7px}
+  .race-club{white-space:normal}
+  .race-figs{flex:1 1 100%;padding-left:32px}
   .game{gap:8px;padding:12px 6px 12px 8px}
   .g-team{white-space:normal;overflow-wrap:anywhere}
   .g-teams{gap:6px}
@@ -435,6 +444,11 @@ main{padding:22px 0 80px}
 .race-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px 8px}
 .race-head i{width:8px;height:8px;border-radius:2px;flex:none}
 .race-head b{font-weight:800;font-stretch:112%;font-size:13.5px}
+/* Deliberately not subtle, and deliberately ahead of the scope line:
+   this is the difference between a table that is true now and one that
+   was true on Sunday. */
+.race-stale{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--warn);background:var(--warn-soft);border-radius:999px;padding:2px 7px;flex:none}
 .race-scope{margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;
   text-transform:uppercase;color:var(--muted)}
 .race-rows{list-style:none;margin:0;padding:0}
@@ -456,8 +470,8 @@ main{padding:22px 0 80px}
   background:var(--accent-soft);font-family:var(--mono);font-size:9.5px;letter-spacing:.07em;
   text-transform:uppercase;color:var(--accent)}
 .race-line-at{margin-left:auto}
-.race-gap{padding:2px 12px;border-top:1px solid var(--line);color:var(--line-strong);
-  font-family:var(--mono);font-size:11px;text-align:center;letter-spacing:.2em}
+.race-gap{padding:3px 12px;border-top:1px solid var(--line);color:var(--muted);
+  font-family:var(--mono);font-size:12px;text-align:center;letter-spacing:.3em}
 .race-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;
   border-top:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.45}
 .race-foot span{flex:1 1 180px;min-width:0}
@@ -800,9 +814,14 @@ function resolveRights(g){
    is the clinch letter, because that one the source publishes per team.
    ============================================================ */
 
-/* The build stops carrying an unreachable source forward after three
-   days. This is the browser's own backstop, for a file that stopped
-   being rebuilt at all: standings older than this are not shown. */
+/* The hard expiry on a standings group that is being carried rather
+   than refreshed. It matches STANDINGS_HOLD in scripts/lib/race.mjs, and
+   the tests assert the two are equal: the build must never ship a group
+   this page would refuse to draw, and nobody may ever be looking at
+   standings older than this however long a source stays down.
+
+   Below it a carried group is still shown, because an outage should not
+   empty the board — but it is shown as what it is and never as current. */
 const RACE_MAX_AGE = 48*3600000;
 const RACE_CHECKED = "2026-09-08";
 
@@ -3101,6 +3120,24 @@ function renderResults(now, todayKey){
 const RACE_CLINCH = {"*":"clinched home advantage", "z":"clinched a division",
   "y":"clinched a bye", "x":"clinched a playoff place", "e":"eliminated"};
 
+/* How long ago a carried group was last actually read. Hours while that
+   still reads naturally, then days: "54 hours ago" is a number nobody
+   converts in their head. */
+function raceAge(from, now){
+  const h = Math.round(Math.max(0, now - from) / 3600000);
+  if(h < 1) return "under an hour ago";
+  if(h < 36) return h + (h === 1 ? " hour ago" : " hours ago");
+  const d = Math.round(h / 24);
+  return d + (d === 1 ? " day ago" : " days ago");
+}
+
+/* When a group is being carried rather than refreshed. A group read on
+   the run that built the file carries no such stamp and returns null. */
+function raceHeldAt(grp){
+  const at = grp && grp.heldFrom ? Date.parse(grp.heldFrom) : NaN;
+  return Number.isFinite(at) ? at : null;
+}
+
 function raceOrdinal(n){
   const v = Number(n);
   if(!Number.isFinite(v)) return String(n);
@@ -3170,10 +3207,21 @@ function raceRowHtml(row, grp){
     + '</span><span class="race-figs">' + raceFigures(row, grp) + '</span></li>';
 }
 
-function raceCardHtml(card){
+function raceCardHtml(card, now){
   const grp = card.grp, at = card.at;
+  const when = now == null ? Date.now() : now;
+  /* A carried group is still drawn, because an outage should not empty
+     the board — but it says so on its face. A table that moved last
+     night and one that stopped being refreshed two days ago look exactly
+     alike otherwise, and only one of them is current. */
+  const heldAt = raceHeldAt(grp);
   const full = raceFull.has(card.id);
-  const rows = raceSlice(grp, at, card.focus.length ? card.focus : card.mine, full);
+  /* Every followed club in this table gets a window, not just the ones
+     near the line. `focus` decides whether the card is worth drawing;
+     who appears on it is everybody you follow. A Mariners fan looking at
+     the wild-card race wants to see the Mariners in it, eight places
+     back and all. */
+  const rows = raceSlice(grp, at, card.mine.length ? card.mine : card.focus, full);
   const comp = COMPS[grp.comp] || {short:grp.comp, color:"#5A6478"};
   const one = SOCCER[grp.comp] ? "match" : "game";
   const many = SOCCER[grp.comp] ? "matches" : "games";
@@ -3198,9 +3246,14 @@ function raceCardHtml(card){
   return '<section class="race-card">'
     + '<div class="race-head"><i style="background:' + esc(comp.color) + '"></i>'
     + '<b>' + esc(card.title) + '</b>'
+    + (heldAt ? '<span class="race-stale">Not current &middot; last read '
+        + esc(raceAge(heldAt, when)) + '</span>' : "")
     + '<span class="race-scope">' + esc(comp.short) + ' &middot; ' + esc(played) + '</span></div>'
     + '<ol class="race-rows">' + list + '</ol>'
-    + '<div class="race-foot"><span>' + esc(raceOrigin(card.view)) + '</span>'
+    + '<div class="race-foot"><span>'
+    + (heldAt ? '<b class="stale-h">The source has not answered since then.</b> This is where '
+        + 'the table stood when it was last read, not where it stands now. ' : "")
+    + esc(raceOrigin(card.view)) + '</span>'
     + '<button class="race-more" data-race="' + esc(card.id) + '" aria-pressed="' + full + '">'
     + (full ? "Show the race" : "Full table") + '</button></div></section>';
 }
@@ -3225,9 +3278,15 @@ function renderRaces(now){
   if(!showScores) return "";
   const cards = raceCards(now, selected);
   if(!cards.length) return "";
+  /* If the leading card is being carried, the shut panel has to say so
+     too: a headline read at a glance is exactly where a stale figure
+     would pass for a current one. */
+  const held = raceHeldAt(cards[0].grp);
   return '<details class="races"' + (racesOpen ? " open" : "") + '>'
-    + '<summary>Race<span class="conf-note">' + raceHeadline(cards[0]) + '</span></summary>'
-    + '<div class="races-in">' + cards.map(raceCardHtml).join("") + '</div></details>';
+    + '<summary>Race<span class="conf-note">' + raceHeadline(cards[0])
+    + (held ? ' <span class="warn">&middot; not current</span>' : "")
+    + '</span></summary>'
+    + '<div class="races-in">' + cards.map(c => raceCardHtml(c, now)).join("") + '</div></details>';
 }
 
 /* ---------- rights table ---------- */

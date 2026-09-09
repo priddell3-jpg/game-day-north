@@ -245,6 +245,28 @@ falls and are **never printed against a club**. The one per-team verdict shown
 is ESPN's clinch letter, because that one is published per team; a letter that
 is not in the known set is shown as nothing rather than guessed at.
 
+### A carried table says that it is carried
+
+If a standings source misses a run, its last good answer is kept so that one
+outage does not empty the board. That kindness has a hard end at **48 hours**,
+which is the same number in the build and in the page, so the file never ships
+a group the page would refuse to draw and nobody is ever looking at standings
+older than that however long a source stays down.
+
+Below that limit the card is drawn, and it says on its face what it is: an
+amber **Not current** chip with how long ago the table was actually read, and
+a line under it saying this is where the table stood, not where it stands. If
+the leading card is a carried one, the shut panel's headline says so too,
+because a headline read at a glance is exactly where a stale figure would pass
+for a live one. The age is measured from the last time the source answered,
+not the last time the build ran, so a group cannot be quietly refreshed into
+looking new.
+
+A new season ends it immediately, whatever the age. A league answering in
+February with a table nothing has been played in produces no usable group and
+looks exactly like an outage, and carrying last season's final table into that
+gap would be the most confident wrong answer this app could give.
+
 ### When there is nothing to say, it says nothing
 
 A competition whose standings are missing, unreadable, or older than the

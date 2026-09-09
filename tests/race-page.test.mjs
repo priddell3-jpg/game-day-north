@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { loadFromPage, styleText, mediaBlock, ruleFor } from "./helpers/page.mjs";
 import { loadFromBuild } from "./helpers/build.mjs";
-import { CLINCH, RACE_KINDS, groupsFrom } from "../scripts/lib/race.mjs";
+import { CLINCH, RACE_KINDS, groupsFrom, STANDINGS_HOLD } from "../scripts/lib/race.mjs";
 
 /* The Race section, exercised the way the rest of this suite exercises
    the page: by pulling the shipped declarations out of src/page.html and
@@ -18,7 +18,8 @@ import { CLINCH, RACE_KINDS, groupsFrom } from "../scripts/lib/race.mjs";
 const NAMES = ["esc", "COMPS", "SOCCER", "CLUB_NAMES", "TEAM_ROWS", "TEAMS", "fullName",
   "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "attachStandings", "raceZoneHit", "raceCutoff",
   "racePhase", "raceRelevance", "raceFollowsComp", "raceGroupsFor", "raceSlice",
-  "RACE_PER_COMP", "raceCards", "RACE_CLINCH", "raceOrdinal", "raceRowName", "raceFigures",
+  "RACE_PER_COMP", "raceCards", "RACE_CLINCH", "raceAge", "raceHeldAt", "raceOrdinal",
+  "raceRowName", "raceFigures",
   "raceOrigin", "raceLineHtml", "raceRowHtml", "raceCardHtml", "raceHeadline", "renderRaces"];
 
 /* A fresh page scope per case. `showScores` and the followed set are read
@@ -382,4 +383,124 @@ test("two lines a place apart in one table are one card, not two", () => {
   for(let i = 1; i < eplCuts.length; i++)
     assert.ok(eplCuts[i] - eplCuts[i - 1] >= 3,
       "cards at " + eplCuts.join(" and ") + " show the same clubs twice");
+});
+
+/* ============ standings that are being carried, not refreshed ============ */
+
+const HOUR = 3600000;
+const heldCopy = (groups, age) => JSON.parse(JSON.stringify(groups)).map(g =>
+  Object.assign(g, { heldFrom: new Date(NOW - age).toISOString() }));
+
+test("the page and the build agree on the hard expiry", () => {
+  const P = page();
+  assert.equal(P.RACE_MAX_AGE, STANDINGS_HOLD,
+    "the build must never ship a group the page would refuse to draw");
+});
+
+test("a carried group is drawn, and says on its face that it is not current", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(heldCopy(MLB, 30 * HOUR));
+  const html = P.renderRaces(NOW);
+  assert.ok(html, "an outage does not empty the board");
+  assert.ok(html.includes("race-stale"), "the card carries the marker");
+  assert.ok(html.includes("Not current &middot; last read 30 hours ago"));
+  assert.ok(html.includes("The source has not answered since then."));
+  assert.ok(html.includes("where the table stood when it was last read"));
+});
+
+test("a shut panel does not present a carried figure as a current one", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(heldCopy(MLB, 26 * HOUR));
+  const summary = P.renderRaces(NOW).split("</summary>")[0];
+  assert.ok(/not current/.test(summary),
+    "the headline is exactly where a stale figure would pass for a live one");
+});
+
+test("a group read this run says nothing about age", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(MLB);
+  const html = P.renderRaces(NOW);
+  assert.ok(!html.includes("race-stale"));
+  assert.ok(!/not current/i.test(html));
+});
+
+test("past the expiry the card goes, however long the source stays down", () => {
+  for(const age of [49, 72, 24 * 30]){
+    const P = page({ picks: ["tor-mlb"] });
+    P.attachStandings(heldCopy(MLB, age * HOUR));
+    assert.equal(P.renderRaces(NOW), "", "still drawn after " + age + " hours");
+  }
+});
+
+test("age is written the way it would be said out loud", () => {
+  const P = page();
+  const at = h => P.raceAge(NOW - h * HOUR, NOW);
+  assert.equal(at(0.2), "under an hour ago");
+  assert.equal(at(1), "1 hour ago");
+  assert.equal(at(9), "9 hours ago");
+  assert.equal(at(35), "35 hours ago");
+  assert.equal(at(36), "2 days ago", "past a day and a half, hours stop being read at a glance");
+  assert.equal(at(47), "2 days ago");
+  assert.equal(P.raceHeldAt({}), null);
+  assert.equal(P.raceHeldAt({ heldFrom: "nonsense" }), null);
+});
+
+/* ====== the two elimination claims, told apart on the page ====== */
+
+test("a club in the Eliminated zone is not called eliminated", () => {
+  const P = page({ picks: ["liv"] });
+  P.attachStandings(UCL);
+  const ucl = grp(UCL, "league");
+  const sporting = ucl.rows.find(r => r.name === "Sporting CP");
+  assert.ok(sporting.pos >= 25 && sporting.gp === 0);
+  const row = P.raceRowHtml(sporting, ucl);
+  assert.ok(!/eliminat/i.test(row),
+    "28th on nothing played is a position, not a season");
+  assert.ok(!row.includes("race-clinch"));
+
+  /* Even with the whole bottom of the table on screen. */
+  const card = P.raceCardHtml({ id: "u", view: view(P, "ucl-top24"), grp: ucl, at: 24,
+    mine: [], focus: [], reason: "seasonal", rank: 90, title: "Knockout play-off places" }, NOW);
+  assert.ok(!/eliminat/i.test(card));
+});
+
+test("a club the source reports as eliminated is called eliminated", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  const al = grp(MLB, "AL");
+  const angels = al.rows.find(r => r.abbr === "LAA");
+  assert.equal(angels.clinch, "e");
+  const row = P.raceRowHtml(angels, al);
+  assert.ok(row.includes("race-clinch"));
+  assert.ok(row.includes("eliminated"), "because this one is published about the team");
+
+  /* And a club merely behind the line is not. */
+  const behind = al.rows.find(r => r.pos > 3 && !r.clinch);
+  assert.ok(!/eliminat/i.test(P.raceRowHtml(behind, al)));
+});
+
+test("a card drawn for one club still shows the others you follow", () => {
+  /* Toronto sit beside the line and Seattle several places back. The
+     card exists because of Toronto; Seattle is on it because you follow
+     them, with an ellipsis marking the places stepped over. */
+  const P = page({ picks: ["tor-mlb", "sea-mlb"] });
+  P.attachStandings(MLB);
+  const card = P.raceCards(NOW, new Set(["tor-mlb", "sea-mlb"]))[0];
+  assert.equal(card.reason, "near");
+  assert.deepEqual(card.focus.map(r => r.abbr), ["TOR"], "Toronto is why it is here");
+  const html = P.raceCardHtml(card, NOW);
+  assert.ok(html.includes("Toronto Blue Jays"));
+  assert.ok(html.includes("Seattle Mariners"), "and Seattle is on it regardless");
+  assert.ok(html.includes("race-gap"));
+  assert.equal((html.match(/class="race-row mine/g) || []).length, 2, "both marked");
+});
+
+test("below 360 the figures move under the name rather than truncating it", () => {
+  const narrow = mediaBlock("(max-width:360px)");
+  assert.ok(narrow, "expected a 360px block for the race row");
+  assert.match(ruleFor(narrow, ".race-row"), /flex-wrap:wrap/);
+  assert.match(ruleFor(narrow, ".race-figs"), /flex:1 1 100%/);
+  assert.match(ruleFor(narrow, ".race-club"), /white-space:normal/,
+    "the club name stops being clipped once it has the width");
+  assert.equal(ruleFor(narrow, ".race-pos"), null,
+    "the place stays on the same line as the club it belongs to");
 });

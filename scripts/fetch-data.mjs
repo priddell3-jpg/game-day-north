@@ -21,7 +21,8 @@ import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, fres
          stageSections, titleWords, titleMatches } from "./lib/cycling.mjs";
 import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
-import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf } from "./lib/race.mjs";
+import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
+         STANDINGS_HOLD } from "./lib/race.mjs";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -784,9 +785,6 @@ if(rugbySourceErrors.length){
    the source publishes none, the cutoff lives in the page's dated RACES
    table beside a note and a link, the way a rights row does.
    ============================================================ */
-const STANDINGS_HOLD = 3*DAY;   // how long a source may go unreachable
-                                // before its last good answer stops
-                                // being carried forward at all
 const prevStandings = (previous && Array.isArray(previous.standings)) ? previous.standings : [];
 const prevGenerated = (previous && previous.generated) || new Date(now).toISOString();
 const standings = [];
@@ -812,17 +810,14 @@ for(const src of RACE_SOURCES){
      boundary: last season's final table standing in for this season's
      empty one would be the most confident wrong answer this file could
      give. */
-  const answeredSeason = payload ? seasonOf(payload) : null;
-  const held = prevStandings.filter(g=>{
-    if(g.comp !== src.comp || g.view !== src.view) return false;
-    if(answeredSeason != null && g.season != null && g.season !== answeredSeason) return false;
-    const from = Date.parse(g.heldFrom || prevGenerated);
-    return Number.isFinite(from) && now - from < STANDINGS_HOLD;
-  }).map(g => Object.assign({}, g, {heldFrom: g.heldFrom || prevGenerated}));
+  const held = heldGroups(prevStandings, src, {
+    now, since: prevGenerated, answeredSeason: payload ? seasonOf(payload) : null });
   if(held.length) standings.push(...held);
   standingsUnavailable.push(src.comp + " " + src.view
     + (payload ? " — answered, nothing orderable yet" : " — unreachable")
-    + (held.length ? "; holding " + held.length + " group(s) read earlier" : "; nothing held"));
+    + (held.length ? "; holding " + held.length + " group(s) read earlier"
+        : "; nothing held (never answered, or last answer older than "
+          + Math.round(STANDINGS_HOLD/3600000) + "h)"));
 }
 console.log("Race standings: " + standings.length + " group(s) across "
   + new Set(standings.map(g=>g.comp)).size + " competition(s)");
