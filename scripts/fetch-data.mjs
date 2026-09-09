@@ -21,6 +21,7 @@ import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, fres
          stageSections, titleWords, titleMatches } from "./lib/cycling.mjs";
 import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
+import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf } from "./lib/race.mjs";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -757,6 +758,84 @@ if(rugbySourceErrors.length){
   rugbySourceErrors.forEach(e=>console.warn("     " + e));
 }
 
+
+/* ============================================================
+   RACE — normalised standings, so the page can say why a game matters.
+
+   Kept structurally apart from the fixtures above and sharing nothing
+   with them but the team matcher: a standings row is not a fixture, and
+   no code path here reads or writes one.
+
+   Six requests per run, each against a named ESPN standings view. Which
+   view matters more than it looks: the same field means different things
+   in different ones, so scripts/lib/race.mjs records the view each
+   source reads and the field meanings that belong to it.
+
+   The volatile figures ESPN publishes beside these — playoff and
+   wild-card percentages, magic numbers — are deliberately not read. They
+   move on every run whether or not a game has been played, and carrying
+   them would put a commit and a site rebuild on the schedule rather than
+   on the results.
+
+   Cutoffs are not here. Where the source publishes its own qualification
+   zones they are read from the payload, because how many places qualify
+   is a competition rule that changes: the Premier League sent five clubs
+   to the Champions League in 2025-26 and sends four this season. Where
+   the source publishes none, the cutoff lives in the page's dated RACES
+   table beside a note and a link, the way a rights row does.
+   ============================================================ */
+const STANDINGS_HOLD = 3*DAY;   // how long a source may go unreachable
+                                // before its last good answer stops
+                                // being carried forward at all
+const prevStandings = (previous && Array.isArray(previous.standings)) ? previous.standings : [];
+const prevGenerated = (previous && previous.generated) || new Date(now).toISOString();
+const standings = [];
+const standingsUnavailable = [];
+for(const src of RACE_SOURCES){
+  let payload = null;
+  try{ payload = await get(src.url); }
+  catch(err){ payload = null; }
+  const fresh = payload ? groupsFrom(payload, {comp:src.comp, kind:src.kind, idFor,
+    groupFor: node => groupIdFor(src, node)}) : [];
+  if(fresh.length){
+    fresh.forEach(g=>{ g.view = src.view; });
+    standings.push(...fresh);
+    continue;
+  }
+  /* Nothing usable. Either the source could not be reached, or it
+     answered with a table nothing has been played in yet — week one of
+     the NFL seeds every team zero, which is not an order. The page
+     treats both the same way and shows no card at all.
+
+     A previous answer is carried forward so a brief outage does not
+     empty the board, but only for a few days, and never across a season
+     boundary: last season's final table standing in for this season's
+     empty one would be the most confident wrong answer this file could
+     give. */
+  const answeredSeason = payload ? seasonOf(payload) : null;
+  const held = prevStandings.filter(g=>{
+    if(g.comp !== src.comp || g.view !== src.view) return false;
+    if(answeredSeason != null && g.season != null && g.season !== answeredSeason) return false;
+    const from = Date.parse(g.heldFrom || prevGenerated);
+    return Number.isFinite(from) && now - from < STANDINGS_HOLD;
+  }).map(g => Object.assign({}, g, {heldFrom: g.heldFrom || prevGenerated}));
+  if(held.length) standings.push(...held);
+  standingsUnavailable.push(src.comp + " " + src.view
+    + (payload ? " — answered, nothing orderable yet" : " — unreachable")
+    + (held.length ? "; holding " + held.length + " group(s) read earlier" : "; nothing held"));
+}
+console.log("Race standings: " + standings.length + " group(s) across "
+  + new Set(standings.map(g=>g.comp)).size + " competition(s)");
+standings.forEach(g=>console.log("    " + (g.comp + "/" + g.group).padEnd(18)
+  + String(g.rows.length).padStart(2) + " rows"
+  + (g.played ? "  played " + g.played.min + "-" + g.played.max : "")
+  + (g.zones ? "  zones " + g.zones.map(z=>z.from + "-" + z.to).join(",") : "")
+  + (g.heldFrom ? "  HELD from " + g.heldFrom : "")));
+if(standingsUnavailable.length){
+  console.warn("  ! no usable standings for " + standingsUnavailable.length + " source(s):");
+  standingsUnavailable.forEach(x=>console.warn("     " + x));
+}
+
 /* A roster entry that matched no fixture at all is almost always a name
    that drifted, not a team with an empty schedule. Say so loudly: this
    failure is invisible in the app, where it just looks like a team that
@@ -795,7 +874,9 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
 const MAX_AGE = 6*3600000;
 const cyclingSame = previous && JSON.stringify(previous.cycling || []) === JSON.stringify(cyclingOut);
 const rugbySame = previous && JSON.stringify(previous.rugby || []) === JSON.stringify(rugbyOut);
-if(previous && cyclingSame && rugbySame && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
+const standingsSame = previous && JSON.stringify(previous.standings || []) === JSON.stringify(standings);
+if(previous && cyclingSame && rugbySame && standingsSame &&
+   JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
     console.log("No fixture changed and the file is " + Math.round(age/60000) +
@@ -816,12 +897,22 @@ const out = {
             /* Named in the file so the page can say a competition is
                unavailable instead of implying the feed is complete. */
             rugbyUnavailable, rugbyUnknownSides: [...rugbyReject].sort(),
-            rugbyDisputedKickoffs: rugbyDisputed.length },
+            rugbyDisputedKickoffs: rugbyDisputed.length,
+            standings: standings.length,
+            /* Named so the page never has to infer why a race is absent,
+               and so a source that quietly stopped answering is visible
+               in the file rather than only in a log nobody reads. */
+            standingsUnavailable },
   fixtures,
   cycling: cyclingOut,
-  rugby: rugbyOut
+  rugby: rugbyOut,
+  /* Standings live beside the fixtures, not inside them. Nothing in the
+     Race model is keyed on a fixture and nothing in a fixture is keyed
+     on a standing; the only thing they share is the team id. */
+  standings
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +
-  rugbyOut.length + " rugby, " + calls + " requests, " + failures + " failed");
+  rugbyOut.length + " rugby, " + standings.length + " standings groups, " +
+  calls + " requests, " + failures + " failed");
 console.log("  " + Object.entries(byComp).map(([k,v])=>k+":"+v).join("  "));
