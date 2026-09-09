@@ -260,12 +260,19 @@ const ROW_PREAMBLE = `
   const tourneyOf = () => null;
   const isStarredPlayer = () => false;
   let TABLES = [], RECORDS = new Map();
+  /* The board spoiledTeams reads. Held on globalThis so a test can put
+     games on it and then ask what the page makes of them. */
+  globalThis.__board = [];
+  const myGames = () => globalThis.__board;
+  let SPOILED = new Set();
+  globalThis.__spoil = now => { SPOILED = spoiledTeams(now); return SPOILED; };
 `;
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag",
-  "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope","gameRow"];
+  "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope",
+  "RESULTS_DAYS","spoiledTeams","gameRow"];
 
 const NOW = Date.parse("2026-11-20T23:00:00Z");
 const TEAM = (id, city, name, comp) => ({id, home:comp, city, name, abbr:id.toUpperCase().slice(0,3), color:"#123456"});
@@ -273,9 +280,13 @@ const LEAFS = TEAM("tor", "Toronto", "Maple Leafs", "NHL");
 const BRUINS = TEAM("bos", "Boston", "Bruins", "NHL");
 const CANUCKS = TEAM("van", "Vancouver", "Canucks", "NHL");
 
-function rowHarness(){
-  const p = loadFromPage(ROW_NAMES, ROW_PREAMBLE);
+/* The board, and then the same two steps render() takes: work out whose
+   records are being held back, and only then draw the rows. */
+function rowHarness(board = [], preamble = ROW_PREAMBLE){
+  const p = loadFromPage(ROW_NAMES, preamble);
   p.attachTables([NHL_TABLE, NHL_OTHER, EPL_TABLE]);
+  globalThis.__board = board;
+  globalThis.__spoil(NOW);
   return p;
 }
 const game = over => Object.assign({
@@ -284,65 +295,134 @@ const game = over => Object.assign({
   result:{status:"final", label:"Final", score:[2,4]}
 }, over);
 
+/* A finished game, and the same two teams playing again later in the
+   window. This pair is the whole spoiler rule. */
+const FINISHED = game();
+const UPCOMING = game({id:"g9", start: NOW + 2*86400000,
+  home: LEAFS, away: BRUINS, result:{status:"scheduled", label:"", score:null}});
+const SCHEDULED_ONLY = game({id:"g8", start: NOW + 2*86400000,
+  home: CANUCKS, away: BRUINS, result:{status:"scheduled", label:"", score:null}});
+
 test("both records render on an ordinary row", () => {
-  const p = rowHarness();
-  const html = p.gameRow(game({result:{status:"scheduled", label:"", score:null},
-    start: NOW + 2*3600000}), NOW);
-  assert.match(html, /12-4-2 &middot; 1st in the Atlantic|12-4-2 · 1st in the Atlantic/);
-  assert.match(html, /9-7-1 &middot; 2nd in the Atlantic|9-7-1 · 2nd in the Atlantic/);
+  const p = rowHarness([UPCOMING]);
+  const html = p.gameRow(UPCOMING, NOW);
+  assert.match(html, /12-4-2 · 1st in the Atlantic/);
+  assert.match(html, /9-7-1 · 2nd in the Atlantic/);
 });
 
 test("a team currently playing still shows its record", () => {
   /* A record cannot move while a game is in progress, so it gives away
      nothing about the game on the screen — and a hidden live score is
      still hidden. */
-  const p = rowHarness();
-  const html = p.gameRow(game({result:{status:"live", label:"2nd period", score:[1,1]}}), NOW);
+  const live = game({result:{status:"live", label:"2nd period", score:[1,1]}});
+  const p = rowHarness([live]);
+  const html = p.gameRow(live, NOW);
   assert.match(html, /1st in the Atlantic/);
   assert.match(html, /2nd in the Atlantic/);
   assert.match(html, /hidden-score/, "the score itself is still behind the reveal");
 });
 
 test("a finished game with its result hidden takes both records down", () => {
-  const p = rowHarness();
-  const html = p.gameRow(game(), NOW);
+  const p = rowHarness([FINISHED]);
+  const html = p.gameRow(FINISHED, NOW);
   assert.match(html, /hidden-score/, "the game is final and hidden");
   assert.doesNotMatch(html, /g-rec/, "a record already counts that result");
 });
 
-test("revealing that game brings the records back", () => {
-  /* The record is suppressed to protect a hidden result. Once the person
-     has chosen to see the result, there is nothing left to protect. */
-  const p = loadFromPage(ROW_NAMES, ROW_PREAMBLE.replace("revealed = new Set()", 'revealed = new Set(["g1"])'));
-  p.attachTables([NHL_TABLE, NHL_OTHER, EPL_TABLE]);
-  const html = p.gameRow(game(), NOW);
-  assert.match(html, /1st in the Atlantic/);
-  assert.match(html, /2nd in the Atlantic/);
+test("and takes them down on that team's UPCOMING row too", () => {
+  /* The leak the per-row rule left open. The Bruins played last night
+     and play again on Sunday. Sunday's row is scheduled, so nothing
+     about that row is hidden — but the record on it already counts last
+     night, and 9-7-1 becoming 10-7-1 announces the result on a row about
+     a game that has not been played. */
+  const p = rowHarness([FINISHED, UPCOMING]);
+  const ahead = p.gameRow(UPCOMING, NOW);
+  assert.doesNotMatch(ahead, /g-rec/,
+    "neither team may show a record while their finished game is hidden");
+  assert.doesNotMatch(ahead, /hidden-score/, "the upcoming row itself hides nothing");
+  assert.match(ahead, /Maple Leafs/, "the row is otherwise unchanged");
+});
+
+test("revealing that game restores the record on both rows", () => {
+  const p = rowHarness([FINISHED, UPCOMING],
+    ROW_PREAMBLE.replace("revealed = new Set()", 'revealed = new Set(["g1"])'));
+  assert.match(p.gameRow(FINISHED, NOW), /1st in the Atlantic/, "on the game that was hidden");
+  assert.match(p.gameRow(UPCOMING, NOW), /1st in the Atlantic/, "and on the one ahead of it");
+  assert.match(p.gameRow(UPCOMING, NOW), /2nd in the Atlantic/);
+});
+
+test("a team with no hidden result behind it shows its record on every row", () => {
+  /* The Canucks have nothing final on the board. The Bruins do, and only
+     the Bruins go quiet — one team's hidden result must not empty the
+     board. */
+  const p = rowHarness([FINISHED, SCHEDULED_ONLY]);
+  const html = p.gameRow(SCHEDULED_ONLY, NOW);
+  assert.match(html, /4th in the Pacific/, "the Canucks are unaffected");
+  assert.doesNotMatch(html, /2nd in the Atlantic/, "the Bruins, on the same row, are not");
 });
 
 test("with scores switched on, a finished game shows records like any other", () => {
-  const p = loadFromPage(ROW_NAMES, ROW_PREAMBLE.replace("showScores = false", "showScores = true"));
-  p.attachTables([NHL_TABLE, NHL_OTHER, EPL_TABLE]);
-  assert.match(p.gameRow(game(), NOW), /1st in the Atlantic/);
+  const p = rowHarness([FINISHED, UPCOMING], ROW_PREAMBLE.replace("showScores = false", "showScores = true"));
+  assert.match(p.gameRow(FINISHED, NOW), /1st in the Atlantic/);
+  assert.match(p.gameRow(UPCOMING, NOW), /1st in the Atlantic/);
+});
+
+test("the suppressed set is worked out once, over the board, not per row", () => {
+  const p = rowHarness([FINISHED, UPCOMING]);
+  const spoiled = p.spoiledTeams(NOW);
+  assert.deepEqual([...spoiled].sort(), ["bos", "tor"], "both sides of the hidden game");
+  /* A race, a rugby fixture and a tennis match carry no record to give
+     away, and asking about them must not throw. */
+  globalThis.__board = [FINISHED, {id:"r1", event:true, start:NOW, race:"Some race"},
+    {id:"t1", tennis:true, start:NOW, home:null, away:null},
+    {id:"ru1", rugby:true, start:NOW - 3*3600000, home:{id:"ire"}, away:{id:"eng"},
+     ru:{state:"final"}, result:{status:"final", score:[10,7]}}];
+  const again = p.spoiledTeams(NOW);
+  assert.deepEqual([...again].sort(), ["bos", "tor"], "nothing else contributes an id");
+});
+
+test("a finished game older than the board cannot suppress anything", () => {
+  /* The suppressed set reaches exactly as far back as Recent results
+     does, because that is as far back as a person can see a hidden game
+     or click Reveal on it. A game five days ago is on nobody's screen,
+     so no result is being withheld — and counting it would take a team's
+     record off the board permanently, since in daily sport there is
+     nearly always something back there. */
+  const old = game({id:"g7", start: NOW - 5*86400000});
+  const p = rowHarness([old, UPCOMING]);
+  assert.deepEqual([...p.spoiledTeams(NOW)], [], "out of the board's reach");
+  assert.match(p.gameRow(UPCOMING, NOW), /1st in the Atlantic/);
+
+  /* One day inside it does suppress, and can be revealed. */
+  const recent = game({id:"g6", start: NOW - 26*3600000});
+  const q = rowHarness([recent, UPCOMING]);
+  assert.deepEqual([...q.spoiledTeams(NOW)].sort(), ["bos", "tor"]);
+  assert.doesNotMatch(q.gameRow(UPCOMING, NOW), /g-rec/);
+});
+
+test("the spoiler rule and Recent results read the same three days from one constant", () => {
+  const { RESULTS_DAYS } = rowHarness();
+  assert.equal(RESULTS_DAYS, 3);
+  const spoil = /function spoiledTeams\(now\)\{[\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(spoil, /RESULTS_DAYS \* DAY/, "the set reaches as far as the panel does");
+  const results = /function renderResults\([\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(results, /RESULTS_DAYS\*DAY/, "and the panel reaches as far as the set does");
 });
 
 test("one row hiding its record does not silence the rest of the board", () => {
-  const p = rowHarness();
-  const hidden = p.gameRow(game(), NOW);
-  const other = p.gameRow(game({id:"g2", home: CANUCKS, away: BRUINS,
-    result:{status:"scheduled", label:"", score:null}, start: NOW + 86400000}), NOW);
-  assert.doesNotMatch(hidden, /g-rec/);
-  assert.match(other, /4th in the Pacific/, "a different game is not the hidden one");
+  const p = rowHarness([FINISHED, SCHEDULED_ONLY]);
+  assert.doesNotMatch(p.gameRow(FINISHED, NOW), /g-rec/);
+  assert.match(p.gameRow(SCHEDULED_ONLY, NOW), /4th in the Pacific/);
 });
 
 test("adding a club to the board renders its record on the same frame", () => {
   /* The tables are not filtered by who is followed, so nothing is
      fetched, rebuilt or waited for when someone is added. The proof is
      that the record is already there with an empty board. */
-  const p = rowHarness();
   const fixture = {id:"g3", comp:"NHL", start: NOW + 86400000, home: CANUCKS, away: LEAFS,
     stage:"", listed:true, espn:true, fromFeed:true, moved:null, venue:null,
     result:{status:"scheduled", label:"", score:null}};
+  const p = rowHarness([fixture]);
   const unfollowed = p.gameRow(fixture, NOW);
   assert.match(unfollowed, /4th in the Pacific/, "with nothing selected at all");
   assert.match(unfollowed, /g-team dim/, "and the club is not followed yet");

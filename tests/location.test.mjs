@@ -169,10 +169,12 @@ const TOURNEYS = new Map();
 const tourneyOf = () => null;
 const isStarredPlayer = () => false;
 
-/* The full tables the record under a team name is read from. Empty here:
-   these tests are about where a match is played, and a row with no
-   record is the same row. The record has its own file. */
+/* The full tables the record under a team name is read from, and the
+   teams whose record is being held back. Both empty here: these tests
+   are about where a match is played, and a row with no record is the
+   same row. The record has its own file. */
 let RECORDS = new Map();
+let SPOILED = new Set();
 `;
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
