@@ -27,6 +27,7 @@ const PREAMBLE = `
   const fmtDayLong = k => k;
   const isNarrow = () => false;
   const isStarredPlayer = () => false;
+  let TENNIS_RANKS = {}, TENNIS_RANKED_AT = {};
   globalThis.__games = [];
   const GAMES = globalThis.__games;
   const myGames = () => globalThis.__games;
@@ -40,7 +41,8 @@ const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","C
   "US_OPEN","resolveRights","SOCCER","esc","inkOn","pad","ymd","normName","fmtTime","fmtShortDate",
   "countdownText","BELL","saveButton","servicesFor","covered","RESULTS_DAYS","TENNIS_SETTLED",
   "TENNIS_STATE","setText","setHtml","setTally","tourneyOf","spoiledPlayers","playerSpoiled",
-  "TBD_PLAYER","nextMatchFor","nextOpponentLine","tennisRow"];
+  "TBD_PLAYER","nextMatchFor","nextOpponentLine","RANK_STALE_DAYS","attachRankings",
+  "rankOfPlayer","rankLine","tennisRow"];
 
 const player = (id, name, short) => ({id, name, short, country:"USA", tbd:false});
 const PAUL   = player("2964", "Tommy Paul", "T. Paul");
@@ -93,6 +95,201 @@ test("a live match marks nobody, because nothing has been decided", () => {
   const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
   const html = p.tennisRow(asGame(m), NOW);
   assert.doesNotMatch(html, /pl-win|pl-lost/);
+});
+
+/* ============ "def", and the winner on top ============ */
+
+test("a settled match puts the winner first and says def", () => {
+  const m = match();                       // Alcaraz, players[1], beat Paul
+  const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /class="vs">def</, "the way a result has always been written");
+  assert.ok(html.indexOf("Carlos Alcaraz") < html.indexOf("Tommy Paul"), "winner on top");
+  /* And the greying stays. The redundancy is the point: order, word and
+     weight all say the same thing, so a glance cannot misread it. */
+  assert.match(html, /pl-win[^>]*>Carlos Alcaraz/);
+  assert.match(html, /pl-lost[^>]*>Tommy Paul/);
+});
+
+test("a winner already on top is left where the feed put them", () => {
+  const m = match({winner: 0, setWins: [0, 0], sets: [[6, 3], [6, 4]], tiebreaks: [null, null]});
+  const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.ok(html.indexOf("Tommy Paul") < html.indexOf("Carlos Alcaraz"));
+  assert.match(html, /class="vs">def</);
+});
+
+test("live and scheduled matches keep v, in the order the feed billed them", () => {
+  for(const over of [{status:"live", label:"3rd", winner:null, setWins:[0,1,null]},
+                     {status:"scheduled", label:"", winner:null, sets:[], setWins:[], tiebreaks:[]}]){
+    const m = match(over);
+    const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+    const html = p.tennisRow(asGame(m), NOW);
+    assert.match(html, /class="vs">v</, over.status + " must say v");
+    assert.ok(html.indexOf("Tommy Paul") < html.indexOf("Carlos Alcaraz"), over.status + " keeps feed order");
+  }
+});
+
+test("reordering leaks the winner as loudly as the word, so a hidden final does neither", () => {
+  const m = match();
+  const p = harness([m]);
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /class="vs">v</, "not def");
+  assert.ok(html.indexOf("Tommy Paul") < html.indexOf("Carlos Alcaraz"), "feed order");
+  assert.doesNotMatch(html, /pl-win|pl-lost/, "and nobody greyed");
+  assert.match(html, /hidden-score/);
+});
+
+test("revealing brings the order, the word and the greying back together", () => {
+  const m = match();
+  const p = harness([m], s => s.replace('revealed = new Set()', 'revealed = new Set(["tennis:m1"])'));
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /class="vs">def</);
+  assert.ok(html.indexOf("Carlos Alcaraz") < html.indexOf("Tommy Paul"));
+  assert.match(html, /pl-lost[^>]*>Tommy Paul/);
+});
+
+test("the set scores turn round with the names", () => {
+  /* A row reading "Alcaraz def Paul" over "4-6 3-6 4-6" would be
+     contradicting itself: those numbers are Paul's first. */
+  const m = match();
+  const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /<b>6<\/b>-4/, "the winner's games first, and marked as the set winner's");
+  assert.doesNotMatch(html, /4-<b>6<\/b>/);
+
+  /* Directly, both ways round. */
+  assert.equal(p.setText(m, 0), "4-6");
+  assert.equal(p.setText(m, 0, true), "6-4");
+  assert.equal(p.setHtml(m, 0, true), '<span class="set"><b>6</b>-4</span>');
+  assert.equal(p.setTally(match({setWins:[0,0,1]})), "2–1");
+  assert.equal(p.setTally(match({setWins:[0,0,1]}), true), "1–2");
+});
+
+/* ============ a retirement, a walkover, and a result with no sets ============
+
+   None of the three is in the committed file today: it holds 85 finals,
+   2 live matches and 26 scheduled, and no retirement, walkover,
+   cancellation or postponement at all. So these are built from the shape
+   the normaliser produces rather than observed, and that is stated
+   rather than implied. `winner` is read from the competitor's own winner
+   flag and does not depend on the status, so all three carry one. */
+
+test("a retirement is a result: winner first, def, and the sets that were played", () => {
+  const m = match({status:"retired", label:"Retired", winner:1,
+    sets:[[4,6],[1,2]], tiebreaks:[null,null], setWins:[1,null]});
+  const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /class="vs">def</);
+  assert.ok(html.indexOf("Carlos Alcaraz") < html.indexOf("Tommy Paul"));
+  assert.match(html, /<b>6<\/b>-4/, "the completed set, turned round");
+  assert.match(html, /2-1/, "and the one abandoned, unmarked");
+});
+
+test("a walkover has a winner and no sets, and can still be hidden and revealed", () => {
+  /* The trap this closes: the Reveal button used to appear only when
+     sets had been played, so a walkover could never be opened — and its
+     players would stay blanked out of every later round for good. */
+  const m = match({status:"walkover", label:"Walkover", winner:1,
+    sets:[], tiebreaks:[], setWins:[]});
+  const hidden = harness([m]);
+  const shut = hidden.tennisRow(asGame(m), NOW);
+  assert.match(shut, /hidden-score/, "there is a result, so there is a way to open it");
+  assert.match(shut, /class="vs">v</);
+  assert.doesNotMatch(shut, /pl-win|pl-lost/);
+
+  const open = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const html = open.tennisRow(asGame(m), NOW);
+  assert.match(html, /class="vs">def</);
+  assert.ok(html.indexOf("Carlos Alcaraz") < html.indexOf("Tommy Paul"));
+  assert.doesNotMatch(html, /class="set"/, "no sets were played and none are invented");
+});
+
+test("a finished match with no score published still reads as a result", () => {
+  const m = match({status:"final", label:"Final", winner:0,
+    sets:[], tiebreaks:[], setWins:[]});
+  const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /class="vs">def</);
+  assert.doesNotMatch(html, /class="set"/);
+});
+
+test("a cancelled match has no winner, so nothing is reordered and nothing is said", () => {
+  const m = match({status:"canceled", label:"Canceled", winner:null,
+    sets:[], tiebreaks:[], setWins:[]});
+  const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /class="vs">v</);
+  assert.doesNotMatch(html, /pl-win|pl-lost|hidden-score/);
+});
+
+/* ============ the ranking, in the slot a record occupies ============ */
+
+test("a ranked player carries their place under their name", () => {
+  const m = match({status:"scheduled", label:"", winner:null, sets:[], tiebreaks:[], setWins:[]});
+  const p = harness([m]);
+  p.attachRankings({ATP: {"3782": 3}}, {ATP: new Date(NOW).toISOString()});
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /<span class="g-rec">No\. 3<\/span>/, "the same slot a team's record sits in");
+  assert.equal((html.match(/g-rec/g) || []).length, 1, "and nothing for the player who has none");
+});
+
+test("an unranked player gets nothing, not the word unranked", () => {
+  /* Real today: the live WTA match in the file has two players outside
+     the top hundred, so this is the ordinary case rather than an edge. */
+  const p = harness([]);
+  p.attachRankings({ATP: {"3782": 3}}, {ATP: new Date(NOW).toISOString()});
+  assert.equal(p.rankLine(PAUL, "ATP", NOW), null);
+  assert.equal(p.rankLine(ALCARAZ, "ATP", NOW), "No. 3");
+  assert.equal(p.rankLine(ALCARAZ, "WTA", NOW), null, "the other tour's list is not theirs");
+  assert.equal(p.rankLine(TBD, "ATP", NOW), null);
+});
+
+test("a ranking is a weekly figure, not a result, so it is not gated on the reveal", () => {
+  /* The tours publish on Mondays. A place does not move when a match
+     finishes, so it cannot say how one went — which is why a hidden
+     final still shows both players' rankings while showing nothing else
+     about them. */
+  const m = match();
+  const p = harness([m]);
+  p.attachRankings({ATP: {"3782": 3, "2964": 12}}, {ATP: new Date(NOW).toISOString()});
+  const html = p.tennisRow(asGame(m), NOW);
+  assert.match(html, /hidden-score/, "the result is hidden");
+  assert.doesNotMatch(html, /pl-win|pl-lost/);
+  assert.match(html, /No\. 3/);
+  assert.match(html, /No\. 12/, "both places, on a row saying nothing about the match");
+});
+
+test("a name being withheld takes its ranking with it", () => {
+  /* A place beside a blanked name identifies the player as surely as the
+     name would. */
+  const p = harness([R4, QF]);
+  p.attachRankings({ATP: {"3782": 3, "4231": 7}}, {ATP: new Date(NOW).toISOString()});
+  const qf = p.tennisRow(asGame(QF), NOW);
+  assert.match(qf, /tbd-slot/);
+  assert.doesNotMatch(qf, /No\. 3/, "Alcaraz is being withheld, and so is his place");
+  assert.match(qf, /No\. 7/, "Shelton is not, and keeps his");
+});
+
+test("a place from a list nobody could refresh for over a week is not printed", () => {
+  /* It still filters — a slightly old idea of the top twenty-five beats
+     none, and the filter's failure mode is more tennis rather than
+     less. It stops being SHOWN, because a place beside a name is a
+     claim. */
+  const p = harness([]);
+  const stale = new Date(NOW - 9 * DAY).toISOString();
+  p.attachRankings({ATP: {"3782": 3}}, {ATP: stale});
+  assert.equal(p.rankLine(ALCARAZ, "ATP", NOW), null);
+  assert.equal(p.rankOfPlayer(ALCARAZ, "ATP"), 3, "but the filter can still read it");
+
+  const fresh = new Date(NOW - 6 * DAY).toISOString();
+  p.attachRankings({ATP: {"3782": 3}}, {ATP: fresh});
+  assert.equal(p.rankLine(ALCARAZ, "ATP", NOW), "No. 3", "a week old is what a ranking is");
+
+  /* An undated list is not assumed stale — nothing said is not the same
+     as something said and old. */
+  p.attachRankings({ATP: {"3782": 3}}, {});
+  assert.equal(p.rankLine(ALCARAZ, "ATP", NOW), "No. 3");
 });
 
 /* ============ reading a live match at a glance ============ */

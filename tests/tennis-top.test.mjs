@@ -284,7 +284,11 @@ test("no star control on an empty slot or on a name being withheld", () => {
      back exactly what the row is holding. */
   const row = /function tennisRow\([\s\S]*?\n\}/.exec(SRC)[0];
   assert.match(row, /const starOf = p => \(!p \|\| p\.id == null \|\| p\.tbd\) \? ""/);
-  assert.match(row, /playerSpoiled\(m, p\)\s*\n\s*\? nameOf\(TBD_PLAYER, i, false\)\s*\n\s*: nameOf\(p, i, reveal\) \+ starOf\(p\)/);
+  assert.match(row, /if\(playerSpoiled\(m, p\)\)/, "a withheld name gets no star control");
+  const spoiledBranch = row.slice(row.indexOf("if(playerSpoiled(m, p))"),
+                                  row.indexOf("const rank = rankLine"));
+  assert.doesNotMatch(spoiledBranch, /starOf/, "and no place beside it either, which would identify them");
+  assert.match(row, /nameOf\(p, i, show\) \+ starOf\(p\)/, "a named player gets one");
 });
 
 /* ================= saying that the filter is there ================= */
