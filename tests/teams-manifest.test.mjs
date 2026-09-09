@@ -24,9 +24,22 @@ const root = new URL("../", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("data/teams.json", root), "utf8"));
 const frozen = JSON.parse(readFileSync(new URL("tests/fixtures/frozen-team-ids.json", root), "utf8"));
 
-const P = loadFromPage(["TEAM_ROWS", "GHOSTS", "CLUB_NAMES", "ESPN_NAME", "SOCCER",
-  "DEFAULT_TEAMS", "COMPS", "ZONE_IANA"]);
-const B = loadFromBuild(["ROSTER", "ALIASES", "EXTRA", "idFor"]);
+/* The six lists as they shipped, recorded the moment before the consumer
+   migration deleted them.
+
+   The equivalence proof has to outlive the thing it compares against.
+   Once TEAM_ROWS is gone from the page there is nothing live to hold the
+   manifest up to, and the proof would quietly become vacuous — so the
+   originals are recorded and the manifest is held up to the record
+   instead. That keeps the assertion doing the same work: the manifest
+   must still reproduce, exactly, what the app shipped before it existed.
+
+   This file is a record of what was true. It is never edited to make a
+   test pass; a disagreement means the manifest drifted. */
+const LEGACY = JSON.parse(readFileSync(new URL("tests/fixtures/legacy-team-lists.json", root), "utf8"));
+
+const P = loadFromPage(["SOCCER", "COMPS", "ZONE_IANA"]);
+const B = loadFromBuild(["idFor"]);
 
 /* ============================ it is a valid file ============================ */
 
@@ -38,7 +51,7 @@ test("the committed manifest passes its own validator", () => {
 test("the manifest holds today's roster and nothing more", () => {
   assert.equal(manifest.version, 1);
   assert.equal(manifest.teams.length, 50, "50 followable teams, exactly today's roster");
-  assert.equal(manifest.teams.length, B.ROSTER.length);
+  assert.equal(manifest.teams.length, LEGACY.ROSTER.length);
   assert.equal(allEntries(manifest).length, 62,
     "50 followable, 1 event, 5 ghosts, 6 known only by name");
 });
@@ -46,19 +59,19 @@ test("the manifest holds today's roster and nothing more", () => {
 /* ============================ it reproduces all six ============================ */
 
 test("it reproduces TEAM_ROWS, element for element", () => {
-  assert.deepEqual(toTeamRows(manifest), P.TEAM_ROWS);
+  assert.deepEqual(toTeamRows(manifest), LEGACY.TEAM_ROWS);
 });
 
 test("it reproduces GHOSTS", () => {
-  assert.deepEqual(toGhostRows(manifest), P.GHOSTS);
+  assert.deepEqual(toGhostRows(manifest), LEGACY.GHOSTS);
 });
 
 test("it reproduces ROSTER", () => {
-  assert.deepEqual(toRoster(manifest), B.ROSTER);
+  assert.deepEqual(toRoster(manifest), LEGACY.ROSTER);
 });
 
 test("it reproduces CLUB_NAMES", () => {
-  assert.deepEqual(toClubNames(manifest), P.CLUB_NAMES);
+  assert.deepEqual(toClubNames(manifest), LEGACY.CLUB_NAMES);
 });
 
 test("it reproduces ESPN_NAME", () => {
@@ -66,22 +79,22 @@ test("it reproduces ESPN_NAME", () => {
      rather than the manifest's copy of that knowledge, so the assertion
      is against the shipped rule and not against a restatement of it. */
   const isSoccer = c => !!P.SOCCER[c];
-  assert.deepEqual(toEspnName(manifest, isSoccer), P.ESPN_NAME);
+  assert.deepEqual(toEspnName(manifest, isSoccer), LEGACY.ESPN_NAME);
 });
 
 test("it reproduces ALIASES", () => {
-  assert.deepEqual(toAliases(manifest), B.ALIASES);
+  assert.deepEqual(toAliases(manifest), LEGACY.ALIASES);
 });
 
 test("it reproduces EXTRA, including the order within each league", () => {
   const rebuilt = toExtra(manifest);
-  assert.deepEqual(rebuilt, B.EXTRA);
-  for(const league of Object.keys(B.EXTRA))
-    assert.deepEqual(rebuilt[league], B.EXTRA[league], league + " differs in order");
+  assert.deepEqual(rebuilt, LEGACY.EXTRA);
+  for(const league of Object.keys(LEGACY.EXTRA))
+    assert.deepEqual(rebuilt[league], LEGACY.EXTRA[league], league + " differs in order");
 });
 
 test("it reproduces DEFAULT_TEAMS, in order", () => {
-  assert.deepEqual(toDefaults(manifest), P.DEFAULT_TEAMS);
+  assert.deepEqual(toDefaults(manifest), LEGACY.DEFAULT_TEAMS);
 });
 
 /* ============================ names still resolve ============================ */
@@ -174,7 +187,7 @@ test("the five clubs the baked fixtures name keep their exact ids", () => {
 test("the ids a share link carries are the followable ones", () => {
   const followable = manifest.teams.map(e => e.id);
   for(const id of followable) assert.equal(frozen.ids[id].group, "teams", id);
-  for(const id of P.DEFAULT_TEAMS) assert.ok(followable.includes(id), id + " ships as a default but is not followable");
+  for(const id of LEGACY.DEFAULT_TEAMS) assert.ok(followable.includes(id), id + " ships as a default but is not followable");
 });
 
 /* ============================ no second source of truth ============================ */
