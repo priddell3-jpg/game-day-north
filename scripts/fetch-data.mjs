@@ -33,6 +33,12 @@ import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
 import { MAX_LIMIT, planRanges, splitRange, dateKey, compFloorProblems, describeFloor,
          nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
 
+/* Every club this build knows about, and every name each answers to.
+   One committed file, shared with the page, so the two cannot drift —
+   which they did three times before it existed, each time detaching a
+   club's fixtures in a way that looked exactly like a quiet season. */
+const TEAMS = JSON.parse(readFileSync(new URL("../data/teams.json", import.meta.url), "utf8"));
+
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
   NHL:"hockey/nhl", NBA:"basketball/nba", NFL:"football/nfl", MLB:"baseball/mlb",
@@ -77,29 +83,18 @@ const ROSTER = [
 const EXTRA = { EPL:["EFL","FAC","UCL"], LALIGA:["UCL"], BUNDES:["UCL"], LIGUE1:["UCL"], SERIEA:["UCL"] };
 
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
-/* Names the feed uses that no rule could derive from ours. Each of these
-   silently detached a club until the unmatched-team warning caught it. */
-const ALIASES = {
-  int:  ["Inter Milan", "Inter"],
-  lafc: ["Los Angeles FC"],
-  "van-mls": ["Vancouver Whitecaps FC"],
-  sou:  ["Seattle Sounders"],
-  mia:  ["Inter Miami"],
-  "mtl-mls": ["CF Montréal", "Montreal Impact"],
-  psg:  ["PSG", "Paris SG"],
-  bay:  ["Bayern München", "FC Bayern München"],
-  rma:  ["Real Madrid CF"],
-  bar:  ["FC Barcelona"]
-};
-
 /* Match on the name, and on the name minus a club suffix. ESPN says
    "Vancouver Whitecaps" where the roster said "Vancouver Whitecaps FC",
    and that one word silently detached every one of their fixtures from
    the person following them. Tolerate the difference both ways. */
 const trimSuffix = n => n.replace(/\b(fc|cf|sc|afc)\b/gi, "").replace(/\s+/g," ").trim();
+/* Names the feed uses that no rule could derive from ours live on each
+   club in the manifest. Each of them silently detached a club until the
+   unmatched-team warning caught it. */
 const NAME_TO_ID = new Map();
 for(const [id,,name] of ROSTER){
-  const variants = [name].concat(ALIASES[id] || []);
+  const entry = TEAMS.teams.find(t => t.id === id);
+  const variants = [name].concat((entry && entry.aliases) || []);
   for(const v of variants){
     if(!NAME_TO_ID.has(norm(v))) NAME_TO_ID.set(norm(v), id);
     const bare = norm(trimSuffix(v));

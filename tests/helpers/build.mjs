@@ -15,12 +15,20 @@ const SRC = readFileSync(new URL("../../scripts/fetch-data.mjs", import.meta.url
 const OPEN = "\nconst ESPN = ";
 const CLOSE = "\nconst SAME = ";
 
+/* The block reads the team manifest, which the real script loads from
+   disk. It cannot do that here — the block is evaluated as a function
+   body, where there is no readFileSync and no import.meta — so the same
+   committed file is supplied to it instead. The page helper does the
+   same thing by inlining; this is that, for the build. */
+const MANIFEST = readFileSync(new URL("../../data/teams.json", import.meta.url), "utf8");
+
 export function loadFromBuild(names){
   const from = SRC.indexOf(OPEN), to = SRC.indexOf(CLOSE);
   if(from < 0 || to <= from){
     throw new Error("could not find the declaration block in scripts/fetch-data.mjs — " +
       "it is delimited by the lines starting `const ESPN =` and `const SAME =`");
   }
-  const factory = new Function(SRC.slice(from, to) + "\nreturn {" + names.join(",") + "};");
+  const preamble = "const TEAMS = " + MANIFEST.trim() + ";\n";
+  const factory = new Function(preamble + SRC.slice(from, to) + "\nreturn {" + names.join(",") + "};");
   return factory();
 }
