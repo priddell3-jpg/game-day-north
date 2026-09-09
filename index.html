@@ -2110,6 +2110,12 @@ const TEAM_ROWS = [
 ["sou","MLS","Seattle","Sounders","SEA","PT","#005595"],
 ["uci-wt","UCI","","Men's WorldTour","WT","CET","#8A6D1F"]
 ];
+/* Every entry the manifest carries, by id: followable clubs, the
+   WorldTour, the ghosts the baked fixtures name, and the clubs known
+   only by the name the feed uses. */
+const MANIFEST_BY_ID = new Map(
+  ["teams","events","ghosts","feedOnly"].flatMap(g => (TEAM_MANIFEST[g] || []).map(e => [e.id, e])));
+
 const TEAMS = {};
 TEAM_ROWS.forEach(r=>{
   const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
@@ -2117,6 +2123,11 @@ TEAM_ROWS.forEach(r=>{
   t.comps = [r[1]];
   if(r[1]==="EPL") t.comps = ["EPL","EFL","FAC"];
   if(t.ucl) t.comps = t.comps.concat(["UCL"]);
+  /* The name the feed uses for this club, which is not always the name
+     the page shows: the roster writes "Montreal Canadiens" where the
+     page writes "Montréal". Matching goes through this. */
+  const m = MANIFEST_BY_ID.get(t.id);
+  if(m && m.feedName) t.feed = m.feedName;
   TEAMS[t.id] = t;
 });
 const teamList = Object.values(TEAMS);
@@ -2136,7 +2147,11 @@ const GHOSTS = [
 ["nfo","EPL","Nottingham","Nottm Forest","NFO","UK","#DD0000"],
 ["ful","EPL","London","Fulham","FUL","UK","#1B1B1B"]
 ];
-GHOSTS.forEach(r=>{ TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ghost:true, comps:[r[1]]}; });
+GHOSTS.forEach(r=>{
+  const m = MANIFEST_BY_ID.get(r[0]);
+  TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6],
+    ghost:true, comps:[r[1]], ...(m && m.feedName ? {feed:m.feedName} : {})};
+});
 const allTeams = Object.values(TEAMS);
 const pickable = allTeams.filter(t=>!t.ghost);
 
@@ -2218,15 +2233,6 @@ function idKey(t){
   return (t.id && !/^(feed|espn):/.test(t.id)) ? t.id : normName(t.name);
 }
 // clubs whose ESPN name differs from city + name
-const ESPN_NAME = {
-  liv:"Liverpool", ars:"Arsenal", mci:"Manchester City", mun:"Manchester United",
-  che:"Chelsea", tot:"Tottenham Hotspur", new:"Newcastle United", nfo:"Nottingham Forest",
-  bou:"AFC Bournemouth", ips:"Ipswich Town", avl:"Aston Villa", bha:"Brighton & Hove Albion",
-  whu:"West Ham United", eve:"Everton", cry:"Crystal Palace", bre:"Brentford", ful:"Fulham",
-  rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Internazionale",
-  "van-mls":"Vancouver Whitecaps", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
-  lafc:"LAFC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
-};
 /* Every name a club is known by, normalised. The file writes a name in
    full — "Toronto Blue Jays" — where the roster splits it into a city
    and a name, so a club record matches on whichever of these two
@@ -2242,7 +2248,7 @@ function clubKeys(t){
   if(!t) return [];
   const keys = [idKey(t)];
   if(t.name) keys.push(normName(t.name), normName((t.city || "") + " " + t.name));
-  if(ESPN_NAME[t.id]) keys.push(normName(ESPN_NAME[t.id]));
+  if(t.feed) keys.push(normName(t.feed));
   return keys.filter(Boolean);
 }
 const sameClub = (a, b) => clubKeys(a).some(k => clubKeys(b).indexOf(k) >= 0);
@@ -2521,7 +2527,7 @@ const ESPN_PATH = {
   EFL:"soccer/eng.league_cup", FAC:"soccer/eng.fa",
   LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1"
 };
-// ESPN_NAME is declared with the identity helpers above, which need it.
+// The feed name lives on the club itself, set where TEAMS is built.
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 let liveMode = null;          // null = not tried, true = reachable, false = blocked
 let liveNote = "", liveErr = "";
@@ -2543,7 +2549,7 @@ function espnTeamObj(e, comp){
   const disp = e.displayName || e.name || "";
   for(const t of allTeams){
     if(t.home!==comp && (t.comps||[]).indexOf(comp)<0) continue;
-    if(ESPN_NAME[t.id] && norm(ESPN_NAME[t.id])===norm(disp)) return t;
+    if(t.feed && norm(t.feed)===norm(disp)) return t;
     if(norm(t.city+" "+t.name)===norm(disp)) return t;
     if(norm(t.name)===norm(disp)) return t;
   }
@@ -2874,9 +2880,9 @@ async function espnTeamsList(comp){
 }
 const bare = n => norm(String(n||"").replace(/\b(fc|cf|sc|afc)\b/gi,""));
 function findEspnTeam(t, list){
-  const want = norm(ESPN_NAME[t.id] || (t.city+" "+t.name));
+  const want = norm(t.feed || (t.city+" "+t.name));
   return list.find(e=>norm(e.displayName)===want)
-      || list.find(e=>bare(e.displayName)===bare(ESPN_NAME[t.id] || (t.city+" "+t.name)))
+      || list.find(e=>bare(e.displayName)===bare(t.feed || (t.city+" "+t.name)))
       || list.find(e=>norm(e.displayName)===norm(t.city+" "+t.name))
       || list.find(e=>norm(e.name)===norm(t.name) && norm(e.location)===norm(t.city))
       || list.find(e=>norm(e.name)===norm(t.name))

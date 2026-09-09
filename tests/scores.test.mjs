@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { loadFromPage } from "./helpers/page.mjs";
 
 const { findScored, applyScored, orientation, sameClub } = loadFromPage(
-  ["normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN_NAME", "clubKeys", "sameClub",
+  ["normName", "idKey", "SAME_WINDOW", "sameGame", "clubKeys", "sameClub",
    "orientation", "findScored", "applyScored"]);
 
 /* The live top-up reads the scoreboard and merges what it finds into the
@@ -203,8 +203,7 @@ function harness(){
     }};
   const page = loadFromPage(
     ["TEAM_ROWS", "GHOSTS", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
-     "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "ESPN_NAME",
-     "norm", "espnTeamObj", "venueOf", "parseEvent", "parseSummary", "clubKeys", "sameClub",
+     "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "norm", "espnTeamObj", "venueOf", "parseEvent", "parseSummary", "clubKeys", "sameClub",
      "orientation", "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore",
      "activeNow", "scoredDays", "SUMMARY_CAP", "DAY_CAP", "fillScores"], PREAMBLE);
   // the shipped roster, built the way the page builds it
