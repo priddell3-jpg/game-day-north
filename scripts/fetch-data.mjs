@@ -10,19 +10,28 @@
  *   - a game is filed under its US Eastern date, not UTC
  *   - the season schedule reports finished games as scheduled, 0-0;
  *     only the scoreboard carries the result
- *   - a YYYYMMDD-YYYYMMDD range silently returns the first day only.
- *     Soccer accepts YYYYMM for a whole month; the NA leagues do not.
+ *   - `limit` is honoured to exactly 1000 and silently collapses to 25
+ *     above it, so the most generous-looking value returns almost
+ *     nothing. A response that comes back exactly full is indistinguishable
+ *     from a truncated one and is never trusted.
+ *
+ * A fourth quirk used to be here and is no longer true: a
+ * YYYYMMDD-YYYYMMDD range once returned the first day only. Measured
+ * again on 2026-09-09 it returns the whole span, and the same event ids
+ * as one request per day. That is what lets one request cover a league's
+ * entire window; see scripts/lib/fetch-plan.mjs and tests/fetch-plan.test.mjs.
  *
  * No dependencies. Node 20+ for built-in fetch.
  */
 import { writeFileSync, readFileSync } from "node:fs";
-import { easternDate } from "./lib/dates.mjs";
 import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, freshestLeader,
          stageSections, titleWords, titleMatches } from "./lib/cycling.mjs";
 import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
 import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
          STANDINGS_HOLD } from "./lib/race.mjs";
+import { MAX_LIMIT, planRanges, splitRange, dateKey,
+         compFloorProblems, describeFloor } from "./lib/fetch-plan.mjs";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -68,7 +77,6 @@ const ROSTER = [
 const EXTRA = { EPL:["EFL","FAC","UCL"], LALIGA:["UCL"], BUNDES:["UCL"], LIGUE1:["UCL"], SERIEA:["UCL"] };
 
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
-const pad = n => String(n).padStart(2,"0");
 /* Names the feed uses that no rule could derive from ours. Each of these
    silently detached a club until the unmatched-team warning caught it. */
 const ALIASES = {
@@ -105,11 +113,6 @@ function idFor(displayName){
   return NAME_TO_ID.get(bare) || null;
 }
 
-function monthKeys(from, to){
-  const out = [], d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
-  while(d <= to){ out.push(d.getUTCFullYear()+pad(d.getUTCMonth()+1)); d.setUTCMonth(d.getUTCMonth()+1); }
-  return out;
-}
 let calls = 0, failures = 0, consecutive = 0, ok = 0;
 async function get(url){
   calls++;
@@ -136,6 +139,61 @@ async function get(url){
     }
   }
 }
+/* One competition's whole window, as few requests as it safely takes.
+
+   The window is planned into chunks no one of which is expected to
+   overflow, and a chunk that comes back exactly full is halved and asked
+   again rather than believed: a full page and a truncated page look
+   identical, and shipping a truncated fixture set silently is the worst
+   thing this file could do. A single day that still comes back full is
+   the end of the road and throws.
+
+   This replaces two things at once. The per-team season schedules, which
+   cost one request per followed team and were the only source of the
+   forward window for the North American leagues; and the per-date
+   scoreboards, which covered eight days back and three forward. The
+   range covers both spans and carries scores exactly as the per-date
+   scoreboard did. */
+let preseasonSkipped = 0;
+async function scoreboardRange(comp, path, fromMs, toMs, out){
+  let asked = 0;
+  const queue = planRanges(comp, fromMs, toMs);
+  while(queue.length){
+    const [fromKey, toKey, a, b] = queue.shift();
+    const url = ESPN + path + "/scoreboard?dates=" + fromKey + "-" + toKey + "&limit=" + MAX_LIMIT;
+    const r = await get(url);
+    asked++;
+    const events = ((r || {}).events) || [];
+    if(events.length >= MAX_LIMIT){
+      const halves = splitRange(a, b);
+      if(!halves){
+        throw new Error(comp + " returned " + events.length + " events for the single day "
+          + fromKey + " — at the request ceiling, so the answer may be truncated and "
+          + "cannot be trusted");
+      }
+      console.warn("  ! " + comp + " " + fromKey + "-" + toKey + " came back at the "
+        + MAX_LIMIT + " ceiling — splitting rather than trusting a full page");
+      queue.unshift([dateKey(halves[0][0]), dateKey(halves[0][1]), halves[0][0], halves[0][1]],
+                    [dateKey(halves[1][0]), dateKey(halves[1][1]), halves[1][0], halves[1][1]]);
+      continue;
+    }
+    for(const ev of events){
+      /* Preseason is dropped deliberately.
+
+         The ranged scoreboard returns it and the per-team schedules did
+         not, so taking everything would quietly add exhibition hockey to
+         people's boards. That matters here for one reason: the rights
+         table keys on competition, so a preseason game would be told it
+         is on Sportsnet on a Saturday because the regular season is.
+         That is a carriage claim nothing sourced, which is the one thing
+         this app does not do. Regular season and post-season only. */
+      if((ev.season || {}).slug === "preseason"){ preseasonSkipped++; continue; }
+      out(parseEvent(ev, comp));
+    }
+  }
+  return asked;
+}
+
 /* Where the match is actually being played, as the source states it.
 
    This is a fact about the FIXTURE, not about the home club, and the
@@ -271,20 +329,45 @@ function sameGame(a,b){
 
 const now = Date.now();
 const fixtures = [];
+/* Fixtures already held, indexed by the source's own event id.
+
+   This used to be a linear scan of everything accumulated so far,
+   calling sameGame() — which normalises two club names, each an NFD
+   normalise and two regexes — against every record held. That was
+   affordable while most events were discarded on arrival. It stops being
+   affordable the moment more of them are kept, because the number of
+   inserts and the length of the array being scanned grow together.
+
+   Almost every record carries an id, and an id does not need guessing
+   at. The scan survives only for the few that do not. */
+const byEid = new Map();
+function merge(held, f){
+  if(f.score && !held.score){
+    /* The copy with a score wins, but must not lose a venue it lacks:
+       two readings of one fixture do not always both state one. */
+    if(!f.venue && held.venue) f.venue = held.venue;
+    return f;
+  }
+  if(!held.venue && f.venue) held.venue = f.venue;
+  return held;
+}
 function add(f){
   if(!f) return;
   if(f.start < now - BACK*DAY || f.start > now + FORWARD*DAY) return;
   if(!f.home.id && !f.away.id) return;                 // nobody follows either club
-  const i = fixtures.findIndex(x=>sameGame(x,f));
-  if(i < 0){ fixtures.push(f); return; }
-  if(f.score && !fixtures[i].score){
-    // the copy with a score wins, but must not lose a venue it lacks:
-    // the season schedule and the scoreboard do not always both state one
-    if(!f.venue && fixtures[i].venue) f.venue = fixtures[i].venue;
-    fixtures[i] = f;
-  } else if(!fixtures[i].venue && f.venue){
-    fixtures[i].venue = f.venue;
+  if(f.eid){
+    const held = byEid.get(f.eid);
+    if(!held){ fixtures.push(f); byEid.set(f.eid, f); return; }
+    const keep = merge(held, f);
+    if(keep !== held){ fixtures[fixtures.indexOf(held)] = keep; byEid.set(f.eid, keep); }
+    return;
   }
+  /* No id to key on, so identity has to be argued from clubs and
+     kickoff. Rare, and the scan is bounded by however few of these
+     there are rather than by the whole file. */
+  const i = fixtures.findIndex(x=>!x.eid && sameGame(x,f));
+  if(i < 0){ fixtures.push(f); return; }
+  fixtures[i] = merge(fixtures[i], f);
 }
 
 const comps = new Set();
@@ -292,44 +375,31 @@ ROSTER.forEach(([,comp])=>{ comps.add(comp); (EXTRA[comp]||[]).forEach(c=>comps.
 
 console.log("Building fixtures for " + ROSTER.length + " teams across " + comps.size + " competitions");
 
-// North American leagues: per-team season schedules give the long tail
-const espnIds = {};
-for(const comp of [...comps].filter(c=>NA.has(c))){
-  const list = await get(ESPN + PATHS[comp] + "/teams?limit=500");
-  const teams = (((list||{}).sports||[{}])[0].leagues||[{}])[0].teams || [];
-  for(const w of teams){
-    const t = w.team; if(!t) continue;
-    const id = idFor(t.displayName);
-    if(id) espnIds[id] = { comp, espn: t.id };
-  }
-}
-for(const [id, meta] of Object.entries(espnIds)){
-  const sched = await get(ESPN + PATHS[meta.comp] + "/teams/" + meta.espn + "/schedule");
-  (((sched||{}).events)||[]).forEach(ev=>add(parseEvent(ev, meta.comp)));
-}
+/* One ranged request per competition, covering the whole window.
 
-// ...and per-date scoreboards for the near window, which carries scores
-// the season schedule does not and turns up games it omits entirely.
-// Since the summary top-up below, this is no longer the last word on a
-// score — it is what a fixture with no event id has, and a first answer
-// for everything else.
-const nearDays = [];
-for(let d=-BACK; d<=3; d++) nearDays.push(easternDate(now + d*DAY));
-for(const comp of [...comps].filter(c=>NA.has(c))){
-  for(const day of nearDays){
-    const r = await get(ESPN + PATHS[comp] + "/scoreboard?dates=" + day);
-    (((r||{}).events)||[]).forEach(ev=>add(parseEvent(ev, comp)));
-  }
-}
+   This used to be three loops. The North American leagues were built
+   from one season-schedule request per followed team, which is the cost
+   that would have multiplied by five as the roster grows, plus per-date
+   scoreboards over a narrow near window; soccer was fetched a month at a
+   time. All three are the same question asked three ways, and the ranged
+   scoreboard answers it once.
 
-// Soccer answers a month at a time
-const months = monthKeys(new Date(now - BACK*DAY), new Date(now + FORWARD*DAY));
-for(const comp of [...comps].filter(c=>!NA.has(c))){
-  for(const m of months){
-    const r = await get(ESPN + PATHS[comp] + "/scoreboard?dates=" + m + "&limit=400");
-    (((r||{}).events)||[]).forEach(ev=>add(parseEvent(ev, comp)));
-  }
+   Verified before the swap, over this exact window and against every
+   team in each league: every event id the per-team schedules returned is
+   present in the ranged scoreboard, for all four leagues, with none
+   missing. The range also returns more — preseason hockey, and the
+   basketball regular season, which the per-team endpoint does not yet
+   publish and which this file has therefore been missing. */
+const scoreboardWindow = { from: now - BACK*DAY, to: now + FORWARD*DAY };
+let scoreboardCalls = 0;
+for(const comp of comps){
+  if(!PATHS[comp]) continue;
+  scoreboardCalls += await scoreboardRange(comp, PATHS[comp],
+    scoreboardWindow.from, scoreboardWindow.to, add);
 }
+console.log("Fixtures: " + scoreboardCalls + " ranged request(s) across " + comps.size
+  + " competition(s), " + dateKey(scoreboardWindow.from) + "-" + dateKey(scoreboardWindow.to)
+  + (preseasonSkipped ? ", " + preseasonSkipped + " preseason event(s) skipped" : ""));
 
 /* Score top-up, one event at a time.
 
@@ -342,13 +412,30 @@ for(const comp of [...comps].filter(c=>!NA.has(c))){
    otherwise be re-asked on every run for the eight days it stays in the
    window. If the cap bites it is said out loud rather than quietly
    leaving the oldest fixtures looking settled. */
-const SUMMARY_CAP = 40;
+/* Fixtures asked about by their own event id when the scoreboard left
+   them unsettled. This is a correctness cap, not a performance knob:
+   anything past it keeps whatever the scoreboard gave it, which for an
+   older game means a stale score or none.
+
+   Measured on 2026-09-09, league-wide across all thirteen competitions,
+   the busiest three-hour window — one build's spacing — starts 25
+   fixtures, in both a September and a November sample. Add the handful
+   that stay unsettled across the eight-day back window, postponements
+   and abandonments, and a realistic worst case is around 40. 120 is
+   threefold headroom on that, and it is affordable because dropping the
+   per-team schedule loop freed far more requests than it spends. */
+const SUMMARY_CAP = 120;
 const stale = fixtures
   .filter(f => f.eid && PATHS[f.comp] && f.start <= now && !(f.status === "final" && f.score))
   .sort((a,b) => b.start - a.start);
-if(stale.length > SUMMARY_CAP){
-  console.warn("  ! " + stale.length + " unsettled fixtures, asking about the " +
-    SUMMARY_CAP + " most recent — the rest keep what the scoreboard gave them");
+/* Recorded in the file, not only warned about: a warning inside a
+   three-hourly cron is read by nobody, and the fixtures past the cap are
+   the ones showing a stale score. */
+const summaryCapped = Math.max(0, stale.length - SUMMARY_CAP);
+if(summaryCapped){
+  console.warn("  !! " + stale.length + " unsettled fixtures exceeds the cap of " + SUMMARY_CAP
+    + " — " + summaryCapped + " will keep whatever the scoreboard gave them, which for an "
+    + "older game means a stale score. Raise SUMMARY_CAP.");
 }
 let toppedUp = 0;
 for(const f of stale.slice(0, SUMMARY_CAP)){
@@ -860,6 +947,29 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
   process.exit(1);
 }
 
+/* ...and never replace it with one that has quietly lost a whole
+   competition.
+
+   The guard above counts the file as a whole, which was adequate while a
+   request covered one day of one league. It is not adequate now that one
+   request covers one league's entire window: hockey alone is 35% of this
+   file, so losing all of it leaves 65% behind and sails straight through
+   a 50% floor. `get()` answers null on failure rather than throwing, so
+   nothing else would notice either.
+
+   `counts.byComp` is already written every run, which makes the previous
+   file the reference. A competition that had a real number of fixtures
+   and now has none did not have a quiet week. */
+const floorProblems = compFloorProblems(
+  (previous && previous.counts && previous.counts.byComp) || null, byComp);
+if(floorProblems.length){
+  console.error("A competition collapsed between runs — keeping the existing file:");
+  console.error(describeFloor(floorProblems));
+  console.error("If this is real and not an outage, the previous file has to be updated "
+    + "deliberately rather than by a build that cannot tell the two apart.");
+  process.exit(1);
+}
+
 /* Don't rewrite the file just to move a timestamp. The build stamps
    `generated`, which differs on every run, so writing unconditionally
    meant a commit and a site rebuild every time — including all through
@@ -887,6 +997,11 @@ const out = {
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
   counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
+            /* Fixtures the summary top-up could not reach because the cap
+               bit. Any number here means some older games are showing a
+               score the scoreboard happened to have rather than the one
+               that settled them. */
+            summaryCapped,
             unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0),
             rugby: rugbyOut.length, rugbyByComp: rugbyOut.reduce((a,f)=>{a[f.comp]=(a[f.comp]||0)+1;return a;},{}),
             /* Named in the file so the page can say a competition is

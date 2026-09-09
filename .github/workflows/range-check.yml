@@ -1,0 +1,37 @@
+name: Range still covers its span
+
+# scripts/fetch-data.mjs asks for a competition's whole window in one
+# ranged request. That works today, and this repository documented — at
+# the time correctly — that it did not: a YYYYMMDD-YYYYMMDD range once
+# returned the first day only.
+#
+# If that behaviour reverts, every league silently loses everything past
+# its first day. The per-competition floor in the build would catch the
+# damage on the next run, but it would report a collapsed league rather
+# than the reason. This says the reason, directly, the night it happens.
+#
+# Eight small requests. Deliberately not part of the fixture build, so a
+# check failing never stops fixtures being published.
+
+on:
+  schedule:
+    - cron: "10 6 * * *"          # daily, well clear of the refresh slots
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/check-range.mjs"
+      - ".github/workflows/range-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node scripts/check-range.mjs
