@@ -4,8 +4,8 @@ import { loadFromPage } from "./helpers/page.mjs";
 
 /* The two things a reader can see go wrong when the leader is stale: the
    lead is pinned to a stage it was never read after, and a finished
-   stage keeps a live dot in the rail. Both are rendering decisions, so
-   they are asserted against the declarations the page actually ships. */
+   stage remains in What's on. Both are rendering decisions, so they are
+   asserted against the declarations the page actually ships. */
 
 const PRE = `
   const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -19,8 +19,8 @@ globalThis.__GAMES = [];
 const GAMES = globalThis.__GAMES;
 const setGames = list => { GAMES.length = 0; list.forEach(g=>GAMES.push(g)); };
 
-const { attachCycling, stageNumber, leadNote, railEventMeta } =
-  loadFromPage(["stageNumber", "leadNote", "railEventMeta", "attachCycling"], PRE);
+const { attachCycling, stageNumber, leadNote, railFinished, railTime, matchupLabel } =
+  loadFromPage(["stageNumber", "leadNote", "railFinished", "railTime", "matchupLabel", "attachCycling"], PRE);
 
 const HOUR = 3600000;
 const day = n => Date.parse("2026-08-2" + n + "T12:00:00Z");
@@ -79,36 +79,29 @@ test("a leader's name is escaped like any other untrusted text", () => {
   assert.ok(!leadNote({leader: "<script>", leaderStage: 3}).includes("<script>"));
 });
 
-/* --- the rail follows the same clock the row does --- */
+/* --- What's on keeps only the trustworthy cycling facts --- */
 
-const stage = extra => Object.assign({timeKnown: true, start: day(9), finishUtc: day(9) + 5*HOUR}, extra);
+const stage = extra => Object.assign({event:true, timeKnown:true, start:day(9), finishUtc:day(9)+5*HOUR}, extra);
 
-test("before the start the rail shows the start time, not a live dot", () => {
-  const meta = railEventMeta(stage(), day(9) - HOUR);
-  assert.ok(!meta.includes("dot-live"), meta);
-  assert.match(meta, /^\d\d:\d\d$/);
+test("a stage with a published timetable keeps its quiet start time", () => {
+  assert.match(railTime(stage(), day(9) - HOUR), /^\d\d:\d\d$/);
 });
 
-test("between start and finish the rail shows a live dot", () => {
-  const meta = railEventMeta(stage(), day(9) + 2*HOUR);
-  assert.match(meta, /dot-live/);
-  assert.match(meta, /Racing now/);
+test("a stage without a trustworthy timetable gets no invented time", () => {
+  assert.equal(railTime({event:true, start:day(9)}, day(9)), "");
 });
 
-test("after the expected arrival the rail says Finished with no live dot", () => {
-  const meta = railEventMeta(stage(), day(9) + 6*HOUR);
-  assert.equal(meta, "Finished");
+test("a cycling item names both the race and stage", () => {
+  assert.equal(matchupLabel({event:true, race:"Vuelta a España", stage:"Stage 10"}),
+    "Vuelta a España · Stage 10");
 });
 
-test("with no timetable at all the rail says only what it knows", () => {
-  const meta = railEventMeta({start: day(9)}, day(9) + 2*HOUR);
-  assert.equal(meta, "Racing today");
-  assert.ok(!meta.includes("dot-live"));
+test("a cycling stage remains before its expected finish", () => {
+  assert.equal(railFinished(stage(), day(9) + 2*HOUR), false);
 });
 
-test("a finished stage never carries a live dot", () => {
+test("a cycling stage leaves What's on after its expected finish", () => {
   for(const t of [6, 8, 12]){
-    assert.ok(!railEventMeta(stage(), day(9) + t*HOUR).includes("dot-live"),
-      `${t}h after the start still showed a live dot`);
+    assert.equal(railFinished(stage(), day(9) + t*HOUR), true);
   }
 });

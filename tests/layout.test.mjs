@@ -68,6 +68,27 @@ test("the top bar is allowed to wrap rather than overflow", () => {
   assert.match(rule, /flex-wrap\s*:\s*wrap/);
 });
 
+test("the iOS header reserves the native safe area", () => {
+  assert.match(ruleFor(css, ".topbar"), /padding-top\s*:\s*env\(safe-area-inset-top\)/);
+  assert.match(ruleFor(css, ".wrap"), /safe-area-inset-left/);
+  assert.match(ruleFor(css, ".wrap"), /safe-area-inset-right/);
+});
+
+test("the mobile header keeps its horizontal gutter while adding vertical padding", () => {
+  const rule = ruleFor(mobile, ".topbar-in");
+  assert.match(rule, /padding-top\s*:\s*6px/);
+  assert.match(rule, /padding-bottom\s*:\s*6px/);
+  assert.doesNotMatch(rule, /padding\s*:\s*10px\s+0/,
+    "a shorthand must not erase the .wrap side padding");
+});
+
+test("what's on has a page heading outside the dark rail", () => {
+  const section = /<section class="whats-on"[\s\S]*?<\/section>/.exec(SRC);
+  assert.ok(section, "expected the What's on section");
+  assert.ok(section[0].indexOf('class="rail-head"') < section[0].indexOf('class="rail"'));
+  assert.match(section[0], /id="railCount"/);
+});
+
 test("the header buttons carry a short label for the narrowest screens", () => {
   /* Both labels ship and the breakpoint chooses, rather than JavaScript
      rewriting the button as the window moves. */
@@ -77,6 +98,18 @@ test("the header buttons carry a short label for the narrowest screens", () => {
   assert.ok(short && full, "both labels must be addressed at 360");
   assert.match(short, /display\s*:\s*inline/);
   assert.match(full, /display\s*:\s*none/);
+});
+
+test("the narrow header compresses its controls enough to avoid a third row", () => {
+  assert.match(ruleFor(narrow, ".topbar-in"), /gap\s*:\s*6px/);
+  const icon = ruleFor(narrow, ".icon-btn");
+  const seg = ruleFor(narrow, ".seg button");
+  const segWrap = ruleFor(narrow, ".seg");
+  assert.match(icon, /padding\s*:\s*5px(?:;|\})/);
+  assert.match(icon, /font-size\s*:\s*11\.5px/);
+  assert.match(seg, /padding\s*:\s*5px\s+7px/);
+  assert.match(segWrap, /margin-left\s*:\s*0/,
+    "auto margin would consume the room the Services button needs");
 });
 
 test("the score toggle drops to its icon at 320, and keeps a name", () => {

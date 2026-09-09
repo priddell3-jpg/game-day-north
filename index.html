@@ -102,11 +102,16 @@ body{
 }
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.wrap{
+  max-width:1080px;margin:0 auto;
+  padding-left:max(20px, env(safe-area-inset-left));
+  padding-right:max(20px, env(safe-area-inset-right));
+}
 
 /* ---------- top bar ---------- */
 .topbar{
   position:sticky;top:0;z-index:40;
+  padding-top:env(safe-area-inset-top);
   background:color-mix(in srgb, var(--ground) 88%, transparent);
   backdrop-filter:saturate(1.4) blur(10px);
   border-bottom:1px solid var(--line);
@@ -139,25 +144,30 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
    row on the narrowest phones. Both labels ship; the breakpoint chooses. */
 .lbl-short{display:none}
 
-/* ---------- scoreboard rail ---------- */
+/* ---------- what's on ----------
+   The heading belongs to the page; the dark strip beneath it is only the
+   handful of things happening today. It is deliberately not a second
+   scoreboard. Scores, services and status stay in the full rows below. */
+.whats-on{background:var(--ground)}
+.rail-head{display:flex;align-items:baseline;gap:9px;padding-top:9px;padding-bottom:6px}
+.rail-head h2{
+  margin:0;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.rail-count{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .rail{background:var(--panel);color:var(--panel-ink);border-bottom:1px solid var(--line-strong);box-shadow:inset 0 -1px 0 var(--panel-line)}
-.rail-in{display:flex;align-items:stretch;gap:0;min-height:64px}
-.rail-label{
-  flex:none;display:flex;flex-direction:column;justify-content:center;padding:10px 18px 10px 0;
-  border-right:1px solid var(--panel-line);margin-right:16px;
-}
-.rail-label b{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--panel-muted);font-weight:500}
-.rail-label span{font-weight:800;font-stretch:118%;font-size:15px;letter-spacing:-.2px}
-.rail-scroll{display:flex;gap:0;overflow-x:auto;flex:1;scrollbar-width:thin}
+.rail-in{display:flex;align-items:stretch;min-height:48px}
+.rail-scroll{display:flex;overflow-x:auto;flex:1;scrollbar-width:none;overscroll-behavior-inline:contain}
+.rail-scroll::-webkit-scrollbar{display:none}
 .rail-card{
-  flex:none;min-width:186px;padding:11px 18px 11px 0;margin-right:18px;
-  border-right:1px solid var(--panel-line);display:flex;flex-direction:column;gap:3px;justify-content:center;
+  flex:none;display:flex;align-items:baseline;gap:8px;min-width:max-content;
+  padding:11px 16px 11px 0;margin-right:16px;border-right:1px solid var(--panel-line);
+  color:var(--panel-ink);font-family:var(--mono);font-size:12px;text-align:left;white-space:nowrap;
 }
-.rail-card:last-child{border-right:none}
-.rail-row{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:12.5px}
-.rail-row .t{flex:1;color:var(--panel-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rail-row .s{font-weight:600;font-variant-numeric:tabular-nums}
-.rail-meta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--panel-muted);display:flex;gap:7px;align-items:center}
+.rail-card:last-child{border-right:none;margin-right:0}
+.rail-card:hover{color:#fff}
+.rail-card:active{opacity:.78}
+.rail-time{color:var(--panel-muted);font-size:10px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
 .rail-empty{display:block;color:var(--panel-muted);font-size:13.5px;line-height:1.55;padding:12px 0}
 .rail-empty .countdown{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
 .rail-empty b{white-space:normal}
@@ -223,6 +233,7 @@ main{padding:22px 0 80px}
 .game:last-child{border-bottom:none}
 .game:hover{background:var(--surface-2)}
 .game.is-live{border-left-color:var(--live);background:linear-gradient(90deg,var(--live-soft),var(--surface) 55%)}
+.game.rail-jump{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
 .g-time{font-family:var(--mono);font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.25}
 .g-time .ap{font-size:10px;color:var(--muted);margin-left:2px}
 .g-time .moved{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--live);margin-top:2px}
@@ -376,9 +387,17 @@ main{padding:22px 0 80px}
 .note code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
 
 @media (max-width:760px){
-  .wrap{padding:0 14px}
+  .wrap{
+    padding-left:max(14px, env(safe-area-inset-left));
+    padding-right:max(14px, env(safe-area-inset-right));
+  }
   .brand-sub{display:none}
-  .topbar-in{height:auto;padding:10px 0;flex-wrap:wrap;gap:8px}
+  /* Vertical padding only: a padding shorthand here used to erase the
+     horizontal safe-area gutter inherited from .wrap and clip both ends
+     of the header on an iPhone. */
+  .topbar-in{height:auto;padding-top:6px;padding-bottom:6px;flex-wrap:wrap;gap:8px}
+  .brand{flex:1 1 180px;margin-right:0}
+  .seg{margin-left:auto}
   .game{grid-template-columns:64px 1fr auto;gap:10px;padding:12px 8px 12px 10px}
   .g-watch{grid-column:2/3;align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:10px}
   .g-score{grid-column:3;grid-row:1;min-width:0}
@@ -388,7 +407,8 @@ main{padding:22px 0 80px}
   .bell svg{width:18px;height:18px}
   .cal-cell{min-height:70px}
   .cal-ev .tm{display:none}
-  .rail-label{display:none}
+  .rail-head{padding-top:6px;padding-bottom:4px}
+  .rail-card{padding-top:10px;padding-bottom:10px}
 }
 
 /* ---------- v2: coverage, confidence, competitions ---------- */
@@ -418,11 +438,12 @@ main{padding:22px 0 80px}
      not meant to: the bar wraps. What these do is keep the wrap to two
      rows rather than three, by spending less on padding and on the word
      "My", which the count beside the label makes redundant anyway. */
-  .topbar-in{gap:7px}
-  .icon-btn{padding:6px 9px;gap:6px}
+  .topbar-in{gap:6px}
+  .icon-btn{padding:5px;gap:4px;font-size:11.5px}
   .lbl-full{display:none}
   .lbl-short{display:inline}
-  .seg button{padding:5px 9px}
+  .seg{gap:1px;margin-left:0}
+  .seg button{padding:5px 7px;font-size:11.5px}
   .brand-name{font-size:15px}
   /* The open and closed eyes already differ, and the button keeps an
      aria-label saying which it is, so the word is the one thing here
@@ -647,7 +668,13 @@ main{padding:22px 0 80px}
   </div>
 </header>
 
-<div class="rail"><div class="wrap rail-in" id="rail"></div></div>
+<section class="whats-on" aria-labelledby="railHeading">
+  <div class="wrap rail-head">
+    <h2 id="railHeading">What&rsquo;s on</h2>
+    <span class="rail-count" id="railCount"></span>
+  </div>
+  <div class="rail"><div class="wrap rail-in" id="rail"></div></div>
+</section>
 
 <section class="drawer" id="drawer" hidden>
   <div class="wrap drawer-in">
@@ -6509,7 +6536,7 @@ function eventRow(g, now){
 
   const on = alerts.has(g.id);
   const bell = saveButton(g.id, on, g.race || "this race");
-  return '<div class="game'+(state==="today"?" is-live":"")+'">'+timeCell
+  return '<div class="game'+(state==="today"?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell
     + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
 }
 
@@ -6633,7 +6660,7 @@ function rugbyRow(g, now){
   scoreCell += '</div>';
 
   const bell = saveButton(g.id, alerts.has(g.id), g.home.name + " v " + g.away.name);
-  return '<div class="game'+(live?" is-live":"")+(starA||starB?" has-star":"")+'">'
+  return '<div class="game'+(live?" is-live":"")+(starA||starB?" has-star":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'
     + timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
@@ -6877,7 +6904,7 @@ function tennisRow(g, now){
      the title and left in the button is not blanked. */
   const label = m.players.map(p=>playerSpoiled(m, p) ? TBD_PLAYER.name : p.name).join(" v ");
   const bell = saveButton(g.id, alerts.has(g.id), label);
-  return '<div class="game' + (state.live ? " is-live" : "") + '">' + timeCell
+  return '<div class="game' + (state.live ? " is-live" : "") + '" data-game-id="' + esc(String(g.id)) + '" tabindex="-1">' + timeCell
     + '<div class="g-match">' + title + meta + '</div>' + watch + right + bell + '</div>';
 }
 
@@ -6976,7 +7003,7 @@ function gameRow(g, now){
 
   const on = alerts.has(g.id);
   const bell = saveButton(g.id, on, fullName(g.home) + " v " + fullName(g.away));
-  return '<div class="game'+(st.status==="live"?" is-live":"")+'">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
+  return '<div class="game'+(st.status==="live"?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
 function daySection(key, games, now, todayKey){
@@ -7616,23 +7643,34 @@ function renderCalendar(now, todayKey){
   return welcomeBanner()+renderFilters()+tennisNote()+head+grid+detail;
 }
 
-/* A stage on today's card is not racing all day. The rail follows the
-   same clock the row does: the start time until it starts, a live dot
-   only while it is actually on, and "Finished" once the expected
-   arrival has passed. With no published timetable there is no clock to
-   follow, and the day is all that is honestly known. */
-const railEventMeta = (g, now) => (g.timeKnown && now < g.start) ? esc(fmtTime(g.start))
-  : (g.finishUtc && now > g.finishUtc) ? "Finished"
-  : (g.timeKnown || g.finishUtc) ? '<span class="dot-live"></span>Racing now'
-  : "Racing today";
 /* Who is playing, whatever the sport. The rail and the "next up" line
    both needed this: reaching for home and away gave tennis "TBD v TBD",
    because a match has neither. */
 function matchupLabel(g){
   if(g.tennis) return g.match.players.map(p=>p.name).join(" v ");
-  if(g.event) return g.race || "";
+  if(g.event) return [g.race, g.stage].filter(Boolean).join(" \u00b7 ");
   const o = orderedTeams(g);
   return fullName(o.a) + " " + o.sep + " " + fullName(o.b);
+}
+/* Only a source-confirmed finish removes a game. An unresolved score
+   after its nominal start is not silently called finished. */
+function railFinished(g, now){
+  if(g.event) return !!g.finishUtc && now > g.finishUtc;
+  if(g.tennis) return !!TENNIS_SETTLED[g.match.status];
+  if(g.rugby){
+    const st = g.ru && g.ru.state;
+    return st === "final" || st === "postponed" || st === "cancelled" || st === "abandoned";
+  }
+  return stateOf(g, now).status === "final";
+}
+/* A start time is useful beside a matchup only when the source actually
+   knows it. Status, score and coverage do not belong in this strip. */
+function railTime(g, now){
+  if(g.event) return g.timeKnown ? fmtTime(g.start) : "";
+  if(g.tennis) return g.match.timeKnown ? fmtTime(g.start) : "";
+  if(g.rugby) return g.ru && g.ru.timeTBD ? "" : fmtTime(g.start);
+  const ts = timeState(g, now);
+  return ts.state === "tbd" || ts.state === "tbc" ? "" : fmtTime(g.start);
 }
 /* Defensive on the optional parts of the contract. A browser holding a
    cached page while a newer data.json answers it — or the reverse — is a
@@ -7644,60 +7682,34 @@ const setsWon = (m, i) => (m.setWins || []).filter(w => w === i).length;
 
 function renderRail(now, todayKey){
   const el=document.getElementById("rail");
-  const today=myGames().filter(g=>localKey(g.start)===todayKey);
-  // live first — read from the match for tennis, which has no home side
-  // for stateOf() to reason about
-  const rankOf = g => g.tennis
-    ? (g.match.status==="live"||g.match.status==="suspended" ? 0 : g.match.status==="scheduled" ? 1 : 2)
-    : (st=>st==="live"?0:st==="scheduled"?1:2)(stateOf(g,now).status);
-  today.sort((a,b)=>rankOf(a)-rankOf(b)||a.start-b.start);
-  const label='<div class="rail-label"><b>Today</b><span>'+esc(fmtDayLong(todayKey))+'</span></div>';
+  const count=document.getElementById("railCount");
+  const today=myGames().filter(g=>localKey(g.start)===todayKey && !railFinished(g, now)
+    && (g.start > now - 4*3600000 || g.listed || g.espn));
+  /* Chronological is predictable; a live game naturally remains ahead
+     of the ones that have not started. Unknown start times go last. */
+  today.sort((a,b)=>Number(railTime(a,now)==="")-Number(railTime(b,now)==="")||a.start-b.start);
+  count.textContent=today.length+" today";
   if(!today.length){
     const next=myGames().find(g=>g.start>now);
-    el.innerHTML=label+(next
+    el.innerHTML=next
       ? '<div class="rail-empty">Nothing on today. Next up: '
         + '<b>'+esc(matchupLabel(next))+'</b>'
         + ' &middot; ' + esc(fmtDayLong(localKey(next.start)))
         + ' &middot; <span class="countdown" data-start="'+next.start+'">'+esc(countdownText(next.start,now))+'</span></div>'
-      : '<div class="rail-empty">Nothing on today.</div>');
+      : '<div class="rail-empty">Nothing on today.</div>';
     return;
   }
   /* One unrenderable card must not leave the whole rail showing whatever
      it happened to say before. */
   const card = g => { try{ return railCard(g, now); }catch(e){ return ""; } };
-  el.innerHTML=label+'<div class="rail-scroll">'+today.map(card).join("")+'</div>';
+  el.innerHTML='<div class="rail-scroll">'+today.map(card).join("")+'</div>';
 }
 function railCard(g, now){
-  if(g.event){
-    const r=resolveRights(g);
-    return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
-      + '<div class="rail-row"><span class="t" style="color:var(--panel-muted)">'+esc(g.stage||"")+'</span></div>'
-      + '<div class="rail-meta">'+railEventMeta(g, now)+'<span>&middot;</span><span>'
-      + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
-  }
-  if(g.tennis){
-    /* A card of its own. Sets won per player is a real tennis number —
-       ESPN says who took each set — where a single scoreline would not
-       be. The set-by-set line stays on the row in the list. */
-    const m=g.match, r=resolveRights(g), stt=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
-    const reveal=showScores||revealed.has(g.id);
-    const played=(m.sets||[]).some((_,i)=>setText(m,i));
-    const line=i=>'<div class="rail-row"><span class="t">'+esc(m.players[i].short||m.players[i].name)+'</span>'
-      +'<span class="s">'+(m.status==="scheduled"?"&nbsp;":!played?"&ndash;":reveal?setsWon(m,i):"&bull;")+'</span></div>';
-    const meta=stt.live?'<span class="dot-live"></span>'+esc(m.label||stt.text)
-      : m.status==="scheduled"?esc(m.timeKnown?fmtTime(g.start):"Time TBD") : esc(stt.text);
-    return '<div class="rail-card">'+line(0)+line(1)
-      +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'
-      +esc(r.carriers.length?r.carriers[0].name:"TBD")+'</span></div></div>';
-  }
-
-  const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
-  const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
-  const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
-    +(s.status==="scheduled"?"&nbsp;":!sc?"&ndash;":reveal?(first?sc[0]:sc[1]):"&bull;")+'</span></div>';
-  const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
-  return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
-    +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
+  const label=matchupLabel(g), time=railTime(g, now);
+  return '<button class="rail-card" data-rail-game="'+esc(String(g.id))+'" aria-label="Jump to '+esc(label)+' in the schedule">'
+    + '<span>'+esc(label)+'</span>'
+    + (time?'<span class="rail-time"><span aria-hidden="true">&middot;</span> '+esc(time)+'</span>':'')
+    + '</button>';
 }
 
 /* Rugby is followed as a competition and starred as a nation, and those
@@ -7930,6 +7942,25 @@ document.getElementById("teamsToggle").addEventListener("click",function(){
   toggleDrawer(drawer);
 });
 document.getElementById("servicesToggle").addEventListener("click",()=>toggleDrawer(svcDrawer));
+document.getElementById("rail").addEventListener("click",function(e){
+  const item=e.target.closest("[data-rail-game]");
+  if(!item) return;
+  const id=item.getAttribute("data-rail-game");
+  if(view!=="list"){ view="list"; render(); }
+  /* Wait until a calendar-to-list redraw has put the destination into
+     the document, then center it below the sticky header. */
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target=[...document.querySelectorAll("[data-game-id]")]
+      .find(row=>row.getAttribute("data-game-id")===id);
+    if(!target) return;
+    target.scrollIntoView({behavior:"smooth",block:"center"});
+    try{ target.focus({preventScroll:true}); }catch(err){ target.focus(); }
+    target.classList.remove("rail-jump");
+    void target.offsetWidth;
+    target.classList.add("rail-jump");
+    setTimeout(()=>target.classList.remove("rail-jump"),1600);
+  }));
+});
 /* The service cards used to be in #main and were handled by its listener.
    They are in the drawer now, which that listener never sees. */
 svcDrawer.addEventListener("click",function(e){
