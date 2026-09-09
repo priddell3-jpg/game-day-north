@@ -14,10 +14,11 @@
  * somebody's board. tests/fixtures/frozen-team-ids.json is the ledger,
  * and the tests fail on any drift from it.
  *
- * Run:  node scripts/generate-teams.mjs [--write]
- * Without --write it prints what it would produce and changes nothing.
+ * Run:  node scripts/generate-teams.mjs [--write] [--force]
+ * Without --write it prints what it would produce and changes nothing,
+ * and it refuses to overwrite an existing manifest without --force.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { loadFromPage } from "../tests/helpers/page.mjs";
 import { loadFromBuild } from "../tests/helpers/build.mjs";
 
@@ -117,6 +118,7 @@ const manifest = {
 const json = JSON.stringify(manifest, null, 1) + "\n";
 const out = new URL("../data/teams.json", import.meta.url);
 const write = process.argv.includes("--write");
+const force = process.argv.includes("--force");
 const withEspn = teams.filter(t => t.espn).length;
 
 console.log("teams     " + String(teams.length).padStart(3));
@@ -130,5 +132,30 @@ if(withEspn < teams.length){
 }
 console.log((json.length / 1024).toFixed(1) + " KB");
 
-if(write){ writeFileSync(out, json); console.log("wrote data/teams.json"); }
-else console.log("(dry run — pass --write to save)");
+/* The manifest is the artefact; this script is only how it first came to
+   exist. Re-running it over a live file would throw away every edit made
+   since — a club that has moved, a name the feed changed, an id minted
+   by hand — and would do it silently, from six lists that are themselves
+   on their way out.
+
+   So an existing manifest is not overwritten by accident. --force says
+   the loss is intended. */
+if(write && existsSync(out) && !force){
+  console.error("");
+  console.error("data/teams.json already exists, and this script will not overwrite it.");
+  console.error("");
+  console.error("  The manifest is the artefact. Edit data/teams.json directly, then run");
+  console.error("  scripts/validate-teams.mjs. Ids in particular are data rather than a");
+  console.error("  derivation, and tests/fixtures/frozen-team-ids.json is the ledger they");
+  console.error("  are checked against — regenerating cannot honour edits it never saw.");
+  console.error("");
+  console.error("  If replacing it really is what you want: --write --force");
+  console.error("");
+  process.exit(1);
+}
+if(write){
+  writeFileSync(out, json);
+  console.log(force && existsSync(out) ? "overwrote data/teams.json (--force)" : "wrote data/teams.json");
+}else{
+  console.log("(dry run — pass --write to save)");
+}

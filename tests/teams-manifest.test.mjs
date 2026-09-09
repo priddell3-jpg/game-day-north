@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { loadFromPage } from "./helpers/page.mjs";
 import { loadFromBuild } from "./helpers/build.mjs";
 import {
@@ -196,4 +198,32 @@ test("nothing reads the manifest yet", () => {
     assert.ok(!/teams\.json/.test(src), file + " reads the manifest — that is the migration, not this change");
     assert.ok(!/lib\/teams\.mjs/.test(src), file + " imports the manifest module");
   }
+});
+
+/* ============================ the generator cannot clobber ============================ */
+
+test("the generator refuses to overwrite a manifest that already exists", () => {
+  /* Re-running the generator over a live file would silently discard
+     every edit made since — a club that moved, a name the feed changed,
+     an id minted by hand — and would do it from six lists that are
+     themselves on their way out. The manifest is the artefact; the
+     script is only how it first came to exist. */
+  const before = readFileSync(new URL("data/teams.json", root), "utf8");
+  const run = spawnSync(process.execPath, ["scripts/generate-teams.mjs", "--write"],
+    { cwd: fileURLToPath(root), encoding: "utf8" });
+  assert.equal(run.status, 1, "writing over an existing manifest must fail");
+  assert.match(run.stderr, /will not overwrite it/);
+  assert.match(run.stderr, /The manifest is the artefact/, "and it must say what to do instead");
+  assert.match(run.stderr, /--write --force/, "including the way out for someone who means it");
+  assert.equal(readFileSync(new URL("data/teams.json", root), "utf8"), before,
+    "and the file must be untouched");
+});
+
+test("a dry run says what it would do and changes nothing", () => {
+  const before = readFileSync(new URL("data/teams.json", root), "utf8");
+  const run = spawnSync(process.execPath, ["scripts/generate-teams.mjs"],
+    { cwd: fileURLToPath(root), encoding: "utf8" });
+  assert.equal(run.status, 0);
+  assert.match(run.stdout, /dry run/);
+  assert.equal(readFileSync(new URL("data/teams.json", root), "utf8"), before);
 });
