@@ -317,7 +317,7 @@ test("a fixture with no event id still goes by the day it falls on", async () =>
   const start = Date.now() - 45*60000;
   const game = asBaked(h, start);
   h.GAMES.push(game);
-  h.stub("EPL", [LIVE_EVENT(start)]);
+  h.stub("EPL", [LIVE_EVENT(start)], start);
 
   assert.equal(await h.page.fillScores(), 1);
   assert.deepEqual(h.asked, [h.url("EPL", start)]);
@@ -328,17 +328,22 @@ test("the two paths run in the same cycle without either taking the other's work
   const h = harness();
   const start = Date.now() - 45*60000;
   const withId = asCommitted(h, start);
-  const withoutId = asBaked(h, start - 30*60000);
+  /* Half an hour earlier than the fixture with an id, which between
+     00:45 and 01:15 Eastern is the previous ESPN day. Named, so the stub
+     and the assertion below both mean the day this row actually falls
+     on rather than the other row's. */
+  const bakedStart = start - 30*60000;
+  const withoutId = asBaked(h, bakedStart);
   withoutId.home = h.TEAMS.ars;
   withoutId.away = h.TEAMS.tot;
   h.GAMES.push(withId, withoutId);
   h.stubSummary("EPL", LIVE_EVENT(start));
-  h.stub("EPL", []);                                   // nothing for the baked row today
+  h.stub("EPL", [], bakedStart);                       // nothing for the baked row that day
 
   await h.page.fillScores();
   assert.equal(h.asked.length, 2);
   assert.ok(h.asked.includes(h.summaryUrl("EPL", "401879318")));
-  assert.ok(h.asked.includes(h.url("EPL", start)));
+  assert.ok(h.asked.includes(h.url("EPL", bakedStart)));
   assert.deepEqual(withId.result.score, [1, 2]);
 });
 
@@ -386,7 +391,7 @@ test("a fixture is settled from its own event even when its day lists nothing", 
   const start = Date.now() - 3*3600000;
   const game = asCommitted(h, start);
   h.GAMES.push(game);
-  h.stub("EPL", []);                                   // the day has forgotten the game...
+  h.stub("EPL", [], start);                            // the day has forgotten the game...
   h.stubSummary("EPL", FINAL_EVENT(start));            // ...the event itself has not
 
   assert.equal(await h.page.fillScores(), 1);
