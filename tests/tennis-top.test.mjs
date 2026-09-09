@@ -72,11 +72,20 @@ test("the whole thing costs about two kilobytes", () => {
 const PREAMBLE = `
   let TENNIS_RANKS = {};
   let tennisStars = new Set();
+  let tennisTours = new Set(["ATP", "WTA"]);
+  let tennisEvents = new Set();
+  let tennisAll = false;
+  globalThis.__games = [];
+  const GAMES = globalThis.__games;
   globalThis.__stars = tennisStars;
+  globalThis.__setAll = v => { tennisAll = v; };
+  globalThis.__isAll = () => tennisAll;
+  const esc = s => String(s);
   const isStarredPlayer = p => !!(p && p.id != null && tennisStars.has(String(p.id)));
 `;
 const model = () => loadFromPage(
-  ["TENNIS_TOP", "attachRankings", "rankOfPlayer", "lateRound", "tennisWorthShowing"], PREAMBLE);
+  ["TENNIS_TOP", "attachRankings", "rankOfPlayer", "lateRound", "tennisWorthShowing",
+   "tennisCounts", "tennisNote", "tennisMine"], PREAMBLE);
 
 const pl = (id, name) => ({id, name, short: name, country: "USA", tbd: false});
 const SINNER = pl("3623", "Jannik Sinner");      // 1
@@ -183,4 +192,163 @@ test("an unreachable list is held rather than emptied, and said out loud", () =>
   assert.match(build, /rankings could not be read and none were held/,
     "and the case with nothing to hold is named too");
   assert.match(build, /RANK_STALE_DAYS/, "with a limit past which a held list is called stale");
+});
+
+/* ================= the way out of the filter ================= */
+
+/* The hole this closes: the filter's third clause lets a match through
+   when a player in it is starred, and a player can only be starred from
+   a row on the screen. Without a way to see the whole draw, the only
+   players anyone could star are the ones who were never hidden — the
+   clause is unreachable and the filter is a one-way door. Both halves
+   are needed and neither works alone. */
+
+const game = over => {
+  const mm = m(over);
+  return {id:"tennis:"+mm.id, tennis:true, comp:mm.tour, match:mm, start:mm.start};
+};
+
+test("the whole draw can be shown, and the filter is what it switches off", () => {
+  const p = model();
+  p.attachRankings(RANKS);
+  const buried = game({id:"deep", players:[QUALIFIER, OTHER], round:"Round 1"});
+  globalThis.__games.length = 0;
+  globalThis.__games.push(buried, game({id:"top", players:[SINNER, OTHER]}));
+
+  assert.equal(p.tennisMine(buried), false, "filtered, as before");
+  globalThis.__setAll(true);
+  assert.equal(p.tennisMine(buried), true, "and reachable once the whole draw is showing");
+  /* The rule itself is untouched, which is what lets the note count what
+     is being held back while it is being shown. */
+  assert.equal(p.tennisWorthShowing(buried.match), false);
+});
+
+test("the flow works end to end: show all, star, collapse back, and it stays", () => {
+  const p = model();
+  p.attachRankings(RANKS);
+  const buried = game({id:"deep", players:[QUALIFIER, OTHER], round:"Round 1"});
+  const later = game({id:"deep2", players:[QUALIFIER, SINNER], round:"Round 2", start: 1});
+  globalThis.__games.length = 0;
+  globalThis.__games.push(buried, later);
+
+  // 1. the qualifier is nowhere to be seen
+  globalThis.__setAll(false);
+  assert.equal(p.tennisMine(buried), false);
+
+  // 2. show every match, and there they are
+  globalThis.__setAll(true);
+  assert.equal(p.tennisMine(buried), true);
+
+  // 3. star them from that row
+  globalThis.__stars.add("77777");
+
+  // 4. collapse back to the filtered view
+  globalThis.__setAll(false);
+
+  // 5. their matches stay
+  assert.equal(p.tennisMine(buried), true, "the match they were starred from");
+  assert.equal(p.tennisMine(later), true, "and the next one, which was never on screen");
+});
+
+test("the star control exists on the row, on the same pattern as the rugby one", () => {
+  const row = /function tennisRow\([\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(row, /class="pl-star" data-player="/, "a control, not just a mark");
+  assert.match(row, /aria-pressed="' \+ isStarredPlayer\(p\)/);
+  assert.match(row, /aria-label="' \+ \(isStarredPlayer\(p\) \? "Unstar " : "Star "\)/);
+  /* And a handler that writes to the same store rugby's writes to, and
+     redraws — unstarring somebody below the top of the draw has to take
+     their matches off the board.
+
+     Asserted INSIDE the #main listener, not merely present somewhere.
+     Both branches were first written into the drawer's listener, where
+     the clicks never arrive, and the suite was green: the control
+     existed, the handler existed, and nothing connected them. A listener
+     has to be on the element the control is actually inside, which is
+     why the rugby star sits in the other one. */
+  const mainListener = SRC.slice(SRC.indexOf('document.getElementById("main").addEventListener("click"'));
+  assert.ok(mainListener.length > 500, "could not isolate the #main listener");
+  assert.match(mainListener, /const st=e\.target\.closest\("\[data-player\]"\);/);
+  assert.match(mainListener, /tennisStars\.has\(id\)\?tennisStars\.delete\(id\):tennisStars\.add\(id\);/);
+  assert.match(mainListener, /const ta=e\.target\.closest\("\[data-tennis-all\]"\);/);
+  const drawerListener = SRC.slice(
+    SRC.indexOf('document.getElementById("teamGroups").addEventListener("click"'),
+    SRC.indexOf('document.getElementById("main").addEventListener("click"'));
+  assert.doesNotMatch(drawerListener, /data-tennis-all/,
+    "the drawer never sees a click on a row");
+  /* Nothing new in the share link: ts= already carries starred players. */
+  assert.match(SRC, /if\(tennisStars\.size\) parts\.push\("ts="\+\[\.\.\.tennisStars\]\.join\("\."\)\)/);
+});
+
+test("no star control on an empty slot or on a name being withheld", () => {
+  /* A star button carrying a player's id beside the word TBD would hand
+     back exactly what the row is holding. */
+  const row = /function tennisRow\([\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(row, /const starOf = p => \(!p \|\| p\.id == null \|\| p\.tbd\) \? ""/);
+  assert.match(row, /playerSpoiled\(m, p\)\s*\n\s*\? nameOf\(TBD_PLAYER, i, false\)\s*\n\s*: nameOf\(p, i, reveal\) \+ starOf\(p\)/);
+});
+
+/* ================= saying that the filter is there ================= */
+
+test("the line says how many matches are being held back, and offers the way out", () => {
+  const p = model();
+  p.attachRankings(RANKS);
+  globalThis.__games.length = 0;
+  globalThis.__games.push(game({id:"a", players:[SINNER, OTHER]}),
+                          game({id:"b", players:[QUALIFIER, OTHER]}),
+                          game({id:"c", players:[QUALIFIER, OTHER]}));
+  assert.deepEqual(p.tennisCounts(), {shown: 1, hidden: 2});
+
+  const note = p.tennisNote();
+  assert.match(note, /Showing 1 of 3 tennis matches/);
+  assert.match(note, /the top 25, the quarterfinals on, and players you have starred/);
+  assert.match(note, /data-tennis-all="all"[^>]*>Show every match/);
+
+  globalThis.__setAll(true);
+  const all = p.tennisNote();
+  assert.match(all, /Showing all 3 tennis matches in the draw/);
+  assert.match(all, /data-tennis-all="top"[^>]*>Show the top 25/);
+});
+
+test("nothing is said when nothing is being held back", () => {
+  const p = model();
+  p.attachRankings(RANKS);
+  globalThis.__games.length = 0;
+  globalThis.__games.push(game({id:"a", players:[SINNER, OTHER]}));
+  assert.equal(p.tennisNote(), "", "one more line for no reason");
+
+  /* And nothing at all with tennis switched off. */
+  globalThis.__games.push(game({id:"b", players:[QUALIFIER, OTHER]}));
+  assert.match(p.tennisNote(), /Showing 1 of 2/);
+});
+
+test("the counts describe the viewer's board, not the file", () => {
+  const p = model();
+  p.attachRankings(RANKS);
+  globalThis.__games.length = 0;
+  globalThis.__games.push(game({id:"a", players:[QUALIFIER, OTHER], tid:"t1"}),
+                          game({id:"b", players:[QUALIFIER, OTHER], tid:"t2"}));
+  assert.equal(p.tennisCounts().hidden, 2);
+  /* A tournament filter is somebody's own choice and is not the
+     top-of-the-draw rule holding anything back. */
+  const q = loadFromPage(
+    ["TENNIS_TOP", "attachRankings", "rankOfPlayer", "lateRound", "tennisWorthShowing",
+     "tennisCounts", "tennisNote", "tennisMine"],
+    PREAMBLE.replace("tennisEvents = new Set()", 'tennisEvents = new Set(["t1"])'));
+  q.attachRankings(RANKS);
+  /* Loading the second model gave it its own empty board, so the same
+     two matches go back on it. */
+  globalThis.__games.push(game({id:"a", players:[QUALIFIER, OTHER], tid:"t1"}),
+                          game({id:"b", players:[QUALIFIER, OTHER], tid:"t2"}));
+  assert.equal(q.tennisCounts().hidden, 1, "only the tournament being looked at");
+});
+
+test("the switch is this browser's, not part of a shared board", () => {
+  /* How one person is reading the draw this week, not the board they
+     would send someone. */
+  assert.match(SRC, /const TENNIS_ALL_KEY = "gdn\.tennis\.all";/);
+  assert.match(SRC, /let tennisAll = LS\.get\(TENNIS_ALL_KEY, false\) === true;/,
+    "read strictly as a boolean, like resultsOpen");
+  assert.match(SRC, /LS\.set\(TENNIS_ALL_KEY, tennisAll\);/);
+  const link = /function shareLink\(\)\{[\s\S]*?\n\}/.exec(SRC)[0];
+  assert.doesNotMatch(link, /tennisAll/);
 });
