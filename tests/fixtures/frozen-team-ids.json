@@ -8,7 +8,7 @@
   "The `teams` group is what localStorage and share links carry; the rest are recorded so they cannot be quietly reassigned."
  ],
  "checked": "2026-09-09",
- "count": 87,
+ "count": 177,
  "ids": {
   "tor-nhl": {
    "group": "teams",
@@ -266,7 +266,7 @@
    "feedName": "Men's WorldTour"
   },
   "kcr": {
-   "group": "ghosts",
+   "group": "teams",
    "comp": "MLB",
    "feedName": "Kansas City Royals"
   },
@@ -444,6 +444,456 @@
    "group": "teams",
    "comp": "NFL",
    "feedName": "Washington Commanders"
+  },
+  "ana": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Anaheim Ducks"
+  },
+  "buf-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Buffalo Sabres"
+  },
+  "car-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Carolina Hurricanes"
+  },
+  "chi-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Chicago Blackhawks"
+  },
+  "cbj": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Columbus Blue Jackets"
+  },
+  "dal-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Dallas Stars"
+  },
+  "det-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Detroit Red Wings"
+  },
+  "fla": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Florida Panthers"
+  },
+  "la": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Los Angeles Kings"
+  },
+  "min-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Minnesota Wild"
+  },
+  "nsh": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Nashville Predators"
+  },
+  "nj": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "New Jersey Devils"
+  },
+  "nyi": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "New York Islanders"
+  },
+  "phi-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Philadelphia Flyers"
+  },
+  "pit-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Pittsburgh Penguins"
+  },
+  "sj": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "San Jose Sharks"
+  },
+  "stl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "St. Louis Blues"
+  },
+  "tb-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Tampa Bay Lightning"
+  },
+  "utah": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Utah Mammoth"
+  },
+  "wsh-nhl": {
+   "group": "teams",
+   "comp": "NHL",
+   "feedName": "Washington Capitals"
+  },
+  "atl-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Atlanta Hawks"
+  },
+  "bkn": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Brooklyn Nets"
+  },
+  "cha": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Charlotte Hornets"
+  },
+  "chi-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Chicago Bulls"
+  },
+  "cle-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Cleveland Cavaliers"
+  },
+  "dal-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Dallas Mavericks"
+  },
+  "det-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Detroit Pistons"
+  },
+  "hou-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Houston Rockets"
+  },
+  "ind-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Indiana Pacers"
+  },
+  "lac-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "LA Clippers"
+  },
+  "mem": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Memphis Grizzlies"
+  },
+  "mia-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Miami Heat"
+  },
+  "mil": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Milwaukee Bucks"
+  },
+  "min-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Minnesota Timberwolves"
+  },
+  "no-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "New Orleans Pelicans"
+  },
+  "orl": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Orlando Magic"
+  },
+  "phi-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Philadelphia 76ers"
+  },
+  "phx": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Phoenix Suns"
+  },
+  "por": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Portland Trail Blazers"
+  },
+  "sac": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Sacramento Kings"
+  },
+  "sa": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "San Antonio Spurs"
+  },
+  "utah-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Utah Jazz"
+  },
+  "wsh-nba": {
+   "group": "teams",
+   "comp": "NBA",
+   "feedName": "Washington Wizards"
+  },
+  "ari-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Arizona Diamondbacks"
+  },
+  "ath": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Athletics"
+  },
+  "atl-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Atlanta Braves"
+  },
+  "bal-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Baltimore Orioles"
+  },
+  "chc": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Chicago Cubs"
+  },
+  "chw": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Chicago White Sox"
+  },
+  "cin-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Cincinnati Reds"
+  },
+  "col-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Colorado Rockies"
+  },
+  "det-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Detroit Tigers"
+  },
+  "hou-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Houston Astros"
+  },
+  "laa": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Los Angeles Angels"
+  },
+  "mia-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Miami Marlins"
+  },
+  "mil-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Milwaukee Brewers"
+  },
+  "min-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Minnesota Twins"
+  },
+  "nym": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "New York Mets"
+  },
+  "phi-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Philadelphia Phillies"
+  },
+  "pit-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Pittsburgh Pirates"
+  },
+  "sd": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "San Diego Padres"
+  },
+  "sf-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "San Francisco Giants"
+  },
+  "stl-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "St. Louis Cardinals"
+  },
+  "tb-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Tampa Bay Rays"
+  },
+  "tex": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Texas Rangers"
+  },
+  "wsh-mlb": {
+   "group": "teams",
+   "comp": "MLB",
+   "feedName": "Washington Nationals"
+  },
+  "atl-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Atlanta United FC"
+  },
+  "atx": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Austin FC"
+  },
+  "clt": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Charlotte FC"
+  },
+  "chi-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Chicago Fire FC"
+  },
+  "col-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Colorado Rapids"
+  },
+  "clb": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Columbus Crew"
+  },
+  "dc": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "D.C. United"
+  },
+  "cin-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "FC Cincinnati"
+  },
+  "dal-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "FC Dallas"
+  },
+  "hou-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Houston Dynamo FC"
+  },
+  "la-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "LA Galaxy"
+  },
+  "min-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Minnesota United FC"
+  },
+  "nsh-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Nashville SC"
+  },
+  "ne-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "New England Revolution"
+  },
+  "nyc": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "New York City FC"
+  },
+  "orl-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Orlando City SC"
+  },
+  "phi-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Philadelphia Union"
+  },
+  "por-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Portland Timbers"
+  },
+  "rsl": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Real Salt Lake"
+  },
+  "rbny": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Red Bull New York"
+  },
+  "sd-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "San Diego FC"
+  },
+  "sj-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "San Jose Earthquakes"
+  },
+  "skc": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "Sporting Kansas City"
+  },
+  "stl-mls": {
+   "group": "teams",
+   "comp": "MLS",
+   "feedName": "St. Louis CITY SC"
   }
  }
 }

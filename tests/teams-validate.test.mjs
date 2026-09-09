@@ -114,9 +114,14 @@ test("two clubs pointing at one ESPN id in the same competition is caught", () =
   /* The same number in two different competitions is fine: the id
      namespaces are not shared between leagues. */
   const n = clone();
-  const nhl = n.teams.find(t => t.comp === "NHL");
-  const nba = n.teams.find(t => t.comp === "NBA");
-  nba.espn = nhl.espn;
+  /* A value no club in either league holds, so the only thing being
+     tested is that sharing it across competitions is allowed. Reusing a
+     real id would land on whichever club upstream happened to give the
+     same number, which is a collision inside one league rather than
+     across two. */
+  const free = "99999999";
+  n.teams.find(t => t.comp === "NHL").espn = free;
+  n.teams.find(t => t.comp === "NBA").espn = free;
   assert.ok(!kinds(n).includes("duplicate-espn"), "different leagues, different namespaces");
 });
 

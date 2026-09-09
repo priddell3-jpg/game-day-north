@@ -84,7 +84,7 @@ test("a score arrives as a number whether ESPN wrote it as one or not", () => {
 const stuck = (over = {}) => ({
   eid:"401816683", comp:"MLB", start:Date.parse("2026-08-26T23:07Z"),
   home:{id:"tor-mlb", name:"Toronto Blue Jays", abbr:"TOR", city:"Toronto", color:"#134a8e"},
-  away:{id:null, name:"Kansas City Royals", abbr:"KC", city:"Kansas City", color:"#004687"},
+  away:{id:"kcr", name:"Kansas City Royals", abbr:"KC", city:"Kansas City", color:"#004687"},
   status:"scheduled", label:"8/26 - 7:07 PM EDT", score:null,
   venue:{name:"Rogers Centre", city:"Toronto", state:"Ontario"},
   ...over
@@ -111,7 +111,7 @@ test("the venue the summary does not state is the venue the fixture keeps", () =
 
 test("a score is turned round when the fixture lists the clubs the other way", () => {
   const f = stuck({
-    home:{id:null, name:"Kansas City Royals", abbr:"KC", city:"Kansas City", color:"#004687"},
+    home:{id:"kcr", name:"Kansas City Royals", abbr:"KC", city:"Kansas City", color:"#004687"},
     away:{id:"tor-mlb", name:"Toronto Blue Jays", abbr:"TOR", city:"Toronto", color:"#134a8e"}
   });
   build.applySummary(f, build.parseSummary(FIX, "MLB"));
