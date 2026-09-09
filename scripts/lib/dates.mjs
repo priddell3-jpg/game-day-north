@@ -52,6 +52,9 @@ export function easternOffsetHours(ms){
    compared directly in a test rather than trusted to stay in step. */
 const ZONE_IANA = {
   ET:"America/New_York", CT:"America/Chicago", MT:"America/Denver",
+  /* Arizona keeps its own entry because it does not observe daylight
+     saving: for half the year it is not Denver's clock. */
+  MST:"America/Phoenix",
   PT:"America/Los_Angeles", UK:"Europe/London", CET:"Europe/Paris", UTC:"UTC"
 };
 const zoneFmt = {};

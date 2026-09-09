@@ -1,0 +1,251 @@
+name: Data freshness
+
+# A dead cron looks exactly like a quiet week. On 27 Aug 2026 the
+# "Refresh fixtures" schedule stopped firing after 14:31 the previous
+# day and nothing said so: every workflow that did run was green, the
+# site stayed up, and the only symptom was that a person eventually
+# noticed a finished game still reading "scheduled". Roughly eight runs
+# were missed before anyone looked.
+#
+# So the served file is checked against the clock instead. This asks the
+# deployed site — not the repository — for data.json, because that is
+# what a visitor actually gets: a build that commits but never deploys
+# is the same outage seen from outside.
+#
+# The obvious limit, stated because it would otherwise be mistaken for
+# cover: this is itself a scheduled workflow. It catches a refresh that
+# has stopped while Actions is otherwise working, which is the failure
+# that happened. It cannot catch GitHub's scheduler stopping altogether,
+# because then this stops too.
+
+on:
+  schedule:
+    # Hourly, at :40 — twenty minutes after the refresh's own slot, so a
+    # run in progress has finished before its output is judged.
+    - cron: "40 * * * *"
+  workflow_dispatch:
+    inputs:
+      drill:
+        description: >-
+          Fire the stale path on purpose, to prove the alert still works.
+          The issue it opens says in its first line that it is a drill.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: freshness-sentinel
+  cancel-in-progress: false
+
+env:
+  # The refresh runs every three hours and rewrites the stamp once the
+  # file is six hours old even when no fixture moved, so a healthy site
+  # is never much past six. Seven is two missed runs plus slack: late
+  # enough not to cry about one skipped slot, early enough that a dead
+  # cron is named the same morning rather than the next day.
+  MAX_AGE_HOURS: "7"
+  # An alert nobody has ever seen fire is a hope, not a safety net, and
+  # this one cannot be exercised by waiting: it only opens an issue when
+  # the site is genuinely stale, which is the thing being prevented. A
+  # drill lowers the threshold to zero for one manual run so the whole
+  # cycle — open, pin, close — can be watched end to end. It is off
+  # unless someone asks for it by hand: `inputs.drill` is empty on a
+  # scheduled run, which is not the string "true".
+  DRILL: ${{ inputs.drill }}
+  LABEL: stale-data
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # gh reads the repository off the git remote, and this job deliberately
+  # has no checkout — it is asking the deployed site about itself, not
+  # reading the source. Without this every gh call ends at "fatal: not a
+  # git repository", which is what the first real run did.
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Ask the deployed site how old its data is
+        id: check
+        env:
+          # Set the SITE_URL repository variable if the site is served
+          # from a custom domain; otherwise the Pages URL is derived.
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          set -uo pipefail
+          site="$SITE_URL"
+          if [ -z "$site" ]; then
+            site="https://${GITHUB_REPOSITORY%%/*}.github.io/${GITHUB_REPOSITORY#*/}"
+          fi
+          url="${site%/}/data.json"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Checking $url"
+
+          # Three tries before calling it unreachable: one refused
+          # connection is a blip, not an outage worth an issue.
+          ok=""
+          for attempt in 1 2 3; do
+            if curl -fsS --max-time 30 "$url" -o served.json; then ok=1; break; fi
+            echo "  attempt $attempt failed"
+            [ "$attempt" = 3 ] || sleep 10
+          done
+
+          if [ -z "$ok" ]; then
+            {
+              echo "state=unreachable"
+              echo "detail=The site did not answer for data.json after three attempts."
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Everything the issue body needs is decided here and written
+          # as step outputs. Nothing derived from the fetched file is
+          # ever interpolated into a shell command.
+          node -e '
+            const fs = require("fs");
+            const put = pairs => fs.appendFileSync(process.env.GITHUB_OUTPUT,
+              Object.entries(pairs).map(([k, v]) => k + "=" + String(v).replace(/[\r\n]+/g, " ")).join("\n") + "\n");
+            let d = null, bad = "";
+            try { d = JSON.parse(fs.readFileSync("served.json", "utf8")); }
+            catch (e) { bad = "The served data.json is not valid JSON: " + e.message; }
+            const t = d ? Date.parse(d.generated || "") : 0;
+            if (!bad && !t) bad = "The served data.json carries no readable generated stamp.";
+            if (bad) {
+              put({state: "unparseable", detail: bad});
+            } else {
+              const hours = (Date.now() - t) / 3600000;
+              const age = hours.toFixed(1) + " h";
+              const drill = process.env.DRILL === "true";
+              const max = drill ? 0 : Number(process.env.MAX_AGE_HOURS);
+              put({generated: new Date(t).toISOString(), age, drill: drill,
+                   state: hours > max ? "stale" : "fresh",
+                   detail: drill
+                     ? "This is a drill. The threshold was lowered to zero for this run on " +
+                       "purpose, so the file below is reported stale at whatever age it is. " +
+                       "The site is fine: data.json was generated " + age + " ago, well " +
+                       "inside the " + process.env.MAX_AGE_HOURS + " h an ordinary run allows."
+                     : hours > max
+                     ? "The served data.json was generated " + age + " ago, past the " +
+                       max + " h a working refresh should never exceed."
+                     : "Generated " + age + " ago."});
+            }
+          '
+          cat "$GITHUB_OUTPUT"
+
+      - name: Open or update the issue
+        if: steps.check.outputs.state != 'fresh'
+        env:
+          # Passed as environment rather than substituted into the script:
+          # DETAIL carries text from a fetched file, and a file fetched
+          # over the network never becomes part of a command line.
+          DETAIL: ${{ steps.check.outputs.detail }}
+          URL: ${{ steps.check.outputs.url }}
+          GENERATED: ${{ steps.check.outputs.generated }}
+          AGE: ${{ steps.check.outputs.age }}
+          STATE: ${{ steps.check.outputs.state }}
+          IS_DRILL: ${{ steps.check.outputs.drill }}
+        run: |
+          set -euo pipefail
+          gh label create "$LABEL" --color B60205 \
+            --description "The deployed data.json has stopped being refreshed" 2>/dev/null || true
+
+          node -e '
+            const fs = require("fs");
+            const e = process.env, dash = v => v || "—";
+            const drill = e.IS_DRILL === "true";
+            /* A drill says so before anything else, and says so again in
+               the title, so that nobody reading this repository months
+               later reads a deliberate test as an outage that happened. */
+            fs.writeFileSync("title.txt", drill
+              ? "Data freshness DRILL — a deliberate test, not an outage"
+              : "Data freshness: the refresh has stopped");
+            const opening = drill ? [
+              "> ### 🧪 This is a drill — no outage happened",
+              ">",
+              "> Someone ran this workflow by hand with the threshold lowered to zero, so",
+              "> that the alert could be watched opening, pinning and closing at least once.",
+              "> The site was fine at the time and the figures below say so. The next",
+              "> healthy hourly check closes this issue by itself."
+            ] : [
+              "**The deployed data.json is not being refreshed.**"
+            ];
+            fs.writeFileSync("body.md", [
+              ...opening,
+              "",
+              e.DETAIL,
+              "",
+              "| | |",
+              "|---|---|",
+              "| Checked | `" + new Date().toISOString() + "` |",
+              "| URL | " + dash(e.URL) + " |",
+              "| `generated` | `" + dash(e.GENERATED) + "` |",
+              "| Age | " + dash(e.AGE) + " |",
+              "| State | `" + dash(e.STATE) + "` |",
+              "",
+              "The page falls back to fetching ESPN directly once the file is 90 minutes",
+              "old, so visitors are not seeing nothing — they are seeing every visitor make",
+              "a dozen calls to an undocumented API instead of one call to this repo, and",
+              "any fixture outside the committed window is simply absent.",
+              "",
+              "Worth checking, in order: whether **Refresh fixtures** still has runs on its",
+              "`schedule` trigger in the Actions tab, whether Actions is disabled or out of",
+              "minutes for this repository, and whether the last run pushed or was rejected.",
+              "",
+              "This body is rewritten on every hourly check, and so is the title — a",
+              "drill that a real outage later reuses stops calling itself a drill. The",
+              "issue closes itself once the served file is current again."
+            ].join("\n") + "\n");
+          '
+
+          number=$(gh issue list --label "$LABEL" --state open --limit 1 \
+                     --json number --jq '.[0].number // empty')
+
+          # The title is rewritten alongside the body. A drill issue that a
+          # real outage later reuses must stop calling itself a drill.
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --title "$(cat title.txt)" --body-file body.md
+            echo "Updated #$number"
+          else
+            url=$(gh issue create --title "$(cat title.txt)" \
+                    --label "$LABEL" --body-file body.md)
+            number="${url##*/}"
+            echo "Opened #$number"
+            # Pinning is best-effort. A repository allows three pinned
+            # issues and the API refuses a fourth, which must not turn a
+            # working alert into a failed workflow.
+            id=$(gh issue view "$number" --json id --jq .id)
+            gh api graphql -f query='mutation($id:ID!){ pinIssue(input:{issueId:$id}){ issue { number } } }' \
+              -f id="$id" > /dev/null \
+              || echo "Could not pin #$number — the alert stands, unpinned."
+          fi
+
+      - name: Close the issue once the file is current again
+        if: steps.check.outputs.state == 'fresh'
+        env:
+          GENERATED: ${{ steps.check.outputs.generated }}
+          AGE: ${{ steps.check.outputs.age }}
+        run: |
+          set -euo pipefail
+          number=$(gh issue list --label "$LABEL" --state open --limit 1 \
+                     --json number --jq '.[0].number // empty')
+          [ -n "$number" ] || exit 0
+          # Unpin first. A pinned issue stays at the top of the issues
+          # page after it is closed, which is how a resolved alert — or a
+          # drill — goes on looking like a live outage to anyone glancing
+          # at the repository, and it holds one of only three pin slots.
+          # Best-effort, like the pin itself: failing to unpin must not
+          # stop the issue being closed.
+          id=$(gh issue view "$number" --json id --jq .id)
+          gh api graphql -f query='mutation($id:ID!){ unpinIssue(input:{issueId:$id}){ issue { number } } }' \
+            -f id="$id" > /dev/null \
+            || echo "Could not unpin #$number — closing it anyway."
+          gh issue close "$number" \
+            --comment "Closed by the hourly check: data.json is $AGE old (\`$GENERATED\`), inside the $MAX_AGE_HOURS h threshold. If this was a drill, that is the drill completing."
+          echo "Closed #$number"

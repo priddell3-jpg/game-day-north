@@ -1,0 +1,722 @@
+{
+ "_note": "Trimmed from .../rugby/268565/scoreboard?dates=2025 on 2026-08-25. All ten tour fixtures: four Tests, four Super Rugby clubs and two invitational XVs. Nothing in the payload distinguishes them.",
+ "leagues": [
+  {
+   "id": "8016",
+   "name": "British and Irish Lions Tour",
+   "abbreviation": "British and Irish Lions Tour",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-06-19T04:00Z",
+    "endDate": "2026-08-11T03:59Z",
+    "displayName": "2026",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "British and Irish Lions tour 2026",
+     "abbreviation": "British and Irish Lions tour 2026"
+    }
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "602527",
+   "date": "2025-06-20T19:00Z",
+   "name": "British and Irish Lions vs Argentina",
+   "shortName": "LIONS VS ARG",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602527",
+     "date": "2025-06-20T19:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16102",
+      "fullName": "Aviva Stadium",
+      "address": {
+       "city": "Dublin",
+       "state": "Ireland"
+      }
+     },
+     "competitors": [
+      {
+       "id": "32",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "24"
+      },
+      {
+       "id": "10",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "10",
+        "name": "Argentina",
+        "abbreviation": "ARG",
+        "displayName": "Argentina",
+        "color": "0099FF"
+       },
+       "score": "28"
+      }
+     ],
+     "status": {
+      "clock": 4961,
+      "displayClock": "83'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602518",
+   "date": "2025-06-28T10:00Z",
+   "name": "Western Force vs British and Irish Lions",
+   "shortName": "WES VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602518",
+     "date": "2025-06-28T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "289673",
+      "fullName": "Optus Stadium",
+      "address": {
+       "city": "Perth",
+       "state": "Scotland"
+      }
+     },
+     "competitors": [
+      {
+       "id": "25893",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "25893",
+        "name": "Western Force",
+        "abbreviation": "WES",
+        "displayName": "Western Force",
+        "color": "0000FF"
+       },
+       "score": "7"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "54"
+      }
+     ],
+     "status": {
+      "clock": 4884,
+      "displayClock": "82'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602519",
+   "date": "2025-07-02T10:00Z",
+   "name": "Queensland Reds vs British and Irish Lions",
+   "shortName": "QUE VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602519",
+     "date": "2025-07-02T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16317",
+      "fullName": "Suncorp Stadium",
+      "address": {
+       "city": "Brisbane",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "182",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "182",
+        "name": "Queensland Reds",
+        "abbreviation": "QUE",
+        "displayName": "Queensland Reds",
+        "color": "CC0000"
+       },
+       "score": "12"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "52"
+      }
+     ],
+     "status": {
+      "clock": 5107,
+      "displayClock": "86'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602520",
+   "date": "2025-07-05T10:00Z",
+   "name": "New South Wales Waratahs vs British and Irish Lions",
+   "shortName": "NSW VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602520",
+     "date": "2025-07-05T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16575",
+      "fullName": "Allianz Stadium",
+      "address": {
+       "city": "Sydney",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "227",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "227",
+        "name": "New South Wales Waratahs",
+        "abbreviation": "NSW",
+        "displayName": "New South Wales Waratahs",
+        "color": "003399"
+       },
+       "score": "10"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "21"
+      }
+     ],
+     "status": {
+      "clock": 4917,
+      "displayClock": "82'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602521",
+   "date": "2025-07-09T10:00Z",
+   "name": "Brumbies vs British and Irish Lions",
+   "shortName": "ACT VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602521",
+     "date": "2025-07-09T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16714",
+      "fullName": "GIO Stadium",
+      "address": {
+       "city": "Canberra",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "25889",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "25889",
+        "name": "Brumbies",
+        "abbreviation": "ACT",
+        "displayName": "Brumbies",
+        "color": "FFCC00"
+       },
+       "score": "24"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "36"
+      }
+     ],
+     "status": {
+      "clock": 4916,
+      "displayClock": "82'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602522",
+   "date": "2025-07-12T10:00Z",
+   "name": "AUNZ XV vs British and Irish Lions",
+   "shortName": "AUN VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602522",
+     "date": "2025-07-12T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16814",
+      "fullName": "Adelaide Oval",
+      "address": {
+       "city": "Adelaide",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "289469",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "289469",
+        "name": "AUNZ XV",
+        "abbreviation": "AUN",
+        "displayName": "AUNZ XV"
+       },
+       "score": "0"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "48"
+      }
+     ],
+     "status": {
+      "clock": 4852,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602523",
+   "date": "2025-07-19T10:00Z",
+   "name": "Australia vs British and Irish Lions",
+   "shortName": "AUS VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602523",
+     "date": "2025-07-19T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16317",
+      "fullName": "Suncorp Stadium",
+      "address": {
+       "city": "Brisbane",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "6",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "6",
+        "name": "Australia",
+        "abbreviation": "AUS",
+        "displayName": "Australia",
+        "color": "FFCC00"
+       },
+       "score": "19"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "27"
+      }
+     ],
+     "status": {
+      "clock": 4856,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602524",
+   "date": "2025-07-22T10:00Z",
+   "name": "First Nations & Pasifika XV vs British and Irish Lions",
+   "shortName": "FIR VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602524",
+     "date": "2025-07-22T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16743",
+      "fullName": "Marvel Stadium",
+      "address": {
+       "city": "Melbourne",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "289754",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "289754",
+        "name": "First Nations & Pasifika XV",
+        "abbreviation": "FIR",
+        "displayName": "First Nations & Pasifika XV"
+       },
+       "score": "19"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "24"
+      }
+     ],
+     "status": {
+      "clock": 4842,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602525",
+   "date": "2025-07-26T10:00Z",
+   "name": "Australia vs British and Irish Lions",
+   "shortName": "AUS VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602525",
+     "date": "2025-07-26T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16693",
+      "fullName": "Melbourne Cricket Ground",
+      "address": {
+       "city": "Melbourne",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "6",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "6",
+        "name": "Australia",
+        "abbreviation": "AUS",
+        "displayName": "Australia",
+        "color": "FFCC00"
+       },
+       "score": "26"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "29"
+      }
+     ],
+     "status": {
+      "clock": 4807,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "602526",
+   "date": "2025-08-02T10:00Z",
+   "name": "Australia vs British and Irish Lions",
+   "shortName": "AUS VS LIONS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "british-and-irish-lions-tour-2025"
+   },
+   "competitions": [
+    {
+     "id": "602526",
+     "date": "2025-08-02T10:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16728",
+      "fullName": "Accor Stadium",
+      "address": {
+       "city": "Sydney",
+       "state": "Australia"
+      }
+     },
+     "competitors": [
+      {
+       "id": "6",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "6",
+        "name": "Australia",
+        "abbreviation": "AUS",
+        "displayName": "Australia",
+        "color": "FFCC00"
+       },
+       "score": "22"
+      },
+      {
+       "id": "32",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "32",
+        "name": "British and Irish Lions",
+        "abbreviation": "LIONS",
+        "displayName": "British and Irish Lions",
+        "color": "FF0000"
+       },
+       "score": "12"
+      }
+     ],
+     "status": {
+      "clock": 4805,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  }
+ ]
+}

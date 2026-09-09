@@ -197,10 +197,119 @@ only thing that catches the rename, and it earned its place.
 
 ---
 
+### Status
+
+**Step 1 is done** — `data/teams.json` exists, reproduces all six lists
+plus `DEFAULT_TEAMS`, and is validated. Nothing reads it yet, and a test
+holds that line. Steps 2 to 4 are the consumer migration and are a
+separate change.
+
+Two departures from the shape above, both made when the real data was in
+front of us:
+
+- **`espn`**, the source's own team id, is carried per club. At 265 teams
+  the alias list is the thing that would rot; matching on an id the feed
+  states does not. Name matching stays as the fallback, so the
+  unmatched-team warning still earns its place.
+- **`defaults` is an ordered top-level array**, not a per-team boolean.
+  `DEFAULT_TEAMS` is ordered and the order is what a first-time visitor's
+  board looks like; a boolean loses it.
+
+Four groups rather than one list, because the six lists cover four
+different kinds of thing: `teams` (followable), `events` (the men's
+WorldTour, which stands in the picker where a team would be), `ghosts`
+(real clubs nobody can follow, named by the baked fallback fixtures) and
+`feedOnly` (clubs known only by the name the feed uses).
+
+---
+
+## Change C — league-wide fixture fetching
+
+Prerequisite for expanding past 50 teams. Not started.
+
+### The quirk that is no longer true
+
+This repo states, in the README and in `scripts/fetch-data.mjs`, that a
+`YYYYMMDD-YYYYMMDD` range silently returns only the first day for the
+North American leagues. **Measured on 2026-09-09, it does not.** A ranged
+request returned exactly the same event ids as one request per day:
+
+| League | Ranged | Per day | Missing |
+| --- | --- | --- | --- |
+| MLB | 273 | 273 | 0 |
+| Premier League | 30 | 30 | 0 |
+| NFL | 32 | 32 | 0 |
+
+One ranged request per competition therefore replaces both the per-team
+season schedules and the per-day scoreboards: about 83 requests for 265
+teams, against 125 today for 50, against about 282 if the current
+per-team approach were simply multiplied.
+
+### The failure mode that must not ship
+
+`limit` is honoured to exactly **1000** and silently collapses to **25**
+above it. Worse, the ceiling is reachable: MLB measured 13 events a day,
+so a full 84-day window in regular season is roughly 1,092, and NHL
+mid-season is around 580 — a thinner margin than September's 449
+suggests. **A truncated fixture set that ships silently is the worst
+failure in this workstream.**
+
+So the build must:
+
+- **fail loudly** if any response comes back with exactly `limit`
+  results, rather than treating a full page as a complete answer;
+- **chunk the window per competition** when projected volume approaches
+  the ceiling, e.g. two 42-day requests for baseball;
+- never pass a `limit` above 1000, since the value that looks most
+  generous is the one that returns 25.
+
+### Keeping the old path honest
+
+Add a cheap nightly check: one ranged three-day request must equal three
+per-day requests. If ESPN reverts the range behaviour, that surfaces the
+day it happens rather than the day someone notices a missing fixture.
+
+### Payload
+
+2,070 fixtures in the window takes `data.json` from 294 KB to roughly
+900 KB. GitHub Pages gzips it, so a visitor transfers about 102 KB
+against 35.6 KB today. Acceptable, and it means **no per-league file
+split** for now.
+
+---
+
+## Open questions, before the roster expands
+
+1. **The Champions League–only clubs.** Fifteen clubs in the current
+   field have no supported domestic league. Following one gives roughly
+   six matches a season. Either a deliberate, labelled state
+   ("Champions League fixtures only") or we fetch their domestic leagues
+   too. This bakes into the manifest, so it is answered before the
+   clubs are added.
+2. **Who owns manifest staleness.** Promotion and relegation rewrite
+   about six clubs each summer, and the Champions League–only fifteen
+   turn over almost entirely each season. Proposed: a scheduled job that
+   diffs ESPN's `/teams` against the manifest and opens an issue on
+   drift. Not built until confirmed.
+3. **When to split the payload.** 102 KB gzipped is fine, but the fetch
+   is all-or-nothing: somebody following three teams downloads all 265.
+   A threshold needs naming.
+
+## After the roster expands
+
+Race's Auto rules were designed against a 50-team roster. "Meaningful
+races only" and spoiler safety with scores hidden both need re-verifying
+at 265 teams, as a separate check.
+
+---
+
 ## Sequencing
 
-**B, then A.** B is smaller, its equivalence test is mechanical, and it
-removes an active source of bugs. A is larger and touches the table the
-product's central claim rests on; it deserves an undistracted review.
+**B, then C, then A.** B is smaller, its equivalence test is mechanical,
+and it removes an active source of bugs. C is the prerequisite for any
+roster growth and carries the truncation risk above. A is larger and
+touches the table the product's central claim rests on; it deserves an
+undistracted review.
 
-Neither should be bundled with unrelated work.
+Consumer migration for B is its own pull request, after the manifest
+lands. Neither should be bundled with unrelated work.

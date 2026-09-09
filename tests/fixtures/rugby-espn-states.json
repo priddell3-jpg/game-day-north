@@ -1,0 +1,794 @@
+{
+ "_note": "CONSTRUCTED, not captured. Every field layout is copied verbatim from the real Nations Championship payload in rugby-espn-nations-championship.json; only status.type, the scores and the ids are substituted. ESPN was serving no live, half-time, delayed, suspended, postponed or abandoned rugby match anywhere in the world at the moment this branch was built (2026-08-25), so these states could not be captured from the wire. state and completed are the pair the adapter reads, and these are the values ESPN publishes for those states across its sports.",
+ "leagues": [
+  {
+   "id": "24400",
+   "name": "Nations Championship",
+   "abbreviation": "Nations Championship",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-01-01T05:00Z",
+    "endDate": "2027-01-01T04:59Z",
+    "displayName": "2026",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "Nations Championship",
+     "abbreviation": "Nations Championship"
+    }
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "900001",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900001",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "17"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "12"
+      }
+     ],
+     "status": {
+      "clock": 3120,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "2",
+       "name": "STATUS_IN_PROGRESS",
+       "state": "in",
+       "completed": false,
+       "description": "52'",
+       "detail": "52'",
+       "shortDetail": "52'"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900002",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900002",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "10"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "7"
+      }
+     ],
+     "status": {
+      "clock": 2400,
+      "displayClock": "0'",
+      "period": 1,
+      "type": {
+       "id": "7",
+       "name": "STATUS_HALFTIME",
+       "state": "in",
+       "completed": false,
+       "description": "HT",
+       "detail": "HT",
+       "shortDetail": "HT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900003",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900003",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "3"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 600,
+      "displayClock": "0'",
+      "period": 1,
+      "type": {
+       "id": "6",
+       "name": "STATUS_DELAYED",
+       "state": "in",
+       "completed": false,
+       "description": "Delayed",
+       "detail": "Delayed",
+       "shortDetail": "Delayed"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900004",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900004",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "21"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "21"
+      }
+     ],
+     "status": {
+      "clock": 4200,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "23",
+       "name": "STATUS_SUSPENDED",
+       "state": "in",
+       "completed": false,
+       "description": "Suspended",
+       "detail": "Suspended",
+       "shortDetail": "Suspended"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900005",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900005",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "24"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "24"
+      }
+     ],
+     "status": {
+      "clock": 5280,
+      "displayClock": "0'",
+      "period": 3,
+      "type": {
+       "id": "2",
+       "name": "STATUS_IN_PROGRESS",
+       "state": "in",
+       "completed": false,
+       "description": "ET 88'",
+       "detail": "ET 88'",
+       "shortDetail": "ET 88'"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900006",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900006",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "0"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "4",
+       "name": "STATUS_POSTPONED",
+       "state": "post",
+       "completed": false,
+       "description": "Postponed",
+       "detail": "Postponed",
+       "shortDetail": "Postponed"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900007",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900007",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "0"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "5",
+       "name": "STATUS_CANCELED",
+       "state": "post",
+       "completed": false,
+       "description": "Canceled",
+       "detail": "Canceled",
+       "shortDetail": "Canceled"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900008",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900008",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "13"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "10"
+      }
+     ],
+     "status": {
+      "clock": 3300,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "27",
+       "name": "STATUS_ABANDONED",
+       "state": "post",
+       "completed": false,
+       "description": "Abandoned",
+       "detail": "Abandoned",
+       "shortDetail": "Abandoned"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900009",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900009",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "31"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "24"
+      }
+     ],
+     "status": {
+      "clock": 4800,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900010",
+   "date": "2026-11-07T14:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900010",
+     "date": "2026-11-07T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "0"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "99",
+       "name": "STATUS_SOMETHING_NEW",
+       "state": "",
+       "completed": false,
+       "description": "?",
+       "detail": "?",
+       "shortDetail": "?"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "900011",
+   "date": "2026-11-28T00:00Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "900011",
+     "date": "2026-11-28T00:00Z",
+     "timeValid": false,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "0"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "0'",
+      "period": 2,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Scheduled",
+       "shortDetail": "Scheduled"
+      }
+     },
+     "notes": []
+    }
+   ]
+  }
+ ]
+}

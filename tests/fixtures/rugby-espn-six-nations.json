@@ -1,0 +1,94 @@
+{
+ "_note": "Trimmed from https://site.api.espn.com/apis/site/v2/sports/rugby/180659/scoreboard?dates=2026 on 2026-08-25. Statistics and linescores removed; every field the adapter reads is verbatim.",
+ "leagues": [
+  {
+   "id": "8323",
+   "name": "Six Nations",
+   "abbreviation": "Six Nations",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-01-31T05:00Z",
+    "endDate": "2026-03-17T03:59Z",
+    "displayName": "2026",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "2026 Six Nations",
+     "abbreviation": "2026 Six Nations"
+    }
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "602514",
+   "date": "2026-03-14T14:10Z",
+   "name": "Ireland vs Scotland",
+   "shortName": "IRE VS SCO",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "2026-six-nations"
+   },
+   "competitions": [
+    {
+     "id": "602514",
+     "date": "2026-03-14T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16102",
+      "fullName": "Aviva Stadium",
+      "address": {
+       "city": "Dublin",
+       "state": "Ireland"
+      }
+     },
+     "competitors": [
+      {
+       "id": "3",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "3",
+        "name": "Ireland",
+        "abbreviation": "IRE",
+        "displayName": "Ireland",
+        "color": "009900"
+       },
+       "score": "43"
+      },
+      {
+       "id": "2",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "2",
+        "name": "Scotland",
+        "abbreviation": "SCO",
+        "displayName": "Scotland",
+        "color": "003366"
+       },
+       "score": "21"
+      }
+     ],
+     "status": {
+      "clock": 4841,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  }
+ ]
+}

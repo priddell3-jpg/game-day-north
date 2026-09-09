@@ -545,7 +545,12 @@ test("the tournament list is built from the endpoint's answer, never a hardcoded
 test("the labels no longer promise a player picker", () => {
   assert.doesNotMatch(SRC, /My teams &amp; players/);
   assert.doesNotMatch(SRC, /Pick your teams<\/h2>/);
-  assert.match(SRC, /My teams &amp; tennis/);
+  /* The header button kept its responsive two-label form, which the
+     320px layout needs, so the assertion is the one this test is named
+     for: nothing in the header offers to pick people. The tennis
+     controls live in the drawer, next to the rugby ones. */
+  assert.match(SRC, /<span class="lbl-full">My teams<\/span>/);
+  assert.doesNotMatch(SRC, /players<\/span>/);
 });
 
 test("switching a tour off drops any tournament filter that belonged to it", () => {

@@ -1,0 +1,230 @@
+{
+ "_note": "Trimmed from .../rugby/17567/scoreboard?dates=2026 on 2026-08-25. One final, two scheduled.",
+ "leagues": [
+  {
+   "id": "24400",
+   "name": "Nations Championship",
+   "abbreviation": "Nations Championship",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-01-01T05:00Z",
+    "endDate": "2027-01-01T04:59Z",
+    "displayName": "2026",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "Nations Championship",
+     "abbreviation": "Nations Championship"
+    }
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "603975",
+   "date": "2026-07-04T07:10Z",
+   "name": "New Zealand vs France",
+   "shortName": "NEW VS FRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "603975",
+     "date": "2026-07-04T07:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308777",
+      "fullName": "One NZ Stadium",
+      "address": {
+       "city": "Christchurch",
+       "state": "New Zealand"
+      }
+     },
+     "competitors": [
+      {
+       "id": "8",
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "34"
+      },
+      {
+       "id": "9",
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "9",
+        "name": "France",
+        "abbreviation": "FRA",
+        "displayName": "France",
+        "color": "0000CC"
+       },
+       "score": "32"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "603993",
+   "date": "2026-11-06T20:10Z",
+   "name": "Ireland vs Argentina",
+   "shortName": "IRE VS ARG",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "603993",
+     "date": "2026-11-06T20:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16102",
+      "fullName": "Aviva Stadium",
+      "address": {
+       "city": "Dublin",
+       "state": "Ireland"
+      }
+     },
+     "competitors": [
+      {
+       "id": "3",
+       "homeAway": "home",
+       "team": {
+        "id": "3",
+        "name": "Ireland",
+        "abbreviation": "IRE",
+        "displayName": "Ireland",
+        "color": "009900"
+       },
+       "score": "0"
+      },
+      {
+       "id": "10",
+       "homeAway": "away",
+       "team": {
+        "id": "10",
+        "name": "Argentina",
+        "abbreviation": "ARG",
+        "displayName": "Argentina",
+        "color": "0099FF"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 0,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Fri, November 6th at 3:10 PM EST",
+       "shortDetail": "11/6 - 3:10 PM EST"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "604005",
+   "date": "2026-11-21T14:10Z",
+   "name": "England vs New Zealand",
+   "shortName": "ENG VS NEW",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "nations-championship"
+   },
+   "competitions": [
+    {
+     "id": "604005",
+     "date": "2026-11-21T14:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16145",
+      "fullName": "Allianz Stadium",
+      "address": {
+       "city": "London",
+       "state": "England"
+      }
+     },
+     "competitors": [
+      {
+       "id": "1",
+       "homeAway": "home",
+       "team": {
+        "id": "1",
+        "name": "England",
+        "abbreviation": "ENG",
+        "displayName": "England",
+        "color": "FF0000"
+       },
+       "score": "0"
+      },
+      {
+       "id": "8",
+       "homeAway": "away",
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 0,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sat, November 21st at 9:10 AM EST",
+       "shortDetail": "11/21 - 9:10 AM EST"
+      }
+     },
+     "notes": []
+    }
+   ]
+  }
+ ]
+}

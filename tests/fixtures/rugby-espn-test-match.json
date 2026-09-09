@@ -1,0 +1,275 @@
+{
+ "_note": "Trimmed from .../rugby/289234/scoreboard?dates=2026 on 2026-08-25. Includes the two 00:00Z kickoffs that answer to the PREVIOUS US Eastern date.",
+ "leagues": [
+  {
+   "id": "10659",
+   "name": "International Test Match",
+   "abbreviation": "International Test Match",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-01-01T05:00Z",
+    "endDate": "2027-01-01T04:59Z",
+    "displayName": "2026",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "International Test Match",
+     "abbreviation": "International Test Match"
+    }
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "603247",
+   "date": "2026-08-22T15:10Z",
+   "name": "South Africa vs New Zealand",
+   "shortName": "SOU VS NEW",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "international-test-match"
+   },
+   "competitions": [
+    {
+     "id": "603247",
+     "date": "2026-08-22T15:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16173",
+      "fullName": "Ellis Park",
+      "address": {
+       "city": "Johannesburg",
+       "state": "South Africa"
+      }
+     },
+     "competitors": [
+      {
+       "id": "5",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "5",
+        "name": "South Africa",
+        "abbreviation": "SOU",
+        "displayName": "South Africa",
+        "color": "336600"
+       },
+       "score": "16"
+      },
+      {
+       "id": "8",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "33"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "603737",
+   "date": "2026-09-05T05:50Z",
+   "name": "Japan vs Canada",
+   "shortName": "JAP VS CAN",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "international-test-match"
+   },
+   "competitions": [
+    {
+     "id": "603737",
+     "date": "2026-09-05T05:50Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "308785",
+      "fullName": "Denka Big Swan Stadium"
+     },
+     "competitors": [
+      {
+       "id": "23",
+       "homeAway": "home",
+       "team": {
+        "id": "23",
+        "name": "Japan",
+        "abbreviation": "JAP",
+        "displayName": "Japan",
+        "color": "FF0000"
+       },
+       "score": "0"
+      },
+      {
+       "id": "25",
+       "homeAway": "away",
+       "team": {
+        "id": "25",
+        "name": "Canada",
+        "abbreviation": "CAN",
+        "displayName": "Canada",
+        "color": "000000"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 0,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sat, September 4th at 1:50 AM EDT",
+       "shortDetail": "9/5 - 1:50 AM EDT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "604715",
+   "date": "2026-10-31T00:00Z",
+   "name": "Belgium vs Hong Kong",
+   "shortName": "BEL VS HON",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "international-test-match"
+   },
+   "competitions": [
+    {
+     "id": "604715",
+     "date": "2026-10-31T00:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "competitors": [
+      {
+       "id": "289267",
+       "homeAway": "home",
+       "team": {
+        "id": "289267",
+        "name": "Belgium",
+        "abbreviation": "BEL",
+        "displayName": "Belgium"
+       },
+       "score": "0"
+      },
+      {
+       "id": "289268",
+       "homeAway": "away",
+       "team": {
+        "id": "289268",
+        "name": "Hong Kong",
+        "abbreviation": "HON",
+        "displayName": "Hong Kong"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 0,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Fri, October 30th at 8:00 PM EDT",
+       "shortDetail": "10/30 - 8:00 PM EDT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "604602",
+   "date": "2026-11-14T00:00Z",
+   "name": "Paraguay vs Brazil",
+   "shortName": "PAR VS BRA",
+   "season": {
+    "year": 2026,
+    "type": 1,
+    "slug": "international-test-match"
+   },
+   "competitions": [
+    {
+     "id": "604602",
+     "date": "2026-11-14T00:00Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "competitors": [
+      {
+       "id": "289514",
+       "homeAway": "home",
+       "team": {
+        "id": "289514",
+        "name": "Paraguay",
+        "abbreviation": "PAR",
+        "displayName": "Paraguay"
+       },
+       "score": "0"
+      },
+      {
+       "id": "33",
+       "homeAway": "away",
+       "team": {
+        "id": "33",
+        "name": "Brazil",
+        "abbreviation": "BRA",
+        "displayName": "Brazil",
+        "color": ""
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 0,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Fri, November 13th at 7:00 PM EST",
+       "shortDetail": "11/13 - 7:00 PM EST"
+      }
+     },
+     "notes": []
+    }
+   ]
+  }
+ ]
+}

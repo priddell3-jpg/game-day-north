@@ -1,0 +1,159 @@
+{
+ "_note": "Trimmed from .../rugby/164205/scoreboard?dates=2027 on 2026-08-25. RWC 2027 is outside the 90-day window; kept so the adapter is covered.",
+ "leagues": [
+  {
+   "id": "8337",
+   "name": "Rugby World Cup",
+   "abbreviation": "Rugby World Cup",
+   "season": {
+    "year": 2023,
+    "startDate": "2023-09-08T04:00Z",
+    "endDate": "2023-10-29T03:59Z",
+    "displayName": "2023",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "2023 Rugby World Cup",
+     "abbreviation": "2023 Rugby World Cup"
+    }
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "603499",
+   "date": "2027-10-01T10:45Z",
+   "name": "Australia vs Hong Kong",
+   "shortName": "AUS VS HON",
+   "season": {
+    "year": 2027,
+    "type": 1,
+    "slug": "2027-rugby-world-cup"
+   },
+   "competitions": [
+    {
+     "id": "603499",
+     "date": "2027-10-01T10:45Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "289673",
+      "fullName": "Optus Stadium",
+      "address": {
+       "city": "Perth",
+       "state": "Scotland"
+      }
+     },
+     "competitors": [
+      {
+       "id": "6",
+       "homeAway": "home",
+       "team": {
+        "id": "6",
+        "name": "Australia",
+        "abbreviation": "AUS",
+        "displayName": "Australia",
+        "color": "FFCC00"
+       },
+       "score": "0"
+      },
+      {
+       "id": "289268",
+       "homeAway": "away",
+       "team": {
+        "id": "289268",
+        "name": "Hong Kong",
+        "abbreviation": "HON",
+        "displayName": "Hong Kong"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 0,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Fri, October 1st at 6:45 AM EDT",
+       "shortDetail": "10/1 - 6:45 AM EDT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "603534",
+   "date": "2027-10-17T11:15Z",
+   "name": "South Africa vs Romania",
+   "shortName": "SOU VS ROM",
+   "season": {
+    "year": 2027,
+    "type": 1,
+    "slug": "2027-rugby-world-cup"
+   },
+   "competitions": [
+    {
+     "id": "603534",
+     "date": "2027-10-17T11:15Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "289673",
+      "fullName": "Optus Stadium",
+      "address": {
+       "city": "Perth",
+       "state": "Scotland"
+      }
+     },
+     "competitors": [
+      {
+       "id": "5",
+       "homeAway": "home",
+       "team": {
+        "id": "5",
+        "name": "South Africa",
+        "abbreviation": "SOU",
+        "displayName": "South Africa",
+        "color": "336600"
+       },
+       "score": "0"
+      },
+      {
+       "id": "12",
+       "homeAway": "away",
+       "team": {
+        "id": "12",
+        "name": "Romania",
+        "abbreviation": "ROM",
+        "displayName": "Romania",
+        "color": "0000CC"
+       },
+       "score": "0"
+      }
+     ],
+     "status": {
+      "clock": 0,
+      "displayClock": "1'",
+      "period": 0,
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, October 17th at 7:15 AM EDT",
+       "shortDetail": "10/17 - 7:15 AM EDT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  }
+ ]
+}

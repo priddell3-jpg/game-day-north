@@ -1,0 +1,1050 @@
+{
+ "_note": "Trimmed from https://api.wr-rims-prod.pulselive.com/rugby/v3/match?startDate=2026-05-01&endDate=2026-12-31 on 2026-08-25. Deliberately mixed: men's senior internationals that must be kept, alongside women's (WRU), age-grade (JMU/JWU), sevens (MRS/WRS), club and domestic fixtures that must all be dropped — plus an uncapped XV side, a South African franchise called Lions, cancelled matches and placeholder opponents.",
+ "pageInfo": {
+  "page": 0,
+  "numPages": 1,
+  "pageSize": 29,
+  "numEntries": 29
+ },
+ "content": [
+  {
+   "matchId": "92b73b38-dc79-4dc7-8c27-e1476d84ed72",
+   "description": "Match 1",
+   "eventPhase": null,
+   "venue": {
+    "id": "6",
+    "name": "Stade de France",
+    "city": "Saint-Denis",
+    "country": "France"
+   },
+   "time": {
+    "millis": 1770322200000,
+    "gmtOffset": 1,
+    "label": "2026-02-05"
+   },
+   "teams": [
+    {
+     "id": "42",
+     "name": "France",
+     "abbreviation": "FRA"
+    },
+    {
+     "id": "36",
+     "name": "Ireland",
+     "abbreviation": "IRE"
+    }
+   ],
+   "scores": [
+    36,
+    14
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "MRU",
+   "competition": "Six Nations 2026"
+  },
+  {
+   "matchId": "d1dbb1eb-32b4-4aa8-87c2-ad129aa3c7bb",
+   "description": "Match 2",
+   "eventPhase": null,
+   "venue": {
+    "id": "56",
+    "name": "Stadio Olimpico",
+    "city": "Roma",
+    "country": "Italy"
+   },
+   "time": {
+    "millis": 1770473400000,
+    "gmtOffset": 1,
+    "label": "2026-02-07"
+   },
+   "teams": [
+    {
+     "id": "41",
+     "name": "Italy",
+     "abbreviation": "ITA"
+    },
+    {
+     "id": "35",
+     "name": "Scotland",
+     "abbreviation": "SCO"
+    }
+   ],
+   "scores": [
+    18,
+    15
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "MRU",
+   "competition": "Six Nations 2026"
+  },
+  {
+   "matchId": "df4c7248-54c1-488f-b2cc-41b8da9adafc",
+   "description": "Match 54",
+   "eventPhase": "League",
+   "venue": {
+    "id": "226",
+    "name": "Sky Stadium",
+    "city": "Wellington",
+    "country": "New Zealand"
+   },
+   "time": {
+    "millis": 1777619100000,
+    "gmtOffset": 12,
+    "label": "2026-05-01"
+   },
+   "teams": [
+    {
+     "id": "2348",
+     "name": "Hurricanes",
+     "abbreviation": null
+    },
+    {
+     "id": "2345",
+     "name": "Crusaders",
+     "abbreviation": null
+    }
+   ],
+   "scores": [
+    38,
+    31
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "MRU",
+   "competition": "Super Rugby 2026"
+  },
+  {
+   "matchId": "360f4cf4-231f-4c64-aff6-357332eaf736",
+   "description": "Match 4",
+   "eventPhase": null,
+   "venue": {
+    "id": "270",
+    "name": "Stade Maurice Trelut",
+    "city": "Tarbes",
+    "country": "France"
+   },
+   "time": {
+    "millis": 1777734000000,
+    "gmtOffset": 2,
+    "label": "2026-05-02"
+   },
+   "teams": [
+    {
+     "id": "c73d2cad-925d-48c9-a093-e8164dd9c36c",
+     "name": "France U21",
+     "abbreviation": null
+    },
+    {
+     "id": "04c388cf-e3dd-426a-8dc5-2cbd1e71c2d1",
+     "name": "Scotland U21",
+     "abbreviation": null
+    }
+   ],
+   "scores": [
+    113,
+    0
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "JWU",
+   "competition": "U21 Womens Six Nations Series 2026"
+  },
+  {
+   "matchId": "f9019496-919c-4d5a-8202-6a52252e4382",
+   "description": "Match 3",
+   "eventPhase": null,
+   "venue": {
+    "id": "900",
+    "name": "Nelson Mandela Bay Stadium",
+    "city": "Port Elizabeth",
+    "country": "South Africa"
+   },
+   "time": {
+    "millis": 1777809600000,
+    "gmtOffset": 2,
+    "label": "2026-05-03"
+   },
+   "teams": [
+    {
+     "id": "2746",
+     "name": "New Zealand U20",
+     "abbreviation": "NZL"
+    },
+    {
+     "id": "2748",
+     "name": "Argentina U20",
+     "abbreviation": "ARG"
+    }
+   ],
+   "scores": [
+    17,
+    25
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "JMU",
+   "competition": "The Rugby Championship U20 2026"
+  },
+  {
+   "matchId": "60d6988b-d428-4200-b307-a815832fc5f4",
+   "description": "Match 4",
+   "eventPhase": null,
+   "venue": {
+    "id": "900",
+    "name": "Nelson Mandela Bay Stadium",
+    "city": "Port Elizabeth",
+    "country": "South Africa"
+   },
+   "time": {
+    "millis": 1777817400000,
+    "gmtOffset": 2,
+    "label": "2026-05-03"
+   },
+   "teams": [
+    {
+     "id": "2750",
+     "name": "South Africa U20",
+     "abbreviation": "RSA"
+    },
+    {
+     "id": "2754",
+     "name": "Australia U20",
+     "abbreviation": "AUS"
+    }
+   ],
+   "scores": [
+    56,
+    17
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "JMU",
+   "competition": "The Rugby Championship U20 2026"
+  },
+  {
+   "matchId": "942094e1-3dc2-423e-a444-fce1759ee4a8",
+   "description": null,
+   "eventPhase": null,
+   "venue": null,
+   "time": {
+    "millis": 1778284800000,
+    "gmtOffset": 0,
+    "label": "2026-05-09"
+   },
+   "teams": [
+    {
+     "id": "729",
+     "name": "Israel",
+     "abbreviation": "ISR"
+    },
+    {
+     "id": "2742",
+     "name": "Cyprus",
+     "abbreviation": "CYP"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "CC",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Rugby Europe Conference 2026"
+  },
+  {
+   "matchId": "67dd6a9e-5136-41eb-b13c-73374f91caaa",
+   "description": "Match 10",
+   "eventPhase": null,
+   "venue": {
+    "id": "348",
+    "name": "Stadio Sergio Lanfranchi",
+    "city": "Parma",
+    "country": "Italy"
+   },
+   "time": {
+    "millis": 1778331600000,
+    "gmtOffset": 2,
+    "label": "2026-05-09"
+   },
+   "teams": [
+    {
+     "id": "2601",
+     "name": "Italy",
+     "abbreviation": "ITA"
+    },
+    {
+     "id": "2517",
+     "name": "England",
+     "abbreviation": "ENG"
+    }
+   ],
+   "scores": [
+    33,
+    61
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "WRU",
+   "competition": "Women's Six Nations 2026"
+  },
+  {
+   "matchId": "0abe954a-95ec-494d-b954-11b49f78b6f7",
+   "description": "Match 1",
+   "eventPhase": "Pool B",
+   "venue": {
+    "id": "589c3d0c-66ad-4d88-a89f-2bcbd809da5a",
+    "name": "Estadio Jose Zorrilla",
+    "city": "Valladolid",
+    "country": "Spain"
+   },
+   "time": {
+    "millis": 1780041600000,
+    "gmtOffset": 2,
+    "label": "2026-05-29"
+   },
+   "teams": [
+    {
+     "id": "3974",
+     "name": "USA 7s",
+     "abbreviation": "USA"
+    },
+    {
+     "id": "3936",
+     "name": "Fiji 7s",
+     "abbreviation": "FIJ"
+    }
+   ],
+   "scores": [
+    19,
+    26
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "WRS",
+   "competition": "Women's Sevens Series 2026"
+  },
+  {
+   "matchId": "6ae5f772-5061-4612-9dea-a7f3d81f8d99",
+   "description": "Match 1",
+   "eventPhase": "Pool B",
+   "venue": {
+    "id": "589c3d0c-66ad-4d88-a89f-2bcbd809da5a",
+    "name": "Estadio Jose Zorrilla",
+    "city": "Valladolid",
+    "country": "Spain"
+   },
+   "time": {
+    "millis": 1780044240000,
+    "gmtOffset": 2,
+    "label": "2026-05-29"
+   },
+   "teams": [
+    {
+     "id": "2416",
+     "name": "New Zealand 7s",
+     "abbreviation": "NZL"
+    },
+    {
+     "id": "3919",
+     "name": "Uruguay 7s",
+     "abbreviation": "URU"
+    }
+   ],
+   "scores": [
+    40,
+    0
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "MRS",
+   "competition": "Men's Sevens Series 2026"
+  },
+  {
+   "matchId": "759c0387-6281-48d2-ab62-7ecd00ae37ac",
+   "description": "Match 5",
+   "eventPhase": null,
+   "venue": {
+    "id": "1315",
+    "name": "Namdong Asiad Rugby Stadium",
+    "city": "Incheon",
+    "country": "Korea"
+   },
+   "time": {
+    "millis": 1781330400000,
+    "gmtOffset": 9,
+    "label": "2026-06-13"
+   },
+   "teams": [
+    {
+     "id": "736",
+     "name": "Korea",
+     "abbreviation": "KOR"
+    },
+    {
+     "id": "766",
+     "name": "Sri Lanka",
+     "abbreviation": "SRI"
+    }
+   ],
+   "scores": [
+    20,
+    0
+   ],
+   "status": "CC",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Asia Rugby Championship 2026"
+  },
+  {
+   "matchId": "b4d69e24-162e-4bb5-96d2-66b3737fee56",
+   "description": null,
+   "eventPhase": null,
+   "venue": {
+    "id": "1106",
+    "name": "Stade de la Rabine",
+    "city": "Vannes",
+    "country": "France"
+   },
+   "time": {
+    "millis": 1781885700000,
+    "gmtOffset": 2,
+    "label": "2026-06-19"
+   },
+   "teams": [
+    {
+     "id": "1200",
+     "name": "France A",
+     "abbreviation": "FRA"
+    },
+    {
+     "id": "1204",
+     "name": "England XV",
+     "abbreviation": "ENG"
+    }
+   ],
+   "scores": [
+    35,
+    19
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "MRU",
+   "competition": "Men's Internationals 2026"
+  },
+  {
+   "matchId": "9410fced-5adf-445f-b94b-f86492eabcda",
+   "description": "Match 6",
+   "eventPhase": null,
+   "venue": {
+    "id": "2666f276-3f4e-4544-858d-a94d71b30477",
+    "name": "Clarke Stadium",
+    "city": "Edmonton",
+    "country": "Canada"
+   },
+   "time": {
+    "millis": 1783213200000,
+    "gmtOffset": -6,
+    "label": "2026-07-04"
+   },
+   "teams": [
+    {
+     "id": "50",
+     "name": "Canada",
+     "abbreviation": "CAN"
+    },
+    {
+     "id": "43",
+     "name": "Spain",
+     "abbreviation": "ESP"
+    }
+   ],
+   "scores": [
+    42,
+    42
+   ],
+   "status": "C",
+   "outcome": "D",
+   "sport": "MRU",
+   "competition": "World Rugby Nations Cup 2026"
+  },
+  {
+   "matchId": "ca2b19d8-3c9d-4dd9-9705-44bb8713f76a",
+   "description": "Match 12",
+   "eventPhase": null,
+   "venue": {
+    "id": "2666f276-3f4e-4544-858d-a94d71b30477",
+    "name": "Clarke Stadium",
+    "city": "Edmonton",
+    "country": "Canada"
+   },
+   "time": {
+    "millis": 1783818000000,
+    "gmtOffset": -6,
+    "label": "2026-07-11"
+   },
+   "teams": [
+    {
+     "id": "50",
+     "name": "Canada",
+     "abbreviation": "CAN"
+    },
+    {
+     "id": "44",
+     "name": "Portugal",
+     "abbreviation": "POR"
+    }
+   ],
+   "scores": [
+    14,
+    38
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "MRU",
+   "competition": "World Rugby Nations Cup 2026"
+  },
+  {
+   "matchId": "3f95524f-5cca-4b45-b152-60ab29821388",
+   "description": "Match 1",
+   "eventPhase": "League",
+   "venue": {
+    "id": "231",
+    "name": "FMG Stadium",
+    "city": "Hamilton",
+    "country": "New Zealand"
+   },
+   "time": {
+    "millis": 1785395400000,
+    "gmtOffset": 12,
+    "label": "2026-07-30"
+   },
+   "teams": [
+    {
+     "id": "345",
+     "name": "Waikato",
+     "abbreviation": null
+    },
+    {
+     "id": "350",
+     "name": "Bay of Plenty",
+     "abbreviation": null
+    }
+   ],
+   "scores": [
+    38,
+    26
+   ],
+   "status": "C",
+   "outcome": "A",
+   "sport": "MRU",
+   "competition": "Bunnings Warehouse NPC 2026"
+  },
+  {
+   "matchId": "7dd9d979-4efd-4ed2-9bd7-2d6d1acc3109",
+   "description": "Match 1",
+   "eventPhase": null,
+   "venue": {
+    "id": "1144",
+    "name": "DHL Stadium",
+    "city": "Cape Town",
+    "country": "South Africa"
+   },
+   "time": {
+    "millis": 1786119000000,
+    "gmtOffset": 2,
+    "label": "2026-08-07"
+   },
+   "teams": [
+    {
+     "id": "2352",
+     "name": "Stormers",
+     "abbreviation": "STO"
+    },
+    {
+     "id": "37",
+     "name": "New Zealand",
+     "abbreviation": "NZL"
+    }
+   ],
+   "scores": [
+    21,
+    38
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "MRU",
+   "competition": "Rugby’s Greatest Rivalry 2026"
+  },
+  {
+   "matchId": "c11d2bbb-d831-4a53-b337-b31c72ecb1a0",
+   "description": "Match 2",
+   "eventPhase": null,
+   "venue": {
+    "id": "61",
+    "name": "Hollywoodbets Kings Park",
+    "city": "Durban",
+    "country": "South Africa"
+   },
+   "time": {
+    "millis": 1786464600000,
+    "gmtOffset": 2,
+    "label": "2026-08-11"
+   },
+   "teams": [
+    {
+     "id": "2353",
+     "name": "Sharks",
+     "abbreviation": "SHA"
+    },
+    {
+     "id": "37",
+     "name": "New Zealand",
+     "abbreviation": "NZL"
+    }
+   ],
+   "scores": [
+    0,
+    54
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "MRU",
+   "competition": "Rugby’s Greatest Rivalry 2026"
+  },
+  {
+   "matchId": "52acd2b2-33c9-4e66-9650-c238e75160cd",
+   "description": "Match 3",
+   "eventPhase": null,
+   "venue": {
+    "id": "60",
+    "name": "Loftus Versfeld",
+    "city": "Pretoria",
+    "country": "South Africa"
+   },
+   "time": {
+    "millis": 1786810200000,
+    "gmtOffset": 2,
+    "label": "2026-08-15"
+   },
+   "teams": [
+    {
+     "id": "2351",
+     "name": "Bulls",
+     "abbreviation": "BUL"
+    },
+    {
+     "id": "37",
+     "name": "New Zealand",
+     "abbreviation": "NZL"
+    }
+   ],
+   "scores": [
+    19,
+    50
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "MRU",
+   "competition": "Rugby’s Greatest Rivalry 2026"
+  },
+  {
+   "matchId": "43c1e80f-b4ac-478b-83dd-0d491c904b09",
+   "description": "Match 4",
+   "eventPhase": null,
+   "venue": {
+    "id": "37",
+    "name": "Emirates Airline Park",
+    "city": "Johannesburg",
+    "country": "South Africa"
+   },
+   "time": {
+    "millis": 1787411400000,
+    "gmtOffset": 2,
+    "label": "2026-08-22"
+   },
+   "teams": [
+    {
+     "id": "39",
+     "name": "South Africa",
+     "abbreviation": "RSA"
+    },
+    {
+     "id": "37",
+     "name": "New Zealand",
+     "abbreviation": "NZL"
+    }
+   ],
+   "scores": [
+    16,
+    33
+   ],
+   "status": "C",
+   "outcome": "B",
+   "sport": "MRU",
+   "competition": "Rugby’s Greatest Rivalry 2026"
+  },
+  {
+   "matchId": "5bd5d582-e087-448e-8d3f-dbf3039bfddd",
+   "description": "Match 6",
+   "eventPhase": null,
+   "venue": {
+    "id": "1144",
+    "name": "DHL Stadium",
+    "city": "Cape Town",
+    "country": "South Africa"
+   },
+   "time": {
+    "millis": 1788012600000,
+    "gmtOffset": 2,
+    "label": "2026-08-29"
+   },
+   "teams": [
+    {
+     "id": "39",
+     "name": "South Africa",
+     "abbreviation": "RSA"
+    },
+    {
+     "id": "37",
+     "name": "New Zealand",
+     "abbreviation": "NZL"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Rugby’s Greatest Rivalry 2026"
+  },
+  {
+   "matchId": "08d834c3-6666-4797-8a41-f661ebb21a82",
+   "description": "Match 1",
+   "eventPhase": "Semi-Finals",
+   "venue": {
+    "id": "130",
+    "name": "Hanazono Rugby Stadium",
+    "city": "Osaka Prefecture, Higashiosaka City",
+    "country": "Japan"
+   },
+   "time": {
+    "millis": 1789196400000,
+    "gmtOffset": 9,
+    "label": "2026-09-12"
+   },
+   "teams": [
+    {
+     "id": "46",
+     "name": "Fiji",
+     "abbreviation": "FIJ"
+    },
+    {
+     "id": "50",
+     "name": "Canada",
+     "abbreviation": "CAN"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Pacific Nations Cup 2026"
+  },
+  {
+   "matchId": "5147ecd2-57bc-4d17-af31-4b30c53fee9c",
+   "description": "Match 2",
+   "eventPhase": "Semi-Finals",
+   "venue": {
+    "id": "130",
+    "name": "Hanazono Rugby Stadium",
+    "city": "Osaka Prefecture, Higashiosaka City",
+    "country": "Japan"
+   },
+   "time": {
+    "millis": 1789207500000,
+    "gmtOffset": 9,
+    "label": "2026-09-12"
+   },
+   "teams": [
+    {
+     "id": "49",
+     "name": "Japan",
+     "abbreviation": "JPN"
+    },
+    {
+     "id": "51",
+     "name": "USA",
+     "abbreviation": "USA"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Pacific Nations Cup 2026"
+  },
+  {
+   "matchId": "22056030-c322-43e1-9705-5fff0cbfdde2",
+   "description": null,
+   "eventPhase": null,
+   "venue": {
+    "id": "536",
+    "name": "CorPacq Stadium",
+    "city": "Salford",
+    "country": "England"
+   },
+   "time": {
+    "millis": 1789221600000,
+    "gmtOffset": 1,
+    "label": "2026-09-12"
+   },
+   "teams": [
+    {
+     "id": "2517",
+     "name": "England",
+     "abbreviation": "ENG"
+    },
+    {
+     "id": "2577",
+     "name": "Australia",
+     "abbreviation": "AUS"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "WRU",
+   "competition": "WXV 2026"
+  },
+  {
+   "matchId": "fef86d20-aad7-4942-b387-ed60544d3f2a",
+   "description": "Match 3",
+   "eventPhase": "3rd Place Play-Off",
+   "venue": {
+    "id": "131",
+    "name": "Prince Chichibu Memorial Stadium",
+    "city": "Tokyo",
+    "country": "Japan"
+   },
+   "time": {
+    "millis": 1789801200000,
+    "gmtOffset": 9,
+    "label": "2026-09-19"
+   },
+   "teams": [
+    {
+     "id": "0",
+     "name": "Loser M1",
+     "abbreviation": null
+    },
+    {
+     "id": "0",
+     "name": "Loser M2",
+     "abbreviation": null
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Pacific Nations Cup 2026"
+  },
+  {
+   "matchId": "1ab861c4-0bad-4711-aeba-b40e702ad048",
+   "description": "Match 4",
+   "eventPhase": "Final",
+   "venue": {
+    "id": "131",
+    "name": "Prince Chichibu Memorial Stadium",
+    "city": "Tokyo",
+    "country": "Japan"
+   },
+   "time": {
+    "millis": 1789812300000,
+    "gmtOffset": 9,
+    "label": "2026-09-19"
+   },
+   "teams": [
+    {
+     "id": "0",
+     "name": "Winner M1",
+     "abbreviation": null
+    },
+    {
+     "id": "0",
+     "name": "Winner M2",
+     "abbreviation": null
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Pacific Nations Cup 2026"
+  },
+  {
+   "matchId": "ac4f516c-300d-4f4b-85ea-514f0be5ddf6",
+   "description": null,
+   "eventPhase": null,
+   "venue": {
+    "id": "62",
+    "name": "Eden Park",
+    "city": "Auckland",
+    "country": "New Zealand"
+   },
+   "time": {
+    "millis": 1791616200000,
+    "gmtOffset": 12,
+    "label": "2026-10-10"
+   },
+   "teams": [
+    {
+     "id": "37",
+     "name": "New Zealand",
+     "abbreviation": "NZL"
+    },
+    {
+     "id": "38",
+     "name": "Australia",
+     "abbreviation": "AUS"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Bledisloe Cup 2026"
+  },
+  {
+   "matchId": "e3cbae12-66b3-4835-b1ce-4014b63055c8",
+   "description": null,
+   "eventPhase": null,
+   "venue": {
+    "id": "74",
+    "name": "Stadium Australia",
+    "city": "Sydney | Wangal",
+    "country": "Australia"
+   },
+   "time": {
+    "millis": 1792215900000,
+    "gmtOffset": 10,
+    "label": "2026-10-17"
+   },
+   "teams": [
+    {
+     "id": "38",
+     "name": "Australia",
+     "abbreviation": "AUS"
+    },
+    {
+     "id": "37",
+     "name": "New Zealand",
+     "abbreviation": "NZL"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Bledisloe Cup 2026"
+  },
+  {
+   "matchId": "bbe9b401-9955-4147-a612-d6d9d2ea469e",
+   "description": null,
+   "eventPhase": null,
+   "venue": {
+    "id": "ce659efb-d933-4761-92ce-130c4d89f5e7",
+    "name": "TBC",
+    "city": "TBC",
+    "country": "England"
+   },
+   "time": {
+    "millis": 1795970400000,
+    "gmtOffset": 0,
+    "label": "2026-11-29"
+   },
+   "teams": [
+    {
+     "id": "0",
+     "name": "NTH 1st",
+     "abbreviation": null
+    },
+    {
+     "id": "0",
+     "name": "STH 1st",
+     "abbreviation": null
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "Nations Championship 2026"
+  },
+  {
+   "matchId": "0b974b32-5580-44f3-99f6-25df422bc61b",
+   "description": "Match 32",
+   "eventPhase": "League",
+   "venue": {
+    "id": "30",
+    "name": "Kingsholm",
+    "city": "Gloucester",
+    "country": "England"
+   },
+   "time": {
+    "millis": 1797692400000,
+    "gmtOffset": 0,
+    "label": "2026-12-19"
+   },
+   "teams": [
+    {
+     "id": "83",
+     "name": "Gloucester Rugby",
+     "abbreviation": "GLO"
+    },
+    {
+     "id": "74",
+     "name": "Saracens",
+     "abbreviation": "SAR"
+    }
+   ],
+   "scores": [
+    0,
+    0
+   ],
+   "status": "U",
+   "outcome": "N",
+   "sport": "MRU",
+   "competition": "English Premiership 2027"
+  }
+ ]
+}

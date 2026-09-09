@@ -1,0 +1,59 @@
+=== General classification ===
+{| class="wikitable" style="width:50em;margin-bottom:0;"
+|+ General classification after stage 10 (1–10)<ref name="class">{{cite web|url=https://www.lavuelta.es/en/rankings|title=Official classifications of La Vuelta 2026|website=LA VUELTA.ES|publisher=[[Amaury Sport Organisation]]|access-date=1 September 2026}}</ref><ref name="tissottime">{{cite web|url=https://www.tissottiming.com/2026/vue/stage-10/rankings|title=Vuelta a España Rankings Tissot Timing|work=Tissot Timing|access-date=1 September 2026}}</ref>
+|-
+! scope="col" | Rank
+! scope="col" | Rider
+! scope="col" | Team
+! scope="col" | Time
+|-
+! scope="row" | 1
+| {{Flag athlete|[[Enric Mas]]|ESP}} {{cjersey|red}}
+| {{UCI team code|MOV men|2026}}
+| align="right" | 32h 41' 44"
+|-
+! scope="row" | 2
+| {{Flag athlete|[[Primož Roglič]]|SLO}}
+| {{UCI team code|RBH|2026}}
+| align="right" | + 1' 18"
+|-
+! scope="row" | 3
+| {{Flag athlete|[[Felix Gall]]|AUT}} {{cjersey|red number}}
+| {{UCI team code|DCT|2026}}
+| align="right" | + 1' 39"
+|-
+! scope="row" | 4
+| {{Flag athlete|[[Oscar Onley]]|GBR}} {{cjersey|white}}
+| {{UCI team code|NCI|2026b}}
+| align="right" | + 2' 20"
+|-
+! scope="row" | 5
+| {{Flag athlete|[[Richard Carapaz]]|ECU}}
+| {{UCI team code|EFE|2026}}
+| align="right" | + 3' 26"
+|-
+! scope="row" | 6
+| {{Flag athlete|[[Mattias Skjelmose]]|DEN}}
+| {{UCI team code|LTK men|2026}}
+| align="right" | + 3' 55"
+|-
+! scope="row" | 7
+| {{Flag athlete|[[Sepp Kuss]]|USA}}
+| {{UCI team code|TVL men|2026}}
+| align="right" | + 4' 09"
+|-
+! scope="row" | 8
+| {{Flag athlete|[[Harold Tejada]]|COL}}
+| {{UCI team code|XAT|2026}}
+| align="right" | + 4' 39"
+|-
+! scope="row" | 9
+| {{Flag athlete|[[Gregor Mühlberger]]|AUT}} {{cjersey|red number}}
+| {{UCI team code|DCT|2026}}
+| align="right" | + 7' 33"
+|-
+! scope="row" | 10
+| {{Flag athlete|[[Jakob Omrzel]]|SLO}}
+| {{UCI team code|TBV|2026}}
+| align="right" | + 8' 05"
+|}

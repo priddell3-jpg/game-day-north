@@ -1,0 +1,164 @@
+{
+ "_note": "Trimmed from https://site.api.espn.com/apis/site/v2/sports/rugby/244293/scoreboard?dates=2025 on 2026-08-25. The 2026 endpoint returns zero events — the competition is not yet scheduled there — which is why the 2025 season is the one captured.",
+ "leagues": [
+  {
+   "id": "8328",
+   "name": "The Rugby Championship",
+   "abbreviation": "Rugby Championship",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-07-20T04:00Z",
+    "endDate": "2027-07-20T03:59Z",
+    "displayName": "2026",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "The Rugby Championship",
+     "abbreviation": "The Rugby Championship"
+    }
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "603118",
+   "date": "2025-08-16T15:10Z",
+   "name": "South Africa vs Australia",
+   "shortName": "SOU VS AUS",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "the-rugby-championship"
+   },
+   "competitions": [
+    {
+     "id": "603118",
+     "date": "2025-08-16T15:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "16173",
+      "fullName": "Ellis Park",
+      "address": {
+       "city": "Johannesburg",
+       "state": "South Africa"
+      }
+     },
+     "competitors": [
+      {
+       "id": "5",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "5",
+        "name": "South Africa",
+        "abbreviation": "SOU",
+        "displayName": "South Africa",
+        "color": "336600"
+       },
+       "score": "22"
+      },
+      {
+       "id": "6",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "6",
+        "name": "Australia",
+        "abbreviation": "AUS",
+        "displayName": "Australia",
+        "color": "FFCC00"
+       },
+       "score": "38"
+      }
+     ],
+     "status": {
+      "clock": 4820,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  },
+  {
+   "id": "603119",
+   "date": "2025-08-16T21:10Z",
+   "name": "Argentina vs New Zealand",
+   "shortName": "ARG VS NEW",
+   "season": {
+    "year": 2025,
+    "type": 1,
+    "slug": "the-rugby-championship"
+   },
+   "competitions": [
+    {
+     "id": "603119",
+     "date": "2025-08-16T21:10Z",
+     "timeValid": true,
+     "neutralSite": false,
+     "venue": {
+      "id": "167188",
+      "fullName": "Estadio Mario Alberto Kempes",
+      "address": {
+       "city": "Cordoba",
+       "state": "Argentina"
+      }
+     },
+     "competitors": [
+      {
+       "id": "10",
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "10",
+        "name": "Argentina",
+        "abbreviation": "ARG",
+        "displayName": "Argentina",
+        "color": "0099FF"
+       },
+       "score": "24"
+      },
+      {
+       "id": "8",
+       "homeAway": "away",
+       "winner": true,
+       "team": {
+        "id": "8",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "displayName": "New Zealand",
+        "color": "000000"
+       },
+       "score": "41"
+      }
+     ],
+     "status": {
+      "clock": 4817,
+      "displayClock": "81'",
+      "period": 2,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "FT",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "notes": []
+    }
+   ]
+  }
+ ]
+}

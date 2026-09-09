@@ -24,6 +24,9 @@ const shareWith = (state) => {
     const tennisEvents = new Set(globalThis.__s.events || []);
     const showScores = globalThis.__s.scores !== false;
     const location = {origin: "https://example.test", pathname: "/gdn/"};
+    /* Rugby and starred players append their own keys after these. */
+    const rugbyStars = new Set(globalThis.__s.rugbyStars || []);
+    const tennisStars = new Set(globalThis.__s.tennisStars || []);
   `);
   return shareLink();
 };

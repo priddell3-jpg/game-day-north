@@ -10,15 +10,34 @@
  *   - a game is filed under its US Eastern date, not UTC
  *   - the season schedule reports finished games as scheduled, 0-0;
  *     only the scoreboard carries the result
- *   - a YYYYMMDD-YYYYMMDD range silently returns the first day only.
- *     Soccer accepts YYYYMM for a whole month; the NA leagues do not.
+ *   - `limit` is honoured to exactly 1000 and silently collapses to 25
+ *     above it, so the most generous-looking value returns almost
+ *     nothing. A response that comes back exactly full is indistinguishable
+ *     from a truncated one and is never trusted.
+ *
+ * A fourth quirk used to be here and is no longer true: a
+ * YYYYMMDD-YYYYMMDD range once returned the first day only. Measured
+ * again on 2026-09-09 it returns the whole span, and the same event ids
+ * as one request per day. That is what lets one request cover a league's
+ * entire window; see scripts/lib/fetch-plan.mjs and tests/fetch-plan.test.mjs.
  *
  * No dependencies. Node 20+ for built-in fetch.
  */
 import { writeFileSync, readFileSync } from "node:fs";
-import { easternDate } from "./lib/dates.mjs";
-import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, stageSections,
-         titleWords, titleMatches } from "./lib/cycling.mjs";
+import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, freshestLeader,
+         stageSections, titleWords, titleMatches } from "./lib/cycling.mjs";
+import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
+         FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
+import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
+         STANDINGS_HOLD } from "./lib/race.mjs";
+import { MAX_LIMIT, planRanges, splitRange, dateKey, compFloorProblems, describeFloor,
+         nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
+
+/* Every club this build knows about, and every name each answers to.
+   One committed file, shared with the page, so the two cannot drift —
+   which they did three times before it existed, each time detaching a
+   club's fixtures in a way that looked exactly like a quiet season. */
+const TEAMS = JSON.parse(readFileSync(new URL("../data/teams.json", import.meta.url), "utf8"));
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -31,63 +50,19 @@ const NA = new Set(["NHL","NBA","NFL","MLB"]);
 const DAY = 86400000;
 const BACK = 8, FORWARD = 75;          // days of history / lookahead to keep
 
-/* The followable roster. Kept in step with TEAM_ROWS in src/page.html —
-   if you add a team there, add it here or its fixtures won't be built. */
-const ROSTER = [
-["tor-nhl","NHL","Toronto Maple Leafs"],["van-nhl","NHL","Vancouver Canucks"],
-["edm","NHL","Edmonton Oilers"],["cgy","NHL","Calgary Flames"],
-["ott","NHL","Ottawa Senators"],["mtl-nhl","NHL","Montreal Canadiens"],
-["wpg","NHL","Winnipeg Jets"],["bos-nhl","NHL","Boston Bruins"],
-["nyr","NHL","New York Rangers"],["vgk","NHL","Vegas Golden Knights"],
-["sea-nhl","NHL","Seattle Kraken"],["col","NHL","Colorado Avalanche"],
-["tor-nba","NBA","Toronto Raptors"],["gsw","NBA","Golden State Warriors"],
-["lal","NBA","Los Angeles Lakers"],["bos-nba","NBA","Boston Celtics"],
-["den","NBA","Denver Nuggets"],["okc","NBA","Oklahoma City Thunder"],
-["nyk","NBA","New York Knicks"],
-["sea-nfl","NFL","Seattle Seahawks"],["buf","NFL","Buffalo Bills"],
-["sf","NFL","San Francisco 49ers"],["kc","NFL","Kansas City Chiefs"],
-["dal","NFL","Dallas Cowboys"],["phi","NFL","Philadelphia Eagles"],
-["det","NFL","Detroit Lions"],
-["tor-mlb","MLB","Toronto Blue Jays"],["sea-mlb","MLB","Seattle Mariners"],
-["lad","MLB","Los Angeles Dodgers"],["nyy","MLB","New York Yankees"],
-["bos-mlb","MLB","Boston Red Sox"],["cle","MLB","Cleveland Guardians"],
-["liv","EPL","Liverpool"],["ars","EPL","Arsenal"],["mci","EPL","Manchester City"],
-["mun","EPL","Manchester United"],["che","EPL","Chelsea"],["tot","EPL","Tottenham Hotspur"],
-["new","EPL","Newcastle United"],
-["rma","LALIGA","Real Madrid"],["bar","LALIGA","Barcelona"],
-["bay","BUNDES","Bayern Munich"],["psg","LIGUE1","Paris Saint-Germain"],["int","SERIEA","Internazionale"],
-["van-mls","MLS","Vancouver Whitecaps"],["tfc","MLS","Toronto FC"],
-["mtl-mls","MLS","CF Montreal"],["lafc","MLS","LAFC"],
-["mia","MLS","Inter Miami CF"],["sou","MLS","Seattle Sounders FC"]
-];
-/* Clubs that enter competitions beyond their own league. */
-const EXTRA = { EPL:["EFL","FAC","UCL"], LALIGA:["UCL"], BUNDES:["UCL"], LIGUE1:["UCL"], SERIEA:["UCL"] };
-
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
-const pad = n => String(n).padStart(2,"0");
-/* Names the feed uses that no rule could derive from ours. Each of these
-   silently detached a club until the unmatched-team warning caught it. */
-const ALIASES = {
-  int:  ["Inter Milan", "Inter"],
-  lafc: ["Los Angeles FC"],
-  "van-mls": ["Vancouver Whitecaps FC"],
-  sou:  ["Seattle Sounders"],
-  mia:  ["Inter Miami"],
-  "mtl-mls": ["CF Montréal", "Montreal Impact"],
-  psg:  ["PSG", "Paris SG"],
-  bay:  ["Bayern München", "FC Bayern München"],
-  rma:  ["Real Madrid CF"],
-  bar:  ["FC Barcelona"]
-};
-
 /* Match on the name, and on the name minus a club suffix. ESPN says
    "Vancouver Whitecaps" where the roster said "Vancouver Whitecaps FC",
    and that one word silently detached every one of their fixtures from
    the person following them. Tolerate the difference both ways. */
 const trimSuffix = n => n.replace(/\b(fc|cf|sc|afc)\b/gi, "").replace(/\s+/g," ").trim();
+/* Names the feed uses that no rule could derive from ours live on each
+   club in the manifest. Each of them silently detached a club until the
+   unmatched-team warning caught it. */
 const NAME_TO_ID = new Map();
-for(const [id,,name] of ROSTER){
-  const variants = [name].concat(ALIASES[id] || []);
+for(const t of TEAMS.teams){
+  const id = t.id;
+  const variants = [t.feedName].concat(t.aliases || []);
   for(const v of variants){
     if(!NAME_TO_ID.has(norm(v))) NAME_TO_ID.set(norm(v), id);
     const bare = norm(trimSuffix(v));
@@ -101,11 +76,20 @@ function idFor(displayName){
   return NAME_TO_ID.get(bare) || null;
 }
 
-function monthKeys(from, to){
-  const out = [], d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
-  while(d <= to){ out.push(d.getUTCFullYear()+pad(d.getUTCMonth()+1)); d.setUTCMonth(d.getUTCMonth()+1); }
-  return out;
-}
+/* A 404 and an outage are different answers and must stop looking alike.
+
+   get() returned null for both: routine, out-of-season 404s and requests
+   that failed twice. That was survivable while one request covered one
+   day of one league. It is not survivable now that one request covers a
+   league's entire window — a single hard failure is a whole competition
+   missing, and the caller could not tell that from a competition that is
+   simply out of season.
+
+   So a 404 still answers null, meaning "asked, and there is nothing",
+   and a hard failure answers FAILED, meaning "never got an answer". The
+   distinction is a fact the build already had and was throwing away. */
+const FAILED = Symbol("fetch failed");
+
 let calls = 0, failures = 0, consecutive = 0, ok = 0;
 async function get(url){
   calls++;
@@ -126,12 +110,97 @@ async function get(url){
       if(attempt === 1){
         failures++; consecutive++;
         console.warn("  ! " + url.replace(ESPN,"") + " — " + err.message);
-        return null;
+        return FAILED;
       }
       await new Promise(r=>setTimeout(r, 700));
     }
   }
 }
+/* One competition's whole window, as few requests as it safely takes.
+
+   The window is planned into chunks no one of which is expected to
+   overflow, and a chunk that comes back exactly full is halved and asked
+   again rather than believed: a full page and a truncated page look
+   identical, and shipping a truncated fixture set silently is the worst
+   thing this file could do. A single day that still comes back full is
+   the end of the road and throws.
+
+   This replaces two things at once. The per-team season schedules, which
+   cost one request per followed team and were the only source of the
+   forward window for the North American leagues; and the per-date
+   scoreboards, which covered eight days back and three forward. The
+   range covers both spans and carries scores exactly as the per-date
+   scoreboard did. */
+let preseasonSkipped = 0;
+async function scoreboardRange(comp, path, fromMs, toMs, out){
+  let asked = 0;
+  const queue = planRanges(comp, fromMs, toMs);
+  while(queue.length){
+    const [fromKey, toKey, a, b] = queue.shift();
+    const url = ESPN + path + "/scoreboard?dates=" + fromKey + "-" + toKey + "&limit=" + MAX_LIMIT;
+    const r = await get(url);
+    asked++;
+    /* Fatal, and deliberately so. This request is the competition's
+       whole window; carrying on would publish a file with a league
+       silently missing, which the count floor would then have to infer
+       from arithmetic. The build already knows. */
+    if(r === FAILED){
+      throw new Error(comp + " " + fromKey + "-" + toKey + " could not be fetched. That request "
+        + "is the competition's entire window, so continuing would publish a file with "
+        + comp + " missing.");
+    }
+    const events = ((r || {}).events) || [];
+    if(events.length >= MAX_LIMIT){
+      const halves = splitRange(a, b);
+      if(!halves){
+        throw new Error(comp + " returned " + events.length + " events for the single day "
+          + fromKey + " — at the request ceiling, so the answer may be truncated and "
+          + "cannot be trusted");
+      }
+      console.warn("  ! " + comp + " " + fromKey + "-" + toKey + " came back at the "
+        + MAX_LIMIT + " ceiling — splitting rather than trusting a full page");
+      queue.unshift([dateKey(halves[0][0]), dateKey(halves[0][1]), halves[0][0], halves[0][1]],
+                    [dateKey(halves[1][0]), dateKey(halves[1][1]), halves[1][0], halves[1][1]]);
+      continue;
+    }
+    for(const ev of events){
+      /* Preseason is dropped deliberately, and the reasoning lives with
+         the filter in scripts/lib/fetch-plan.mjs rather than here, so it
+         is one line to revisit rather than archaeology. */
+      if(!isCarriedSeason(ev)){ preseasonSkipped++; continue; }
+      out(parseEvent(ev, comp));
+    }
+  }
+  return asked;
+}
+
+/* Where the match is actually being played, as the source states it.
+
+   This is a fact about the FIXTURE, not about the home club, and the
+   difference is not academic: the 2026 League Cup final is filed as
+   "Manchester City at Arsenal" and played at Wembley. Reading a location
+   off the home team would have labelled it with Arsenal's own ground.
+
+   Deliberately no mapping and no inference. If ESPN states a venue it is
+   carried through verbatim; if it states none, the fixture carries none
+   and the page shows nothing rather than guessing. ESPN populates this
+   on every soccer and North American event seen so far, on both the
+   scoreboard and the per-team season schedule. */
+function venueOf(cp){
+  const v = cp && cp.venue;
+  if(!v) return null;
+  const a = v.address || {};
+  const out = {};
+  if(v.fullName) out.name = v.fullName;
+  if(a.city) out.city = a.city;
+  /* state is a US/Canadian field and is absent for English grounds;
+     country is absent for US ones. Both are kept when given because
+     "Kansas City" alone is two different places. */
+  if(a.state) out.state = a.state;
+  if(a.country) out.country = a.country;
+  return Object.keys(out).length ? out : null;
+}
+
 function parseEvent(ev, comp){
   const cp = (ev.competitions && ev.competitions[0]) || ev;
   const cs = cp.competitors || [];
@@ -150,13 +219,18 @@ function parseEvent(ev, comp){
     const t = c.team;
     return { id: idFor(t.displayName),
              name: t.displayName || t.name || "", abbr: (t.abbreviation||"?").slice(0,4),
-             // the home club's city is what names the venue in the UI, so it
-             // has to survive for clubs outside the followable roster too
+             /* ESPN's team.location is the club's own label, and for
+                soccer that is the club name rather than a town —
+                "Ipswich Town", "New York City FC". It is kept because
+                the roster matches against it, but it is NOT where the
+                page gets a location from: that comes from venueOf above,
+                which is a fact about the fixture. */
              city: t.location || "",
              color: t.color ? "#"+String(t.color).replace("#","") : null };
   };
   const sh = num(H.score && H.score.displayValue != null ? H.score.displayValue : H.score);
   const sa = num(A.score && A.score.displayValue != null ? A.score.displayValue : A.score);
+  const venue = venueOf(cp);
   return {
     /* The source's own event id. Team names drift, start times move, and
        a composite key built from them has to guess whether two records
@@ -164,10 +238,67 @@ function parseEvent(ev, comp){
        collides with the page's internal row ids. */
     eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, start, home: side(H), away: side(A), status,
+    ...(venue ? {venue} : {}),
     label: ty.shortDetail || ty.description || (status==="final" ? "Final" : ""),
     score: (status === "scheduled" || sh === null || sa === null) ? null : [sh, sa]
   };
 }
+/* ---- one event, asked about by its own id ------------------------------
+
+   A score used to be read only off the scoreboard for the day a fixture
+   falls on. That is one request for however many games are on, which is
+   why it was built that way, but it makes every result on that date
+   depend on one page being complete: whatever is not in it — not filed
+   there yet, served short — is a fixture nothing can settle, and the row
+   stays "scheduled" until something else happens to fix it.
+
+   Royals at Blue Jays on 26 Aug 2026 is the case this was written for.
+   It sat in data.json reading "scheduled" long after the final out,
+   while this endpoint, asked for that one event by id, had the complete
+   post-game record. Why the day route did not carry it was not
+   established; that it needed a second route was.
+
+   So a fixture whose event id we already hold is asked about by that id.
+   The scoreboard remains the source for fixtures that carry no id, and
+   for discovering games the season schedule omits.
+
+   The response is enormous — the boxscore, every pitch, odds, standings,
+   and 892 KB of it for one baseball game. Only header.competitions[0] is
+   read; the rest is parsed and dropped. Note that a summary states no
+   venue there (it files one under gameInfo), which is why applySummary
+   below patches a fixture in place instead of replacing it. */
+function parseSummary(sum, comp){
+  const h = sum && sum.header;
+  const cp = h && Array.isArray(h.competitions) && h.competitions[0];
+  if(!cp) return null;
+  return parseEvent({ id: h.id != null ? h.id : cp.id, date: cp.date, competitions: [cp] }, comp);
+}
+
+/* Take a summary's status and score into the fixture it was asked about.
+
+   The id was ours to begin with, so this is not an identity question —
+   but it is still a question of which way round the two copies list the
+   clubs, and a score whose orientation cannot be established is worse
+   than no score at all. Undecidable means nothing is applied.
+
+   A known final is never erased by a copy carrying no score: the same
+   rule the page applies wherever two records of one fixture meet. */
+function applySummary(f, s){
+  if(!f || !s) return false;
+  const k = t => t.id || norm(t.name);
+  const straight = k(s.home)===k(f.home) && k(s.away)===k(f.away);
+  const reversed = k(s.home)===k(f.away) && k(s.away)===k(f.home);
+  if(!straight && !reversed) return false;
+  if(f.status === "final" && f.score && !s.score) return false;
+  const sc = s.score && reversed ? [s.score[1], s.score[0]] : s.score;
+  if(f.status === s.status && f.label === s.label &&
+     JSON.stringify(f.score) === JSON.stringify(sc)) return false;
+  f.status = s.status;
+  f.label = s.label;
+  f.score = sc;
+  return true;
+}
+
 const SAME = 4*3600000;
 function sameGame(a,b){
   if(a.comp !== b.comp || Math.abs(a.start-b.start) >= SAME) return false;
@@ -178,54 +309,132 @@ function sameGame(a,b){
 
 const now = Date.now();
 const fixtures = [];
+/* Fixtures already held, indexed by the source's own event id.
+
+   This used to be a linear scan of everything accumulated so far,
+   calling sameGame() — which normalises two club names, each an NFD
+   normalise and two regexes — against every record held. That was
+   affordable while most events were discarded on arrival. It stops being
+   affordable the moment more of them are kept, because the number of
+   inserts and the length of the array being scanned grow together.
+
+   Almost every record carries an id, and an id does not need guessing
+   at. The scan survives only for the few that do not. */
+const byEid = new Map();
+function merge(held, f){
+  if(f.score && !held.score){
+    /* The copy with a score wins, but must not lose a venue it lacks:
+       two readings of one fixture do not always both state one. */
+    if(!f.venue && held.venue) f.venue = held.venue;
+    return f;
+  }
+  if(!held.venue && f.venue) held.venue = f.venue;
+  return held;
+}
 function add(f){
   if(!f) return;
   if(f.start < now - BACK*DAY || f.start > now + FORWARD*DAY) return;
   if(!f.home.id && !f.away.id) return;                 // nobody follows either club
-  const i = fixtures.findIndex(x=>sameGame(x,f));
+  if(f.eid){
+    const held = byEid.get(f.eid);
+    if(!held){ fixtures.push(f); byEid.set(f.eid, f); return; }
+    const keep = merge(held, f);
+    if(keep !== held){ fixtures[fixtures.indexOf(held)] = keep; byEid.set(f.eid, keep); }
+    return;
+  }
+  /* No id to key on, so identity has to be argued from clubs and
+     kickoff. Rare, and the scan is bounded by however few of these
+     there are rather than by the whole file. */
+  const i = fixtures.findIndex(x=>!x.eid && sameGame(x,f));
   if(i < 0){ fixtures.push(f); return; }
-  if(f.score && !fixtures[i].score) fixtures[i] = f;   // the copy with a score wins
+  fixtures[i] = merge(fixtures[i], f);
 }
 
+/* Every competition worth asking about: each club's own league, plus the
+   cups and continental competitions it enters. Declared per club in the
+   manifest rather than per league, because at twenty clubs a league that
+   is what it actually is — Liverpool enter the Champions League and
+   Newcastle do not. */
 const comps = new Set();
-ROSTER.forEach(([,comp])=>{ comps.add(comp); (EXTRA[comp]||[]).forEach(c=>comps.add(c)); });
-
-console.log("Building fixtures for " + ROSTER.length + " teams across " + comps.size + " competitions");
-
-// North American leagues: per-team season schedules give the long tail
-const espnIds = {};
-for(const comp of [...comps].filter(c=>NA.has(c))){
-  const list = await get(ESPN + PATHS[comp] + "/teams?limit=500");
-  const teams = (((list||{}).sports||[{}])[0].leagues||[{}])[0].teams || [];
-  for(const w of teams){
-    const t = w.team; if(!t) continue;
-    const id = idFor(t.displayName);
-    if(id) espnIds[id] = { comp, espn: t.id };
-  }
-}
-for(const [id, meta] of Object.entries(espnIds)){
-  const sched = await get(ESPN + PATHS[meta.comp] + "/teams/" + meta.espn + "/schedule");
-  (((sched||{}).events)||[]).forEach(ev=>add(parseEvent(ev, meta.comp)));
+for(const t of TEAMS.teams){
+  comps.add(t.comp);
+  (t.extraComps || []).forEach(c => comps.add(c));
 }
 
-// ...and per-date scoreboards for the near window, which is the only
-// place a finished or in-progress game reliably carries its score
-const nearDays = [];
-for(let d=-BACK; d<=3; d++) nearDays.push(easternDate(now + d*DAY));
-for(const comp of [...comps].filter(c=>NA.has(c))){
-  for(const day of nearDays){
-    const r = await get(ESPN + PATHS[comp] + "/scoreboard?dates=" + day);
-    (((r||{}).events)||[]).forEach(ev=>add(parseEvent(ev, comp)));
-  }
-}
+console.log("Building fixtures for " + TEAMS.teams.length + " teams across " + comps.size + " competitions");
 
-// Soccer answers a month at a time
-const months = monthKeys(new Date(now - BACK*DAY), new Date(now + FORWARD*DAY));
-for(const comp of [...comps].filter(c=>!NA.has(c))){
-  for(const m of months){
-    const r = await get(ESPN + PATHS[comp] + "/scoreboard?dates=" + m + "&limit=400");
-    (((r||{}).events)||[]).forEach(ev=>add(parseEvent(ev, comp)));
-  }
+/* One ranged request per competition, covering the whole window.
+
+   This used to be three loops. The North American leagues were built
+   from one season-schedule request per followed team, which is the cost
+   that would have multiplied by five as the roster grows, plus per-date
+   scoreboards over a narrow near window; soccer was fetched a month at a
+   time. All three are the same question asked three ways, and the ranged
+   scoreboard answers it once.
+
+   Verified before the swap, over this exact window and against every
+   team in each league: every event id the per-team schedules returned is
+   present in the ranged scoreboard, for all four leagues, with none
+   missing. The range also returns more — preseason hockey, and the
+   basketball regular season, which the per-team endpoint does not yet
+   publish and which this file has therefore been missing. */
+const scoreboardWindow = { from: now - BACK*DAY, to: now + FORWARD*DAY };
+let scoreboardCalls = 0;
+for(const comp of comps){
+  if(!PATHS[comp]) continue;
+  scoreboardCalls += await scoreboardRange(comp, PATHS[comp],
+    scoreboardWindow.from, scoreboardWindow.to, add);
+}
+console.log("Fixtures: " + scoreboardCalls + " ranged request(s) across " + comps.size
+  + " competition(s), " + dateKey(scoreboardWindow.from) + "-" + dateKey(scoreboardWindow.to)
+  + (preseasonSkipped ? ", " + preseasonSkipped + " preseason event(s) skipped" : ""));
+
+/* Score top-up, one event at a time.
+
+   Everything that has started and is not settled gets asked about by its
+   own id, whatever the day's scoreboard said. A fixture already carrying
+   a final is left alone; so is one with no event id, which has nothing
+   to ask with and keeps whatever the scoreboard gave it.
+
+   Newest first, and capped: a postponement that never resolves would
+   otherwise be re-asked on every run for the eight days it stays in the
+   window. If the cap bites it is said out loud rather than quietly
+   leaving the oldest fixtures looking settled. */
+/* Fixtures asked about by their own event id when the scoreboard left
+   them unsettled. This is a correctness cap, not a performance knob:
+   anything past it keeps whatever the scoreboard gave it, which for an
+   older game means a stale score or none.
+
+   Measured on 2026-09-09, league-wide across all thirteen competitions,
+   the busiest three-hour window — one build's spacing — starts 25
+   fixtures, in both a September and a November sample. Add the handful
+   that stay unsettled across the eight-day back window, postponements
+   and abandonments, and a realistic worst case is around 40. 120 is
+   threefold headroom on that, and it is affordable because dropping the
+   per-team schedule loop freed far more requests than it spends. */
+const SUMMARY_CAP = 120;
+const stale = fixtures
+  .filter(f => f.eid && PATHS[f.comp] && f.start <= now && !(f.status === "final" && f.score))
+  .sort((a,b) => b.start - a.start);
+/* Recorded in the file, not only warned about: a warning inside a
+   three-hourly cron is read by nobody, and the fixtures past the cap are
+   the ones showing a stale score. */
+const summaryCapped = Math.max(0, stale.length - SUMMARY_CAP);
+if(summaryCapped){
+  console.warn("  !! " + stale.length + " unsettled fixtures exceeds the cap of " + SUMMARY_CAP
+    + " — " + summaryCapped + " will keep whatever the scoreboard gave them, which for an "
+    + "older game means a stale score. Raise SUMMARY_CAP.");
+}
+let toppedUp = 0;
+for(const f of stale.slice(0, SUMMARY_CAP)){
+  const r = await get(ESPN + PATHS[f.comp] + "/summary?event=" + encodeURIComponent(f.eid));
+  /* One unreachable summary is one fixture keeping what the scoreboard
+     gave it, which is the behaviour this top-up already degrades to. */
+  if(r !== FAILED && applySummary(f, parseSummary(r, f.comp))) toppedUp++;
+}
+if(stale.length){
+  console.log("Summary top-up: " + toppedUp + " of " +
+    Math.min(stale.length, SUMMARY_CAP) + " unsettled fixtures moved on");
 }
 
 fixtures.sort((a,b)=>a.start-b.start);
@@ -323,7 +532,11 @@ try{
     const settled = d => prevStages.find(x=>x.date===d && Array.isArray(x.top3) && x.top3.length===3);
     const due = rc.dates.filter(d=>d <= todayISO && !(settled(d) && d < todayISO));
     let stages = rc.dates.filter(d=>d <= todayISO).map(settled).filter(Boolean);
+    /* The leader carries forward with the stage it was read after, so a
+       value kept from a previous run can be compared for freshness
+       against anything parsed this run rather than outranking it. */
     let leader = prev.leader || null;
+    let leaderStage = Number.isFinite(prev.leaderStage) ? prev.leaderStage : null;
     if(due.length){
       const texts = [];
       for(const pg of rc.pages){ const t = await wikitextOf(pg); if(t) texts.push(t); }
@@ -339,32 +552,53 @@ try{
           const sections = {};
           texts.forEach(t=>Object.assign(sections, stageSections(t)));
           const fresh = [];
-          let leadStage = 0;
+          /* Every source offers a leader together with the stage its
+             standings are current to, and the freshest offer wins.
+             Freshness is compared, not assumed. */
+          const offers = [];
           rc.dates.forEach((date, i)=>{
             if(date > todayISO) return;
+            const sec = sections[i+1];
+            const blocks = sec ? resultBlocks(sec) : [];
+            /* The GC is read from every stage section present, including
+               one whose podium is already settled. A podium cannot
+               change once ridden but the standings under it can, and
+               returning early on a settled stage meant only the current
+               day's GC was ever consulted — which froze the leader at a
+               rider who had since abandoned the race. */
+            const gcBlock = blocks.filter(isGCBlock)[0];
+            if(gcBlock) offers.push([ridersInBlock(gcBlock, 1)[0], i + 1]);
             const kept = settled(date);
             if(kept && date < todayISO){ fresh.push(kept); return; }
-            const sec = sections[i+1];
-            if(!sec) return;
-            const blocks = resultBlocks(sec);
+            if(!blocks.length) return;
             const notGC = blocks.filter(b=>!isGCBlock(b));
             // prefer the block actually titled as the stage result; a
             // neutralised stage carries a "time gaps" block instead
             const res = notGC.filter(b=>/result/i.test(b.slice(0,240)))[0] || notGC[0] || "";
             const top3 = ridersInBlock(res, 3);
             if(top3.length === 3) fresh.push({date, top3});
-            const gcBlock = blocks.filter(isGCBlock)[0];
-            if(gcBlock && i+1 > leadStage){
-              const gc = ridersInBlock(gcBlock, 1);
-              if(gc.length){ leader = gc[0]; leadStage = i+1; }
-            }
           });
           if(fresh.length) stages = fresh;
-          // before any split article exists there are no stage sections
-          // at all; the main article still carries the standings
-          if(!leader){
-            for(const t of texts){ const l = gcLeaderFrom(t); if(l){ leader = l; break; } }
+          /* The main article carries the standings too, and before any
+             split article exists it is the only place they appear. It
+             competes on the stage number in its caption rather than
+             filling in only when nothing else was found: gated behind a
+             leader that had been carried forward, it could never be
+             reached, because a carried value is always truthy. */
+          for(const t of texts){
+            const at = gcStageFrom(t);
+            if(at) offers.push([gcLeaderFrom(t), at]);
           }
+          /* The value carried from the previous run competes rather than
+             being replaced by whatever happened to parse. It is offered
+             last, so a fresh reading of the same stage supersedes it
+             while an older one cannot: stages 12 onwards live in a split
+             article that does not exist until the race reaches them, and
+             on a run that reaches only the stage 1-11 article, its "GC
+             after stage 11" must not walk a stage-12 leader backwards. */
+          offers.push([leader, leaderStage]);
+          const pick = freshestLeader(offers);
+          if(pick){ leader = pick.leader; leaderStage = pick.leaderStage; }
         }
       }
     }
@@ -428,7 +662,7 @@ try{
       }
     }
     stages.sort((a,b)=>a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-    if(stages.length || leader) cyclingOut.push({race:rc.name, oneDay:!!rc.oneDay, leader, stages});
+    if(stages.length || leader) cyclingOut.push({race:rc.name, oneDay:!!rc.oneDay, leader, leaderStage, stages});
   }
   const podiums = cyclingOut.reduce((a,r)=>a+podiumCount(r), 0);
   console.log("Cycling (Wikipedia): " + podiums + " stage podium" + (podiums===1?"":"s")
@@ -438,13 +672,258 @@ try{
   if(prevCycling.length && !cyclingOut.length) cyclingOut.push(...prevCycling);
 }
 
+
+/* ============================================================
+   MEN'S INTERNATIONAL RUGBY UNION
+
+   Two independent sources, deliberately kept independent. ESPN carries
+   the six numbered rugby leagues; World Rugby's own match feed carries
+   the Pacific Nations Cup and the World Rugby Nations Cup, which ESPN
+   has no league for at all, and the Nations Championship finals
+   weekend, which ESPN's copy of that competition omits.
+
+   Neither may suppress the other. A competition reachable through only
+   one of them must still appear when the other is unreachable, so each
+   adapter is wrapped on its own and a failure is recorded rather than
+   thrown. What could not be reached is reported; nothing is filled in.
+   ============================================================ */
+const RUGBY_BACK_DAYS = 5;      // the browser applies the exact 3-local-day
+                                // cutoff; the file keeps a superset, because
+                                // "three local days" is 26 hours wider in
+                                // Auckland than in Vancouver and the build
+                                // does not know where the reader is
+const rugbyFrom = now - RUGBY_BACK_DAYS*DAY, rugbyTo = now + RUGBY_FORWARD*DAY;
+const rugbyReject = new Set();
+const rugbySourceErrors = [];
+const rugbyCompsSeen = {};
+
+/* Years the window touches. A window that straddles New Year needs both,
+   and ESPN answers a whole season to ?dates=YYYY — the same request that
+   returns 15 Six Nations fixtures for 2026 and nothing for 2027. */
+const rugbyYears = [...new Set([
+  new Date(rugbyFrom).getUTCFullYear(), new Date(rugbyTo).getUTCFullYear()
+])];
+
+/* ---- ESPN, one league at a time ---- */
+const espnRugby = [];
+for(const [compId, cfg] of Object.entries(RUGBY_COMPS)){
+  /* Not every competition has an ESPN league. The Pacific Nations Cup
+     and the World Rugby Nations Cup have none, which is a fact about
+     the source and not a failure to reach it — recorded as such so the
+     log does not report a working source as broken. */
+  if(!cfg.espn){ rugbyCompsSeen[compId] = {espn:"none"}; continue; }
+  let reached = false, kept = 0;
+  for(const year of rugbyYears){
+    let r = null;
+    try{
+      r = await get(ESPN + "rugby/" + cfg.espn + "/scoreboard?dates=" + year);
+    }catch(err){
+      rugbySourceErrors.push("ESPN " + compId + " " + year + ": " + (err && err.message || err));
+      continue;
+    }
+    /* Both mean nothing was added, and neither may mark the competition
+       as reached: a 404 is a league with no fixtures published for that
+       year, and FAILED is a request that never answered. Recorded apart
+       further down, where "asked and got nothing" and "never got an
+       answer" are reported as the different claims they are. */
+    if(r === null || r === FAILED) continue;
+    reached = true;
+    for(const ev of r.events || []){
+      const f = fromEspnEvent(ev, compId, rugbyReject);
+      if(f){ espnRugby.push(f); kept++; }
+    }
+  }
+  /* An empty competition is normal — The Rugby Championship publishes
+     nothing until it is scheduled — but "we asked and got nothing" and
+     "we never got an answer" are different claims and are recorded as
+     different things. */
+  rugbyCompsSeen[compId] = {espn: reached ? kept : null};
+}
+
+/* ---- World Rugby's own feed ---- */
+const WR_API = "https://api.wr-rims-prod.pulselive.com/rugby/v3/match";
+const WR_PAGE = 100;
+const wrRugby = [];
+let wrReached = false;
+try{
+  const iso = ms => new Date(ms).toISOString().slice(0,10);
+  const qs = p => WR_API + "?startDate=" + iso(rugbyFrom) + "&endDate=" + iso(rugbyTo)
+    + "&sort=asc&pageSize=" + WR_PAGE + "&page=" + p;
+  /* This host answers 429 to a burst, so the pages are walked in order
+     with a pause, and a rate-limited page is retried once rather than
+     silently leaving a hole in the middle of the window. */
+  let page = 0, pages = 1;
+  while(page < pages && page < 40){
+    let body = null;
+    for(let attempt = 0; attempt < 3 && !body; attempt++){
+      if(attempt) await new Promise(r=>setTimeout(r, 1500*attempt));
+      try{
+        const res = await fetch(qs(page), {headers:{"user-agent":WIKI_UA, "accept":"application/json"},
+          signal:AbortSignal.timeout(20000)});
+        if(res.status === 429) continue;        // backs off on the next pass
+        if(!res.ok) break;
+        body = await res.json();
+      }catch(e){ /* retried, then given up on below */ }
+    }
+    if(!body){ rugbySourceErrors.push("World Rugby: page " + page + " unavailable"); break; }
+    wrReached = true;
+    pages = (body.pageInfo && body.pageInfo.numPages) || 1;
+    for(const m of body.content || []){
+      const f = fromWrMatch(m, rugbyReject);
+      if(f) wrRugby.push(f);
+    }
+    page++;
+    await new Promise(r=>setTimeout(r, 350));
+  }
+}catch(err){
+  rugbySourceErrors.push("World Rugby: " + (err && err.message || err));
+}
+for(const compId of Object.keys(RUGBY_COMPS)){
+  const seen = rugbyCompsSeen[compId] || (rugbyCompsSeen[compId] = {espn:null});
+  if(seen.espn === undefined) seen.espn = null;
+  seen.wr = wrReached ? wrRugby.filter(f=>f.comp === compId).length : null;
+}
+
+/* One list, ids first and nations-plus-kickoff only where the id
+   namespaces do not overlap.
+
+   ESPN is concatenated first on purpose rather than by accident: where
+   both sources carry a fixture the base copy's kickoff is the one kept,
+   and ESPN agreed with World Rugby on every fixture already played
+   while disagreeing with it on several still to come. Where they do
+   disagree the other reading is recorded on the fixture as altStart. */
+const rugbyAll = dedupe(espnRugby.concat(wrRugby));
+/* Old results are dropped here rather than in the browser so the file
+   does not carry a season of finished matches to every visitor. The
+   browser applies the exact local-calendar rule on top of this. */
+const rugbyOut = rugbyAll.filter(f =>
+  f.start <= rugbyTo && (!isTerminal(f.status) || f.start >= rugbyFrom))
+  /* __src is a merge hint about which feed a venue came from; it has
+     done its job by now and does not belong in the shipped file. */
+  .map(f => f.venue ? Object.assign({}, f, {venue:(({__src, ...v}) => v)(f.venue)}) : f);
+
+if(rugbyReject.size){
+  console.warn("\n  !! " + rugbyReject.size + " rugby side(s) matched no nation and are not a known "
+    + "non-test side — check the name against the feed:");
+  [...rugbyReject].sort().forEach(n=>console.warn("     " + n));
+  console.warn("");
+}
+/* A competition neither source answered for. Distinct from one that
+   answered with nothing: The Rugby Championship legitimately publishes
+   no 2026 fixtures yet, and that is not the same as not being asked. */
+const rugbyUnavailable = Object.entries(rugbyCompsSeen)
+  .filter(([,v]) => (v.espn === null || v.espn === "none") && v.wr === null)
+  .map(([k]) => RUGBY_COMPS[k].label);
+console.log("Rugby: " + rugbyOut.length + " fixture(s) in window from "
+  + (espnRugby.length ? "ESPN" : "") + (espnRugby.length && wrRugby.length ? " + " : "")
+  + (wrRugby.length ? "World Rugby" : "") + (!espnRugby.length && !wrRugby.length ? "no source" : "")
+  + " (" + espnRugby.length + " + " + wrRugby.length + " before dedup)");
+Object.entries(rugbyCompsSeen).forEach(([k,v])=>{
+  const label = RUGBY_COMPS[k].label;
+  const say = x => x === null ? "unreachable" : x === "none" ? "no league" : x;
+  const bits = ["espn=" + say(v.espn), "wr=" + say(v.wr)];
+  console.log("    " + label.padEnd(26) + " " + bits.join("  "));
+});
+const rugbyDisputed = rugbyOut.filter(f => f.altStart != null);
+if(rugbyDisputed.length){
+  console.warn("  ! " + rugbyDisputed.length + " kickoff(s) reported differently by the two sources; "
+    + "the ESPN reading is shown and the other is kept as altStart:");
+  rugbyDisputed.forEach(f => console.warn("     " + f.home.name + " v " + f.away.name
+    + "  " + new Date(f.start).toISOString() + " vs " + new Date(f.altStart).toISOString()
+    + " (" + f.altSource + ")"));
+}
+if(rugbyUnavailable.length){
+  console.warn("  ! no source answered for: " + rugbyUnavailable.join(", ")
+    + " — reported as unavailable rather than shown as empty");
+}
+if(rugbySourceErrors.length){
+  console.warn("  ! rugby source problems: " + rugbySourceErrors.length);
+  rugbySourceErrors.forEach(e=>console.warn("     " + e));
+}
+
+
+/* ============================================================
+   RACE — normalised standings, so the page can say why a game matters.
+
+   Kept structurally apart from the fixtures above and sharing nothing
+   with them but the team matcher: a standings row is not a fixture, and
+   no code path here reads or writes one.
+
+   Six requests per run, each against a named ESPN standings view. Which
+   view matters more than it looks: the same field means different things
+   in different ones, so scripts/lib/race.mjs records the view each
+   source reads and the field meanings that belong to it.
+
+   The volatile figures ESPN publishes beside these — playoff and
+   wild-card percentages, magic numbers — are deliberately not read. They
+   move on every run whether or not a game has been played, and carrying
+   them would put a commit and a site rebuild on the schedule rather than
+   on the results.
+
+   Cutoffs are not here. Where the source publishes its own qualification
+   zones they are read from the payload, because how many places qualify
+   is a competition rule that changes: the Premier League sent five clubs
+   to the Champions League in 2025-26 and sends four this season. Where
+   the source publishes none, the cutoff lives in the page's dated RACES
+   table beside a note and a link, the way a rights row does.
+   ============================================================ */
+const prevStandings = (previous && Array.isArray(previous.standings)) ? previous.standings : [];
+const prevGenerated = (previous && previous.generated) || new Date(now).toISOString();
+const standings = [];
+const standingsUnavailable = [];
+for(const src of RACE_SOURCES){
+  let payload = null;
+  try{ payload = await get(src.url); }
+  catch(err){ payload = null; }
+  /* Standings are not fatal: a source that cannot be reached falls
+     through to the group held from a previous run, and the page draws
+     nothing rather than a card if there is none. */
+  if(payload === FAILED) payload = null;
+  const fresh = payload ? groupsFrom(payload, {comp:src.comp, kind:src.kind, idFor,
+    groupFor: node => groupIdFor(src, node)}) : [];
+  if(fresh.length){
+    fresh.forEach(g=>{ g.view = src.view; });
+    standings.push(...fresh);
+    continue;
+  }
+  /* Nothing usable. Either the source could not be reached, or it
+     answered with a table nothing has been played in yet — week one of
+     the NFL seeds every team zero, which is not an order. The page
+     treats both the same way and shows no card at all.
+
+     A previous answer is carried forward so a brief outage does not
+     empty the board, but only for a few days, and never across a season
+     boundary: last season's final table standing in for this season's
+     empty one would be the most confident wrong answer this file could
+     give. */
+  const held = heldGroups(prevStandings, src, {
+    now, since: prevGenerated, answeredSeason: payload ? seasonOf(payload) : null });
+  if(held.length) standings.push(...held);
+  standingsUnavailable.push(src.comp + " " + src.view
+    + (payload ? " — answered, nothing orderable yet" : " — unreachable")
+    + (held.length ? "; holding " + held.length + " group(s) read earlier"
+        : "; nothing held (never answered, or last answer older than "
+          + Math.round(STANDINGS_HOLD/3600000) + "h)"));
+}
+console.log("Race standings: " + standings.length + " group(s) across "
+  + new Set(standings.map(g=>g.comp)).size + " competition(s)");
+standings.forEach(g=>console.log("    " + (g.comp + "/" + g.group).padEnd(18)
+  + String(g.rows.length).padStart(2) + " rows"
+  + (g.played ? "  played " + g.played.min + "-" + g.played.max : "")
+  + (g.zones ? "  zones " + g.zones.map(z=>z.from + "-" + z.to).join(",") : "")
+  + (g.heldFrom ? "  HELD from " + g.heldFrom : "")));
+if(standingsUnavailable.length){
+  console.warn("  ! no usable standings for " + standingsUnavailable.length + " source(s):");
+  standingsUnavailable.forEach(x=>console.warn("     " + x));
+}
+
 /* A roster entry that matched no fixture at all is almost always a name
    that drifted, not a team with an empty schedule. Say so loudly: this
    failure is invisible in the app, where it just looks like a team that
    never plays. */
 const matched = new Set();
 fixtures.forEach(f=>{ if(f.home.id) matched.add(f.home.id); if(f.away.id) matched.add(f.away.id); });
-const unmatched = ROSTER.filter(([id])=>!matched.has(id)).map(([id,comp,name])=>id+" ("+name+", "+comp+")");
+const unmatched = TEAMS.teams.filter(t=>!matched.has(t.id)).map(t=>t.id+" ("+t.feedName+", "+t.comp+")");
 if(unmatched.length){
   console.warn("\n  !! " + unmatched.length + " roster team(s) matched no fixture — check the name against the feed:");
   unmatched.forEach(u=>console.warn("     " + u));
@@ -467,6 +946,35 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
   process.exit(1);
 }
 
+/* ...and never replace it with one that has quietly lost a whole
+   competition.
+
+   The guard above counts the file as a whole, which was adequate while a
+   request covered one day of one league. It is not adequate now that one
+   request covers one league's entire window: hockey alone is 35% of this
+   file, so losing all of it leaves 65% behind and sails straight through
+   a 50% floor. `get()` answers null on failure rather than throwing, so
+   nothing else would notice either.
+
+   `counts.byComp` is already written every run, which makes the previous
+   file the reference. A competition that had a real number of fixtures
+   and now has none did not have a quiet week. */
+const prevCounts = (previous && previous.counts) || {};
+/* The peak each competition has reached, and when. Reading only the
+   previous run leaves a season-wide hole: baseball decays to nothing
+   over the winter, so by March there is no MLB in the previous run at
+   all, and a competition absent from it was never checked again. */
+const peaks = nextPeaks(prevCounts.peakByComp, byComp, now);
+const floorProblems = compFloorProblems(prevCounts.byComp || null, byComp,
+  { vanishBaseline: vanishBaseline(prevCounts.byComp, prevCounts.peakByComp, now) });
+if(floorProblems.length){
+  console.error("A competition collapsed between runs — keeping the existing file:");
+  console.error(describeFloor(floorProblems));
+  console.error("If this is real and not an outage, the previous file has to be updated "
+    + "deliberately rather than by a build that cannot tell the two apart.");
+  process.exit(1);
+}
+
 /* Don't rewrite the file just to move a timestamp. The build stamps
    `generated`, which differs on every run, so writing unconditionally
    meant a commit and a site rebuild every time — including all through
@@ -475,7 +983,10 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
    otherwise start treating the file as stale. */
 const MAX_AGE = 6*3600000;
 const cyclingSame = previous && JSON.stringify(previous.cycling || []) === JSON.stringify(cyclingOut);
-if(previous && cyclingSame && JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
+const rugbySame = previous && JSON.stringify(previous.rugby || []) === JSON.stringify(rugbyOut);
+const standingsSame = previous && JSON.stringify(previous.standings || []) === JSON.stringify(standings);
+if(previous && cyclingSame && rugbySame && standingsSame &&
+   JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
     console.log("No fixture changed and the file is " + Math.round(age/60000) +
@@ -491,11 +1002,36 @@ const out = {
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
   counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
-            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0) },
+            /* Fixtures the summary top-up could not reach because the cap
+               bit. Any number here means some older games are showing a
+               score the scoreboard happened to have rather than the one
+               that settled them. */
+            summaryCapped,
+            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0),
+            rugby: rugbyOut.length, rugbyByComp: rugbyOut.reduce((a,f)=>{a[f.comp]=(a[f.comp]||0)+1;return a;},{}),
+            /* Named in the file so the page can say a competition is
+               unavailable instead of implying the feed is complete. */
+            rugbyUnavailable, rugbyUnknownSides: [...rugbyReject].sort(),
+            rugbyDisputedKickoffs: rugbyDisputed.length,
+            standings: standings.length,
+            /* Named so the page never has to infer why a race is absent,
+               and so a source that quietly stopped answering is visible
+               in the file rather than only in a log nobody reads. */
+            standingsUnavailable,
+            /* Carried run to run so a competition that has been absent
+               for a while is still guarded. Lapses on its own, so a
+               season that genuinely ended stops guarding. */
+            peakByComp: peaks },
   fixtures,
-  cycling: cyclingOut
+  cycling: cyclingOut,
+  rugby: rugbyOut,
+  /* Standings live beside the fixtures, not inside them. Nothing in the
+     Race model is keyed on a fixture and nothing in a fixture is keyed
+     on a standing; the only thing they share is the team id. */
+  standings
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +
+  rugbyOut.length + " rugby, " + standings.length + " standings groups, " +
   calls + " requests, " + failures + " failed");
 console.log("  " + Object.entries(byComp).map(([k,v])=>k+":"+v).join("  "));
