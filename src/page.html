@@ -1364,22 +1364,15 @@ const fullName = t => !t ? "TBD"
   : t.full ? t.name                       // came from the feed already complete
   : (t.display || (SOCCER[t.home] ? t.name : t.city+" "+t.name));
 
-/* ---- filler opponents: real clubs you can't select, so schedules look real ---- */
-/* Opponents referenced by the baked fallback below. Everything else
-   arrives from the live feed with its own name and colours. */
-const GHOSTS = [
-["kcr","MLB","Kansas City","Royals","KC","CT","#004687"],
-["ips","EPL","Ipswich","Ipswich Town","IPS","UK","#3A64A3"],
-["bou","EPL","Bournemouth","Bournemouth","BOU","UK","#B50E12"],
-["nfo","EPL","Nottingham","Nottm Forest","NFO","UK","#DD0000"],
-["ful","EPL","London","Fulham","FUL","UK","#1B1B1B"]
-];
-GHOSTS.forEach(r=>{
-  const m = MANIFEST_BY_ID.get(r[0]);
-  TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6],
-    ghost:true, comps:[r[1]],
-    ...(m && m.feedName ? {feed:m.feedName} : {}),
-    ...(m && m.displayName ? {display:m.displayName} : {})};
+/* ---- filler opponents: real clubs you can't select, so schedules look real ----
+   Referenced by the baked fallback below, which names them by id, so
+   their ids are load-bearing. Everything else arrives from the live feed
+   with its own name and colours. */
+TEAM_MANIFEST.ghosts.forEach(g=>{
+  TEAMS[g.id] = {id:g.id, home:g.comp, city:g.city || "", name:g.name, abbr:g.abbr,
+    tz:g.tz, color:g.color, ghost:true, comps:[g.comp],
+    ...(g.feedName ? {feed:g.feedName} : {}),
+    ...(g.displayName ? {display:g.displayName} : {})};
 });
 const allTeams = Object.values(TEAMS);
 const pickable = allTeams.filter(t=>!t.ghost);

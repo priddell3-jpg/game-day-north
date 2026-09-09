@@ -202,7 +202,7 @@ function harness(){
       return responses.get(url);
     }};
   const page = loadFromPage(
-    ["TEAM_ROWS", "GHOSTS", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
+    ["TEAM_ROWS", "TEAM_MANIFEST", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
      "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "norm", "espnTeamObj", "venueOf", "parseEvent", "parseSummary", "clubKeys", "sameClub",
      "orientation", "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore",
      "activeNow", "scoredDays", "SUMMARY_CAP", "DAY_CAP", "fillScores"], PREAMBLE);
@@ -213,8 +213,9 @@ function harness(){
     if(t.ucl) t.comps = t.comps.concat(["UCL"]);
     TEAMS[t.id] = t;
   });
-  page.GHOSTS.forEach(r=>{
-    TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ghost:true, comps:[r[1]]};
+  page.TEAM_MANIFEST.ghosts.forEach(g=>{
+    TEAMS[g.id] = {id:g.id, home:g.comp, city:g.city || "", name:g.name, abbr:g.abbr,
+      tz:g.tz, color:g.color, ghost:true, comps:[g.comp]};
   });
   Object.values(TEAMS).forEach(t=>allTeams.push(t));
   const url = (comp, ms) => page.ESPN + page.ESPN_PATH[comp] + "/scoreboard?dates=" + page.espnDate(ms == null ? Date.now() : ms);
