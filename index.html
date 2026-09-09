@@ -168,6 +168,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .rail-card:hover{color:#fff}
 .rail-card:active{opacity:.78}
 .rail-time{color:var(--panel-muted);font-size:10px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.rail-time.live{color:#FF8A9A;font-weight:600;text-transform:uppercase}
+.rail-time.final{color:var(--panel-muted);text-transform:uppercase}
 .rail-empty{display:block;color:var(--panel-muted);font-size:13.5px;line-height:1.55;padding:12px 0}
 .rail-empty .countdown{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
 .rail-empty b{white-space:normal}
@@ -475,8 +477,19 @@ main{padding:22px 0 80px}
   .sets{gap:3px;font-size:11px}
 }
 
-.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 4px}
+.filters{margin:12px 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.filters summary{
+  display:flex;align-items:center;gap:9px;min-height:44px;padding:0 12px;cursor:pointer;
+  list-style:none;color:var(--ink-2);
+}
+.filters summary::-webkit-details-marker{display:none}
 .filters .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.filter-state{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted)}
+.filter-action{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent)}
+.filter-action .when-open{display:none}
+.filters[open] .filter-action .when-closed{display:none}
+.filters[open] .filter-action .when-open{display:inline}
+.filter-options{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 12px 12px;border-top:1px solid var(--line)}
 .fchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
 .fchip i{width:7px;height:7px;border-radius:50%;flex:none;opacity:.35}
 .fchip[aria-pressed="true"]{color:var(--ink);border-color:var(--line-strong)}
@@ -6057,7 +6070,7 @@ let rugbyStars, tennisStars;
 const rugbyOn = () => selected.has(RUGBY_FOLLOW);
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
-let rightsOpen = false;
+let rightsOpen = false, filtersOpen = false;
 /* Recent results opens the list, so it starts closed: the question this
    page answers is what is on next, and history that arrived expanded
    would push tonight's game below the fold to say something nobody
@@ -7047,12 +7060,21 @@ function welcomeBanner(){
      everything but NHL   tap NHL off, exactly as before
 
    `hiddenComps` is untouched underneath — the same set, written the same
-   way — so an x= share link made before this existed still decodes. */
+   way — so an x= share link made before this existed still decodes.
+
+   The controls live inside one disclosure row now. A phone should not
+   spend two permanent lines on a setting that is changed occasionally,
+   but opening it still reveals the same multi-select choices. */
 function renderFilters(){
   const comps = myComps();
   if(comps.length<2) return "";
   const allHidden = comps.every(c=>hiddenComps.has(c));
-  return '<div class="filters"><span class="lbl">Competitions</span>'
+  const shown = comps.filter(c=>!hiddenComps.has(c)).length;
+  const state = allHidden ? "None showing" : shown===comps.length ? "All "+comps.length+" showing" : shown+" of "+comps.length+" showing";
+  return '<details class="filters"'+(filtersOpen?' open':'')+'><summary>'
+    + '<span class="lbl">Competitions</span><span class="filter-state">'+state+'</span>'
+    + '<span class="filter-action" aria-hidden="true"><span class="when-closed">Change</span><span class="when-open">Done</span></span>'
+    + '</summary><div class="filter-options">'
     + comps.map(c=>'<button class="fchip" data-comp="'+c+'" aria-pressed="'+(!hiddenComps.has(c))+'">'
         + '<i style="background:'+COMPS[c].color+'"></i>'+esc(COMPS[c].short)+'</button>').join("")
     /* A stable id, because the attribute below flips on every press and
@@ -7061,7 +7083,7 @@ function renderFilters(){
        because its own label changed. */
     + '<button class="fchip fchip-all" id="compsAll" data-comps-all="'+(allHidden ? "show" : "clear")+'">'
     + (allHidden ? "Show all" : "Clear all") + '</button>'
-    + '</div>';
+    + '</div></details>';
 }
 /* What the top-of-the-draw filter is doing, in one line, next to the
    control that undoes it.
@@ -7652,8 +7674,10 @@ function matchupLabel(g){
   const o = orderedTeams(g);
   return fullName(o.a) + " " + o.sep + " " + fullName(o.b);
 }
-/* Only a source-confirmed finish removes a game. An unresolved score
-   after its nominal start is not silently called finished. */
+/* Only a source-confirmed finish puts a game in the finished group. An
+   unresolved score after its nominal start is not silently called
+   finished. Finished items stay in today's rail; they move behind live
+   and upcoming events rather than disappearing. */
 function railFinished(g, now){
   if(g.event) return !!g.finishUtc && now > g.finishUtc;
   if(g.tennis) return !!TENNIS_SETTLED[g.match.status];
@@ -7662,6 +7686,12 @@ function railFinished(g, now){
     return st === "final" || st === "postponed" || st === "cancelled" || st === "abandoned";
   }
   return stateOf(g, now).status === "final";
+}
+function railState(g, now){
+  if(railFinished(g, now)) return "final";
+  if(g.event) return now >= g.start ? "live" : "upcoming";
+  if(g.tennis) return g.match.status==="live" || g.match.status==="suspended" ? "live" : "upcoming";
+  return stateOf(g, now).status === "live" ? "live" : "upcoming";
 }
 /* A start time is useful beside a matchup only when the source actually
    knows it. Status, score and coverage do not belong in this strip. */
@@ -7680,14 +7710,39 @@ function railTime(g, now){
    one, now between the page and the committed file.) */
 const setsWon = (m, i) => (m.setWins || []).filter(w => w === i).length;
 
+/* The rail is an agenda, not a second scoreboard: what needs attention
+   is first, what starts later follows, and completed events remain at
+   the back for the rest of the day. The newest final is closest to the
+   unfinished group. */
+function railCompare(a, b, now){
+  const rank = {live:0, upcoming:1, final:2};
+  const as=railState(a,now), bs=railState(b,now);
+  if(rank[as]!==rank[bs]) return rank[as]-rank[bs];
+  if(as==="final") return b.start-a.start;
+  if(as==="upcoming"){
+    const unknown=Number(railTime(a,now)==="")-Number(railTime(b,now)==="");
+    if(unknown) return unknown;
+  }
+  return a.start-b.start;
+}
+function railStateLabel(g, now){
+  const state=railState(g,now);
+  if(state==="live") return "Live";
+  if(state!=="final") return railTime(g,now);
+  if(g.event) return "Finished";
+  if(g.tennis) return (TENNIS_STATE[g.match.status]||TENNIS_STATE.unknown).text;
+  if(g.rugby && g.ru && g.ru.label) return g.ru.label;
+  return "Final";
+}
+
 function renderRail(now, todayKey){
   const el=document.getElementById("rail");
   const count=document.getElementById("railCount");
-  const today=myGames().filter(g=>localKey(g.start)===todayKey && !railFinished(g, now)
-    && (g.start > now - 4*3600000 || g.listed || g.espn));
-  /* Chronological is predictable; a live game naturally remains ahead
-     of the ones that have not started. Unknown start times go last. */
-  today.sort((a,b)=>Number(railTime(a,now)==="")-Number(railTime(b,now)==="")||a.start-b.start);
+  /* Competition filters shape the full schedule below, not this personal
+     agenda. A hidden league can still contain one of the teams, players
+     or races the viewer explicitly follows. */
+  const today=GAMES.filter(g=>isMine(g) && localKey(g.start)===todayKey);
+  today.sort((a,b)=>railCompare(a,b,now));
   count.textContent=today.length+" today";
   if(!today.length){
     const next=myGames().find(g=>g.start>now);
@@ -7705,10 +7760,10 @@ function renderRail(now, todayKey){
   el.innerHTML='<div class="rail-scroll">'+today.map(card).join("")+'</div>';
 }
 function railCard(g, now){
-  const label=matchupLabel(g), time=railTime(g, now);
-  return '<button class="rail-card" data-rail-game="'+esc(String(g.id))+'" aria-label="Jump to '+esc(label)+' in the schedule">'
+  const label=matchupLabel(g), state=railState(g,now), meta=railStateLabel(g,now);
+  return '<button class="rail-card" data-rail-game="'+esc(String(g.id))+'" aria-label="Jump to '+esc(label)+' in the schedule'+(meta?', '+esc(meta):'')+'">'
     + '<span>'+esc(label)+'</span>'
-    + (time?'<span class="rail-time"><span aria-hidden="true">&middot;</span> '+esc(time)+'</span>':'')
+    + (meta?'<span class="rail-time '+state+'"><span aria-hidden="true">&middot;</span> '+esc(meta)+'</span>':'')
     + '</button>';
 }
 
@@ -7902,6 +7957,8 @@ function render(){
   stg.setAttribute("aria-label", scoreLabel);
   const rt=document.querySelector(".rights");
   if(rt) rt.addEventListener("toggle",()=>{ rightsOpen=rt.open; });
+  const ft=document.querySelector(".filters");
+  if(ft) ft.addEventListener("toggle",()=>{ filtersOpen=ft.open; });
   const rc=document.querySelector(".races");
   if(rc) rc.addEventListener("toggle",()=>{ racesOpen=rc.open; LS.set(RACES_OPEN_KEY, rc.open); });
   const rs=document.querySelector(".results");
@@ -7946,7 +8003,13 @@ document.getElementById("rail").addEventListener("click",function(e){
   const item=e.target.closest("[data-rail-game]");
   if(!item) return;
   const id=item.getAttribute("data-rail-game");
-  if(view!=="list"){ view="list"; render(); }
+  /* The rail is intentionally independent of the competition filter.
+     If its destination is hidden, reveal that competition so the jump
+     cannot land on nothing. */
+  const game=GAMES.find(g=>String(g.id)===id);
+  const revealComp=!!(game && hiddenComps.has(game.comp));
+  if(revealComp){ hiddenComps.delete(game.comp); persist(); }
+  if(view!=="list" || revealComp){ view="list"; render(); }
   /* Wait until a calendar-to-list redraw has put the destination into
      the document, then center it below the sticky header. */
   requestAnimationFrame(()=>requestAnimationFrame(()=>{

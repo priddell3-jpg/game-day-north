@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import { loadFromPage } from "./helpers/page.mjs";
 
 /* The two things a reader can see go wrong when the leader is stale: the
-   lead is pinned to a stage it was never read after, and a finished
-   stage remains in What's on. Both are rendering decisions, so they are
-   asserted against the declarations the page actually ships. */
+   lead is pinned to a stage it was never read after, and a completed
+   stage is not recognised as finished for the rail's ordering. Both are
+   rendering decisions, so they are asserted against the declarations
+   the page actually ships. */
 
 const PRE = `
   const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -100,7 +101,7 @@ test("a cycling stage remains before its expected finish", () => {
   assert.equal(railFinished(stage(), day(9) + 2*HOUR), false);
 });
 
-test("a cycling stage leaves What's on after its expected finish", () => {
+test("a cycling stage enters the finished rail group after its expected finish", () => {
   for(const t of [6, 8, 12]){
     assert.equal(railFinished(stage(), day(9) + t*HOUR), true);
   }

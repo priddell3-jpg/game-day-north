@@ -1,80 +1,73 @@
-# Game Day North iOS header / What's on design QA
+# Game Day North What's On / competition disclosure design QA
 
 Date: 2026-09-09
 
 ## Visual truth
 
-- Pre-change iPhone Simulator capture: `/private/tmp/gdn-audit-ios-safe-area/01-current-simulator.png`
-- Selected implementation target: `/Users/patrick/.codex/generated_images/01a087cd-16f2-7d52-9b3f-0c488ab5eb5b/exec-18585deb-f526-4b8c-ade8-50d47721cece.png`
+- User's current iPhone baseline: `/Users/patrick/Desktop/Screenshot 2026-09-09 at 3.45.22 PM.png`
 - Implemented source: `src/page.html`
 - Built web output: `index.html`
 - Synced iOS web bundle: `ios/App/App/public/`
 
 ## Viewports and states checked
 
-- 390 × 844 responsive viewport, team picker open, live committed fixture data loaded.
-  Capture: `/private/tmp/gdn-qa-390-final.png`.
+- 390 × 844 responsive viewport, normal list state with the competition
+  disclosure collapsed. Capture: `/private/tmp/gdn-rail-390-final.png`.
+- 390 × 844 responsive viewport with the competition disclosure open.
+  Capture: `/private/tmp/gdn-filters-open-390.png`.
 - 320 × 844 narrow-phone viewport, normal list state.
-  Capture: `/private/tmp/gdn-320-final.png`.
-- Side-by-side target / implementation comparison:
-  `/private/tmp/gdn-comparison-final.png`.
+  Capture: `/private/tmp/gdn-rail-320-top.png`.
+- The supplied iPhone baseline and the 390 px implementation capture were
+  inspected together in the same comparison input.
 
-The browser reserves 15 px for its desktop scrollbar, so the measured content
-widths were 375 px and 305 px respectively. In both states the document scroll
-width equalled the content width: no horizontal page overflow. The What's on
-strip scrolls independently when its full matchup text needs more room.
+The in-app browser reserves 15 px for its scrollbar, so the measured page
+content widths were 375 px and 305 px. The document scroll width did not exceed
+either content width. The What's On strip has 901 px of content in a 347 px
+rail at 390 px, and in a 277 px rail at 320 px, confirming independent manual
+horizontal scrolling without horizontal page overflow.
 
 ## Visual comparison
 
-- The header keeps the existing Game Day North type, colours, controls and
-  compact two-row phone treatment.
-- The mobile padding no longer overrides the shared horizontal gutter.
-- `safe-area-inset-top`, `safe-area-inset-left` and `safe-area-inset-right` are
-  reserved in the shipped CSS for the iOS WebView.
-- “What's on” is on the light page surface above the dark strip.
-- The strip contains full matchup names and quiet, trustworthy times only.
-  It contains no scores, result status, league icon, carrier or service name.
-- Cycling labels are race name plus stage. A cycling time is omitted when the
-  source does not know it.
-- The selected mock shows three illustrative fixtures. The live fixture data
-  had one unfinished followed fixture by the end of QA; finished fixtures were
-  correctly absent rather than retained to mimic the mock.
-- Browser screenshots do not expose an iOS native safe-area inset. The final
-  Dynamic Island spacing therefore still needs one native Xcode run after the
-  synced web assets are picked up.
+- The header retains the existing Game Day North identity and compact two-row
+  control treatment, while staying legible at 320 px.
+- The What's On label remains on the light surface and the swipe rail remains a
+  single, compact dark band.
+- Rail items show matchup names and one quiet state label only: start time,
+  Live, or Final/finished. They do not duplicate scores, carrier names, service
+  names, competition icons, or team badges.
+- Cycling uses the existing race name plus stage label.
+- The permanently expanded competition chips from the baseline are replaced by
+  one compact `Competitions / All 7 showing / Change` row. Opening it exposes
+  the same multi-select chips and clear/show-all control.
+- The compact row gives the schedule more room while keeping competition
+  filtering discoverable. Border, radius, colour, type and spacing continue to
+  use the app's existing visual system.
 
-## Interaction and accessibility checks
+## Behaviour and interaction checks
 
-- My teams opens the team picker and preserves the existing selection count.
-- List and Calendar continue to switch views and update pressed state.
-- A What's on item switches Calendar back to List when needed, scrolls to the
-  matching full schedule row, moves programmatic focus there and briefly
-  highlights it.
-- The 390 px jump test focused the exact matching `data-game-id` row.
-- Each strip item has a descriptive “Jump to … in the schedule” accessible
-  name.
+- Today's personal events remain in the rail after completion. Ordering is Live
+  first, upcoming chronologically next, then finished events with the most
+  recently finished closest to the unfinished group.
+- The count reports all personal events happening today, not only live events.
+- The rail is based on the user's followed schedule and is independent of the
+  temporary competition filter.
+- Hiding MLS removed MLS rows from the schedule but left the followed MLS rail
+  item visible. Tapping that rail item restored MLS, jumped to the exact game
+  row, moved focus there and applied the brief highlight.
+- List/Calendar, score visibility, team selection, service selection and the
+  existing competition multi-select remain operational.
+- Competition open/closed state is preserved while the list rerenders.
 - Browser console warnings/errors: none.
 
-## Iteration history
+## Build verification
 
-1. Replaced the duplicate score cards with a names-and-times strip.
-2. Moved the What's on label outside the dark strip.
-3. Added iOS safe-area padding and restored horizontal gutters erased by the
-   former mobile padding shorthand.
-4. Tightened vertical header spacing.
-5. Compressed the 320 px controls and removed the segment's auto margin so the
-   Services control stays on the second row.
-6. Hid the rail scrollbar while retaining touch/trackpad horizontal scrolling.
-
-## Verification status
-
-- Automated tests: 870 passed, 0 failed.
+- Automated tests: 875 passed, 0 failed.
 - Web build: passed.
 - Capacitor iOS asset build/sync: passed.
-- Responsive browser comparison and interactions: passed.
-- Updated native simulator capture: pending. The command-line environment
-  cannot reach CoreSimulatorService / SwiftPM's nested sandbox; Xcode itself is
-  already open and can run the synced build.
+- Built web `dist/index.html` and bundled iOS `public/index.html`: byte-for-byte
+  identical.
+- Responsive visual comparison and interaction checks: passed.
+- The final native Dynamic Island/safe-area check should be done by pressing Run
+  in the already-open Xcode project; the shipped safe-area CSS is unchanged.
 
-final result: blocked — final native safe-area confirmation requires pressing
-Run in Xcode and checking the refreshed iPhone 17 Pro simulator screen.
+final result: passed
