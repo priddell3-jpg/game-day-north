@@ -548,6 +548,22 @@ python3 -m http.server 8000
 
 The one piece of server is `api/tennis.js`, a Vercel function — see the tennis section above for why. Everything else still works with the page opened from a file: without it, tennis rows simply never appear. `api/package.json` exists only to mark that directory as ESM, so `build.js` stays a plain CommonJS script.
 
+### iOS
+
+The iOS app uses Capacitor 8 and requires Node 22 or newer plus Xcode 26 or newer. Its application shell is always the locally bundled `dist/` build; `capacitor.config.json` deliberately has no `server.url`.
+
+```bash
+npm ci
+npm run ios:sync
+npm run ios:open
+```
+
+`npm run ios:sync` rebuilds the ordinary root `index.html`, stages that page, the current `data.json`, the local fonts and the native bridge in `dist/`, then copies them into the Xcode project. The project is `ios/App/App.xcodeproj`.
+
+On iOS, `data.json` refreshes from `https://game-day-north.vercel.app/data.json`. A validated response replaces the last-known-good copy in the app's Library directory. If that request fails, the app opens the saved copy; if there is no saved copy yet, it opens the snapshot bundled with the app. The page always displays the source and the payload's own `generated` freshness. ESPN and World Rugby JSON requests use Capacitor's native HTTP API, so the `capacitor://localhost` WebView does not depend on cross-origin browser permissions. External web links open through the system browser.
+
+Preferences keep their existing `gdn.*` localStorage keys under Capacitor's stable local origin. Share links retain the same hash format and use the public Game Day North URL rather than a local `capacitor://` address.
+
 ### GitHub Pages
 
 Settings → Pages → deploy from `main`, folder `/ (root)`. `index.html` is committed, so it serves as-is.
