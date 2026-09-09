@@ -79,9 +79,6 @@ const ROSTER = [
 ["mtl-mls","MLS","CF Montreal"],["lafc","MLS","LAFC"],
 ["mia","MLS","Inter Miami CF"],["sou","MLS","Seattle Sounders FC"]
 ];
-/* Clubs that enter competitions beyond their own league. */
-const EXTRA = { EPL:["EFL","FAC","UCL"], LALIGA:["UCL"], BUNDES:["UCL"], LIGUE1:["UCL"], SERIEA:["UCL"] };
-
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
 /* Match on the name, and on the name minus a club suffix. ESPN says
    "Vancouver Whitecaps" where the roster said "Vancouver Whitecaps FC",
@@ -382,8 +379,16 @@ function add(f){
   fixtures[i] = merge(fixtures[i], f);
 }
 
+/* Every competition worth asking about: each club's own league, plus the
+   cups and continental competitions it enters. Declared per club in the
+   manifest rather than per league, because at twenty clubs a league that
+   is what it actually is — Liverpool enter the Champions League and
+   Newcastle do not. */
 const comps = new Set();
-ROSTER.forEach(([,comp])=>{ comps.add(comp); (EXTRA[comp]||[]).forEach(c=>comps.add(c)); });
+for(const t of TEAMS.teams){
+  comps.add(t.comp);
+  (t.extraComps || []).forEach(c => comps.add(c));
+}
 
 console.log("Building fixtures for " + ROSTER.length + " teams across " + comps.size + " competitions");
 
