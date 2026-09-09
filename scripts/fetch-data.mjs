@@ -30,8 +30,8 @@ import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
 import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
          STANDINGS_HOLD } from "./lib/race.mjs";
-import { MAX_LIMIT, planRanges, splitRange, dateKey,
-         compFloorProblems, describeFloor } from "./lib/fetch-plan.mjs";
+import { MAX_LIMIT, planRanges, splitRange, dateKey, compFloorProblems, describeFloor,
+         nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const PATHS = {
@@ -113,6 +113,20 @@ function idFor(displayName){
   return NAME_TO_ID.get(bare) || null;
 }
 
+/* A 404 and an outage are different answers and must stop looking alike.
+
+   get() returned null for both: routine, out-of-season 404s and requests
+   that failed twice. That was survivable while one request covered one
+   day of one league. It is not survivable now that one request covers a
+   league's entire window — a single hard failure is a whole competition
+   missing, and the caller could not tell that from a competition that is
+   simply out of season.
+
+   So a 404 still answers null, meaning "asked, and there is nothing",
+   and a hard failure answers FAILED, meaning "never got an answer". The
+   distinction is a fact the build already had and was throwing away. */
+const FAILED = Symbol("fetch failed");
+
 let calls = 0, failures = 0, consecutive = 0, ok = 0;
 async function get(url){
   calls++;
@@ -133,7 +147,7 @@ async function get(url){
       if(attempt === 1){
         failures++; consecutive++;
         console.warn("  ! " + url.replace(ESPN,"") + " — " + err.message);
-        return null;
+        return FAILED;
       }
       await new Promise(r=>setTimeout(r, 700));
     }
@@ -163,6 +177,15 @@ async function scoreboardRange(comp, path, fromMs, toMs, out){
     const url = ESPN + path + "/scoreboard?dates=" + fromKey + "-" + toKey + "&limit=" + MAX_LIMIT;
     const r = await get(url);
     asked++;
+    /* Fatal, and deliberately so. This request is the competition's
+       whole window; carrying on would publish a file with a league
+       silently missing, which the count floor would then have to infer
+       from arithmetic. The build already knows. */
+    if(r === FAILED){
+      throw new Error(comp + " " + fromKey + "-" + toKey + " could not be fetched. That request "
+        + "is the competition's entire window, so continuing would publish a file with "
+        + comp + " missing.");
+    }
     const events = ((r || {}).events) || [];
     if(events.length >= MAX_LIMIT){
       const halves = splitRange(a, b);
@@ -178,16 +201,10 @@ async function scoreboardRange(comp, path, fromMs, toMs, out){
       continue;
     }
     for(const ev of events){
-      /* Preseason is dropped deliberately.
-
-         The ranged scoreboard returns it and the per-team schedules did
-         not, so taking everything would quietly add exhibition hockey to
-         people's boards. That matters here for one reason: the rights
-         table keys on competition, so a preseason game would be told it
-         is on Sportsnet on a Saturday because the regular season is.
-         That is a carriage claim nothing sourced, which is the one thing
-         this app does not do. Regular season and post-season only. */
-      if((ev.season || {}).slug === "preseason"){ preseasonSkipped++; continue; }
+      /* Preseason is dropped deliberately, and the reasoning lives with
+         the filter in scripts/lib/fetch-plan.mjs rather than here, so it
+         is one line to revisit rather than archaeology. */
+      if(!isCarriedSeason(ev)){ preseasonSkipped++; continue; }
       out(parseEvent(ev, comp));
     }
   }
@@ -440,7 +457,9 @@ if(summaryCapped){
 let toppedUp = 0;
 for(const f of stale.slice(0, SUMMARY_CAP)){
   const r = await get(ESPN + PATHS[f.comp] + "/summary?event=" + encodeURIComponent(f.eid));
-  if(applySummary(f, parseSummary(r, f.comp))) toppedUp++;
+  /* One unreachable summary is one fixture keeping what the scoreboard
+     gave it, which is the behaviour this top-up already degrades to. */
+  if(r !== FAILED && applySummary(f, parseSummary(r, f.comp))) toppedUp++;
 }
 if(stale.length){
   console.log("Summary top-up: " + toppedUp + " of " +
@@ -731,7 +750,12 @@ for(const [compId, cfg] of Object.entries(RUGBY_COMPS)){
       rugbySourceErrors.push("ESPN " + compId + " " + year + ": " + (err && err.message || err));
       continue;
     }
-    if(r === null) continue;                    // 404 or a failure already warned
+    /* Both mean nothing was added, and neither may mark the competition
+       as reached: a 404 is a league with no fixtures published for that
+       year, and FAILED is a request that never answered. Recorded apart
+       further down, where "asked and got nothing" and "never got an
+       answer" are reported as the different claims they are. */
+    if(r === null || r === FAILED) continue;
     reached = true;
     for(const ev of r.events || []){
       const f = fromEspnEvent(ev, compId, rugbyReject);
@@ -880,6 +904,10 @@ for(const src of RACE_SOURCES){
   let payload = null;
   try{ payload = await get(src.url); }
   catch(err){ payload = null; }
+  /* Standings are not fatal: a source that cannot be reached falls
+     through to the group held from a previous run, and the page draws
+     nothing rather than a card if there is none. */
+  if(payload === FAILED) payload = null;
   const fresh = payload ? groupsFrom(payload, {comp:src.comp, kind:src.kind, idFor,
     groupFor: node => groupIdFor(src, node)}) : [];
   if(fresh.length){
@@ -960,8 +988,14 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
    `counts.byComp` is already written every run, which makes the previous
    file the reference. A competition that had a real number of fixtures
    and now has none did not have a quiet week. */
-const floorProblems = compFloorProblems(
-  (previous && previous.counts && previous.counts.byComp) || null, byComp);
+const prevCounts = (previous && previous.counts) || {};
+/* The peak each competition has reached, and when. Reading only the
+   previous run leaves a season-wide hole: baseball decays to nothing
+   over the winter, so by March there is no MLB in the previous run at
+   all, and a competition absent from it was never checked again. */
+const peaks = nextPeaks(prevCounts.peakByComp, byComp, now);
+const floorProblems = compFloorProblems(prevCounts.byComp || null, byComp,
+  { vanishBaseline: vanishBaseline(prevCounts.byComp, prevCounts.peakByComp, now) });
 if(floorProblems.length){
   console.error("A competition collapsed between runs — keeping the existing file:");
   console.error(describeFloor(floorProblems));
@@ -1012,7 +1046,11 @@ const out = {
             /* Named so the page never has to infer why a race is absent,
                and so a source that quietly stopped answering is visible
                in the file rather than only in a log nobody reads. */
-            standingsUnavailable },
+            standingsUnavailable,
+            /* Carried run to run so a competition that has been absent
+               for a while is still guarded. Lapses on its own, so a
+               season that genuinely ended stops guarding. */
+            peakByComp: peaks },
   fixtures,
   cycling: cyclingOut,
   rugby: rugbyOut,

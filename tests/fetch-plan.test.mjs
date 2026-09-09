@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   MAX_LIMIT, SAFE_PER_REQUEST, EXPECTED_PER_DAY, chunkDaysFor, planRanges, splitRange, dateKey,
-  FLOOR_MIN, FLOOR_FRACTION, compFloorProblems, describeFloor
+  FLOOR_MIN, FLOOR_FRACTION, compFloorProblems, describeFloor,
+  PEAK_TTL_DAYS, nextPeaks, vanishBaseline,
+  isCarriedSeason, CARRIED_SEASON_SLUGS, EXCLUDED_SEASON_SLUGS
 } from "../scripts/lib/fetch-plan.mjs";
 
 const DAY = 86400000;
@@ -128,7 +130,7 @@ test("the build actually consults the floor before it writes", () => {
   const guard = BUILD.indexOf("compFloorProblems(");
   const write = BUILD.indexOf("writeFileSync(new URL(\"../data.json\"");
   assert.ok(guard > 0 && write > guard, "the guard has to run before the file is replaced");
-  assert.match(BUILD, /previous\.counts\.byComp/, "and it reads what the previous run recorded");
+  assert.match(BUILD, /prevCounts\.byComp/, "and it reads what the previous run recorded");
 });
 
 /* ============ the loops this replaced ============ */
@@ -140,12 +142,29 @@ test("the per-team schedule loop is gone", () => {
   assert.match(BUILD, /scoreboardRange\(comp, PATHS\[comp\]/);
 });
 
-test("preseason is dropped on purpose, and says why", () => {
-  /* The ranged scoreboard returns it where the per-team schedules did
-     not. Keeping it would hand exhibition games the regular season's
-     carriage rules, which is a claim nothing sourced. */
-  assert.match(BUILD, /slug === "preseason"/);
-  assert.match(BUILD, /carriage claim nothing sourced/);
+test("preseason is excluded, and the reason is written down with the filter", () => {
+  /* A named decision rather than a side-effect of changing the fetch.
+     The ranged scoreboard returns preseason where the per-team schedules
+     did not, and keeping it would hand exhibition games the regular
+     season's carriage rules — a claim nothing sourced, about a game that
+     may not be televised at all. */
+  assert.equal(isCarriedSeason({ season: { slug: "preseason" } }), false);
+  assert.equal(isCarriedSeason({ season: { slug: "regular-season" } }), true);
+  assert.equal(isCarriedSeason({ season: { slug: "post-season" } }), true,
+    "playoffs are the point of a season, not an exhibition");
+  assert.deepEqual(EXCLUDED_SEASON_SLUGS, ["preseason"], "one slug, and it is this one");
+  for(const slug of CARRIED_SEASON_SLUGS) assert.ok(isCarriedSeason({ season: { slug } }), slug);
+
+  /* Soccer states no slug at all, and absence of a label is not evidence
+     of an exhibition. */
+  assert.equal(isCarriedSeason({}), true);
+  assert.equal(isCarriedSeason({ season: {} }), true);
+  assert.equal(isCarriedSeason(null), true);
+
+  const src = readFileSync(new URL("../scripts/lib/fetch-plan.mjs", import.meta.url), "utf8");
+  assert.match(src, /carriage claim nothing sourced/, "the reason must live with the filter");
+  assert.match(src, /this is\s*\n?\s*the line to change/, "and say how to revisit it");
+  assert.match(BUILD, /isCarriedSeason\(ev\)/, "the build calls the named filter");
 });
 
 test("the summary cap is sized for the roster it will meet", () => {
@@ -153,4 +172,94 @@ test("the summary cap is sized for the roster it will meet", () => {
   assert.ok(m, "SUMMARY_CAP must exist");
   assert.ok(Number(m[1]) >= 100, "measured peak is 25 starts in a build window, plus stragglers");
   assert.match(BUILD, /summaryCapped/, "and the shortfall is recorded in the file, not only warned");
+});
+
+/* ============ the season-wide hole in the floor ============ */
+
+const iso = ms => new Date(ms).toISOString();
+const NOW = Date.parse("2026-09-09T12:00:00Z");
+const daysAgo = n => NOW - n*DAY;
+
+test("a competition missing from the previous run is still guarded", () => {
+  /* The failure worked through: baseball decays to nothing over the
+     winter, so by March the previous run holds no MLB. Reading only the
+     previous run, a failed first request in March ships a whole season
+     opening with no baseball and nothing fires. */
+  const previous = { NHL: 600, NBA: 620 };                 // March: no MLB at all
+  const peaks = { MLB: { n: 400, at: iso(daysAgo(20)) }, NHL: { n: 613, at: iso(daysAgo(2)) } };
+  assert.deepEqual(compFloorProblems(previous, { NHL: 600, NBA: 620 }), [],
+    "reading only the previous run, nothing fires");
+
+  const withPeak = compFloorProblems(previous, { NHL: 600, NBA: 620 },
+    { vanishBaseline: vanishBaseline(previous, peaks, NOW) });
+  assert.equal(withPeak.length, 1);
+  assert.equal(withPeak[0].comp, "MLB");
+  assert.equal(withPeak[0].why, "vanished");
+});
+
+test("a peak lapses, so a season that really ended stops guarding", () => {
+  const peaks = { MLB: { n: 400, at: iso(daysAgo(PEAK_TTL_DAYS + 5)) } };
+  assert.deepEqual(compFloorProblems({}, {}, { vanishBaseline: vanishBaseline({}, peaks, NOW) }), [],
+    "a peak older than its lifetime guards nothing");
+  const fresh = { MLB: { n: 400, at: iso(daysAgo(PEAK_TTL_DAYS - 5)) } };
+  assert.equal(compFloorProblems({}, {}, { vanishBaseline: vanishBaseline({}, fresh, NOW) }).length, 1);
+  /* An unreadable timestamp is not treated as fresh. */
+  assert.deepEqual(vanishBaseline({}, { MLB: { n: 400, at: "whenever" } }, NOW), {});
+});
+
+test("a season running down is judged against the previous run, not the peak", () => {
+  /* Collapsing is the one check that must not see the peak: a league
+     shedding fixtures as its season ends would otherwise be called an
+     outage every autumn. */
+  const peaks = { MLB: { n: 400, at: iso(daysAgo(3)) } };
+  const base = { vanishBaseline: vanishBaseline({ MLB: 120 }, peaks, NOW) };
+  assert.deepEqual(compFloorProblems({ MLB: 120 }, { MLB: 110 }, base), [],
+    "110 is nowhere near the peak of 400 and that is fine");
+  assert.equal(compFloorProblems({ MLB: 120 }, { MLB: 30 }, base).length, 1,
+    "a cliff between two runs is still a cliff");
+});
+
+test("the peak is set on a new high and otherwise keeps its date", () => {
+  const first = nextPeaks({}, { NHL: 400 }, daysAgo(10));
+  assert.equal(first.NHL.n, 400);
+  assert.equal(first.NHL.at, iso(daysAgo(10)));
+
+  const higher = nextPeaks(first, { NHL: 613 }, NOW);
+  assert.equal(higher.NHL.n, 613);
+  assert.equal(higher.NHL.at, iso(NOW), "a new high refreshes the date");
+
+  const lower = nextPeaks(higher, { NHL: 200 }, NOW + DAY);
+  assert.equal(lower.NHL.n, 613);
+  assert.equal(lower.NHL.at, iso(NOW), "a decline must NOT refresh it, or it never lapses");
+
+  const absent = nextPeaks(higher, { NBA: 10 }, NOW + DAY);
+  assert.equal(absent.NHL.n, 613, "a competition with no fixtures keeps the peak it had");
+  assert.equal(absent.NBA.n, 10);
+  assert.ok(!("n" in (nextPeaks({}, { FAC: 0 }, NOW).FAC || {})), "zero never sets a peak");
+});
+
+test("the build carries the peaks in the file it writes", () => {
+  assert.match(BUILD, /peakByComp: peaks/, "recorded, or the next run has nothing to read");
+  assert.match(BUILD, /nextPeaks\(prevCounts\.peakByComp, byComp, now\)/);
+  assert.match(BUILD, /vanishBaseline\(prevCounts\.byComp, prevCounts\.peakByComp, now\)/);
+});
+
+/* ============ a failed request is not an empty competition ============ */
+
+test("the build tells a 404 apart from an outage, and dies on the outage", () => {
+  assert.match(BUILD, /const FAILED = Symbol\("fetch failed"\)/);
+  assert.match(BUILD, /return FAILED;/, "a hard failure answers with the sentinel");
+  assert.match(BUILD, /if\(res\.status === 404\)\{ ok\+\+; consecutive = 0; return null; \}/,
+    "a 404 still means asked-and-there-is-nothing");
+  assert.match(BUILD, /if\(r === FAILED\)\{\s*\n\s*throw new Error\(comp/,
+    "a ranged fixture request that failed is fatal");
+  assert.match(BUILD, /is the competition's entire window/);
+});
+
+test("the other three call sites handle the sentinel deliberately", () => {
+  assert.match(BUILD, /if\(r === null \|\| r === FAILED\) continue;/,
+    "rugby must not mark a competition reached because a request failed");
+  assert.match(BUILD, /if\(r !== FAILED && applySummary/, "an unreachable summary tops nothing up");
+  assert.match(BUILD, /if\(payload === FAILED\) payload = null;/,
+    "standings fall through to what was held, as before");
 });
