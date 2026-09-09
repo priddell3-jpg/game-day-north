@@ -123,7 +123,7 @@ test("no table is filtered down to the clubs anyone follows", () => {
 
 /* ================= the page side ================= */
 
-const RECORD_NAMES = ["attachTables","tablePlayed","rowPlayed","recordFor","recordLine","recordText","ordinal","ORDINALS","shortScope"];
+const RECORD_NAMES = ["attachTables","tablePlayed","rowPlayed","recordFor","recordLine","recordText","ordinal","ORDINALS","shortScope","REC_ORDER","REC_ORDER_DEFAULT"];
 const RECORD_PREAMBLE = `let TABLES = [], RECORDS = new Map();\n`;
 const model = () => loadFromPage(RECORD_NAMES, RECORD_PREAMBLE);
 
@@ -137,43 +137,142 @@ const EPL_TABLE = {comp:"EPL", group:"table", scope:"2026-27 English Premier Lea
   {id:"ars", name:"Arsenal", pts:7, w:2, d:1, l:0, gp:3, pos:3}]};
 const UCL_TABLE = {comp:"UCL", group:"league", scope:"League Phase", kind:"table", rows:[
   {id:"mci", name:"Manchester City", pts:3, w:1, d:0, l:0, gp:1, pos:12}]};
+/* Two conferences, so the scope IS shown — and MLS writes a record the
+   North American way round, which no other league in a "table" does. */
+const MLS_EAST = {comp:"MLS", group:"eastern-conference", scope:"Eastern Conference", kind:"table",
+  rows:[{id:"tfc", name:"Toronto FC", pts:26, w:5, d:11, l:7, gp:23, pos:11}]};
+const MLS_WEST = {comp:"MLS", group:"western-conference", scope:"Western Conference", kind:"table",
+  rows:[{id:"van-mls", name:"Vancouver Whitecaps", pts:43, w:13, d:4, l:5, gp:22, pos:1}]};
 
-test("a record renders for a club in a North American division and for one in a soccer table", () => {
+test("every competition on the board reads as a record, in its own order", () => {
+  /* The four shapes, all of which disagree with each other. */
   const m = model();
-  m.attachTables([NHL_TABLE, NHL_OTHER, EPL_TABLE]);
+  m.attachTables([NHL_TABLE, NHL_OTHER, EPL_TABLE, MLS_EAST, MLS_WEST]);
+
   /* Hockey keeps a point for an overtime loss, so the third number is
      part of the record rather than a tie count. */
   assert.equal(m.recordLine({id:"tor"}, "NHL"), "12-4-2 · 1st in the Atlantic");
   assert.equal(m.recordLine({id:"van"}, "NHL"), "8-8-3 · 4th in the Pacific");
-  /* One league table needs no scope: "1st" can only mean one thing. */
-  assert.equal(m.recordLine({id:"mci"}, "EPL"), "9 pts · 1st");
-  assert.equal(m.recordLine({id:"ars"}, "EPL"), "7 pts · 3rd");
+
+  /* European soccer: won, drawn, lost. One league table needs no scope,
+     because "1st" can only mean one thing. */
+  assert.equal(m.recordLine({id:"mci"}, "EPL"), "3-0-0 · 1st");
+  assert.equal(m.recordLine({id:"ars"}, "EPL"), "2-1-0 · 3rd");
+
+  /* MLS: won, lost, drawn, the way MLS writes it — and with the
+     conference, because MLS has two groups where the Premier League has
+     one. Thirteen wins, five defeats, four draws. */
+  assert.equal(m.recordLine({id:"van-mls"}, "MLS"), "13-5-4 · 1st in the West");
+  assert.equal(m.recordLine({id:"tfc"}, "MLS"), "5-7-11 · 11th in the East");
 });
 
-test("soccer reads points and a table position, North America reads wins and losses", () => {
+test("points are not a record and are no longer shown as one", () => {
   const m = model();
-  assert.equal(m.recordText({pts:1}, {kind:"table"}), "1 pt", "one point is not one points");
-  assert.equal(m.recordText({pts:0}, {kind:"table"}), "0 pts");
-  assert.equal(m.recordText({w:9, l:7}, {kind:"division"}), "9-7", "no third number where none is published");
-  assert.equal(m.recordText({w:9, l:7, d:1}, {kind:"division"}), "9-7-1", "football ties, when there are any");
-  assert.equal(m.recordText({w:9, l:7, d:0}, {kind:"division"}), "9-7", "and not when there are none");
-  assert.equal(m.recordText({w:9, l:7, otl:2}, {kind:"division"}), "9-7-2");
+  m.attachTables([EPL_TABLE, MLS_WEST]);
+  for(const line of [m.recordLine({id:"mci"}, "EPL"), m.recordLine({id:"van-mls"}, "MLS")]){
+    assert.doesNotMatch(line, /pts?\b/, "a points total is a standings figure, got: " + line);
+  }
+});
+
+test("whether the group is named depends on how many there are, not on the kind", () => {
+  /* MLS and the Premier League are both kind "table". A rule keyed on
+     kind would strip "in the West", which is the part that was right. */
+  const m = model();
+  m.attachTables([EPL_TABLE, MLS_EAST, MLS_WEST, NHL_TABLE, NHL_OTHER]);
+  assert.match(m.recordLine({id:"van-mls"}, "MLS"), / in the West$/, "two conferences");
+  assert.match(m.recordLine({id:"tor"}, "NHL"), / in the Atlantic$/, "several divisions");
+  assert.equal(m.recordLine({id:"mci"}, "EPL"), "3-0-0 · 1st", "one table, so no scope");
+
+  /* And the Champions League league phase is one table too, whatever its
+     scope happens to be called. */
+  const n = model();
+  n.attachTables([UCL_TABLE]);
+  assert.equal(n.recordLine({id:"mci"}, "UCL"), "1-0-0 · 12th");
+});
+
+test("the third figure appears only where the sport has one", () => {
+  const m = model();
+  /* Baseball and basketball: two numbers. "86-0-58" would be a nought
+     nobody can play for. */
+  assert.equal(m.recordText({w:86, l:58, d:0}, {kind:"division", comp:"MLB"}), "86-58");
+  assert.equal(m.recordText({w:9, l:7}, {kind:"division", comp:"NBA"}), "9-7");
+  /* Football ties happen, and are shown when they do. */
+  assert.equal(m.recordText({w:9, l:7, d:1}, {kind:"division", comp:"NFL"}), "9-7-1");
+  assert.equal(m.recordText({w:9, l:7, d:0}, {kind:"division", comp:"NFL"}), "9-7");
+  /* Hockey's overtime loss is always part of the record, zero included:
+     12-4 and 12-4-0 are not the same claim. */
+  assert.equal(m.recordText({w:9, l:7, otl:2}, {kind:"division", comp:"NHL"}), "9-7-2");
+  assert.equal(m.recordText({w:9, l:7, otl:0}, {kind:"division", comp:"NHL"}), "9-7-0");
+  /* A league table is three numbers and always three: a club with no
+     draws has drawn none, which is a fact about their season. */
+  assert.equal(m.recordText({w:1, d:0, l:0, pts:3}, {kind:"table", comp:"UCL"}), "1-0-0");
+  assert.equal(m.recordText({w:13, d:4, l:5, pts:43}, {kind:"table", comp:"MLS"}), "13-5-4");
+  assert.equal(m.recordText({w:13, d:4, l:5, pts:43}, {kind:"table", comp:"EPL"}), "13-4-5");
   /* Nothing is composed from figures the source did not publish. The NBA
      publishes no `overall` string at all, which is why the two numbers
      are read directly — but if even those are missing, so is the
      record. */
-  assert.equal(m.recordText({w:9}, {kind:"division"}), null);
-  assert.equal(m.recordText({}, {kind:"table"}), null);
+  assert.equal(m.recordText({w:9}, {kind:"division", comp:"NBA"}), null);
+  assert.equal(m.recordText({}, {kind:"table", comp:"EPL"}), null);
+  assert.equal(m.recordText({w:3, l:0, pts:9}, {kind:"table", comp:"EPL"}), null,
+    "a table row with no draw count is not a record we can write");
+});
+
+test("MLS is written the way MLS writes it, which is not the way ESPN does", () => {
+  /* ESPN publishes `overall` as won-drawn-lost for MLS and for Europe
+     alike: Chicago Fire arrives as "11-5-6" against 11 wins, 5 draws and
+     6 defeats, and 3x11+5 is the 38 points beside it. So passing the
+     published string through would put a Whitecaps line in European
+     order. The figures are composed here instead, and only the order
+     differs — never the numbers. */
+  const m = model();
+  const row = {w:13, d:4, l:5, pts:43};
+  assert.equal(m.recordText(row, {kind:"table", comp:"MLS"}), "13-5-4", "13 won, 5 lost, 4 drawn");
+  assert.equal(m.recordText(row, {kind:"table", comp:"EPL"}), "13-4-5", "13 won, 4 drawn, 5 lost");
+  assert.deepEqual(m.REC_ORDER.MLS, ["w", "l", "d"]);
+  assert.deepEqual(m.REC_ORDER_DEFAULT, ["w", "d", "l"]);
+  /* Every other soccer competition the app carries takes the default. */
+  for(const comp of ["EPL", "LALIGA", "SERIEA", "BUNDES", "LIGUE1", "UCL", "EFL", "FAC"])
+    assert.equal(m.REC_ORDER[comp], undefined, comp + " is written won-drawn-lost");
 });
 
 test("a cup tie shows the club's league record, not its record in the cup", () => {
   const m = model();
   m.attachTables([EPL_TABLE, UCL_TABLE]);
-  assert.equal(m.recordLine({id:"mci"}, "UCL"), "3 pts · 12th", "in the Champions League, the league phase");
-  assert.equal(m.recordLine({id:"mci"}, "EPL"), "9 pts · 1st");
-  /* An EFL Cup tie has no table of its own, so it falls back to the
-     club's league rather than showing nothing. */
-  assert.equal(m.recordLine({id:"mci"}, "EFL"), "9 pts · 1st");
+  assert.equal(m.recordLine({id:"mci"}, "UCL"), "1-0-0 · 12th", "in the Champions League, the league phase");
+  assert.equal(m.recordLine({id:"mci"}, "EPL"), "3-0-0 · 1st");
+  /* A League Cup tie has no table of its own, so a club that HAS a
+     league table here falls back to it. Most cup clubs do not — see the
+     test below. */
+  assert.equal(m.recordLine({id:"mci"}, "EFL"), "3-0-0 · 1st");
+});
+
+/* ---- the League Cup, where half a row often has no record ---- */
+
+test("a cup row with a record on one side or neither reads as a finished row", () => {
+  /* Most League Cup ties pair a club this app carries a table for with
+     one it does not. A row is not broken because half of it has nothing
+     to say — there is no empty element, no stray separator, and no
+     placeholder standing in for a figure nobody published. */
+  const p = rowHarness([SCHEDULED_ONLY]);
+  const known = {id:"tor", home:"NHL", city:"Toronto", name:"Maple Leafs"};
+  /* A soccer club's name is the whole name — fullName drops the city
+     for a soccer competition rather than prefixing it. */
+  const unknown = {id:"lin", home:"EFL", city:"Lincoln City", name:"Lincoln City"};
+  const oneSide = p.gameRow({id:"cup1", comp:"EFL", start: NOW + 86400000,
+    home: known, away: unknown, stage:"", listed:true, espn:true, fromFeed:true,
+    moved:null, venue:null, result:{status:"scheduled", label:"", score:null}}, NOW);
+  assert.equal((oneSide.match(/class="g-rec"/g) || []).length, 1, "one record, for the side that has one");
+  assert.doesNotMatch(oneSide, /class="g-rec"><\/span>/, "and no empty one for the side that does not");
+  assert.match(oneSide, /Lincoln City/, "the club is still named");
+
+  const neither = p.gameRow({id:"cup2", comp:"EFL", start: NOW + 86400000,
+    home: unknown, away: {id:"mid", home:"EFL", city:"Middlesbrough", name:""},
+    stage:"", listed:true, espn:true, fromFeed:true, moved:null, venue:null,
+    result:{status:"scheduled", label:"", score:null}}, NOW);
+  assert.doesNotMatch(neither, /g-rec/, "no record on either side is a complete row, not a broken one");
+  assert.match(neither, /g-side/, "the sides are still there");
+  assert.match(neither, /class="at"/, "and so is the separator between them");
 });
 
 test("a club with no row anywhere renders nothing, and asking about one throws nothing", () => {
@@ -213,7 +312,7 @@ test("a club that has not played yet has no record, even in a table that has sta
   m.attachTables([{comp:"UCL", group:"league", scope:"League Phase", kind:"table", rows:[
     {id:"mci", name:"Manchester City", pts:3, w:1, d:0, l:0, gp:1, pos:1},
     {id:"liv", name:"Liverpool", pts:0, w:0, d:0, l:0, gp:0, pos:17}]}]);
-  assert.equal(m.recordLine({id:"mci"}, "UCL"), "3 pts · 1st", "a club that has played has one");
+  assert.equal(m.recordLine({id:"mci"}, "UCL"), "1-0-0 · 1st", "a club that has played has one");
   assert.equal(m.recordLine({id:"liv"}, "UCL"), null);
   /* And nothing is borrowed from the club's league table to fill the
      gap: a Premier League figure on a row labelled Champions League
@@ -222,7 +321,7 @@ test("a club that has not played yet has no record, even in a table that has sta
     rows:[{id:"mci", name:"Manchester City", pts:3, w:1, gp:1, l:0, pos:1},
           {id:"ars", name:"Arsenal", pts:0, w:0, d:0, l:0, gp:0, pos:20}]}]);
   assert.equal(m.recordLine({id:"ars"}, "UCL"), null, "not Arsenal's Premier League line");
-  assert.equal(m.recordLine({id:"ars"}, "EPL"), "7 pts · 3rd", "which is still right on a league row");
+  assert.equal(m.recordLine({id:"ars"}, "EPL"), "2-1-0 · 3rd", "which is still right on a league row");
 });
 
 test("positions read the way a person says them", () => {
