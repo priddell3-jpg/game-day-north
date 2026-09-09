@@ -27,9 +27,12 @@ test("a duplicate id is caught, wherever the two entries live", () => {
   m.teams[3].id = m.teams[0].id;
   assert.ok(kinds(m).includes("duplicate-id"));
 
-  /* Across groups too: an id reused for a ghost is the same bug. */
+  /* Across groups too: an id reused outside the followable list is the
+     same bug. The groups other than `teams` empty out as clubs become
+     followable, so one is added rather than assumed to be there. */
   const n = clone();
-  n.ghosts[0].id = n.teams[0].id;
+  n.ghosts.push({ id: n.teams[0].id, comp: "MLB", name: "X", abbr: "X", tz: "ET",
+                  color: "#000000", feedName: "Some Other Club" });
   assert.ok(kinds(n).includes("duplicate-id"), "a team and a ghost cannot share an id");
 });
 

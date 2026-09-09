@@ -87,10 +87,16 @@ test("every ghost club is still here, promoted or not", () => {
      that it stayed in the same list. */
   const rows = new Map(toGhostRows(manifest).map(r => [r[0], r]));
   const byId = new Map(allEntries(manifest).map(e => [e.id, e]));
+  /* Two of them are renamed by being promoted, and the rename is
+     recorded here rather than tolerated by a loose assertion. Their
+     ghost names were short filler labels for a club you could only ever
+     meet as an opponent; a club you can follow gets the name the feed
+     gives it. Nothing else may change. */
+  const RENAMED_ON_PROMOTION = { bou: "AFC Bournemouth", nfo: "Nottingham Forest" };
   for(const was of LEGACY.GHOSTS){
     const still = byId.get(was[0]);
     assert.ok(still, was[0] + " has gone entirely");
-    assert.equal(still.name, was[3], was[0] + " changed name");
+    assert.equal(still.name, RENAMED_ON_PROMOTION[was[0]] || was[3], was[0] + " changed name");
     const row = rows.get(was[0]);
     if(row) assert.deepEqual(row, was, was[0] + " is still a ghost but has changed");
   }

@@ -8,7 +8,7 @@
   "The `teams` group is what localStorage and share links carry; the rest are recorded so they cannot be quietly reassigned."
  ],
  "checked": "2026-09-09",
- "count": 177,
+ "count": 252,
  "ids": {
   "tor-nhl": {
    "group": "teams",
@@ -271,32 +271,32 @@
    "feedName": "Kansas City Royals"
   },
   "ips": {
-   "group": "ghosts",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Ipswich Town"
   },
   "bou": {
-   "group": "ghosts",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "AFC Bournemouth"
   },
   "nfo": {
-   "group": "ghosts",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Nottingham Forest"
   },
   "ful": {
-   "group": "ghosts",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Fulham"
   },
   "avl": {
-   "group": "feedOnly",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Aston Villa"
   },
   "bha": {
-   "group": "feedOnly",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Brighton & Hove Albion"
   },
@@ -306,17 +306,17 @@
    "feedName": "West Ham United"
   },
   "eve": {
-   "group": "feedOnly",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Everton"
   },
   "cry": {
-   "group": "feedOnly",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Crystal Palace"
   },
   "bre": {
-   "group": "feedOnly",
+   "group": "teams",
    "comp": "EPL",
    "feedName": "Brentford"
   },
@@ -894,6 +894,381 @@
    "group": "teams",
    "comp": "MLS",
    "feedName": "St. Louis CITY SC"
+  },
+  "cov": {
+   "group": "teams",
+   "comp": "EPL",
+   "feedName": "Coventry City"
+  },
+  "hul": {
+   "group": "teams",
+   "comp": "EPL",
+   "feedName": "Hull City"
+  },
+  "lee": {
+   "group": "teams",
+   "comp": "EPL",
+   "feedName": "Leeds United"
+  },
+  "sun": {
+   "group": "teams",
+   "comp": "EPL",
+   "feedName": "Sunderland"
+  },
+  "ala": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Alavés"
+  },
+  "ath-laliga": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Athletic Club"
+  },
+  "atm": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Atlético Madrid"
+  },
+  "cel": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Celta Vigo"
+  },
+  "dep": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Deportivo"
+  },
+  "elc": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Elche"
+  },
+  "esp": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Espanyol"
+  },
+  "get": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Getafe"
+  },
+  "lev": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Levante"
+  },
+  "mcf": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Málaga"
+  },
+  "osa": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Osasuna"
+  },
+  "rac": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Racing Santander"
+  },
+  "ray": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Rayo Vallecano"
+  },
+  "bet": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Real Betis"
+  },
+  "rso": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Real Sociedad"
+  },
+  "sev": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Sevilla"
+  },
+  "val": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Valencia"
+  },
+  "vil": {
+   "group": "teams",
+   "comp": "LALIGA",
+   "feedName": "Villarreal"
+  },
+  "fcu": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "1. FC Union Berlin"
+  },
+  "b04": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Bayer Leverkusen"
+  },
+  "dor": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Borussia Dortmund"
+  },
+  "bmg": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Borussia Mönchengladbach"
+  },
+  "sge": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Eintracht Frankfurt"
+  },
+  "fca": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "FC Augsburg"
+  },
+  "koe": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "FC Cologne"
+  },
+  "hsv": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Hamburg SV"
+  },
+  "m05": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Mainz"
+  },
+  "rbl": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "RB Leipzig"
+  },
+  "scf": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "SC Freiburg"
+  },
+  "scp": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "SC Paderborn 07"
+  },
+  "elv": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "SV Elversberg"
+  },
+  "s04": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Schalke 04"
+  },
+  "tsg": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "TSG Hoffenheim"
+  },
+  "vfb": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "VfB Stuttgart"
+  },
+  "svw": {
+   "group": "teams",
+   "comp": "BUNDES",
+   "feedName": "Werder Bremen"
+  },
+  "aux": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "AJ Auxerre"
+  },
+  "mon-ligue1": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "AS Monaco"
+  },
+  "ang": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Angers"
+  },
+  "bre-ligue1": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Brest"
+  },
+  "hac": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Le Havre AC"
+  },
+  "mns": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Le Mans"
+  },
+  "rcl": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Lens"
+  },
+  "lill": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Lille"
+  },
+  "lor": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Lorient"
+  },
+  "lyon": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Lyon"
+  },
+  "olm": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Marseille"
+  },
+  "nice": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Nice"
+  },
+  "par-ligue1": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Paris FC"
+  },
+  "ren": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Stade Rennais"
+  },
+  "str": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Strasbourg"
+  },
+  "tou": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Toulouse"
+  },
+  "try": {
+   "group": "teams",
+   "comp": "LIGUE1",
+   "feedName": "Troyes"
+  },
+  "mil-seriea": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "AC Milan"
+  },
+  "roma": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "AS Roma"
+  },
+  "ata": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Atalanta"
+  },
+  "bol": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Bologna"
+  },
+  "cag": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Cagliari"
+  },
+  "como": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Como"
+  },
+  "fio": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Fiorentina"
+  },
+  "fro": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Frosinone"
+  },
+  "gen": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Genoa"
+  },
+  "juv": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Juventus"
+  },
+  "laz": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Lazio"
+  },
+  "lec": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Lecce"
+  },
+  "mon": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Monza"
+  },
+  "nap": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Napoli"
+  },
+  "par": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Parma"
+  },
+  "sas": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Sassuolo"
+  },
+  "tor": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Torino"
+  },
+  "udi": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Udinese"
+  },
+  "ven": {
+   "group": "teams",
+   "comp": "SERIEA",
+   "feedName": "Venezia"
   }
  }
 }

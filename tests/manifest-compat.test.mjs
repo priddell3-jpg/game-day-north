@@ -268,3 +268,22 @@ test("every club is still reachable, cap or no cap", () => {
     assert.match(html, new RegExp('data-team="' + t.id + '"'), t.id + " cannot be found by its own name");
   }
 });
+
+test("no club renders its own name twice", () => {
+  /* ESPN gives one club the same location and name, so the plain
+     city-and-name derivation said "Athletics Athletics" on the board.
+     Any future club with that shape has to be caught here rather than
+     in a screenshot. */
+  const P = board();
+  const doubled = [];
+  for(const t of Object.values(P.TEAMS)){
+    if(t.ghost) continue;
+    const shown = P.fullName(t);
+    const words = shown.split(/\s+/);
+    if(words.some((w, i) => i > 0 && words[i - 1].toLowerCase() === w.toLowerCase()))
+      doubled.push(t.id + ': "' + shown + '"');
+    assert.equal(shown, shown.trim(), t.id + " renders with stray whitespace");
+    assert.ok(shown.length, t.id + " renders as nothing at all");
+  }
+  assert.deepEqual(doubled, []);
+});
