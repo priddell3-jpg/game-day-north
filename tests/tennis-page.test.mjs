@@ -20,6 +20,10 @@ const PREAMBLE = `
   const selected = globalThis.__t.selected;
   const hiddenComps = globalThis.__t.hidden;
   let TOURNEYS = globalThis.__t.tourneys;
+  /* The top-of-the-draw filter is a feature of its own and has its own
+     file. Left empty here, which means nothing is narrowed — these tests
+     are about tours and tournaments. */
+  let TENNIS_RANKS = {};
   let showScores = true, liveMode = true;
   globalThis.__t.setScores = v => { showScores = v; };
   globalThis.__t.getTourneys = () => TOURNEYS;
@@ -48,7 +52,8 @@ function harness(){
   const page = loadFromPage(
     ["DAY", "POLL_WINDOW", "TENNIS_TOURS", "TENNIS_SETTLED", "normName",
      "tourneyOf", "tennisGame", "mergeTennis", "tennisActive", "attachTennis",
-     "tennisMine", "isMine", "myGames", "COMPS"], PREAMBLE);
+     "tennisMine", "isMine", "myGames", "COMPS",
+     "TENNIS_TOP", "attachRankings", "rankOfPlayer", "lateRound", "tennisWorthShowing"], PREAMBLE);
   /* Tennis arrives in data.json now rather than from a request of its
      own, so what used to be a fetch is the block the file carried. The
      tests below are about what the page does with it, which has not

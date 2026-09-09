@@ -2082,6 +2082,10 @@ async function loadStatic(){
      matches without waiting for the next refresh. */
   staticTennis = r.tennis || null;
   attachTennis(staticTennis);
+  /* Read whether or not a tour is on, for the same reason the matches
+     are: switching a tour on should show the top of the draw straight
+     away rather than the whole of it until the next refresh. */
+  attachRankings(staticTennis && staticTennis.rankings);
   /* Standings are not fixtures and are not merged into them: they are
      held on their own and read by the Race section alone. A file with no
      standings block empties them, so a race can never outlive its data. */
@@ -3144,7 +3148,74 @@ function shareLink(){
    of them. A starred player, like a starred nation, changes nothing
    about what is here. */
 const tennisMine = g => tennisTours.has(g.comp) &&
-  (!tennisEvents.size || tennisEvents.has(g.match.tid));
+  (!tennisEvents.size || tennisEvents.has(g.match.tid)) &&
+  tennisWorthShowing(g.match);
+/* ---- how much of the draw to show ----
+
+   A Grand Slam first round is a hundred and twenty-eight matches and the
+   file carries all of them, deliberately: the narrowing happens HERE,
+   per viewer, and it has to. Starring a player is kept in this browser
+   and nowhere else, so a build that dropped everyone outside the top
+   twenty-five would make starring the hundred-and-fiftieth player in the
+   world do nothing at all — and that player having the week of their
+   life is the one match somebody wanted.
+
+   Three ways through, and a match needs only one:
+
+     - either player is inside the top of their tour,
+     - the round is a quarterfinal or later, which is where a draw stops
+       being a list and starts being an event,
+     - either player is starred by whoever is looking.
+
+   Payload is not what this is for. The file is a hundred and six
+   kilobytes gzipped against a two-hundred-and-fifty ceiling; this is
+   about a board that can be read.
+
+   The rankings are advisory. A rank lets a match through and its absence
+   never keeps one out on its own: an unreachable list, or a player the
+   top hundred does not name, must not be able to empty the board. With
+   no list at all nothing is narrowed and the whole draw shows, which is
+   the same answer this page gave before any of this existed. */
+const TENNIS_TOP = 25;
+let TENNIS_RANKS = {};
+function attachRankings(byTour){
+  TENNIS_RANKS = (byTour && typeof byTour === "object") ? byTour : {};
+  return Object.keys(TENNIS_RANKS).length;
+}
+/* The player's place, or null. Null is "not in the list we hold", which
+   is not the same as unranked and is never shown to anyone. */
+function rankOfPlayer(p, tour){
+  const list = TENNIS_RANKS[tour];
+  if(!list || !p || p.id == null) return null;
+  const at = list[String(p.id)];
+  return Number.isInteger(at) ? at : null;
+}
+/* Quarterfinal onwards.
+
+   Matched on the round's own name rather than on a position in the draw,
+   because there is no position to count from: this month's events carry
+   Round 1, Round 2, Round 4, Qualifying Final, Quarterfinal and
+   Semifinal, which is neither contiguous nor orderable.
+
+   "Qualifying Final" is the trap. It ends in Final and is the last match
+   of the week BEFORE the tournament, so it is excluded by name. */
+function lateRound(round){
+  const r = String(round || "").trim().toLowerCase();
+  if(r.indexOf("qualif") >= 0) return false;
+  return /^(quarter ?finals?|semi ?finals?|finals?)$/.test(r);
+}
+function tennisWorthShowing(m){
+  if(!m) return false;
+  const list = TENNIS_RANKS[m.tour];
+  if(!list) return true;                    // nothing to narrow with
+  if(lateRound(m.round)) return true;
+  for(const p of m.players || []){
+    if(isStarredPlayer(p)) return true;
+    const at = rankOfPlayer(p, m.tour);
+    if(at != null && at <= TENNIS_TOP) return true;
+  }
+  return false;
+}
 const isMine = g => g.rugby ? rugbyOn()
   : g.tennis ? tennisMine(g)
   : ((g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id)));

@@ -333,3 +333,41 @@ export function assembleMatches(lists, opts){
 export function normalizeTennis(payloads, opts){
   return assembleMatches((payloads || []).map(parseScoreboard), opts);
 }
+
+/* ---- world rankings -------------------------------------------------
+
+   The page narrows the draw it shows to the top of each tour, and needs
+   a number per player to do it. ESPN publishes the current ATP and WTA
+   lists at the same host the scoreboards come from, keyed on the SAME
+   athlete id the scoreboard uses, which is what makes this a lookup
+   rather than a name match.
+
+   How deep to carry is a different question from how deep to show. The
+   cutoff is a product decision that will move; carrying a hundred means
+   moving it costs a page change rather than a rebuild, and a hundred
+   ranks is about a kilobyte and a half.
+
+   A player without a rank is not "unranked" here, only "not in the top
+   hundred". Nothing downstream may read absence as a statement about a
+   player, and the page's filter is written that way round: a rank lets a
+   match through, its absence does not keep one out on its own. */
+export const RANK_DEPTH = 100;
+
+/* One tour's list, or null when the payload is not one. Null matters:
+   the caller carries the previous answer forward on null and would
+   otherwise replace a good list with an empty one. */
+export function normalizeRankings(payload){
+  const blocks = (payload && Array.isArray(payload.rankings)) ? payload.rankings : [];
+  const out = {};
+  for(const b of blocks){
+    for(const r of (b && b.ranks) || []){
+      const id = r && r.athlete && r.athlete.id;
+      const at = r && Number(r.current);
+      if(id == null || !Number.isInteger(at) || at < 1 || at > RANK_DEPTH) continue;
+      const key = String(id);
+      if(out[key] == null || at < out[key]) out[key] = at;
+    }
+  }
+  return Object.keys(out).length ? out : null;
+}
+
