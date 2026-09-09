@@ -205,6 +205,14 @@ main{padding:22px 0 80px}
 .g-match{min-width:0;display:flex;flex-direction:column;gap:4px}
 .g-team{min-width:0}
 .g-teams{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* The record sits under the name, so each side becomes a short column.
+   .g-team is untouched: everything that styles a team name — dim,
+   starred, tbd — still addresses exactly what it did before. */
+.g-side{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0}
+/* Quiet by construction. It appears twice on every row of the board, so
+   it is smaller than the name, lighter than the name, and never bold. */
+.g-rec{font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.04em;
+  color:var(--muted);white-space:nowrap}
 .g-team{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px;letter-spacing:-.15px;white-space:nowrap}
 .g-team.dim{font-weight:500;color:var(--ink-2)}
 .at{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
@@ -381,6 +389,9 @@ main{padding:22px 0 80px}
   .game{gap:8px;padding:12px 6px 12px 8px}
   .g-team{white-space:normal;overflow-wrap:anywhere}
   .g-teams{gap:6px}
+  /* At 320px the name already wraps, so the record must be allowed to as
+     well rather than pushing the row wider than the screen. */
+  .g-rec{white-space:normal}
   /* The star rides with the name it marks rather than being allowed to
      wrap onto a line of its own, and the venue-day note is short enough
      to keep at this width — it is the only thing explaining why a
@@ -1016,6 +1027,123 @@ let STANDINGS = [];
 function attachStandings(list){
   STANDINGS = Array.isArray(list) ? list.filter(g=>g && g.comp && Array.isArray(g.rows) && g.rows.length) : [];
   return STANDINGS.length;
+}
+
+/* ---- a team's record, from the full tables ------------------------
+
+   Separate from STANDINGS above, and deliberately so. A Race group is
+   the slice around a cutoff — the MLB one is the wild-card view, which
+   holds twelve of fifteen American League clubs — so a record read from
+   it would be missing for any team not in contention. TABLES holds the
+   full table for every competition that has one, every club present.
+
+   Nothing here is filtered by who is followed. A record has to be in
+   hand the moment a club is added to the board, not one build later. */
+let TABLES = [], RECORDS = new Map();
+/* A group in which nothing has been played is not a table. Every NHL and
+   NFL club reads 0-0 through a preseason, and the rows are well formed
+   and the positions are real, which is exactly what makes it dangerous:
+   published as it stands it would put "0-0-0, 1st in the Atlantic" under
+   thirty-two clubs. The build refuses these, and so does this — a
+   fabricated record is the one thing that must not reach the board by
+   two parties each assuming the other checked. */
+const rowPlayed = r => !!r && (r.gp > 0 || (r.w || 0) + (r.l || 0) + (r.d || 0) + (r.otl || 0) > 0);
+const tablePlayed = g => (g.rows || []).some(rowPlayed);
+function attachTables(list){
+  TABLES = Array.isArray(list)
+    ? list.filter(g=>g && g.comp && Array.isArray(g.rows) && g.rows.length && tablePlayed(g)) : [];
+  RECORDS = new Map();
+  const groupsFor = comp => TABLES.filter(g=>g.comp===comp).length;
+  for(const g of TABLES){
+    /* Whether to name the division is a fact about the competition, not
+       about the row: "1st" alone is the answer in a single league table
+       and is meaningless in one of six baseball divisions. */
+    const scoped = groupsFor(g.comp) > 1;
+    for(const row of g.rows){
+      if(!row || !row.id) continue;
+      const entry = RECORDS.get(row.id) || {byComp:{}, primary:null};
+      entry.byComp[g.comp] = {row, group:g, scoped};
+      /* The club's own league, not the cup it happens to be in this
+         week: a Champions League row is a record too, but "3 pts, 12th"
+         is the wrong thing to read under a club's name on a Saturday.
+         First table wins, and the sources are ordered leagues first. */
+      if(!entry.primary && g.comp !== "UCL") entry.primary = entry.byComp[g.comp];
+      if(!entry.primary) entry.primary = entry.byComp[g.comp];
+      RECORDS.set(row.id, entry);
+    }
+  }
+  return TABLES.length;
+}
+
+/* The table a record should be read from for this team in this fixture:
+   the competition being played where there is one, and the club's own
+   league otherwise. A cup tie shows the league record, which is the
+   figure a person actually carries in their head. */
+function recordFor(team, comp){
+  if(!team || !team.id) return null;
+  const entry = RECORDS.get(team.id);
+  if(!entry) return null;
+  return entry.byComp[comp] || entry.primary || null;
+}
+
+const ORDINALS = ["", "1st", "2nd", "3rd"];
+function ordinal(n){
+  if(!Number.isInteger(n) || n < 1) return null;
+  if(ORDINALS[n]) return ORDINALS[n];
+  const t = n % 100, u = n % 10;
+  if(t >= 11 && t <= 13) return n + "th";
+  return n + (u === 1 ? "st" : u === 2 ? "nd" : u === 3 ? "rd" : "th");
+}
+
+/* The division or conference, said the way a person says it. The source
+   writes "American League East" and "2026-27 English Premier League";
+   only the first is worth repeating under a team name. */
+function shortScope(scope){
+  let t = String(scope || "").replace(/\s+(Division|Conference)$/i, "").trim();
+  t = t.replace(/^American League\b/, "AL").replace(/^National League\b/, "NL");
+  t = t.replace(/^Eastern$/, "East").replace(/^Western$/, "West");
+  return t;
+}
+
+/* The record itself, composed from published figures rather than read
+   from the source's own `overall` string, because that string is not one
+   thing. The NHL writes "0-0-0, 0 PTS" into it and the NBA does not
+   publish it at all, so the two numbers everyone does publish are the
+   honest common ground. */
+function recordText(row, group){
+  if(!row || !group) return null;
+  if(group.kind === "table"){
+    if(row.pts == null) return null;
+    return row.pts + (row.pts === 1 ? " pt" : " pts");
+  }
+  if(row.w == null || row.l == null) return null;
+  let t = row.w + "-" + row.l;
+  /* Hockey keeps a point for an overtime loss, so 12-4 and 12-4-2 are
+     different seasons. Football ties are rare enough that a third number
+     is only shown when there is one. */
+  if(row.otl != null) t += "-" + row.otl;
+  else if(row.d) t += "-" + row.d;
+  return t;
+}
+
+/* One quiet line: what they have done, and where that puts them. */
+function recordLine(team, comp){
+  const hit = recordFor(team, comp);
+  if(!hit) return null;
+  /* A club that has not played in this table has no record in it, even
+     where the table itself is well under way. Two matchdays into the
+     Champions League most of the thirty-six clubs read zero, and "0 pts,
+     17th" under Liverpool is not a fact about Liverpool — it is the
+     alphabet. Nothing is shown instead, and nothing is borrowed from the
+     club's league table either: a figure from a different competition,
+     on a row labelled with this one, would be read as this one's. */
+  if(!rowPlayed(hit.row)) return null;
+  const rec = recordText(hit.row, hit.group);
+  const pos = ordinal(hit.row.pos);
+  if(!rec && !pos) return null;
+  const where = hit.scoped ? shortScope(hit.group.scope) : "";
+  const place = pos ? (where ? pos + " in the " + where : pos) : "";
+  return [rec, place].filter(Boolean).join(" \u00b7 ");
 }
 
 /* ---- where the line falls ----
@@ -1945,6 +2073,10 @@ async function loadStatic(){
      held on their own and read by the Race section alone. A file with no
      standings block empties them, so a race can never outlive its data. */
   attachStandings(r.standings);
+  /* Same bargain as the standings above, read by the record under a team
+     name rather than by a Race card. A file with no tables leaves every
+     record absent, which is exactly what should happen. */
+  attachTables(r.tables);
   /* Independent of the team fixtures above: a rugby row is here because
      rugby is switched on, not because it involves a followed club, so
      it is not subject to the selected-team filter that built `built`. */
@@ -3433,10 +3565,24 @@ function gameRow(g, now){
   if(ts.state==="flex") timeCell += '<span class="tbc">Flex window</span>';
   timeCell += '</div>';
 
+  /* A record cannot move during a match, so a game in progress is not a
+     spoiler and both records stay up. A game that has FINISHED with its
+     result hidden is the one case where they have to come down: the
+     record already counts it, so showing it would announce the result
+     the person asked not to see. Revealing that game brings them back,
+     because the thing being protected is no longer hidden. */
+  const spoiler = st.status === "final" && !reveal;
+  const side = (t, mine, tbd) => {
+    const line = spoiler ? null : recordLine(t, g.comp);
+    return '<span class="g-side">'
+      + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+crest(t)+esc(fullName(t))+'</span>'
+      + (line ? '<span class="g-rec">'+esc(line)+'</span>' : '')
+      + '</span>';
+  };
   const teams = '<div class="g-teams">'
-    + '<span class="g-team'+(mineA?"":" dim")+'">'+crest(o.a)+esc(fullName(o.a))+'</span>'
+    + side(o.a, mineA, false)
     + '<span class="at">'+o.sep+'</span>'
-    + '<span class="g-team'+(mineB?"":" dim")+(o.b?"":" tbd")+'">'+crest(o.b)+esc(fullName(o.b))+'</span></div>';
+    + side(o.b, mineB, !o.b) + '</div>';
 
   const meta = '<div class="g-meta">'
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'

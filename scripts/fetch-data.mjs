@@ -30,6 +30,7 @@ import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
 import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
          STANDINGS_HOLD } from "./lib/race.mjs";
+import { TABLE_SOURCES, tableProblem } from "./lib/records.mjs";
 import { MAX_LIMIT, planRanges, splitRange, dateKey, compFloorProblems, describeFloor,
          nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
 import { normalizeTennis, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
@@ -134,6 +135,19 @@ async function get(url){
    range covers both spans and carries scores exactly as the per-date
    scoreboard did. */
 let preseasonSkipped = 0;
+/* Which season each competition is actually playing, as its own fixtures
+   state it. Read here because this is the only place the raw events are
+   in hand, and used far below to tell a current table from last
+   season's — see scripts/lib/records.mjs, where the reasoning lives.
+   Preseason counts: an exhibition is not carried onto the board, but it
+   is still evidence of which season is under way. */
+const seasonYears = new Map();
+const noteSeason = (comp, ev) => {
+  const y = Number(((ev && ev.season) || {}).year);
+  if(!Number.isFinite(y)) return;
+  if(!seasonYears.has(comp)) seasonYears.set(comp, new Set());
+  seasonYears.get(comp).add(y);
+};
 async function scoreboardRange(comp, path, fromMs, toMs, out){
   let asked = 0;
   const queue = planRanges(comp, fromMs, toMs);
@@ -166,6 +180,7 @@ async function scoreboardRange(comp, path, fromMs, toMs, out){
       continue;
     }
     for(const ev of events){
+      noteSeason(comp, ev);
       /* Preseason is dropped deliberately, and the reasoning lives with
          the filter in scripts/lib/fetch-plan.mjs rather than here, so it
          is one line to revisit rather than archaeology. */
@@ -851,10 +866,14 @@ if(rugbySourceErrors.length){
    with them but the team matcher: a standings row is not a fixture, and
    no code path here reads or writes one.
 
-   Six requests per run, each against a named ESPN standings view. Which
-   view matters more than it looks: the same field means different things
-   in different ones, so scripts/lib/race.mjs records the view each
-   source reads and the field meanings that belong to it.
+   One request per source, each against a named ESPN standings view.
+   Which view matters more than it looks: the same field means different
+   things in different ones, so scripts/lib/race.mjs records the view
+   each source reads and the field meanings that belong to it.
+
+   Three of those URLs are also full-table sources for the records under
+   the team names, so the fetch below is cached by URL and asks for each
+   one once.
 
    The volatile figures ESPN publishes beside these — playoff and
    wild-card percentages, magic numbers — are deliberately not read. They
@@ -869,18 +888,29 @@ if(rugbySourceErrors.length){
    the source publishes none, the cutoff lives in the page's dated RACES
    table beside a note and a link, the way a rights row does.
    ============================================================ */
+/* Race and the full tables overlap on three URLs — the NFL divisions and
+   the Premier League and Champions League tables are the same view read
+   for two purposes. Asking twice would spend a request to receive a
+   second copy of an answer already in hand. */
+const standingsPayloads = new Map();
+async function standingsPayload(url){
+  if(!standingsPayloads.has(url)){
+    let p = null;
+    try{ p = await get(url); }catch(err){ p = null; }
+    standingsPayloads.set(url, p === FAILED ? null : p);
+  }
+  return standingsPayloads.get(url);
+}
+
 const prevStandings = (previous && Array.isArray(previous.standings)) ? previous.standings : [];
 const prevGenerated = (previous && previous.generated) || new Date(now).toISOString();
 const standings = [];
 const standingsUnavailable = [];
 for(const src of RACE_SOURCES){
-  let payload = null;
-  try{ payload = await get(src.url); }
-  catch(err){ payload = null; }
   /* Standings are not fatal: a source that cannot be reached falls
      through to the group held from a previous run, and the page draws
      nothing rather than a card if there is none. */
-  if(payload === FAILED) payload = null;
+  const payload = await standingsPayload(src.url);
   const fresh = payload ? groupsFrom(payload, {comp:src.comp, kind:src.kind, idFor,
     groupFor: node => groupIdFor(src, node)}) : [];
   if(fresh.length){
@@ -917,6 +947,47 @@ standings.forEach(g=>console.log("    " + (g.comp + "/" + g.group).padEnd(18)
 if(standingsUnavailable.length){
   console.warn("  ! no usable standings for " + standingsUnavailable.length + " source(s):");
   standingsUnavailable.forEach(x=>console.warn("     " + x));
+}
+
+/* ============================================================
+   RECORDS — the full table for every competition that has one.
+
+   Separate from Race on purpose, and scripts/lib/records.mjs carries the
+   argument for that. The short version: Race publishes the slice around
+   a cutoff and this publishes every club, because the question "what is
+   this team's record" is asked about whoever is on the board, not about
+   whoever is in contention.
+
+   Nothing is held forward here. A record is a convenience under a team
+   name, not a card the page is built around, so a source that cannot be
+   reached simply renders nothing this run rather than showing a figure
+   that is now some hours old with no way to say so.
+   ============================================================ */
+const tables = [];
+const tablesSkipped = [];
+for(const src of TABLE_SOURCES){
+  const payload = await standingsPayload(src.url);
+  if(!payload){ tablesSkipped.push(src.comp + " " + src.view + " — unreachable"); continue; }
+  const groups = groupsFrom(payload, {comp:src.comp, kind:src.kind, idFor,
+    groupFor: node => groupIdFor(src, node)});
+  if(!groups.length){ tablesSkipped.push(src.comp + " " + src.view + " — nothing orderable"); continue; }
+  /* Judged per competition rather than per group: whether a season has
+     begun is a fact about the league, and one division happening to have
+     played a game first must not publish that division alone. */
+  const years = seasonYears.get(src.comp) || new Set();
+  const problem = groups.map(g => tableProblem(g, years)).find(Boolean);
+  if(problem){ tablesSkipped.push(src.comp + " " + src.view + " — " + problem); continue; }
+  groups.forEach(g => { g.view = src.view; });
+  tables.push(...groups);
+}
+const tableRows = tables.reduce((a,g)=>a+g.rows.length, 0);
+const tableNamed = tables.reduce((a,g)=>a+g.rows.filter(r=>r.id).length, 0);
+console.log("Records: " + tables.length + " table group(s) across "
+  + new Set(tables.map(g=>g.comp)).size + " competition(s), "
+  + tableRows + " rows, " + tableNamed + " matched to a club in the manifest");
+if(tablesSkipped.length){
+  console.warn("  ! no table for " + tablesSkipped.length + " competition(s):");
+  tablesSkipped.forEach(x=>console.warn("     " + x));
 }
 
 /* ============================================================
@@ -1025,8 +1096,9 @@ const MAX_AGE = 6*3600000;
 const cyclingSame = previous && JSON.stringify(previous.cycling || []) === JSON.stringify(cyclingOut);
 const rugbySame = previous && JSON.stringify(previous.rugby || []) === JSON.stringify(rugbyOut);
 const standingsSame = previous && JSON.stringify(previous.standings || []) === JSON.stringify(standings);
+const tablesSame = previous && JSON.stringify(previous.tables || []) === JSON.stringify(tables);
 const tennisSame = previous && JSON.stringify(previous.tennis || {matches:[],tournaments:[]}) === JSON.stringify(tennisOut);
-if(previous && cyclingSame && rugbySame && standingsSame && tennisSame &&
+if(previous && cyclingSame && rugbySame && standingsSame && tablesSame && tennisSame &&
    JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
@@ -1059,6 +1131,11 @@ const out = {
                and so a source that quietly stopped answering is visible
                in the file rather than only in a log nobody reads. */
             standingsUnavailable,
+            /* The full tables behind the record under each team name,
+               and every competition that has none this run with the
+               reason. A record that is simply absent should be
+               answerable from the file, not from a log. */
+            tables: tables.length, tableRows, tablesSkipped,
             /* Carried run to run so a competition that has been absent
                for a while is still guarded. Lapses on its own, so a
                season that genuinely ended stops guarding. */
@@ -1071,10 +1148,16 @@ const out = {
      Race model is keyed on a fixture and nothing in a fixture is keyed
      on a standing; the only thing they share is the team id. */
   standings,
+  /* Full tables, kept apart from `standings` for the same reason
+     standings are kept apart from fixtures: they answer a different
+     question and are read by different code. A Race card reads
+     `standings`; the record under a team name reads this. */
+  tables,
   tennis: tennisOut
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +
   rugbyOut.length + " rugby, " + standings.length + " standings groups, " +
+  tableRows + " table rows, " +
   calls + " requests, " + failures + " failed");
 console.log("  " + Object.entries(byComp).map(([k,v])=>k+":"+v).join("  "));

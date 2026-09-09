@@ -260,6 +260,7 @@ test("the other three call sites handle the sentinel deliberately", () => {
   assert.match(BUILD, /if\(r === null \|\| r === FAILED\) continue;/,
     "rugby must not mark a competition reached because a request failed");
   assert.match(BUILD, /if\(r !== FAILED && applySummary/, "an unreachable summary tops nothing up");
-  assert.match(BUILD, /if\(payload === FAILED\) payload = null;/,
-    "standings fall through to what was held, as before");
+  assert.match(BUILD, /standingsPayloads\.set\(url, p === FAILED \? null : p\);/,
+    "standings fall through to what was held, as before — the sentinel is "
+    + "handled once in the cache both source lists read through");
 });
