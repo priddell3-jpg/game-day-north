@@ -24,6 +24,9 @@ const PREAMBLE = `
      file. Left empty here, which means nothing is narrowed — these tests
      are about tours and tournaments. */
   let TENNIS_RANKS = {};
+  /* The whole-draw switch, off: these tests are about tours and
+     tournaments, and with no rankings held nothing is narrowed anyway. */
+  let tennisAll = false;
   let showScores = true, liveMode = true;
   globalThis.__t.setScores = v => { showScores = v; };
   globalThis.__t.getTourneys = () => TOURNEYS;

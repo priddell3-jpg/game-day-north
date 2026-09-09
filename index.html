@@ -305,6 +305,19 @@ main{padding:22px 0 80px}
 .ru-stars{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
 .ru-star{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
 .ru-star[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+/* The tennis star sits on the row rather than in a picker, so it is a
+   glyph and not a chip: it appears twice on every tennis row and a
+   bordered pill each time would crowd out the names it belongs to. */
+.pl-star{border:0;background:none;padding:0 2px;margin-left:-2px;line-height:1;
+  font-size:12px;color:var(--muted);cursor:pointer}
+.pl-star[aria-pressed="true"]{color:var(--accent)}
+/* What the draw filter is doing, and the way out of it. */
+/* --ink-2 rather than --muted: this is a sentence somebody has to read
+   to understand why most of the draw is missing, not a chrome label like
+   COMPETITIONS beside it. On the page ground, --muted lands at 4.28:1
+   and this at 8.4. */
+.tennis-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 0 8px;
+  font-size:12px;color:var(--ink-2)}
 .ru-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:2px 0 8px}
 
 /* ---------- empty ---------- */
@@ -5921,6 +5934,21 @@ let rightsOpen = false;
    that key is not a value this build wrote. */
 const RESULTS_OPEN_KEY = "gdn.results.open";
 let resultsOpen = LS.get(RESULTS_OPEN_KEY, false) === true;
+/* Whether to show the whole draw instead of the top of it.
+
+   This has to exist, and not only as a convenience. The top-of-the-draw
+   filter lets a match through if a player in it is starred — and a
+   player can only be starred from a row that is on the screen. Without a
+   way to see the whole draw, the only players anyone could star are the
+   ones who were never being hidden, which makes that clause unreachable
+   and the filter a one-way door.
+
+   Kept in this browser and not in the share link: it is how one person
+   is looking at the draw this week, not part of the board they would
+   send someone. Read strictly as a boolean for the same reason
+   resultsOpen is. */
+const TENNIS_ALL_KEY = "gdn.tennis.all";
+let tennisAll = LS.get(TENNIS_ALL_KEY, false) === true;
 /* The Race panel arrives shut, like history. Open it costs one line and
    the line it costs says what is in there, which is the trade the
    schedule below it deserves. Which races are expanded to a full table
@@ -5946,6 +5974,7 @@ function persist(){
   LS.set("gdn.rugby.stars",[...rugbyStars]);
   LS.set("gdn.tennis.stars",[...tennisStars]);
   LS.set("gdn.tennisTours",[...tennisTours]); LS.set("gdn.tennisEvents",[...tennisEvents]);
+  LS.set(TENNIS_ALL_KEY, tennisAll);
 }
 /* Built only when you ask for it, so the address bar stays clean. */
 function shareLink(){
@@ -5977,7 +6006,7 @@ function shareLink(){
    about what is here. */
 const tennisMine = g => tennisTours.has(g.comp) &&
   (!tennisEvents.size || tennisEvents.has(g.match.tid)) &&
-  tennisWorthShowing(g.match);
+  (tennisAll || tennisWorthShowing(g.match));
 /* ---- how much of the draw to show ----
 
    A Grand Slam first round is a hundred and twenty-eight matches and the
@@ -6031,6 +6060,20 @@ function lateRound(round){
   const r = String(round || "").trim().toLowerCase();
   if(r.indexOf("qualif") >= 0) return false;
   return /^(quarter ?finals?|semi ?finals?|finals?)$/.test(r);
+}
+/* How many matches the top-of-the-draw rule is holding back, and how
+   many it is letting through. Counted over the tours and tournaments the
+   viewer has actually asked for, so the number describes their board
+   rather than the file. */
+function tennisCounts(){
+  let shown = 0, hidden = 0;
+  if(!tennisTours.size) return {shown, hidden};
+  for(const g of GAMES){
+    if(!g.tennis || !tennisTours.has(g.comp)) continue;
+    if(tennisEvents.size && !tennisEvents.has(g.match.tid)) continue;
+    if(tennisWorthShowing(g.match)) shown++; else hidden++;
+  }
+  return {shown, hidden};
 }
 function tennisWorthShowing(m){
   if(!m) return false;
@@ -6578,12 +6621,29 @@ function tennisRow(g, now){
     + '">'
     + esc(p.name) + (p.country ? '<span class="pl-flag">' + esc(p.country) + '</span>' : '')
     + '</span>';
+  /* Starring, on the row, because the row is the only place a player
+     exists. Rugby stars a nation from the picker; there is no list of
+     tennis players to put in a picker, and the one built from the draw
+     would be the draw. Same pattern as ru-star otherwise: aria-pressed,
+     the same store, the same ts= on a share link.
+
+     Not offered on a slot with nobody in it, and not on a name that is
+     being withheld — a star button carrying the player's id beside the
+     word TBD would hand back exactly what the row is holding. */
+  const starOf = p => (!p || p.id == null || p.tbd) ? "" :
+    '<button class="pl-star" data-player="' + esc(String(p.id))
+    + '" aria-pressed="' + isStarredPlayer(p) + '"'
+    + ' aria-label="' + (isStarredPlayer(p) ? "Unstar " : "Star ") + esc(p.name) + '">'
+    + (isStarredPlayer(p) ? '<span aria-hidden="true">&#9733;</span>'
+                          : '<span aria-hidden="true">&#9734;</span>') + '</button>';
   const sideOf = i => {
     const p = m.players[i];
     /* A player whose earlier match is sitting hidden becomes the slot
        they were before it: naming them here would announce that they
        won it. */
-    return playerSpoiled(m, p) ? nameOf(TBD_PLAYER, i, false) : nameOf(p, i, reveal);
+    return playerSpoiled(m, p)
+      ? nameOf(TBD_PLAYER, i, false)
+      : nameOf(p, i, reveal) + starOf(p);
   };
   // "v", never "at": neither player is at home
   const title = '<div class="g-teams">' + sideOf(0)
@@ -6817,6 +6877,32 @@ function renderFilters(){
     + (allHidden ? "Show all" : "Clear all") + '</button>'
     + '</div>';
 }
+/* What the top-of-the-draw filter is doing, in one line, next to the
+   control that undoes it.
+
+   A filter nobody can see is indistinguishable from a bug: someone
+   looking at twenty-seven matches out of a hundred and thirteen has no
+   way to tell whether the rest are being withheld or were never
+   published. So the count is said out loud, and the button beside it is
+   the way out.
+
+   Rendered only when there is something to say — with every match
+   already showing and nothing being held back, this is one more line for
+   no reason. */
+function tennisNote(){
+  if(!tennisTours.size) return "";
+  const {shown, hidden} = tennisCounts();
+  if(!hidden) return "";
+  const said = tennisAll
+    ? "Showing all " + (shown + hidden) + " tennis matches in the draw."
+    : "Showing " + shown + " of " + (shown + hidden) + " tennis matches &mdash; the top "
+      + TENNIS_TOP + ", the quarterfinals on, and players you have starred.";
+  return '<div class="tennis-note"><span>' + said + '</span>'
+    + '<button class="fchip fchip-all" id="tennisAll" data-tennis-all="'
+    + (tennisAll ? "top" : "all") + '">'
+    + (tennisAll ? "Show the top " + TENNIS_TOP : "Show every match") + '</button></div>';
+}
+
 /* Clearing hides every competition currently offered; showing empties
    the set outright, so a competition that arrives later is on rather
    than silently missing. An empty board while cleared is a state
@@ -7283,10 +7369,10 @@ function renderList(now, todayKey){
      rights table and the data note stay at the bottom: reference, not
      answer. */
   if(!games.length){
-    return welcomeBanner() + renderFilters() + servicesHint()
+    return welcomeBanner() + renderFilters() + tennisNote() + servicesHint()
       + renderResults(now, todayKey) + renderRaces(now) + emptyState();
   }
-  let out = welcomeBanner() + renderFilters() + servicesHint()
+  let out = welcomeBanner() + renderFilters() + tennisNote() + servicesHint()
     + renderResults(now, todayKey) + renderRaces(now);
   groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
   return out + renderRights() + noteBlock();
@@ -7359,7 +7445,7 @@ function renderCalendar(now, todayKey){
     detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day">'+(gs.length?daySection(selDay,gs,now,todayKey)
       :'<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(selDay))+'</h3><span class="n">No games</span></div></section>')+'</div>';
   } else detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day"><div class="note">Pick a day to see start times, scores and where each game is carried.</div></div>';
-  return welcomeBanner()+renderFilters()+head+grid+detail;
+  return welcomeBanner()+renderFilters()+tennisNote()+head+grid+detail;
 }
 
 /* A stage on today's card is not racing all day. The rail follows the
@@ -7600,6 +7686,7 @@ function render(){
       : active.getAttribute("data-comp") ? "comp:" + active.getAttribute("data-comp")
       : active.getAttribute("data-reveal") ? "reveal:" + active.getAttribute("data-reveal")
       : active.getAttribute("data-race") ? "race:" + active.getAttribute("data-race")
+      : active.getAttribute("data-player") ? "player:" + active.getAttribute("data-player")
       : active.id ? "id:" + active.id : null)
     : null;
   /* Decided once, before anything is drawn, so every row of the board
@@ -7610,7 +7697,7 @@ function render(){
   if(focusKey){
     const [kind, val] = [focusKey.slice(0, focusKey.indexOf(":")), focusKey.slice(focusKey.indexOf(":")+1)];
     const attr = {day:"data-day", alert:"data-alert", comp:"data-comp",
-                  reveal:"data-reveal", race:"data-race"}[kind];
+                  reveal:"data-reveal", race:"data-race", player:"data-player"}[kind];
     let el = null;
     try{ el = kind==="id" ? main.querySelector("#"+CSS.escape(val))
                           : main.querySelector("["+attr+'="'+CSS.escape(val)+'"]'); }catch(e){}
@@ -7739,6 +7826,21 @@ document.getElementById("main").addEventListener("click",function(e){
   const rc=e.target.closest("[data-race]"); if(rc){ const id=rc.getAttribute("data-race");
     raceFull.has(id)?raceFull.delete(id):raceFull.add(id); render(); return; }
   const al=e.target.closest("[data-alert]"); if(al){ const id=al.getAttribute("data-alert"); alerts.has(id)?alerts.delete(id):alerts.add(id); persist(); render(); return; }
+  /* Both of these are rendered into #main and not into the drawer, so
+     they are handled here. The nation star above is the other way round
+     for the same reason — the listener has to be on the element the
+     control is actually inside. */
+  const st=e.target.closest("[data-player]");
+  if(st){
+    const id=st.getAttribute("data-player");
+    tennisStars.has(id)?tennisStars.delete(id):tennisStars.add(id);
+    /* render() and not just a class flip: unstarring a player below the
+       top of the draw takes their matches off the board, which is the
+       whole point of the star. */
+    persist(); render(); return;
+  }
+  const ta=e.target.closest("[data-tennis-all]");
+  if(ta){ tennisAll = ta.getAttribute("data-tennis-all")==="all"; persist(); render(); return; }
   const ca=e.target.closest("[data-comps-all]");
   if(ca){ setAllComps(ca.getAttribute("data-comps-all")==="clear"); persist(); render(); return; }
   const cp=e.target.closest("[data-comp]"); if(cp){ const id=cp.getAttribute("data-comp"); hiddenComps.has(id)?hiddenComps.delete(id):hiddenComps.add(id); persist(); render(); return; }
