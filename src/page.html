@@ -1281,82 +1281,32 @@ function raceCards(now, followed){
   return raceAssignClubs(kept, byClub);
 }
 
-// id | league | city | name | abbr | tz | colour | ucl
-const TEAM_ROWS = [
-["tor-nhl","NHL","Toronto","Maple Leafs","TOR","ET","#00205B"],
-["van-nhl","NHL","Vancouver","Canucks","VAN","PT","#00205B"],
-["edm","NHL","Edmonton","Oilers","EDM","MT","#FF4C00"],
-["cgy","NHL","Calgary","Flames","CGY","MT","#C8102E"],
-["ott","NHL","Ottawa","Senators","OTT","ET","#B01034"],
-["mtl-nhl","NHL","Montréal","Canadiens","MTL","ET","#AF1E2D"],
-["wpg","NHL","Winnipeg","Jets","WPG","CT","#041E42"],
-["bos-nhl","NHL","Boston","Bruins","BOS","ET","#1B1B1B"],
-["nyr","NHL","New York","Rangers","NYR","ET","#0038A8"],
-["vgk","NHL","Vegas","Golden Knights","VGK","PT","#8C7443"],
-["sea-nhl","NHL","Seattle","Kraken","SEA","PT","#001628"],
-["col","NHL","Colorado","Avalanche","COL","MT","#6F263D"],
-["tor-nba","NBA","Toronto","Raptors","TOR","ET","#CE1141"],
-["gsw","NBA","Golden State","Warriors","GSW","PT","#1D428A"],
-["lal","NBA","Los Angeles","Lakers","LAL","PT","#552583"],
-["bos-nba","NBA","Boston","Celtics","BOS","ET","#007A33"],
-["den","NBA","Denver","Nuggets","DEN","MT","#0E2240"],
-["okc","NBA","Oklahoma City","Thunder","OKC","CT","#0F5E96"],
-["nyk","NBA","New York","Knicks","NYK","ET","#D55118"],
-["sea-nfl","NFL","Seattle","Seahawks","SEA","PT","#002244"],
-["buf","NFL","Buffalo","Bills","BUF","ET","#00338D"],
-["sf","NFL","San Francisco","49ers","SF","PT","#8E0000"],
-["kc","NFL","Kansas City","Chiefs","KC","CT","#C41230"],
-["dal","NFL","Dallas","Cowboys","DAL","CT","#041E42"],
-["phi","NFL","Philadelphia","Eagles","PHI","ET","#004C54"],
-["det","NFL","Detroit","Lions","DET","ET","#0076B6"],
-["tor-mlb","MLB","Toronto","Blue Jays","TOR","ET","#134A8E"],
-["sea-mlb","MLB","Seattle","Mariners","SEA","PT","#0C2C56"],
-["lad","MLB","Los Angeles","Dodgers","LAD","PT","#005A9C"],
-["nyy","MLB","New York","Yankees","NYY","ET","#132448"],
-["bos-mlb","MLB","Boston","Red Sox","BOS","ET","#A72A38"],
-["cle","MLB","Cleveland","Guardians","CLE","ET","#00385D"],
-["liv","EPL","Liverpool","Liverpool","LIV","UK","#B3122B",1],
-["ars","EPL","London","Arsenal","ARS","UK","#C60912",1],
-["mci","EPL","Manchester","Man City","MCI","UK","#2A87C8",1],
-["mun","EPL","Manchester","Man United","MUN","UK","#C42318",1],
-["che","EPL","London","Chelsea","CHE","UK","#034694",1],
-["tot","EPL","London","Tottenham","TOT","UK","#132257",1],
-["new","EPL","Newcastle","Newcastle","NEW","UK","#241F20"],
-["rma","LALIGA","Madrid","Real Madrid","RMA","CET","#123A78",1],
-["bar","LALIGA","Barcelona","Barcelona","BAR","CET","#8A0038",1],
-["bay","BUNDES","Munich","Bayern Munich","BAY","CET","#C6052D",1],
-["psg","LIGUE1","Paris","Paris SG","PSG","CET","#004170",1],
-["int","SERIEA","Milan","Inter Milan","INT","CET","#0B1560",1],
-["van-mls","MLS","Vancouver","Whitecaps FC","VAN","PT","#00245E"],
-["tfc","MLS","Toronto","Toronto FC","TOR","ET","#A5122B"],
-["mtl-mls","MLS","Montréal","CF Montréal","MTL","ET","#00214E"],
-["lafc","MLS","Los Angeles","LAFC","LAFC","PT","#1B1B1B"],
-["mia","MLS","Miami","Inter Miami","MIA","ET","#B23A6E"],
-["sou","MLS","Seattle","Sounders","SEA","PT","#005595"],
-["uci-wt","UCI","","Men's WorldTour","WT","CET","#8A6D1F"]
-];
 /* Every entry the manifest carries, by id: followable clubs, the
    WorldTour, the ghosts the baked fixtures name, and the clubs known
    only by the name the feed uses. */
 const MANIFEST_BY_ID = new Map(
   ["teams","events","ghosts","feedOnly"].flatMap(g => (TEAM_MANIFEST[g] || []).map(e => [e.id, e])));
 
+/* The followable board: every club, plus the men's WorldTour, which is a
+   competition standing where a team would be.
+
+   `comps` is which competitions a club actually enters — its own league
+   and whatever else the manifest says it plays in. Declared per club,
+   because that is what it is: Liverpool enter the Champions League and
+   Newcastle do not.
+
+   `feed` is the name the feed uses, which is not always the name shown:
+   the feed writes "Montreal Canadiens" where the page writes "Montréal",
+   and matching goes through it. `display` is what the page calls a club
+   where the plain derivation of city and name is wrong, and stays a
+   handful of exceptions rather than a name for every club. */
 const TEAMS = {};
-TEAM_ROWS.forEach(r=>{
-  const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
-  // which competitions this club actually enters
-  t.comps = [r[1]];
-  if(r[1]==="EPL") t.comps = ["EPL","EFL","FAC"];
-  if(t.ucl) t.comps = t.comps.concat(["UCL"]);
-  /* The name the feed uses for this club, which is not always the name
-     the page shows: the roster writes "Montreal Canadiens" where the
-     page writes "Montréal". Matching goes through this. */
-  const m = MANIFEST_BY_ID.get(t.id);
-  if(m && m.feedName) t.feed = m.feedName;
-  /* What the page calls this club, where that differs from the plain
-     derivation below. A list of exceptions, not a name for all fifty. */
-  if(m && m.displayName) t.display = m.displayName;
-  TEAMS[t.id] = t;
+TEAM_MANIFEST.teams.concat(TEAM_MANIFEST.events).forEach(e=>{
+  TEAMS[e.id] = {id:e.id, home:e.comp, city:e.city || "", name:e.name, abbr:e.abbr,
+    tz:e.tz, color:e.color,
+    comps: [e.comp].concat(e.extraComps || []),
+    ...(e.feedName ? {feed:e.feedName} : {}),
+    ...(e.displayName ? {display:e.displayName} : {})};
 });
 const teamList = Object.values(TEAMS);
 const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1};
