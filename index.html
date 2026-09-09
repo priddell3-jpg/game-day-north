@@ -168,6 +168,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .search::placeholder{color:var(--muted)}
 .lg-group{margin-bottom:14px}
 .lg-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.lg-count{font-family:var(--mono);font-size:10px;color:var(--muted);padding:1px 6px;
+  border:1px solid var(--line);border-radius:999px}
+.chips-more{align-self:center;font-size:11.5px;color:var(--muted);padding:0 4px}
 .lg-title b{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .lg-title .bar{height:1px;flex:1;background:var(--line)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -915,6 +918,281 @@ const TEAM_MANIFEST = {
    "tz": "ET",
    "color": "#0076B6",
    "feedName": "Detroit Lions"
+  },
+  {
+   "id": "ari",
+   "comp": "NFL",
+   "espn": "22",
+   "city": "Arizona",
+   "name": "Cardinals",
+   "abbr": "ARI",
+   "tz": "MST",
+   "color": "#A40227",
+   "feedName": "Arizona Cardinals"
+  },
+  {
+   "id": "atl",
+   "comp": "NFL",
+   "espn": "1",
+   "city": "Atlanta",
+   "name": "Falcons",
+   "abbr": "ATL",
+   "tz": "ET",
+   "color": "#A71930",
+   "feedName": "Atlanta Falcons"
+  },
+  {
+   "id": "bal",
+   "comp": "NFL",
+   "espn": "33",
+   "city": "Baltimore",
+   "name": "Ravens",
+   "abbr": "BAL",
+   "tz": "ET",
+   "color": "#29126F",
+   "feedName": "Baltimore Ravens"
+  },
+  {
+   "id": "car",
+   "comp": "NFL",
+   "espn": "29",
+   "city": "Carolina",
+   "name": "Panthers",
+   "abbr": "CAR",
+   "tz": "ET",
+   "color": "#0085CA",
+   "feedName": "Carolina Panthers"
+  },
+  {
+   "id": "chi",
+   "comp": "NFL",
+   "espn": "3",
+   "city": "Chicago",
+   "name": "Bears",
+   "abbr": "CHI",
+   "tz": "CT",
+   "color": "#0B1C3A",
+   "feedName": "Chicago Bears"
+  },
+  {
+   "id": "cin",
+   "comp": "NFL",
+   "espn": "4",
+   "city": "Cincinnati",
+   "name": "Bengals",
+   "abbr": "CIN",
+   "tz": "ET",
+   "color": "#FB4F14",
+   "feedName": "Cincinnati Bengals"
+  },
+  {
+   "id": "cle-nfl",
+   "comp": "NFL",
+   "espn": "5",
+   "city": "Cleveland",
+   "name": "Browns",
+   "abbr": "CLE",
+   "tz": "ET",
+   "color": "#472A08",
+   "feedName": "Cleveland Browns"
+  },
+  {
+   "id": "den-nfl",
+   "comp": "NFL",
+   "espn": "7",
+   "city": "Denver",
+   "name": "Broncos",
+   "abbr": "DEN",
+   "tz": "MT",
+   "color": "#0A2343",
+   "feedName": "Denver Broncos"
+  },
+  {
+   "id": "gb",
+   "comp": "NFL",
+   "espn": "9",
+   "city": "Green Bay",
+   "name": "Packers",
+   "abbr": "GB",
+   "tz": "CT",
+   "color": "#204E32",
+   "feedName": "Green Bay Packers"
+  },
+  {
+   "id": "hou",
+   "comp": "NFL",
+   "espn": "34",
+   "city": "Houston",
+   "name": "Texans",
+   "abbr": "HOU",
+   "tz": "CT",
+   "color": "#021018",
+   "feedName": "Houston Texans"
+  },
+  {
+   "id": "ind",
+   "comp": "NFL",
+   "espn": "11",
+   "city": "Indianapolis",
+   "name": "Colts",
+   "abbr": "IND",
+   "tz": "ET",
+   "color": "#003B75",
+   "feedName": "Indianapolis Colts"
+  },
+  {
+   "id": "jax",
+   "comp": "NFL",
+   "espn": "30",
+   "city": "Jacksonville",
+   "name": "Jaguars",
+   "abbr": "JAX",
+   "tz": "ET",
+   "color": "#007487",
+   "feedName": "Jacksonville Jaguars"
+  },
+  {
+   "id": "lv",
+   "comp": "NFL",
+   "espn": "13",
+   "city": "Las Vegas",
+   "name": "Raiders",
+   "abbr": "LV",
+   "tz": "PT",
+   "color": "#000000",
+   "feedName": "Las Vegas Raiders"
+  },
+  {
+   "id": "lac",
+   "comp": "NFL",
+   "espn": "24",
+   "city": "Los Angeles",
+   "name": "Chargers",
+   "abbr": "LAC",
+   "tz": "PT",
+   "color": "#0080C6",
+   "feedName": "Los Angeles Chargers"
+  },
+  {
+   "id": "lar",
+   "comp": "NFL",
+   "espn": "14",
+   "city": "Los Angeles",
+   "name": "Rams",
+   "abbr": "LAR",
+   "tz": "PT",
+   "color": "#003594",
+   "feedName": "Los Angeles Rams"
+  },
+  {
+   "id": "mia-nfl",
+   "comp": "NFL",
+   "espn": "15",
+   "city": "Miami",
+   "name": "Dolphins",
+   "abbr": "MIA",
+   "tz": "ET",
+   "color": "#008E97",
+   "feedName": "Miami Dolphins"
+  },
+  {
+   "id": "min",
+   "comp": "NFL",
+   "espn": "16",
+   "city": "Minnesota",
+   "name": "Vikings",
+   "abbr": "MIN",
+   "tz": "CT",
+   "color": "#4F2683",
+   "feedName": "Minnesota Vikings"
+  },
+  {
+   "id": "ne",
+   "comp": "NFL",
+   "espn": "17",
+   "city": "New England",
+   "name": "Patriots",
+   "abbr": "NE",
+   "tz": "ET",
+   "color": "#002A5C",
+   "feedName": "New England Patriots"
+  },
+  {
+   "id": "no",
+   "comp": "NFL",
+   "espn": "18",
+   "city": "New Orleans",
+   "name": "Saints",
+   "abbr": "NO",
+   "tz": "CT",
+   "color": "#D3BC8D",
+   "feedName": "New Orleans Saints"
+  },
+  {
+   "id": "nyg",
+   "comp": "NFL",
+   "espn": "19",
+   "city": "New York",
+   "name": "Giants",
+   "abbr": "NYG",
+   "tz": "ET",
+   "color": "#003C7F",
+   "feedName": "New York Giants"
+  },
+  {
+   "id": "nyj",
+   "comp": "NFL",
+   "espn": "20",
+   "city": "New York",
+   "name": "Jets",
+   "abbr": "NYJ",
+   "tz": "ET",
+   "color": "#115740",
+   "feedName": "New York Jets"
+  },
+  {
+   "id": "pit",
+   "comp": "NFL",
+   "espn": "23",
+   "city": "Pittsburgh",
+   "name": "Steelers",
+   "abbr": "PIT",
+   "tz": "ET",
+   "color": "#000000",
+   "feedName": "Pittsburgh Steelers"
+  },
+  {
+   "id": "tb",
+   "comp": "NFL",
+   "espn": "27",
+   "city": "Tampa Bay",
+   "name": "Buccaneers",
+   "abbr": "TB",
+   "tz": "ET",
+   "color": "#BD1C36",
+   "feedName": "Tampa Bay Buccaneers"
+  },
+  {
+   "id": "ten",
+   "comp": "NFL",
+   "espn": "10",
+   "city": "Tennessee",
+   "name": "Titans",
+   "abbr": "TEN",
+   "tz": "CT",
+   "color": "#4495D2",
+   "feedName": "Tennessee Titans"
+  },
+  {
+   "id": "wsh",
+   "comp": "NFL",
+   "espn": "28",
+   "city": "Washington",
+   "name": "Commanders",
+   "abbr": "WSH",
+   "tz": "ET",
+   "color": "#5A1414",
+   "feedName": "Washington Commanders"
   },
   {
    "id": "tor-mlb",
@@ -2114,6 +2392,10 @@ const pickable = allTeams.filter(t=>!t.ghost);
    Intl with an IANA timeZone is used unguarded here, as it already is
    for every time this page prints. */
 const ZONE_IANA = {ET:"America/New_York", CT:"America/Chicago", MT:"America/Denver",
+  /* Arizona keeps its own entry because it does not observe daylight
+     saving: for half the year it is not Denver's clock, and calling it
+     MT would be wrong every summer. */
+  MST:"America/Phoenix",
   PT:"America/Los_Angeles", UK:"Europe/London", CET:"Europe/Paris", UTC:"UTC"};
 const _zoneFmt = {};
 function zoneParts(tz, ms){
@@ -4552,16 +4834,37 @@ function renderRugbyPicker(){
   return out + '</div>';
 }
 
+/* How many clubs a league shows before it asks you to search.
+
+   Twenty clubs is a list. Thirty-two is a wall, and ten leagues of them
+   is a wall you scroll past to reach anything. Search is the way in at
+   this size — it is already there, at the top, and it always was — so an
+   unsearched league shows the clubs you follow plus enough to browse,
+   and says how many more there are.
+
+   Searching lifts the cap entirely: if you asked for something by name,
+   you get every club that matches. */
+const PICKER_CAP = 12;
 function renderDrawer(){
   const q=search.trim().toLowerCase();
   const groups=Object.keys(COMPS).map(lg=>{
-    const ts=pickable.filter(t=>t.home===lg && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)));
-    if(!ts.length) return "";
-    return '<div class="lg-group"><div class="lg-title"><b>'+esc(COMPS[lg].name)+'</b><span class="bar"></span></div><div class="chips">'
+    const all=pickable.filter(t=>t.home===lg && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)));
+    if(!all.length) return "";
+    /* A club you follow is never hidden behind a cap: the picker is also
+       how you un-follow one. */
+    const mine=all.filter(t=>selected.has(t.id));
+    const rest=all.filter(t=>!selected.has(t.id));
+    const ts = q ? all : mine.concat(rest).slice(0, Math.max(PICKER_CAP, mine.length));
+    const hidden = all.length - ts.length;
+    return '<div class="lg-group"><div class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
+      + (all.length > PICKER_CAP ? '<span class="lg-count">'+all.length+'</span>' : "")
+      + '<span class="bar"></span></div><div class="chips">'
       + ts.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="'+selected.has(t.id)+'" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
           + crest(t)+esc(fullName(t))
           + (t.comps.length>1?'<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+t.comps.length+' comps</span>':'')
-          + '</button>').join("")+'</div></div>';
+          + '</button>').join("")
+      + (hidden ? '<span class="chips-more">'+hidden+' more &mdash; search to find them</span>' : "")
+      + '</div></div>';
   }).join("");
   document.getElementById("teamGroups").innerHTML = (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
     + renderRugbyPicker()

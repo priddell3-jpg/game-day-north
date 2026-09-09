@@ -8,7 +8,7 @@
   "The `teams` group is what localStorage and share links carry; the rest are recorded so they cannot be quietly reassigned."
  ],
  "checked": "2026-09-09",
- "count": 62,
+ "count": 87,
  "ids": {
   "tor-nhl": {
    "group": "teams",
@@ -319,6 +319,131 @@
    "group": "feedOnly",
    "comp": "EPL",
    "feedName": "Brentford"
+  },
+  "ari": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Arizona Cardinals"
+  },
+  "atl": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Atlanta Falcons"
+  },
+  "bal": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Baltimore Ravens"
+  },
+  "car": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Carolina Panthers"
+  },
+  "chi": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Chicago Bears"
+  },
+  "cin": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Cincinnati Bengals"
+  },
+  "cle-nfl": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Cleveland Browns"
+  },
+  "den-nfl": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Denver Broncos"
+  },
+  "gb": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Green Bay Packers"
+  },
+  "hou": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Houston Texans"
+  },
+  "ind": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Indianapolis Colts"
+  },
+  "jax": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Jacksonville Jaguars"
+  },
+  "lv": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Las Vegas Raiders"
+  },
+  "lac": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Los Angeles Chargers"
+  },
+  "lar": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Los Angeles Rams"
+  },
+  "mia-nfl": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Miami Dolphins"
+  },
+  "min": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Minnesota Vikings"
+  },
+  "ne": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "New England Patriots"
+  },
+  "no": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "New Orleans Saints"
+  },
+  "nyg": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "New York Giants"
+  },
+  "nyj": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "New York Jets"
+  },
+  "pit": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Pittsburgh Steelers"
+  },
+  "tb": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Tampa Bay Buccaneers"
+  },
+  "ten": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Tennessee Titans"
+  },
+  "wsh": {
+   "group": "teams",
+   "comp": "NFL",
+   "feedName": "Washington Commanders"
   }
  }
 }
