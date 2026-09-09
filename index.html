@@ -308,6 +308,9 @@ main{padding:22px 0 80px}
 /* The tennis star sits on the row rather than in a picker, so it is a
    glyph and not a chip: it appears twice on every tennis row and a
    bordered pill each time would crowd out the names it belongs to. */
+/* The name and its star on one line, with the ranking under them — the
+   same column a team's record sits in. */
+.pl-line{display:inline-flex;align-items:center;gap:2px;min-width:0}
 .pl-star{border:0;background:none;padding:0 2px;margin-left:-2px;line-height:1;
   font-size:12px;color:var(--muted);cursor:pointer}
 .pl-star[aria-pressed="true"]{color:var(--accent)}
@@ -4950,7 +4953,7 @@ async function loadStatic(){
   /* Read whether or not a tour is on, for the same reason the matches
      are: switching a tour on should show the top of the draw straight
      away rather than the whole of it until the next refresh. */
-  attachRankings(staticTennis && staticTennis.rankings);
+  attachRankings(staticTennis && staticTennis.rankings, staticTennis && staticTennis.rankedAt);
   /* Standings are not fixtures and are not merged into them: they are
      held on their own and read by the Race section alone. A file with no
      standings block empties them, so a race can never outlive its data. */
@@ -6058,10 +6061,28 @@ const tennisMine = g => tennisTours.has(g.comp) &&
    no list at all nothing is narrowed and the whole draw shows, which is
    the same answer this page gave before any of this existed. */
 const TENNIS_TOP = 25;
-let TENNIS_RANKS = {};
-function attachRankings(byTour){
+/* The tours publish on Mondays, so a list a build has been unable to
+   refresh for more than a week has stopped being current. It still
+   FILTERS past that — a slightly old idea of who the top twenty-five are
+   is far better than none, and the filter's failure mode is more tennis
+   rather than less. It stops being SHOWN, because "No. 3" printed beside
+   a name is a claim, and a claim from a list nobody could refresh for
+   nine days is one this page should not make. Same limit the build warns
+   at, for the same reason. */
+const RANK_STALE_DAYS = 8;
+let TENNIS_RANKS = {}, TENNIS_RANKED_AT = {};
+function attachRankings(byTour, datedAt){
   TENNIS_RANKS = (byTour && typeof byTour === "object") ? byTour : {};
+  TENNIS_RANKED_AT = (datedAt && typeof datedAt === "object") ? datedAt : {};
   return Object.keys(TENNIS_RANKS).length;
+}
+/* A place worth printing: one we hold, from a list still current. */
+function rankLine(p, tour, now){
+  const at = rankOfPlayer(p, tour);
+  if(at == null) return null;
+  const dated = Date.parse(TENNIS_RANKED_AT[tour] || "");
+  if(Number.isFinite(dated) && (now - dated) > RANK_STALE_DAYS * DAY) return null;
+  return "No. " + at;
 }
 /* The player's place, or null. Null is "not in the list we hold", which
    is not the same as unranked and is never shown to anyone. */
@@ -6593,28 +6614,34 @@ const TENNIS_STATE = {
    match does not mean doing arithmetic. `setWins` names the winner of
    each set outright; a set still in progress carries null and is left
    plain. */
-function setHtml(m, i){
-  const txt = setText(m, i);
+function setHtml(m, i, flip){
+  const txt = setText(m, i, flip);
   if(!txt) return "";
   const w = (m.setWins || [])[i];
   const parts = /^(\d+|-)-(\d+|-)(\(\d+\))?$/.exec(txt);
   if((w !== 0 && w !== 1) || !parts) return '<span class="set">' + esc(txt) + '</span>';
+  /* Which SIDE OF THE ROW took it, not which feed index — a finished
+     match puts the winner's name first, and a set score reading the
+     other way round would be the row contradicting itself. */
+  const firstWon = flip ? w === 1 : w === 0;
   return '<span class="set">'
-    + (w === 0 ? '<b>' + esc(parts[1]) + '</b>' : esc(parts[1])) + '-'
-    + (w === 1 ? '<b>' + esc(parts[2]) + '</b>' : esc(parts[2]))
+    + (firstWon ? '<b>' + esc(parts[1]) + '</b>' : esc(parts[1])) + '-'
+    + (firstWon ? esc(parts[2]) : '<b>' + esc(parts[2]) + '</b>')
     + (parts[3] ? esc(parts[3]) : "") + '</span>';
 }
 /* Sets won, in the order the names are written. Two completed sets each
    way reads "1-1" without the reader counting anything, which is what
    was missing: a match at 6-3 1-6 4-3 says who is ahead in the set being
    played and nothing at all about the match. */
-function setTally(m){
+function setTally(m, flip){
   const wins = (m.setWins || []).filter(w => w === 0 || w === 1);
   if(!wins.length) return null;
-  return wins.filter(w=>w===0).length + "\u2013" + wins.filter(w=>w===1).length;
+  const a = wins.filter(w=>w===0).length, b = wins.filter(w=>w===1).length;
+  return (flip ? b : a) + "\u2013" + (flip ? a : b);
 }
-function setText(m, i){
-  const [a, b] = (m.sets || [])[i] || [null, null];
+function setText(m, i, flip){
+  const pair = (m.sets || [])[i] || [null, null];
+  const [a, b] = flip ? [pair[1], pair[0]] : pair;
   if(a == null && b == null) return "";
   const tb = (m.tiebreaks || [])[i];
   const pick = tb ? (tb[0] !== null && tb[1] !== null ? "(" + Math.min(tb[0], tb[1]) + ")" : "") : "";
@@ -6638,6 +6665,14 @@ function tennisRow(g, now){
   /* Greying the loser IS the result, so it waits on the same reveal the
      score does. A finished match nobody has looked at renders both names
      exactly as a scheduled one does. */
+  /* Whether the row may say how the match went. Everything that answers
+     that — the order the names are in, the word between them, which one
+     is greyed, the set scores — turns on this single answer, so they
+     come and go together and a half-told row is impossible. */
+  const settled = m.winner != null;
+  const show = settled && reveal;
+  const flip = show && m.winner === 1;
+
   const nameOf = (p, i, settle) => '<span class="g-team pl'
     + (p.tbd ? " tbd-slot" : "")
     + (settle && m.winner === i ? " pl-win" : "")
@@ -6664,14 +6699,29 @@ function tennisRow(g, now){
     const p = m.players[i];
     /* A player whose earlier match is sitting hidden becomes the slot
        they were before it: naming them here would announce that they
-       won it. */
-    return playerSpoiled(m, p)
-      ? nameOf(TBD_PLAYER, i, false)
-      : nameOf(p, i, reveal) + starOf(p);
+       won it — and a place beside a blanked name would identify them
+       just as well, so the ranking goes with it. */
+    if(playerSpoiled(m, p))
+      return '<span class="g-side"><span class="pl-line">' + nameOf(TBD_PLAYER, i, false)
+        + '</span></span>';
+    /* The world ranking, in the slot a team's record occupies. It is a
+       weekly figure published by the tour, not read off any match, so it
+       cannot give a result away and is not gated on the reveal. */
+    const rank = rankLine(p, m.tour, now);
+    return '<span class="g-side">'
+      + '<span class="pl-line">' + nameOf(p, i, show) + starOf(p) + '</span>'
+      + (rank ? '<span class="g-rec">' + esc(rank) + '</span>' : '')
+      + '</span>';
   };
-  // "v", never "at": neither player is at home
-  const title = '<div class="g-teams">' + sideOf(0)
-    + '<span class="vs">v</span>' + sideOf(1) + '</div>';
+  /* "def" once the match is settled and may be said, with the winner
+     moved to the top — the way a result has always been written. "v"
+     otherwise, in the order the feed billed it, which is also what a
+     finished match reverts to while its result is hidden: reordering the
+     names announces the winner exactly as loudly as the word does. */
+  const order = flip ? [1, 0] : [0, 1];
+  const title = '<div class="g-teams">' + sideOf(order[0])
+    + '<span class="vs">' + (show ? "def" : "v") + '</span>'
+    + sideOf(order[1]) + '</div>';
 
   const t = tourneyOf(g);
   const meta = '<div class="g-meta">'
@@ -6703,7 +6753,11 @@ function tennisRow(g, now){
       ? '<span class="countdown" data-start="' + g.start + '">' + esc(countdownText(g.start, now)) + '</span>'
       : '<span class="score-state">Scheduled</span>')
       + '<span class="conf-note">' + (m.timeKnown ? "" : "Time not yet published") + '</span>';
-  } else if(played && !reveal){
+  } else if((played || settled) && !reveal){
+    /* `settled` and not just `played`: a walkover has a winner and no
+       sets at all, and without a way to reveal it the row could never be
+       opened — which would leave that player's name blanked out of every
+       later round for good. */
     right += '<button class="hidden-score" data-reveal="' + esc(g.id) + '">Reveal</button>'
       + '<span class="score-state">' + state.text + ' &middot; hidden</span>';
   } else {
@@ -6711,7 +6765,7 @@ function tennisRow(g, now){
       + (state.live ? '<span class="dot-live"></span>' : "") + state.text + '</span>';
     if(played){
       right += '<span class="sets">'
-        + (m.sets || []).map((_, i) => setHtml(m, i)).filter(Boolean).join("")
+        + (m.sets || []).map((_, i) => setHtml(m, i, flip)).filter(Boolean).join("")
         + '</span>';
     }
     /* The label is ESPN's own words for where the match is — "3rd Set",
@@ -6722,7 +6776,7 @@ function tennisRow(g, now){
        when the row has to answer "who is winning" and the set scores
        alone do not. A finished match does not need it: the loser's name
        is already greyed. */
-    const tally = (state.live && played) ? setTally(m) : null;
+    const tally = (state.live && played) ? setTally(m, flip) : null;
     if(m.status === "live" && (m.label || tally))
       right += '<span class="conf-note">'
         + [m.label ? esc(m.label) : "", tally ? tally + " in sets" : ""].filter(Boolean).join(" &middot; ")

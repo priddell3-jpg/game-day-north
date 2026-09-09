@@ -285,12 +285,14 @@ test("every real fixture match becomes a placeable row", () => {
 
 /* ---------------- the row's own markup rules ---------------- */
 
-test("the row says v, never at or home", () => {
+test("the row says v or def, never at or home", () => {
   const at = SRC.indexOf("function tennisRow");
   const body = SRC.slice(at, SRC.indexOf("\nfunction gameRow", at));
   assert.ok(body.length > 200, "could not isolate tennisRow");
-  assert.match(body, /class="vs">v</, "players should be separated by v");
-  // .at is the team row's "Toronto at Boston" separator; a tennis row must not use it
+  /* "v" until a match is settled and its result may be shown, "def"
+     after — the way a result has always been written. Neither is the
+     team row's home-and-away language. */
+  assert.match(body, /class="vs">' \+ \(show \? "def" : "v"\)/, "v, then def");
   assert.doesNotMatch(body, /class="at"|homeAway|orderedTeams/, "team home/away language in a tennis row");
 });
 
