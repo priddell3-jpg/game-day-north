@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { loadFromPage } from "./helpers/page.mjs";
 
 const { sameGame, normName } = loadFromPage(
-  ["normName", "idKey", "ESPN_NAME", "clubKeys", "sameClub", "sameGame", "SAME_WINDOW"]);
+  ["normName", "idKey", "clubKeys", "sameClub", "sameGame", "SAME_WINDOW"]);
 
 const T = Date.parse("2026-08-24T17:05:00Z");
 const g = (over = {}) => ({

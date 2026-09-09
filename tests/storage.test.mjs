@@ -4,8 +4,7 @@ import { loadFromPage } from "./helpers/page.mjs";
 
 const { validResultRow, readResultStore, dedupeResultRows, RESULTS_VERSION } =
   loadFromPage(
-    ["RESULTS_VERSION", "RESULTS_READABLE", "SAME_WINDOW", "normName", "idKey", "ESPN_NAME",
-     "clubKeys", "sameClub", "sameGame", "validResultRow", "resultRowAsGame", "SYNTHETIC_ID",
+    ["RESULTS_VERSION", "RESULTS_READABLE", "SAME_WINDOW", "normName", "idKey", "clubKeys", "sameClub", "sameGame", "validResultRow", "resultRowAsGame", "SYNTHETIC_ID",
      "rowResolved", "betterResultRow", "dedupeResultRows", "readResultStore"],
     "const DAY = 86400000;");
 

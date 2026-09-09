@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { loadFromPage } from "./helpers/page.mjs";
 
 const { findScored, applyScored, orientation, sameClub } = loadFromPage(
-  ["normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN_NAME", "clubKeys", "sameClub",
+  ["normName", "idKey", "SAME_WINDOW", "sameGame", "clubKeys", "sameClub",
    "orientation", "findScored", "applyScored"]);
 
 /* The live top-up reads the scoreboard and merges what it finds into the
@@ -202,20 +202,19 @@ function harness(){
       return responses.get(url);
     }};
   const page = loadFromPage(
-    ["TEAM_ROWS", "GHOSTS", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
-     "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "ESPN_NAME",
-     "norm", "espnTeamObj", "venueOf", "parseEvent", "parseSummary", "clubKeys", "sameClub",
+    ["TEAM_MANIFEST", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
+     "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "norm", "espnTeamObj", "venueOf", "parseEvent", "parseSummary", "clubKeys", "sameClub",
      "orientation", "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore",
      "activeNow", "scoredDays", "SUMMARY_CAP", "DAY_CAP", "fillScores"], PREAMBLE);
   // the shipped roster, built the way the page builds it
-  page.TEAM_ROWS.forEach(r=>{
-    const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
-    t.comps = r[1]==="EPL" ? ["EPL","EFL","FAC"] : [r[1]];
-    if(t.ucl) t.comps = t.comps.concat(["UCL"]);
-    TEAMS[t.id] = t;
+  page.TEAM_MANIFEST.teams.concat(page.TEAM_MANIFEST.events).forEach(e=>{
+    TEAMS[e.id] = {id:e.id, home:e.comp, city:e.city || "", name:e.name, abbr:e.abbr,
+      tz:e.tz, color:e.color, comps: [e.comp].concat(e.extraComps || []),
+      ...(e.feedName ? {feed:e.feedName} : {}), ...(e.displayName ? {display:e.displayName} : {})};
   });
-  page.GHOSTS.forEach(r=>{
-    TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ghost:true, comps:[r[1]]};
+  page.TEAM_MANIFEST.ghosts.forEach(g=>{
+    TEAMS[g.id] = {id:g.id, home:g.comp, city:g.city || "", name:g.name, abbr:g.abbr,
+      tz:g.tz, color:g.color, ghost:true, comps:[g.comp]};
   });
   Object.values(TEAMS).forEach(t=>allTeams.push(t));
   const url = (comp, ms) => page.ESPN + page.ESPN_PATH[comp] + "/scoreboard?dates=" + page.espnDate(ms == null ? Date.now() : ms);

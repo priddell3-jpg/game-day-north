@@ -598,6 +598,18 @@ main{padding:22px 0 80px}
 "use strict";
 
 /* ============================================================
+   THE TEAM MANIFEST
+
+   data/teams.json, substituted in at build time by build.js. One
+   self-contained file, no request for its own team data.
+
+   In src/page.html this is a placeholder; scripts/lib/inline.cjs puts
+   the real thing here, and tests/helpers/page.mjs performs the same
+   substitution so the tests evaluate what ships.
+   ============================================================ */
+const TEAM_MANIFEST = /*__TEAMS_MANIFEST__*/null;
+
+/* ============================================================
    COMPETITIONS — the rights-bearing entity, not the team.
    A club like Liverpool enters several of these in one season
    and lands on a different Canadian service in each.
@@ -1269,87 +1281,49 @@ function raceCards(now, followed){
   return raceAssignClubs(kept, byClub);
 }
 
-// id | league | city | name | abbr | tz | colour | ucl
-const TEAM_ROWS = [
-["tor-nhl","NHL","Toronto","Maple Leafs","TOR","ET","#00205B"],
-["van-nhl","NHL","Vancouver","Canucks","VAN","PT","#00205B"],
-["edm","NHL","Edmonton","Oilers","EDM","MT","#FF4C00"],
-["cgy","NHL","Calgary","Flames","CGY","MT","#C8102E"],
-["ott","NHL","Ottawa","Senators","OTT","ET","#B01034"],
-["mtl-nhl","NHL","Montréal","Canadiens","MTL","ET","#AF1E2D"],
-["wpg","NHL","Winnipeg","Jets","WPG","CT","#041E42"],
-["bos-nhl","NHL","Boston","Bruins","BOS","ET","#1B1B1B"],
-["nyr","NHL","New York","Rangers","NYR","ET","#0038A8"],
-["vgk","NHL","Vegas","Golden Knights","VGK","PT","#8C7443"],
-["sea-nhl","NHL","Seattle","Kraken","SEA","PT","#001628"],
-["col","NHL","Colorado","Avalanche","COL","MT","#6F263D"],
-["tor-nba","NBA","Toronto","Raptors","TOR","ET","#CE1141"],
-["gsw","NBA","Golden State","Warriors","GSW","PT","#1D428A"],
-["lal","NBA","Los Angeles","Lakers","LAL","PT","#552583"],
-["bos-nba","NBA","Boston","Celtics","BOS","ET","#007A33"],
-["den","NBA","Denver","Nuggets","DEN","MT","#0E2240"],
-["okc","NBA","Oklahoma City","Thunder","OKC","CT","#0F5E96"],
-["nyk","NBA","New York","Knicks","NYK","ET","#D55118"],
-["sea-nfl","NFL","Seattle","Seahawks","SEA","PT","#002244"],
-["buf","NFL","Buffalo","Bills","BUF","ET","#00338D"],
-["sf","NFL","San Francisco","49ers","SF","PT","#8E0000"],
-["kc","NFL","Kansas City","Chiefs","KC","CT","#C41230"],
-["dal","NFL","Dallas","Cowboys","DAL","CT","#041E42"],
-["phi","NFL","Philadelphia","Eagles","PHI","ET","#004C54"],
-["det","NFL","Detroit","Lions","DET","ET","#0076B6"],
-["tor-mlb","MLB","Toronto","Blue Jays","TOR","ET","#134A8E"],
-["sea-mlb","MLB","Seattle","Mariners","SEA","PT","#0C2C56"],
-["lad","MLB","Los Angeles","Dodgers","LAD","PT","#005A9C"],
-["nyy","MLB","New York","Yankees","NYY","ET","#132448"],
-["bos-mlb","MLB","Boston","Red Sox","BOS","ET","#A72A38"],
-["cle","MLB","Cleveland","Guardians","CLE","ET","#00385D"],
-["liv","EPL","Liverpool","Liverpool","LIV","UK","#B3122B",1],
-["ars","EPL","London","Arsenal","ARS","UK","#C60912",1],
-["mci","EPL","Manchester","Man City","MCI","UK","#2A87C8",1],
-["mun","EPL","Manchester","Man United","MUN","UK","#C42318",1],
-["che","EPL","London","Chelsea","CHE","UK","#034694",1],
-["tot","EPL","London","Tottenham","TOT","UK","#132257",1],
-["new","EPL","Newcastle","Newcastle","NEW","UK","#241F20"],
-["rma","LALIGA","Madrid","Real Madrid","RMA","CET","#123A78",1],
-["bar","LALIGA","Barcelona","Barcelona","BAR","CET","#8A0038",1],
-["bay","BUNDES","Munich","Bayern Munich","BAY","CET","#C6052D",1],
-["psg","LIGUE1","Paris","Paris SG","PSG","CET","#004170",1],
-["int","SERIEA","Milan","Inter Milan","INT","CET","#0B1560",1],
-["van-mls","MLS","Vancouver","Whitecaps FC","VAN","PT","#00245E"],
-["tfc","MLS","Toronto","Toronto FC","TOR","ET","#A5122B"],
-["mtl-mls","MLS","Montréal","CF Montréal","MTL","ET","#00214E"],
-["lafc","MLS","Los Angeles","LAFC","LAFC","PT","#1B1B1B"],
-["mia","MLS","Miami","Inter Miami","MIA","ET","#B23A6E"],
-["sou","MLS","Seattle","Sounders","SEA","PT","#005595"],
-["uci-wt","UCI","","Men's WorldTour","WT","CET","#8A6D1F"]
-];
+/* Every entry the manifest carries, by id: followable clubs, the
+   WorldTour, the ghosts the baked fixtures name, and the clubs known
+   only by the name the feed uses. */
+const MANIFEST_BY_ID = new Map(
+  ["teams","events","ghosts","feedOnly"].flatMap(g => (TEAM_MANIFEST[g] || []).map(e => [e.id, e])));
+
+/* The followable board: every club, plus the men's WorldTour, which is a
+   competition standing where a team would be.
+
+   `comps` is which competitions a club actually enters — its own league
+   and whatever else the manifest says it plays in. Declared per club,
+   because that is what it is: Liverpool enter the Champions League and
+   Newcastle do not.
+
+   `feed` is the name the feed uses, which is not always the name shown:
+   the feed writes "Montreal Canadiens" where the page writes "Montréal",
+   and matching goes through it. `display` is what the page calls a club
+   where the plain derivation of city and name is wrong, and stays a
+   handful of exceptions rather than a name for every club. */
 const TEAMS = {};
-TEAM_ROWS.forEach(r=>{
-  const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
-  // which competitions this club actually enters
-  t.comps = [r[1]];
-  if(r[1]==="EPL") t.comps = ["EPL","EFL","FAC"];
-  if(t.ucl) t.comps = t.comps.concat(["UCL"]);
-  TEAMS[t.id] = t;
+TEAM_MANIFEST.teams.concat(TEAM_MANIFEST.events).forEach(e=>{
+  TEAMS[e.id] = {id:e.id, home:e.comp, city:e.city || "", name:e.name, abbr:e.abbr,
+    tz:e.tz, color:e.color,
+    comps: [e.comp].concat(e.extraComps || []),
+    ...(e.feedName ? {feed:e.feedName} : {}),
+    ...(e.displayName ? {display:e.displayName} : {})};
 });
 const teamList = Object.values(TEAMS);
-const CLUB_NAMES = {"uci-wt":"Men's WorldTour","van-mls":"Vancouver Whitecaps","tfc":"Toronto FC","mtl-mls":"CF Montréal","lafc":"LAFC","mia":"Inter Miami","sou":"Seattle Sounders"};
 const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1};
 const fullName = t => !t ? "TBD"
   : t.full ? t.name                       // came from the feed already complete
-  : (CLUB_NAMES[t.id] || (SOCCER[t.home] ? t.name : t.city+" "+t.name));
+  : (t.display || (SOCCER[t.home] ? t.name : t.city+" "+t.name));
 
-/* ---- filler opponents: real clubs you can't select, so schedules look real ---- */
-/* Opponents referenced by the baked fallback below. Everything else
-   arrives from the live feed with its own name and colours. */
-const GHOSTS = [
-["kcr","MLB","Kansas City","Royals","KC","CT","#004687"],
-["ips","EPL","Ipswich","Ipswich Town","IPS","UK","#3A64A3"],
-["bou","EPL","Bournemouth","Bournemouth","BOU","UK","#B50E12"],
-["nfo","EPL","Nottingham","Nottm Forest","NFO","UK","#DD0000"],
-["ful","EPL","London","Fulham","FUL","UK","#1B1B1B"]
-];
-GHOSTS.forEach(r=>{ TEAMS[r[0]] = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ghost:true, comps:[r[1]]}; });
+/* ---- filler opponents: real clubs you can't select, so schedules look real ----
+   Referenced by the baked fallback below, which names them by id, so
+   their ids are load-bearing. Everything else arrives from the live feed
+   with its own name and colours. */
+TEAM_MANIFEST.ghosts.forEach(g=>{
+  TEAMS[g.id] = {id:g.id, home:g.comp, city:g.city || "", name:g.name, abbr:g.abbr,
+    tz:g.tz, color:g.color, ghost:true, comps:[g.comp],
+    ...(g.feedName ? {feed:g.feedName} : {}),
+    ...(g.displayName ? {display:g.displayName} : {})};
+});
 const allTeams = Object.values(TEAMS);
 const pickable = allTeams.filter(t=>!t.ghost);
 
@@ -1431,15 +1405,6 @@ function idKey(t){
   return (t.id && !/^(feed|espn):/.test(t.id)) ? t.id : normName(t.name);
 }
 // clubs whose ESPN name differs from city + name
-const ESPN_NAME = {
-  liv:"Liverpool", ars:"Arsenal", mci:"Manchester City", mun:"Manchester United",
-  che:"Chelsea", tot:"Tottenham Hotspur", new:"Newcastle United", nfo:"Nottingham Forest",
-  bou:"AFC Bournemouth", ips:"Ipswich Town", avl:"Aston Villa", bha:"Brighton & Hove Albion",
-  whu:"West Ham United", eve:"Everton", cry:"Crystal Palace", bre:"Brentford", ful:"Fulham",
-  rma:"Real Madrid", bar:"Barcelona", bay:"Bayern Munich", psg:"Paris Saint-Germain", int:"Internazionale",
-  "van-mls":"Vancouver Whitecaps", tfc:"Toronto FC", "mtl-mls":"CF Montreal",
-  lafc:"LAFC", mia:"Inter Miami CF", sou:"Seattle Sounders FC"
-};
 /* Every name a club is known by, normalised. The file writes a name in
    full — "Toronto Blue Jays" — where the roster splits it into a city
    and a name, so a club record matches on whichever of these two
@@ -1455,7 +1420,7 @@ function clubKeys(t){
   if(!t) return [];
   const keys = [idKey(t)];
   if(t.name) keys.push(normName(t.name), normName((t.city || "") + " " + t.name));
-  if(ESPN_NAME[t.id]) keys.push(normName(ESPN_NAME[t.id]));
+  if(t.feed) keys.push(normName(t.feed));
   return keys.filter(Boolean);
 }
 const sameClub = (a, b) => clubKeys(a).some(k => clubKeys(b).indexOf(k) >= 0);
@@ -1734,7 +1699,7 @@ const ESPN_PATH = {
   EFL:"soccer/eng.league_cup", FAC:"soccer/eng.fa",
   LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1"
 };
-// ESPN_NAME is declared with the identity helpers above, which need it.
+// The feed name lives on the club itself, set where TEAMS is built.
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 let liveMode = null;          // null = not tried, true = reachable, false = blocked
 let liveNote = "", liveErr = "";
@@ -1756,7 +1721,7 @@ function espnTeamObj(e, comp){
   const disp = e.displayName || e.name || "";
   for(const t of allTeams){
     if(t.home!==comp && (t.comps||[]).indexOf(comp)<0) continue;
-    if(ESPN_NAME[t.id] && norm(ESPN_NAME[t.id])===norm(disp)) return t;
+    if(t.feed && norm(t.feed)===norm(disp)) return t;
     if(norm(t.city+" "+t.name)===norm(disp)) return t;
     if(norm(t.name)===norm(disp)) return t;
   }
@@ -2087,9 +2052,9 @@ async function espnTeamsList(comp){
 }
 const bare = n => norm(String(n||"").replace(/\b(fc|cf|sc|afc)\b/gi,""));
 function findEspnTeam(t, list){
-  const want = norm(ESPN_NAME[t.id] || (t.city+" "+t.name));
+  const want = norm(t.feed || (t.city+" "+t.name));
   return list.find(e=>norm(e.displayName)===want)
-      || list.find(e=>bare(e.displayName)===bare(ESPN_NAME[t.id] || (t.city+" "+t.name)))
+      || list.find(e=>bare(e.displayName)===bare(t.feed || (t.city+" "+t.name)))
       || list.find(e=>norm(e.displayName)===norm(t.city+" "+t.name))
       || list.find(e=>norm(e.name)===norm(t.name) && norm(e.location)===norm(t.city))
       || list.find(e=>norm(e.name)===norm(t.name))
@@ -2705,7 +2670,10 @@ const LS = {
   get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
-const DEFAULT_TEAMS = ["van-nhl","van-mls","tor-mlb","tor-nba","liv"];
+/* The board a first-time visitor gets. Ordered, and the order is what
+   they see, so it is an array in the manifest rather than a flag on each
+   club. */
+const DEFAULT_TEAMS = TEAM_MANIFEST.defaults;
 /* Rugby is followed as a competition, not as a team, so one id stands
    for "all supported men's international rugby". It lives in the same
    set as the teams deliberately: an existing share link and an existing

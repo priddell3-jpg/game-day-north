@@ -1,11 +1,19 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 
 /* The app is one HTML file by design — no bundler, no modules, nothing to
    import. To test its logic without changing that, pull the named
    top-level declarations out of the source and evaluate just those. The
    test therefore runs the code that actually ships, rather than a copy
    that can drift from it. */
-const SRC = readFileSync(new URL("../../src/page.html", import.meta.url), "utf8");
+/* The manifest is inlined here exactly as build.js inlines it, so these
+   tests evaluate the page that ships rather than one whose manifest is
+   still the empty placeholder. */
+const require_ = createRequire(import.meta.url);
+const { inlineManifest } = require_("../../scripts/lib/inline.cjs");
+const SRC = inlineManifest(
+  readFileSync(new URL("../../src/page.html", import.meta.url), "utf8"),
+  readFileSync(new URL("../../data/teams.json", import.meta.url), "utf8"));
 
 function declarationOf(name){
   // [async] function NAME(...) { ... }  — closing brace at column 0
@@ -34,9 +42,18 @@ function declarationOf(name){
 
 /** Evaluate the named page declarations and hand them back.
     `preamble` supplies whatever they close over. */
+/* The manifest underpins the team declarations now, so it is always in
+   scope — the same way it is always in scope in the built page, where
+   build.js has inlined it. Without this, asking for anything that reads
+   it would fail on a name the shipped page has and this evaluation does
+   not. */
+const MANIFEST_DECL = declarationOf("TEAM_MANIFEST");
+
 export function loadFromPage(names, preamble = ""){
-  const body = names.map(declarationOf).join("\n\n");
-  const factory = new Function(preamble + "\n" + body + "\nreturn {" + names.join(",") + "};");
+  const wanted = names.filter(n => n !== "TEAM_MANIFEST");
+  const body = wanted.map(declarationOf).join("\n\n");
+  const factory = new Function(preamble + "\n" + MANIFEST_DECL + "\n" + body
+    + "\nreturn {" + names.join(",") + "};");
   return factory();
 }
 

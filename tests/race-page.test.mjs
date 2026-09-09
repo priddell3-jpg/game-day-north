@@ -15,7 +15,7 @@ import { CLINCH, RACE_KINDS, groupsFrom, STANDINGS_HOLD } from "../scripts/lib/r
    parser, the page's model and this app's own team matcher are all
    checked against each other rather than against a hand-made object. */
 
-const NAMES = ["esc", "COMPS", "SOCCER", "CLUB_NAMES", "TEAM_ROWS", "TEAMS", "fullName",
+const NAMES = ["esc", "COMPS", "SOCCER", "TEAM_MANIFEST", "TEAMS", "fullName",
   "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "attachStandings", "raceZoneHit", "raceCutoff",
   "racePhase", "RACE_PHASES", "racePhaseOf", "raceRelevance", "RACE_PRIORITY",
   "racePriority", "raceAutoAllowed", "RACE_GAP_TOLERANCE", "RACE_AUTO", "racePrefOf",
@@ -45,14 +45,12 @@ function page(opts = {}){
     + "const showScores = " + (opts.scores === false ? "false" : "true") + ";\n";
   const P = loadFromPage(NAMES, pre);
   /* The page builds TEAMS with a loop rather than a declaration, so the
-     loop is repeated here against the same TEAM_ROWS. fullName closes
+     loop is repeated here against the same manifest. fullName closes
      over this very object. */
-  P.TEAM_ROWS.forEach(r => {
-    const t = {id:r[0], home:r[1], city:r[2], name:r[3], abbr:r[4], tz:r[5], color:r[6], ucl:!!r[7]};
-    t.comps = [r[1]];
-    if(r[1] === "EPL") t.comps = ["EPL", "EFL", "FAC"];
-    if(t.ucl) t.comps = t.comps.concat(["UCL"]);
-    P.TEAMS[t.id] = t;
+  P.TEAM_MANIFEST.teams.concat(P.TEAM_MANIFEST.events).forEach(e => {
+    P.TEAMS[e.id] = {id:e.id, home:e.comp, city:e.city || "", name:e.name, abbr:e.abbr,
+      tz:e.tz, color:e.color, comps: [e.comp].concat(e.extraComps || []),
+      ...(e.feedName ? {feed:e.feedName} : {}), ...(e.displayName ? {display:e.displayName} : {})};
   });
   return P;
 }

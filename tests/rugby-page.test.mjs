@@ -33,9 +33,12 @@ test("rugby is off for someone who never asked for it", () => {
 });
 
 test("the default team set contains no rugby", () => {
-  const m = /const DEFAULT_TEAMS = (\[[^\]]*\])/.exec(SRC);
-  assert.ok(m, "DEFAULT_TEAMS must exist");
-  assert.equal(JSON.parse(m[1]).includes("rugby-intl"), false);
+  /* Read rather than pattern-matched out of the source: the defaults are
+     the manifest's ordered list now, not a literal array in the page, and
+     the value is what this is about. */
+  const { DEFAULT_TEAMS } = loadFromPage(["DEFAULT_TEAMS"]);
+  assert.ok(Array.isArray(DEFAULT_TEAMS) && DEFAULT_TEAMS.length, "DEFAULT_TEAMS must exist");
+  assert.equal(DEFAULT_TEAMS.includes("rugby-intl"), false);
 });
 
 test("turning rugby on shows every supported international", () => {

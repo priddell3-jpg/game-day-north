@@ -168,7 +168,7 @@ const TEAMS = {
 const allTeams = Object.values(TEAMS);`;
 
 const page = loadFromPage(
-  ["norm", "ESPN_NAME", "venueOf", "espnTeamObj", "parseEvent", "parseSummary"], PREAMBLE);
+  ["norm", "venueOf", "espnTeamObj", "parseEvent", "parseSummary"], PREAMBLE);
 
 test("the page reads the same final out of the same response", () => {
   const g = page.parseSummary(FIX, "MLB");
@@ -219,7 +219,7 @@ test("build and page agree on what the summary says", () => {
 /* ================= the merge the page does with it ================= */
 
 const merge = loadFromPage(
-  ["normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN_NAME", "clubKeys", "sameClub",
+  ["normName", "idKey", "SAME_WINDOW", "sameGame", "clubKeys", "sameClub",
    "orientation", "findScored", "applyScored"]);
 
 test("a summary's final reaches the committed row the day scoreboard stranded", () => {

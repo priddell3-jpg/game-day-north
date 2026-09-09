@@ -1,7 +1,11 @@
 /* Wraps src/page.html, which is a fragment, into the standalone
    document GitHub Pages serves. */
 const fs = require("fs");
-const body = fs.readFileSync(__dirname + "/src/page.html", "utf8");
+const { inlineManifest } = require("./scripts/lib/inline.cjs");
+/* The team manifest is substituted in here rather than fetched at run
+   time, so the page stays a single self-contained file. */
+const manifest = fs.readFileSync(__dirname + "/data/teams.json", "utf8");
+const body = inlineManifest(fs.readFileSync(__dirname + "/src/page.html", "utf8"), manifest);
 const title = (body.match(/<title>([^<]*)<\/title>/) || [, "Game Day North"])[1];
 const doc = `<!doctype html>
 <html lang="en">

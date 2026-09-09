@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Generates data/teams.json from the six lists that currently hold team
- * data in two files.
+ * Generates data/teams.json from the six lists that used to hold team
+ * data in two files, as recorded in tests/fixtures/legacy-team-lists.json.
  *
  * This is a one-shot, committed on purpose. The manifest it produces is
  * the artefact; this script is the provenance, so anyone can see exactly
@@ -19,11 +19,18 @@
  * and it refuses to overwrite an existing manifest without --force.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { loadFromPage } from "../tests/helpers/page.mjs";
-import { loadFromBuild } from "../tests/helpers/build.mjs";
 
-const P = loadFromPage(["TEAM_ROWS", "GHOSTS", "CLUB_NAMES", "ESPN_NAME", "SOCCER", "DEFAULT_TEAMS"]);
-const B = loadFromBuild(["ROSTER", "ALIASES", "EXTRA"]);
+/* The six lists as they shipped, recorded before the migration deleted
+   them. This script used to read them live out of the page and the build
+   script; it reads the record now, for the plain reason that they are
+   gone. That keeps it doing the one job it has — showing exactly how
+   today's data became the manifest — for as long as anyone wants to
+   check, rather than rotting into a script that cannot run. */
+const LEGACY = JSON.parse(readFileSync(
+  new URL("../tests/fixtures/legacy-team-lists.json", import.meta.url), "utf8"));
+const P = { TEAM_ROWS: LEGACY.TEAM_ROWS, GHOSTS: LEGACY.GHOSTS, CLUB_NAMES: LEGACY.CLUB_NAMES,
+            ESPN_NAME: LEGACY.ESPN_NAME, DEFAULT_TEAMS: LEGACY.DEFAULT_TEAMS };
+const B = { ROSTER: LEGACY.ROSTER, ALIASES: LEGACY.ALIASES, EXTRA: LEGACY.EXTRA };
 
 const rosterName = new Map(B.ROSTER.map(([id, , name]) => [id, name]));
 const rowOf = new Map(P.TEAM_ROWS.map(r => [r[0], r]));
