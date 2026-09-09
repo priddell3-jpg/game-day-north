@@ -131,20 +131,22 @@ test("the minute poll stands down while the tab is hidden", () => {
   assert.match(body, /refreshLive\(\)/);
 });
 
-test("the tennis minute poll stands down while the tab is hidden", () => {
-  const body = intervalCalling("tennisPollDue");
-  assert.ok(body, "could not find the tennis minute poll");
-  assert.match(body, /document\.hidden/);
-  assert.match(body, /refreshTennis\(/);
+test("tennis has no poll of its own to stand down", () => {
+  /* It had one: sixty seconds, its own lock, its own endpoint. The
+     matches come in the committed file now, so tennis refreshes when the
+     fixtures do and there is one cadence for the whole page. */
+  assert.ok(!/tennisPollDue|refreshTennis/.test(SRC));
+  assert.doesNotMatch(SRC, /setInterval\([^)]*60000\s*\)\s*;?\s*$/m);
 });
 
-test("coming back to the tab refreshes both straight away", () => {
+test("coming back to the tab refreshes straight away", () => {
   const at = SRC.indexOf('addEventListener("visibilitychange"');
   assert.ok(at > 0, "no visibilitychange listener");
   const body = SRC.slice(at, at + 500);
   assert.match(body, /document\.hidden/);
   assert.match(body, /refreshLive\(\)/);
-  assert.match(body, /refreshTennis\(/);
+  /* One refresh brings the fixtures, and tennis with them. */
+  assert.doesNotMatch(body, /refreshTennis/);
 });
 
 test("the slow schedule refresh is still there for post-final corrections", () => {

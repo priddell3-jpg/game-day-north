@@ -21,10 +21,25 @@
 
 export const DAY = 86400000;
 
-/* Retention, applied before anything is sent to the browser.
+/* Retention, applied in the build before anything reaches the file.
    A finished match is interesting for a few days and then it is history;
    a match still being played is interesting however long ago it started,
-   because that is exactly what a suspended match looks like. */
+   because that is exactly what a suspended match looks like.
+
+   These two numbers are deliberately NOT the fixture window's eight days
+   back and seventy-five forward, and the difference is the point rather
+   than an oversight.
+
+   Forward, because ESPN publishes singles draws about two days either
+   side of today. Seventy-five days forward would be seventy-three days
+   of nothing — false precision that makes the contract look richer than
+   the data behind it. Fourteen is already generous against what the
+   source actually offers.
+
+   Back, because a Grand Slam day is 153 singles matches. A longer tail
+   would buy mostly qualifying rounds nobody asked for, at about 440
+   bytes a match in a file every visitor downloads. Three days is what
+   "what happened this week" needs and no more. */
 export const KEEP_COMPLETED_DAYS = 3;
 export const HORIZON_DAYS = 14;
 

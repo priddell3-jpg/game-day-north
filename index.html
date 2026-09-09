@@ -4730,7 +4730,7 @@ function parseSummary(sum, comp){
    undocumented API. Live scores still come straight from the source,
    because a file refreshed every half hour cannot follow a game.
    ------------------------------------------------------------------ */
-let staticAt = 0, staticCount = 0;
+let staticAt = 0, staticCount = 0, staticTennis = null;
 function staticTeam(t, comp){
   if(t.id && TEAMS[t.id]) return TEAMS[t.id];
   const key = "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
@@ -4765,6 +4765,10 @@ async function loadStatic(){
   });
   if(built.length) mergeReal(built);
   if(Array.isArray(r.cycling)) attachCycling(r.cycling);
+  /* Held whether or not a tour is on, so switching one on shows its
+     matches without waiting for the next refresh. */
+  staticTennis = r.tennis || null;
+  attachTennis(staticTennis);
   /* Standings are not fixtures and are not merged into them: they are
      held on their own and read by the Race section alone. A file with no
      standings block empties them, so a race can never outlive its data. */
@@ -4908,15 +4912,16 @@ const stageNumber = g => { const m = /^Stage\s+(\d+)/.exec((g && g.stage) || "")
    Tennis is the one sport here that is not a fixture list. A viewer
    follows Alcaraz, not the US Open, and the matches that matter are
    wherever he happens to be drawn that week. ESPN publishes that as a
-   tournament containing groupings containing competitions, about 2 MB
+   tournament containing groupings containing competitions, about 3.6 MB
    across the two tours, with a Grand Slam repeated in full under both —
-   so the browser never sees it. /api/tennis does the reading, keeps the
-   singles matches involving the players actually being followed, and
-   returns a few kilobytes. See scripts/lib/tennis.mjs for the parser and
-   api/tennis.js for the endpoint.
+   so the browser never sees it. The scheduled build reads it, keeps the
+   singles, and writes a normalised block into data.json beside the
+   fixtures. See scripts/lib/tennis.mjs for the parser.
 
-   Follow nobody and none of this runs: no request is made, no row is
-   built, and the tennis chips never appear.
+   Switch on no tour and none of this runs: no row is built and the
+   tennis chips never appear. The matches are in the file either way,
+   which costs nothing to a viewer who has not asked for them and is
+   what lets this ship dark.
    ============================================================ */
 const TENNIS_TOURS = {ATP:"atp", WTA:"wta"};
 /* Statuses that mean no more play. Mirrors SETTLED in
@@ -4977,40 +4982,34 @@ function toursOf(only){
   }
   return out.sort();
 }
-async function loadTennis(only){
+/* Tennis arrives with the fixtures, in the file the page already reads.
+
+   There is no separate request and no cadence of its own: whatever
+   loadStatic pulled is what tennis has, refreshed on the same schedule
+   as everything else. Switching a tour off empties the rows rather than
+   leaving a match on screen for a sport nobody asked for. */
+function attachTennis(block){
   if(!tennisTours.size){
     if(GAMES.some(g=>g.tennis)) mergeTennis([]);
-    TOURNEYS = new Map(); tennisAt = 0; tennisErr = "";
+    TOURNEYS = new Map(); tennisAt = 0;
     return 0;
   }
-  const tours = toursOf(only);
-  if(!tours.length) return 0;                    // nothing in progress to chase
-  const url = new URL("api/tennis", location.href);
-  /* Sorted, so two viewers watching the same thing ask for the same URL
-     and share one cached answer rather than each costing a fetch. The
-     tournament filter is deliberately not sent: narrowing happens here,
-     so a tournament that has finished disappears from the list by itself
-     instead of turning the board silently empty. */
-  if(tours.length < 2) url.searchParams.set("tours", tours.join(","));
-  const r = await jget(url.href, 12000, {cache:"no-cache"});
-  if(!r || !Array.isArray(r.matches)) throw new Error("tennis: unusable response");
+  const matches = (block && Array.isArray(block.matches)) ? block.matches : [];
   const before = [...TOURNEYS.keys()].sort().join(",");
-  TOURNEYS = new Map((r.tournaments||[]).filter(t=>t && t.id).map(t=>[t.id, t]));
+  TOURNEYS = new Map(((block && block.tournaments) || []).filter(t=>t && t.id).map(t=>[t.id, t]));
   /* A tournament that has ended stops being offered, so a filter left
      pointing at it is dropped rather than quietly hiding everything. */
   let pruned = false;
   tennisEvents.forEach(id=>{ if(!TOURNEYS.has(id)){ tennisEvents.delete(id); pruned = true; } });
   if(pruned) persist();
-  /* The picker is built from this list, and the first answer usually
-     arrives after the picker has already been drawn — so redraw it when
-     the list changes, or the tournaments never appear for someone who
-     opened it while the page was still loading. Only on a change, so an
-     open drawer is not rebuilt under the viewer every minute. */
+  /* The picker is built from this list, and the first answer arrives
+     after the picker has been drawn — so redraw it when the list
+     changes, or the tournaments never appear for someone who opened the
+     drawer while the page was still loading. */
   if([...TOURNEYS.keys()].sort().join(",") !== before) renderDrawer();
-  mergeTennis(r.matches);
-  tennisAt = Date.parse(r.generated) || Date.now();
-  tennisErr = "";
-  return r.matches.length;
+  mergeTennis(matches.filter(m=>tennisTours.has(m.tour)));
+  tennisAt = staticAt;
+  return matches.length;
 }
 
 /* Stage podiums and the race lead are results: they arrive from the
@@ -7376,39 +7375,13 @@ function agoText(ms){
   const h = Math.round(m/60);
   return h + (h===1?" hour ago":" hours ago");
 }
-/* Tennis refreshes on its own loop and behind its own lock. It is a
-   different endpoint answering a different question, and the team and
-   cycling paths are deliberately untouched by any of it: a viewer who
-   follows no players never reaches this code, and a viewer who follows
-   several never slows their hockey down.
+/* Tennis has no loop of its own any more.
 
-   A failure here is not an emptying. loadTennis() only replaces the rows
-   once it has an answer, so a refusal from the endpoint leaves the last
-   good matches exactly where they were, and the age of them is shown
-   rather than passed off as current. */
-let tennisRefreshing = null;
-function refreshTennis(only){
-  if(tennisRefreshing) return tennisRefreshing;
-  tennisRefreshing = loadTennis(only)
-    .then(n=>{ tennisErr = ""; render(); return n; })
-    .catch(e=>{ tennisErr = (e && e.message || String(e)).slice(0,120); render(); return 0; })
-    .finally(()=>{ tennisRefreshing = null; });
-  return tennisRefreshing;
-}
-/* The whole tennis polling policy:
-     · nobody followed, no request — ever
-     · only while scores are on, as with every other live number here
-     · every 60s while a followed player has a match that is live,
-       suspended, or past its start and unresolved
-     · only the tours that match is actually in
-     · nothing once the source calls it final, retired, walkover or
-       otherwise complete
-     · nothing while the tab is hidden; one refresh when it returns */
-function tennisPollDue(){
-  if(!tennisTours.size || !showScores) return false;
-  const now = Date.now();
-  return GAMES.some(g=>g.tennis && isMine(g) && tennisActive(g.match, now));
-}
+   It used to poll a serverless endpoint every sixty seconds behind its
+   own lock. The matches arrive in data.json now, so tennis refreshes
+   exactly when the fixtures do, on the shared fifteen-minute cycle. One
+   cadence for the whole page is worth more than a bespoke one for a
+   sport that ships switched off, and it is what let the endpoint go. */
 
 /* Picking a team should fill its fixtures in straight away rather than
    leaving a blank until the next cycle. Debounced so working through
@@ -7418,21 +7391,15 @@ function refreshAfterPicks(){
   clearTimeout(pickTimer);
   pickTimer = setTimeout(()=>{
     if(selected.size) refreshLive();
-    if(tennisTours.size) refreshTennis(false);
-    else if(GAMES.some(g=>g.tennis)) refreshTennis(false);   // last tour switched off
+    /* Switching a tour on or off changes which of the matches already
+       held are mine, which is a re-read of what is in hand rather than a
+       request. */
+    attachTennis(staticTennis);
+    render();
   }, 700);
 }
 recallResults();   // put last week's known finals on screen before any network call
 refreshLive();
-if(tennisTours.size) refreshTennis(false);
-setInterval(()=>{
-  if(document.hidden) return;
-  if(tennisPollDue()) refreshTennis(true);   // true: only the tours with a match on
-}, 60000);
-/* Slower sweep for the rest of it — a draw moves on, a walkover is
-   announced, tomorrow's order of play appears. Only when someone is
-   actually being followed. */
-setInterval(()=>{ if(tennisTours.size) refreshTennis(false); }, 15*60000);
 /* ---- the minute poll ------------------------------------------------
    The whole policy, in one place:
 
@@ -7469,7 +7436,6 @@ document.addEventListener("visibilitychange", ()=>{
      the time spent away. This is one request on return, not a poll. */
   if(document.hidden) return;
   if(liveMode !== false) refreshLive();
-  if(tennisTours.size) refreshTennis(false);
 });
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
 if(!selected.size) openDrawer(drawer);

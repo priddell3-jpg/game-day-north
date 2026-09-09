@@ -28,6 +28,9 @@ const PREAMBLE = `
   const renderDrawer = () => { globalThis.__t.drawn++; };
   const location = {href: "https://example.test/game-day-north/"};
   const hash = () => 0;
+  /* attachTennis dates the matches from the file they came in, the way
+     loadStatic does. */
+  let staticAt = Date.now();
   const render = () => { globalThis.__t.renders++; };
 `;
 
@@ -44,8 +47,13 @@ function harness(){
   };
   const page = loadFromPage(
     ["DAY", "POLL_WINDOW", "TENNIS_TOURS", "TENNIS_SETTLED", "normName",
-     "tourneyOf", "tennisGame", "mergeTennis", "tennisActive", "toursOf", "loadTennis",
-     "tennisMine", "isMine", "myGames", "tennisPollDue", "COMPS"], PREAMBLE);
+     "tourneyOf", "tennisGame", "mergeTennis", "tennisActive", "attachTennis",
+     "tennisMine", "isMine", "myGames", "COMPS"], PREAMBLE);
+  /* Tennis arrives in data.json now rather than from a request of its
+     own, so what used to be a fetch is the block the file carried. The
+     tests below are about what the page does with it, which has not
+     changed; this hands it over the way loadStatic does. */
+  page.loadTennis = async () => page.attachTennis(globalThis.__t.reply);
   return {page, t: globalThis.__t};
 }
 
@@ -69,13 +77,6 @@ test("a viewer with no tour on makes no tennis request at all", async () => {
   const {page, t} = harness();
   assert.equal(await page.loadTennis(false), 0);
   assert.equal(t.asked.length, 0, "the endpoint was called with tennis off");
-});
-
-test("a viewer with no tour on has no tennis rows and no tennis poll", () => {
-  const {page, t} = harness();
-  t.GAMES.push(page.tennisGame(match()));
-  assert.equal(page.myGames().length, 0, "a tennis row showed with tennis off");
-  assert.equal(page.tennisPollDue(), false);
 });
 
 test("switching the last tour off clears the rows", async () => {
@@ -154,42 +155,6 @@ test("a match knows nothing about who is playing it, for selection purposes", ()
 
 /* ---------------- the request ---------------- */
 
-test("one tour on asks for only that tour", async () => {
-  const {page, t} = harness();
-  t.tours.add("WTA");
-  t.reply = reply([]);
-  await page.loadTennis(false);
-  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), "wta");
-});
-
-test("both tours on asks for everything, with no filter at all", async () => {
-  const {page, t} = harness();
-  t.tours.add("ATP"); t.tours.add("WTA");
-  t.reply = reply([]);
-  await page.loadTennis(false);
-  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), null,
-    "no tours filter means ask for all of it");
-});
-
-test("the tournament filter is never sent — narrowing happens on the page", async () => {
-  /* Sending it would mean a tournament that has finished turns the board
-     silently empty instead of dropping out of the list. */
-  const {page, t} = harness();
-  t.tours.add("ATP");
-  t.events.add("189-2026");
-  t.reply = reply([]);
-  await page.loadTennis(false);
-  assert.equal(new URL(t.asked[0].url).searchParams.get("events"), null);
-});
-
-test("the request revalidates rather than reading a cached copy", async () => {
-  const {page, t} = harness();
-  t.tours.add("ATP");
-  t.reply = reply([]);
-  await page.loadTennis(false);
-  assert.equal(t.asked[0].init.cache, "no-cache");
-});
-
 test("the tournament list comes back with the matches", async () => {
   const {page, t} = harness();
   t.tours.add("ATP");
@@ -231,38 +196,7 @@ test("a filter still pointing at something live is left alone", async () => {
   assert.equal(t.events.has("363-2026"), true);
 });
 
-test("a failing endpoint leaves the matches already on screen alone", async () => {
-  const {page, t} = harness();
-  t.tours.add("ATP");
-  t.GAMES.push(page.tennisGame(match()));
-  t.reply = new Error("HTTP 503");
-  await assert.rejects(() => page.loadTennis(false));
-  assert.equal(t.GAMES.filter(g => g.tennis).length, 1, "a failure emptied the board");
-  assert.deepEqual(t.GAMES[0].match.sets, [[6, 1], [6, 7], [2, 2]]);
-});
-
-test("an unusable response is refused rather than rendered", async () => {
-  const {page, t} = harness();
-  t.tours.add("ATP");
-  t.GAMES.push(page.tennisGame(match()));
-  for(const bad of [null, {}, {matches: null}, {matches: "nope"}]){
-    t.reply = bad;
-    await assert.rejects(() => page.loadTennis(false));
-  }
-  assert.equal(t.GAMES.filter(g => g.tennis).length, 1);
-});
-
 /* ---------------- what keeps polling ---------------- */
-
-test("only the tours with something in progress are polled", async () => {
-  const {page, t} = harness();
-  t.tours.add("ATP"); t.tours.add("WTA");
-  t.GAMES.push(page.tennisGame(match({tour: "ATP", status: "live"})));
-  t.GAMES.push(page.tennisGame(match({id: "9", tour: "WTA", status: "final"})));
-  t.reply = reply([]);
-  await page.loadTennis(true);                  // true = only what is active
-  assert.equal(new URL(t.asked[0].url).searchParams.get("tours"), "atp");
-});
 
 test("nothing in progress asks for nothing at all", async () => {
   const {page, t} = harness();
@@ -297,25 +231,6 @@ test("a match that never resolved stops being chased every minute", () => {
   assert.equal(page.tennisActive(match({status: "scheduled", start: now - 20 * 3600000}), now), false);
   // but one that is genuinely still live is chased however old
   assert.equal(page.tennisActive(match({status: "live", start: now - 20 * 3600000}), now), true);
-});
-
-test("the poll stops when the match finishes", () => {
-  const {page, t} = harness();
-  t.tours.add("ATP");
-  const g = page.tennisGame(match({status: "live"}));
-  t.GAMES.push(g);
-  assert.equal(page.tennisPollDue(), true);
-  g.match = match({status: "final", winner: 0});
-  assert.equal(page.tennisPollDue(), false);
-});
-
-test("the poll stops with scores switched off", () => {
-  const {page, t} = harness();
-  t.tours.add("ATP");
-  t.GAMES.push(page.tennisGame(match({status: "live"})));
-  assert.equal(page.tennisPollDue(), true);
-  t.setScores(false);
-  assert.equal(page.tennisPollDue(), false);
 });
 
 test("the page and the parser agree on what counts as settled", () => {
@@ -575,4 +490,92 @@ test("the picker is redrawn when the tournament list changes", () => {
   const body = SRC.slice(at, at + 900);
   assert.ok(at > 0, "loadTennis should notice a changed tournament list");
   assert.match(body, /!== before\) renderDrawer\(\)/);
+});
+
+/* ---------------- tennis arrives with the fixtures ---------------- */
+
+/* The endpoint is gone. These replace the ten tests that described it —
+   what tours were requested, what the filter did not send, how a refusal
+   was survived, and when the minute poll fired. None of that exists any
+   more: the matches come in data.json and tennis refreshes when the
+   fixtures do. What replaces them is the contract that took over. */
+
+test("the page asks for no tennis of its own, ever", () => {
+  assert.doesNotMatch(SRC, /api\/tennis/, "the endpoint is retired");
+  assert.doesNotMatch(SRC, /function loadTennis/, "and so is the loader that called it");
+  assert.doesNotMatch(SRC, /tennisPollDue|refreshTennis/, "and the poll it drove");
+  assert.match(SRC, /function attachTennis/, "what is left reads the committed file");
+});
+
+test("with no tour on there are no rows, whatever the file carries", () => {
+  const {page, t} = harness();
+  page.attachTennis(reply([match(), match({id: "2", tour: "WTA"})]));
+  assert.equal(t.GAMES.filter(g => g.tennis).length, 0);
+  assert.equal(page.myGames().length, 0);
+});
+
+test("only the tours that are on become rows", () => {
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  page.attachTennis(reply([match(), match({id: "2", tour: "WTA"})]));
+  const rows = t.GAMES.filter(g => g.tennis);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].comp, "ATP");
+});
+
+test("switching the last tour off empties the rows on the next read", () => {
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  page.attachTennis(reply([match()]));
+  assert.equal(t.GAMES.filter(g => g.tennis).length, 1);
+  t.tours.clear();
+  page.attachTennis(reply([match()]));
+  assert.equal(t.GAMES.filter(g => g.tennis).length, 0,
+    "a match must not stay on screen for a sport nobody asked for");
+});
+
+test("a file with no tennis in it is not a crash", () => {
+  /* An older committed file, or one built while the source was down.
+     Neither may take the page with it. */
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  for(const block of [null, undefined, {}, {matches: null}, {matches: [], tournaments: null}]){
+    page.attachTennis(block);
+    assert.equal(t.GAMES.filter(g => g.tennis).length, 0);
+  }
+});
+
+test("a tennis row cannot reach the team score path, by construction", () => {
+  /* Adding ATP and WTA to ESPN_PATH would be inert: needsScore rejects
+     on a missing away side before it ever looks at the path, and a
+     tennis row deliberately has none so that no team path claims it.
+     Tennis scores therefore come from the committed file, on the build's
+     schedule, and that is the honest description of them. */
+  const need = /function needsScore\(g, now\)\{[\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(need, /if\(!g\.away \|\| !ESPN_PATH\[g\.comp\]\) return false;/);
+  const {page, t} = harness();
+  t.tours.add("ATP");
+  page.attachTennis(reply([match()]));
+  const row = t.GAMES.find(g => g.tennis);
+  assert.equal(row.away, null);
+  assert.equal(row.home, null);
+  const paths = /const ESPN_PATH = \{[\s\S]*?\n\};/.exec(SRC)[0];
+  assert.doesNotMatch(paths, /ATP|WTA/, "so the tours are not in ESPN_PATH either");
+});
+
+test("tennis ships dark", () => {
+  /* The empty set is the feature flag. Nothing here turns a tour on. */
+  assert.match(SRC, /LS\.get\("gdn\.tennisTours", \[\]\)/, "empty unless stored otherwise");
+  /* One thing does turn both tours on, and it is meant to: a link from
+     the build that followed individual players. That is a person who
+     asked for tennis, read as the nearest honest thing this build can
+     offer them. Nothing else may. */
+  const turnsOn = SRC.match(/tennisTours = new Set\(\["ATP", "WTA"\]\);/g) || [];
+  assert.equal(turnsOn.length, 1, "only the old player-link migration");
+  const at = SRC.indexOf('tennisTours = new Set(["ATP", "WTA"]);');
+  assert.match(SRC.slice(at - 400, at), /h\.p \|\| \(LS\.get\("gdn\.players"/,
+    "and only when the link or the storage actually carried players");
+  const {page, t} = harness();
+  page.attachTennis(reply([match(), match({id:"2", tour:"WTA"})]));
+  assert.equal(t.GAMES.filter(g => g.tennis).length, 0, "a fresh viewer sees no tennis");
 });
