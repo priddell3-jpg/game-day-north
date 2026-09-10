@@ -324,7 +324,7 @@ test("the row honours the scores toggle, with a per-match reveal", () => {
 test("uncertain Canadian coverage is stated, not guessed", () => {
   const at = SRC.indexOf("function tennisRow");
   const body = SRC.slice(at, SRC.indexOf("\nfunction gameRow", at));
-  assert.match(body, /Coverage TBD/);
+  assert.match(body, /Coverage not confirmed/);
 });
 
 test("every tennis lifecycle state has words of its own", () => {
@@ -470,7 +470,7 @@ test("a team matchup keeps the order its separator claims", () => {
 
 test("the picker offers tours first, then the tournaments inside them", () => {
   const at = SRC.indexOf("function tennisPicker");
-  const body = SRC.slice(at, SRC.indexOf("\n}", SRC.indexOf("return '<div class=\"lg-group\"><div class=\"lg-title\"><b>Tennis", at)));
+  const body = SRC.slice(at, SRC.indexOf("\n}", at) + 2);
   assert.ok(body.length > 200, "could not isolate tennisPicker");
   assert.match(body, /data-tour="/);
   assert.match(body, /data-event="/);
@@ -496,11 +496,10 @@ test("the tournament list is built from the endpoint's answer, never a hardcoded
 test("the labels no longer promise a player picker", () => {
   assert.doesNotMatch(SRC, /My teams &amp; players/);
   assert.doesNotMatch(SRC, /Pick your teams<\/h2>/);
-  /* The header button kept its responsive two-label form, which the
-     320px layout needs, so the assertion is the one this test is named
-     for: nothing in the header offers to pick people. The tennis
-     controls live in the drawer, next to the rugby ones. */
-  assert.match(SRC, /<span class="lbl-full">My teams<\/span>/);
+  /* Team setup moved into the title menu, but it still describes teams
+     rather than promising a player picker. Tennis remains a tour/event
+     choice inside that drawer. */
+  assert.match(SRC, /id="teamsToggle"[^>]*>My teams/);
   assert.doesNotMatch(SRC, /players<\/span>/);
 });
 

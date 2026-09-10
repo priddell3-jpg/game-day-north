@@ -179,7 +179,7 @@ let SPOILED = new Set();
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
-  "covered","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf",
+  "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf",
   "venueTag","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope","gameRow"];
 const rows = () => loadFromPage(ROW_NAMES, ROW_PREAMBLE);
 
@@ -213,6 +213,24 @@ test("the MLS fixture that already worked still says the same thing", () => {
     away:{id:"hou", home:"MLS", city:"Houston Dynamo FC", name:"Houston Dynamo FC", abbr:"HOU", color:"#f60", full:true},
     venue:{name:"BC Place", city:"Vancouver", country:"Canada"}}), NOW);
   assert.match(html, /in Vancouver/);
+  assert.match(html, /MLS Season Pass/);
+  assert.doesNotMatch(html, />TSN</, "an unconfirmed simulcast disappears inside five days");
+  assert.doesNotMatch(html, />Listed</, "a near fixture simply says where it is");
+  assert.doesNotMatch(html, />Expected</);
+});
+
+test("a distant MLS game distinguishes the service I have from an expected alternative", () => {
+  const p = loadFromPage(ROW_NAMES,
+    ROW_PREAMBLE.replace("let services = new Set()", 'let services = new Set(["apple"])'));
+  const html = p.gameRow(fixture({comp:"MLS", start:NOW + 6*86400000,
+    home:{id:"van-mls", home:"MLS", city:"Vancouver", name:"Whitecaps FC", abbr:"VAN", color:"#00245E"},
+    away:{id:"hou", home:"MLS", city:"Houston Dynamo FC", name:"Houston Dynamo FC", abbr:"HOU", color:"#f60", full:true},
+    venue:{name:"BC Place", city:"Vancouver", country:"Canada"}}), NOW);
+  assert.match(html, /class="svc stream owned"[^>]*aria-label="MLS Season Pass[^\"]*In your services/);
+  assert.match(html, /class="svc tv expected"[^>]*aria-label="TSN[^\"]*Not in your services[^\"]*Expected/);
+  assert.match(html, /<span class="svc-expected">Expected<\/span>/);
+  assert.match(html, />Listed</);
+  assert.doesNotMatch(html, /You have it|Needs /);
 });
 
 test("an MLS away fixture names the host city", () => {

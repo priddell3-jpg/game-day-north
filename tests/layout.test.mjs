@@ -57,26 +57,55 @@ test("the status text itself is never wrapped into ambiguity", () => {
   assert.match(ruleFor(css, ".countdown"), /white-space\s*:\s*nowrap/);
 });
 
-/* --- the header, now carrying a fourth control --- */
+/* --- the compact, one-line header --- */
 
-test("the top bar is allowed to wrap rather than overflow", () => {
-  /* A wordmark and four controls do not fit 320px on one line and are
-     not meant to. What must not happen is the row staying one line and
-     pushing a control off the side. */
+test("the top bar stays on one line because setup moved into the title menu", () => {
   const rule = ruleFor(mobile, ".topbar-in");
   assert.ok(rule, ".topbar-in must be addressed at the mobile breakpoint");
-  assert.match(rule, /flex-wrap\s*:\s*wrap/);
+  assert.match(rule, /flex-wrap\s*:\s*nowrap/);
+  const header = /<header class="topbar">[\s\S]*?<\/header>/.exec(SRC)[0];
+  assert.match(header, /id="appMenuToggle"/);
+  assert.match(header, /id="appMenu"/);
+  assert.ok(header.indexOf('id="teamsToggle"') > header.indexOf('id="appMenu"'));
+  assert.ok(header.indexOf('id="servicesToggle"') > header.indexOf('id="appMenu"'));
 });
 
-test("the header buttons carry a short label for the narrowest screens", () => {
-  /* Both labels ship and the breakpoint chooses, rather than JavaScript
-     rewriting the button as the window moves. */
-  assert.match(css, /\.lbl-short\{display:none\}/);
-  const short = ruleFor(narrow, ".lbl-short");
-  const full = ruleFor(narrow, ".lbl-full");
-  assert.ok(short && full, "both labels must be addressed at 360");
-  assert.match(short, /display\s*:\s*inline/);
-  assert.match(full, /display\s*:\s*none/);
+test("the iOS header reserves the native safe area", () => {
+  assert.match(ruleFor(css, ".topbar"), /padding-top\s*:\s*env\(safe-area-inset-top\)/);
+  assert.match(ruleFor(css, ".wrap"), /safe-area-inset-left/);
+  assert.match(ruleFor(css, ".wrap"), /safe-area-inset-right/);
+});
+
+test("the mobile header keeps its horizontal gutter while adding vertical padding", () => {
+  const rule = ruleFor(mobile, ".topbar-in");
+  assert.match(rule, /padding-top\s*:\s*5px/);
+  assert.match(rule, /padding-bottom\s*:\s*5px/);
+  assert.doesNotMatch(rule, /padding\s*:\s*10px\s+0/,
+    "a shorthand must not erase the .wrap side padding");
+});
+
+test("what's on has a page heading above the swipeable rail", () => {
+  const section = /<section class="whats-on"[\s\S]*?<\/section>/.exec(SRC);
+  assert.ok(section, "expected the What's on section");
+  assert.ok(section[0].indexOf('class="rail-head"') < section[0].indexOf('class="rail"'));
+  assert.match(section[0], /id="railCount"/);
+});
+
+test("teams and services no longer spend permanent header space", () => {
+  const header = /<header class="topbar">[\s\S]*?<\/header>/.exec(SRC)[0];
+  const menu = /<div class="app-menu"[\s\S]*?<\/div>\s*<\/div>/.exec(header)[0];
+  assert.match(menu, /My teams/);
+  assert.match(menu, /My services/);
+  assert.doesNotMatch(header.slice(header.indexOf('<div class="top-actions">')), /teamsToggle|servicesToggle/);
+});
+
+test("the narrow header compresses its three visible pieces", () => {
+  assert.match(ruleFor(narrow, ".topbar-in"), /gap\s*:\s*4px/);
+  const icon = ruleFor(narrow, ".icon-btn");
+  const view = ruleFor(narrow, ".view-toggle");
+  assert.match(icon, /padding\s*:\s*5px\s+7px/);
+  assert.match(icon, /font-size\s*:\s*11\.5px/);
+  assert.match(view, /min-width\s*:\s*64px/);
 });
 
 test("the score toggle drops to its icon at 320, and keeps a name", () => {
@@ -85,6 +114,42 @@ test("the score toggle drops to its icon at 320, and keeps a name", () => {
      whether this page spoils a result, announcing itself as nothing. */
   assert.match(ruleFor(narrow, "#scoreToggleLabel"), /display\s*:\s*none/);
   assert.match(SRC, /stg\.setAttribute\("aria-label", scoreLabel\)/);
+});
+
+test("every phone card uses one time, matchup, result and services hierarchy", () => {
+  const card = ruleFor(mobile, ".game");
+  assert.match(card, /grid-template-columns\s*:\s*minmax\(0,1fr\)\s+minmax\(70px,auto\)/);
+  assert.match(card, /grid-template-areas\s*:\s*"time bell" "match score" "watch watch"/);
+  assert.match(ruleFor(mobile, ".g-watch"), /grid-area\s*:\s*watch/);
+  assert.match(ruleFor(mobile, ".g-watch"), /flex-direction\s*:\s*row/);
+  assert.match(ruleFor(mobile, ".bell"), /grid-area\s*:\s*bell/);
+  assert.equal(ruleFor(mobile, ".results-in .game"), null,
+    "Recent results should inherit the universal card rather than drift into another layout");
+});
+
+test("tennis gets a full-width set-score line on phones", () => {
+  assert.match(SRC, /class="game tennis-game/);
+  const row = ruleFor(mobile, ".tennis-game,.event-game");
+  assert.match(row, /grid-template-columns\s*:\s*minmax\(0,1fr\)\s+44px/);
+  assert.match(row, /grid-template-areas\s*:\s*"time bell" "match match" "score score" "watch watch"/);
+  assert.match(ruleFor(mobile, ".tennis-game .g-score"), /flex-direction\s*:\s*row/);
+  assert.match(ruleFor(mobile, ".tennis-game .g-score"), /flex-wrap\s*:\s*wrap/);
+  const next = ruleFor(mobile, ".tennis-game .g-score .conf-note,.tennis-game .next-up");
+  assert.match(next, /flex-basis\s*:\s*100%/);
+  assert.match(next, /white-space\s*:\s*normal/);
+  assert.match(next, /overflow-wrap\s*:\s*anywhere/);
+  const note = ruleFor(mobile, ".tennis-game .match-note");
+  assert.match(note, /text-transform\s*:\s*none/);
+  assert.match(note, /letter-spacing\s*:\s*0/);
+});
+
+test("cycling gets the same specialty layout and a readable podium", () => {
+  assert.match(SRC, /class="game event-game/);
+  assert.match(ruleFor(mobile, ".event-game .g-score"), /align-items\s*:\s*flex-start/);
+  assert.match(ruleFor(mobile, ".event-game .podium"), /text-align\s*:\s*left/);
+  assert.match(SRC, /const racing = state === "today" && !g\.podium/);
+  assert.match(SRC, /event-game'\+\(racing\?" is-live":""\)/,
+    "a stage that merely happened today must not look live after it finishes");
 });
 
 test("nothing in the header is pinned to a width it cannot give up", () => {
@@ -106,6 +171,22 @@ test("the coverage panel's own chrome went with the panel", () => {
 test("the drawer has room for the coverage line it now carries", () => {
   assert.ok(ruleFor(css, ".drawer-sub"), ".drawer-sub must be styled");
   assert.ok(ruleFor(css, ".svc-hint"), "the first-run hint must be styled");
+});
+
+test("team bulk actions are visually separate from the league disclosure", () => {
+  assert.match(ruleFor(css, ".picker-bulk-row"), /border-bottom\s*:\s*1px solid var\(--line\)/);
+  assert.match(ruleFor(css, ".picker-bulk,.picker-clear"), /min-height\s*:\s*34px/);
+  assert.match(ruleFor(css, ".picked-first .picker-clear"), /flex\s*:\s*none/);
+  assert.match(ruleFor(css, ".picker-clear.confirm"), /var\(--warn-soft\)/);
+});
+
+test("carrier ownership is shown on the service itself, without a second badge", () => {
+  const pip = ruleFor(css, ".svc .pip");
+  assert.match(pip, /border-radius\s*:\s*50%/);
+  assert.match(pip, /border[^;]*var\(--line-strong\)/);
+  assert.match(ruleFor(css, ".svc.owned .pip"), /background\s*:\s*var\(--ok\)/);
+  assert.equal(ruleFor(css, ".tag-cov"), null);
+  assert.doesNotMatch(SRC, />You have it<|>Needs [^<]*</);
 });
 
 /* --- the save control --- */

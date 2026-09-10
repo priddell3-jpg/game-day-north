@@ -27,8 +27,8 @@ const SRC = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
 
 const renderListSrc = /function renderList\([\s\S]*?\n\}/.exec(SRC)[0];
 
-test("the list is composed in one order: setup, history, then the schedule", () => {
-  const order = ["welcomeBanner()", "renderFilters()", "servicesHint()", "renderResults("];
+test("the list is composed in one order: welcome, compact controls, then schedule", () => {
+  const order = ["welcomeBanner()", "renderHomeTools(now,todayKey)"];
   let at = -1;
   for(const piece of order){
     const next = renderListSrc.indexOf(piece, at + 1);
@@ -45,11 +45,10 @@ test("the reference material stays at the bottom", () => {
   assert.ok(renderListSrc.indexOf("noteBlock()") > days);
 });
 
-test("the empty branch keeps the same order, with results above the empty state", () => {
+test("the empty branch keeps compact controls above the empty state", () => {
   const empty = /if\(!games\.length\)\{[\s\S]*?\n  \}/.exec(renderListSrc)[0];
-  assert.ok(empty.indexOf("renderResults(") < empty.indexOf("emptyState()"),
-    "history above the empty state, as in the populated branch");
-  assert.ok(empty.indexOf("renderFilters()") < empty.indexOf("renderResults("));
+  assert.ok(empty.indexOf("renderHomeTools(now,todayKey)") < empty.indexOf("emptyState()"),
+    "the useful controls stay above the empty state");
 });
 
 test("the coverage panel is no longer built into the page body", () => {
@@ -184,6 +183,23 @@ test("only whole past days count, so today's game is not a result", () => {
   assert.match(html, /last 3 days &middot; 1 game/);
 });
 
+test("saving a game keeps it at the top of its day", () => {
+  const pre = `
+    const DAY = 86400000;
+    const alerts = new Set(["saved"]);
+    const stateOf = () => ({status:"scheduled"});
+    const esc = String;
+    const fmtDayLong = String;
+    const gameRow = g => "<i>" + g.id + "</i>";
+  `;
+  const {daySection} = loadFromPage(["daySection"], pre);
+  const html = daySection("2026-09-11", [
+    {id:"late", start:300}, {id:"saved", start:400}, {id:"early", start:100}
+  ], 0, "2026-09-10");
+  assert.ok(html.indexOf("saved") < html.indexOf("early"), "the saved game comes first");
+  assert.ok(html.indexOf("early") < html.indexOf("late"), "unsaved games remain chronological");
+});
+
 /* ---- the preference that survives the visit ---- */
 
 test("the open state is stored under its own key, read as a strict boolean", () => {
@@ -221,8 +237,16 @@ const DOM_PRE = `
       hasAttribute(k){ return k === "hidden" ? this._hidden : (k in this._attrs); }
     };
   }
-  const NODES = {drawer: fakeEl(), svcDrawer: fakeEl(), teamsToggle: fakeEl(), servicesToggle: fakeEl()};
-  const document = {getElementById: id => NODES[id]};
+  const NODES = {
+    drawer: fakeEl(), svcDrawer: fakeEl(), teamsToggle: fakeEl(), servicesToggle: fakeEl(),
+    scoreToggle: fakeEl(), viewToggle: fakeEl(), setupDone: fakeEl()
+  };
+  const BODY_CLASSES = new Set();
+  const document = {
+    body: {classList: {toggle(k, on){ on ? BODY_CLASSES.add(k) : BODY_CLASSES.delete(k); }}},
+    getElementById: id => NODES[id]
+  };
+  const setupDone = NODES.setupDone;
   globalThis.__probe = {nodes: NODES, drew: []};
   const renderDrawer = () => globalThis.__probe.drew.push("teams");
   const renderServices = () => globalThis.__probe.drew.push("services");
@@ -254,6 +278,18 @@ test("the buttons say which drawer is showing", () => {
   assert.deepEqual(pressed(), {teams: "true", services: "false"});
   p.toggleDrawer(p.drawer);
   assert.deepEqual(pressed(), {teams: "false", services: "false"});
+});
+
+test("a drawer replaces the normal header actions until Done", () => {
+  const p = drawers();
+  p.openDrawer(p.drawer);
+  assert.equal(p.probe.nodes.scoreToggle.hasAttribute("hidden"), true);
+  assert.equal(p.probe.nodes.viewToggle.hasAttribute("hidden"), true);
+  assert.equal(p.probe.nodes.setupDone.hasAttribute("hidden"), false);
+  p.toggleDrawer(p.drawer);
+  assert.equal(p.probe.nodes.scoreToggle.hasAttribute("hidden"), false);
+  assert.equal(p.probe.nodes.viewToggle.hasAttribute("hidden"), false);
+  assert.equal(p.probe.nodes.setupDone.hasAttribute("hidden"), true);
 });
 
 test("opening a drawer draws it, and drawing it is what fills it", () => {

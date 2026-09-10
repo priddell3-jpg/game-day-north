@@ -15,6 +15,7 @@ import { loadFromPage, styleText, ruleFor } from "./helpers/page.mjs";
 const SRC = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
 
 const PREAMBLE = comps => `
+  let filtersOpen = globalThis.__filtersOpen === true;
   let hiddenComps = new Set();
   globalThis.__hidden = hiddenComps;
   const myComps = () => ${JSON.stringify(comps)};
@@ -32,6 +33,29 @@ test("a chip is still a toggle, and still says which state it is in", () => {
   globalThis.__hidden.add("NHL");
   assert.ok(!pressed(p.renderFilters(), "NHL"));
   assert.ok(pressed(p.renderFilters(), "MLB"), "one chip off does not touch the others");
+});
+
+test("competition controls collapse into one summary row", () => {
+  globalThis.__filtersOpen = false;
+  const html = load().renderFilters();
+  assert.match(html, /^<details class="filters"><summary>/);
+  assert.match(html, /Competitions/);
+  assert.match(html, /All 3 showing/);
+  assert.match(html, /<div class="filter-options">/);
+});
+
+test("the disclosure stays open across a redraw", () => {
+  globalThis.__filtersOpen = true;
+  assert.match(load().renderFilters(), /^<details class="filters" open>/);
+  globalThis.__filtersOpen = false;
+});
+
+test("the summary says how much of the schedule is showing", () => {
+  const p = load();
+  globalThis.__hidden.add("NHL");
+  assert.match(p.renderFilters(), /2 of 3 showing/);
+  p.setAllComps(true);
+  assert.match(p.renderFilters(), /None showing/);
 });
 
 test("everything but one is still one tap, exactly as before", () => {

@@ -9,8 +9,8 @@ import { localDayKey, localMidnight, venueDayNote, withinWindow,
 
    So: every kickoff is one absolute instant, and every question about a
    DAY is asked of Intl for the zone it is being asked about. No offset
-   is ever baked. Vancouver is UTC-8 for part of the year and UTC-7 for
-   the rest, which is why the label is "PT" and never "PST". */
+   is ever baked. Historically Vancouver changed between UTC-8 and UTC-7,
+   which is why the label is "PT" and never "PST". */
 
 const ZONES = [
   "Pacific/Auckland", "Australia/Sydney", "Asia/Tokyo", "Africa/Johannesburg",
@@ -90,17 +90,18 @@ test("northern spring forward: Vancouver is PDT, not permanently PST", () => {
   assert.notEqual(off(before), off(after));
 });
 
-test("northern fall back: a fixed -8 would file the evening a day early", () => {
-  // US DST ended 2026-11-01 at 02:00 local. A November evening kickoff
-  // in Vancouver is UTC-8; an October one is UTC-7.
-  const oct = Date.parse("2026-10-31T05:30:00Z");   // 22:30 PDT on the 30th
-  const nov = Date.parse("2026-11-02T07:30:00Z");   // 23:30 PST on the 1st
-  assert.equal(localDayKey(oct, "America/Vancouver"), "2026-10-30");
-  assert.equal(localDayKey(nov, "America/Vancouver"), "2026-11-01");
+test("historical northern fall back: a fixed -8 would file the evening a day early", () => {
+  // DST ended 2025-11-02 at 02:00 local. Use a historical transition so
+  // this regression remains valid after British Columbia stopped changing
+  // its clocks in 2026.
+  const oct = Date.parse("2025-11-01T05:30:00Z");   // 22:30 PDT on Oct 31
+  const nov = Date.parse("2025-11-03T07:30:00Z");   // 23:30 PST on Nov 2
+  assert.equal(localDayKey(oct, "America/Vancouver"), "2025-10-31");
+  assert.equal(localDayKey(nov, "America/Vancouver"), "2025-11-02");
   // Holding October's offset into November puts that evening on the
   // wrong day — the exact class of bug a baked offset produces.
   const naive = new Date(nov - 7*3600000).toISOString().slice(0, 10);
-  assert.equal(naive, "2026-11-02");
+  assert.equal(naive, "2025-11-03");
   assert.notEqual(naive, localDayKey(nov, "America/Vancouver"));
 });
 

@@ -1,8 +1,21 @@
 <title>Game Day North</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
+@font-face{
+  font-family:"Archivo";font-style:normal;font-weight:400 900;font-stretch:62% 125%;font-display:swap;
+  src:url("./fonts/archivo-latin-variable.woff2") format("woff2");
+}
+@font-face{
+  font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;
+  src:url("./fonts/ibm-plex-mono-latin-400.woff2") format("woff2");
+}
+@font-face{
+  font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;
+  src:url("./fonts/ibm-plex-mono-latin-500.woff2") format("woff2");
+}
+@font-face{
+  font-family:"IBM Plex Mono";font-style:normal;font-weight:600;font-display:swap;
+  src:url("./fonts/ibm-plex-mono-latin-600.woff2") format("woff2");
+}
 :root{
   --ground:#F1F3F8;
   --surface:#FFFFFF;
@@ -77,30 +90,39 @@ body{
 }
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.wrap{
+  max-width:1080px;margin:0 auto;
+  padding-left:max(20px, env(safe-area-inset-left));
+  padding-right:max(20px, env(safe-area-inset-right));
+}
 
 /* ---------- top bar ---------- */
 .topbar{
   position:sticky;top:0;z-index:40;
+  padding-top:env(safe-area-inset-top);
   background:color-mix(in srgb, var(--ground) 88%, transparent);
   backdrop-filter:saturate(1.4) blur(10px);
   border-bottom:1px solid var(--line);
 }
-.topbar-in{display:flex;align-items:center;gap:14px;height:60px}
-.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
-.brand-mark{
-  width:28px;height:28px;flex:none;border-radius:7px;background:var(--accent);
-  display:grid;place-items:center;color:#fff;font-family:var(--mono);
-  font-size:12px;font-weight:600;letter-spacing:-.5px;
+.topbar-in{display:flex;align-items:center;gap:8px;height:58px;white-space:nowrap}
+.brand{position:relative;display:flex;align-items:center;margin-right:auto;min-width:0}
+.app-menu-toggle{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:7px 3px;border-radius:8px;text-align:left}
+.app-menu-toggle:hover{background:var(--surface-2)}
+.app-menu-toggle[aria-expanded="true"] .picker-chevron{transform:rotate(225deg);margin-top:4px;margin-bottom:0}
+.brand-name{font-weight:800;font-stretch:118%;letter-spacing:-.2px;font-size:16px;overflow:hidden;text-overflow:ellipsis}
+.app-menu{
+  position:absolute;top:calc(100% + 8px);left:0;z-index:60;width:min(250px,calc(100vw - 28px));
+  padding:7px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 14px 34px rgba(12,17,32,.16)
 }
-.brand-name{font-weight:800;font-stretch:118%;letter-spacing:-.2px;font-size:16px;white-space:nowrap;margin:0}
-.brand-sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
-.seg button{
-  padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--muted);
-  transition:background .15s,color .15s;white-space:nowrap;
-}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.app-menu[hidden]{display:none}
+.app-menu .menu-item{display:flex;align-items:center;width:100%;min-height:44px;padding:9px 10px;border-radius:8px;text-align:left;font-size:13px;font-weight:700;color:var(--ink-2)}
+.app-menu .menu-item:hover,.app-menu .menu-item[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.app-menu .menu-count{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.top-actions{display:flex;align-items:center;gap:7px;flex:none}
+.top-actions>[hidden]{display:none}
+.setup-done{min-width:64px;justify-content:center;background:var(--ink);border-color:var(--ink);color:var(--surface);font-weight:800}
+.setup-done[hidden]{display:none}
+.setup-done:hover{background:var(--ink-2);border-color:var(--ink-2)}
 .icon-btn{
   display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--line);
   border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);
@@ -109,34 +131,48 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .icon-btn:hover{border-color:var(--line-strong)}
 .icon-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
 .eye{width:15px;height:15px;flex:none}
-/* Two words at a comfortable width, one at 320. The header carries four
-   controls now, and "My services" is the one that tipped it into a third
-   row on the narrowest phones. Both labels ship; the breakpoint chooses. */
-.lbl-short{display:none}
+.view-toggle{min-width:74px;justify-content:center}
 
-/* ---------- scoreboard rail ---------- */
-.rail{background:var(--panel);color:var(--panel-ink);border-bottom:1px solid var(--line-strong);box-shadow:inset 0 -1px 0 var(--panel-line)}
-.rail-in{display:flex;align-items:stretch;gap:0;min-height:64px}
-.rail-label{
-  flex:none;display:flex;flex-direction:column;justify-content:center;padding:10px 18px 10px 0;
-  border-right:1px solid var(--panel-line);margin-right:16px;
+/* ---------- what's on ----------
+   A compact personal agenda. It names what is happening and when, but it
+   never becomes a second scoreboard. Tapping any card lands on the full
+   row, where records, scores, services and the save control still live. */
+.whats-on{
+  background:color-mix(in srgb,var(--ground) 94%,var(--ink) 6%);
+  border-bottom:1px solid var(--line-strong)
 }
-.rail-label b{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--panel-muted);font-weight:500}
-.rail-label span{font-weight:800;font-stretch:118%;font-size:15px;letter-spacing:-.2px}
-.rail-scroll{display:flex;gap:0;overflow-x:auto;flex:1;scrollbar-width:thin}
+.rail-head{display:flex;align-items:center;gap:9px;padding-top:9px;padding-bottom:6px}
+.rail-head h2{
+  margin:0;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.rail-count{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rail-see{margin-left:auto;padding:4px 2px;font-size:11px;font-weight:700;color:var(--accent)}
+.rail-see[hidden]{display:none}
+.rail{background:transparent;color:var(--ink)}
+.rail-in{display:flex;align-items:stretch;min-height:0}
+.rail-scroll{display:flex;gap:8px;overflow-x:auto;flex:1;padding:0 0 10px;scrollbar-width:none;overscroll-behavior-inline:contain;scroll-snap-type:x proximity}
+.rail-scroll::-webkit-scrollbar{display:none}
 .rail-card{
-  flex:none;min-width:186px;padding:11px 18px 11px 0;margin-right:18px;
-  border-right:1px solid var(--panel-line);display:flex;flex-direction:column;gap:3px;justify-content:center;
+  flex:0 0 min(270px,74vw);display:grid;grid-template-columns:1fr auto;gap:5px 10px;
+  min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+  background:var(--surface);color:var(--ink);text-align:left;scroll-snap-align:start;box-shadow:0 1px 0 rgba(12,17,32,.02)
 }
-.rail-card:last-child{border-right:none}
-.rail-row{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:12.5px}
-.rail-row .t{flex:1;color:var(--panel-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rail-row .s{font-weight:600;font-variant-numeric:tabular-nums}
-.rail-meta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--panel-muted);display:flex;gap:7px;align-items:center}
-.rail-empty{display:block;color:var(--panel-muted);font-size:13.5px;line-height:1.55;padding:12px 0}
+.rail-card.live{border-color:color-mix(in srgb,var(--live) 34%,var(--line));background:color-mix(in srgb,var(--live-soft) 52%,var(--surface))}
+.rail-card:hover{border-color:var(--line-strong)}
+.rail-card:active{opacity:.78}
+.rail-matchup{grid-column:1/-1;display:flex;align-items:baseline;gap:5px;min-width:0;font-size:12.5px;font-weight:700;line-height:1.25}
+.rail-matchup span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-matchup .rail-v{flex:none;font-family:var(--mono);font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase}
+.rail-event{grid-column:1/-1;font-size:12.5px;font-weight:700;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-sport{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rail-time{justify-self:end;color:var(--muted);font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rail-live{display:inline-flex;align-items:center;border-radius:999px;padding:2px 6px;background:var(--live);color:#fff;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.rail-time.final{text-transform:uppercase}
+.rail-empty{display:block;min-width:0;color:var(--muted);font-size:13.5px;line-height:1.55;padding:10px 0 14px;overflow-wrap:anywhere}
 .rail-empty .countdown{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
 .rail-empty b{white-space:normal}
-.rail-empty b{color:var(--panel-ink);font-weight:700}
+.rail-empty b{color:var(--ink);font-weight:700}
 
 /* ---------- live dot ---------- */
 .dot-live{width:6px;height:6px;border-radius:50%;background:var(--live);display:inline-block;flex:none;animation:pulse 1.8s infinite}
@@ -147,6 +183,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .drawer{border-bottom:1px solid var(--line);background:var(--surface)}
 .drawer-in{padding:18px 0 20px}
 .drawer[hidden]{display:none}
+.setup-mode .whats-on,.setup-mode main{display:none}
+.setup-mode .drawer{min-height:calc(100dvh - 58px - env(safe-area-inset-top));border-bottom:0}
 .drawer-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .drawer-head h2{margin:0;font-size:14px;font-weight:800;font-stretch:118%;letter-spacing:-.1px}
 .drawer-head .count{font-family:var(--mono);font-size:11px;color:var(--muted)}
@@ -162,6 +200,29 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .chips-more{align-self:center;font-size:11.5px;color:var(--muted);padding:0 4px}
 .lg-title b{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .lg-title .bar{height:1px;flex:1;background:var(--line)}
+.picker-section{margin:0 0 8px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.picker-section>.lg-title{min-height:44px;margin:0;padding:0 10px;cursor:pointer;list-style:none;user-select:none}
+.picker-section>.lg-title::-webkit-details-marker{display:none}
+.picker-section>.lg-title:hover b{color:var(--ink-2)}
+.picker-summary{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.03em}
+.picker-chevron{width:7px;height:7px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+  transform:rotate(45deg);transition:transform .15s;flex:none;margin:0 4px 4px 2px}
+.picker-section[open]>.lg-title .picker-chevron{transform:rotate(225deg);margin:4px 4px 0 2px}
+.picker-body{padding:0 10px 10px}
+.picker-bulk-row{display:flex;align-items:center;gap:10px;justify-content:flex-end;min-height:42px;margin-bottom:7px;border-bottom:1px solid var(--line)}
+.picker-bulk-row span{margin-right:auto;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.picker-bulk,.picker-clear{
+  min-height:34px;padding:5px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);
+  color:var(--ink-2);font-size:11px;font-weight:700
+}
+.picker-bulk:hover,.picker-clear:hover{border-color:var(--line-strong)}
+.picker-bulk[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.picker-clear.confirm{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.picked-first{margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.picked-first .lg-title{margin-bottom:7px}
+.picked-first .picker-clear{flex:none}
+.follow-chip .chip-meta{font-family:var(--mono);font-size:9.5px;opacity:.72;text-transform:uppercase}
+.follow-chip .chip-remove{font-size:16px;line-height:1;opacity:.72;margin-left:1px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{
   display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 6px;border-radius:99px;
@@ -197,7 +258,8 @@ main{padding:22px 0 80px}
 .day-games{border:1px solid var(--line);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden;background:var(--surface)}
 .game:last-child{border-bottom:none}
 .game:hover{background:var(--surface-2)}
-.game.is-live{border-left-color:var(--live);background:linear-gradient(90deg,var(--live-soft),var(--surface) 55%)}
+.game.is-live{border-left-color:transparent;background:color-mix(in srgb,var(--live-soft) 34%,var(--surface))}
+.game.rail-jump{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
 .g-time{font-family:var(--mono);font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.25}
 .g-time .ap{font-size:10px;color:var(--muted);margin-left:2px}
 .g-time .moved{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--live);margin-top:2px}
@@ -244,9 +306,13 @@ main{padding:22px 0 80px}
 .lg-tag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 6px;border-radius:4px;color:#fff}
 .g-watch{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
 .svc{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
-.svc .pip{width:5px;height:5px;border-radius:1px;background:var(--muted);flex:none}
-.svc.tv .pip{background:var(--accent);border-radius:1px}
-.svc.stream .pip{background:var(--ink-2);border-radius:50%}
+/* The dot answers the personal question directly: green is one of the
+   viewer's services, while an outline is another available carrier.
+   The aria-label supplied by carrierHtml says the same thing without
+   relying on colour. */
+.svc .pip{width:8px;height:8px;border:1.5px solid var(--line-strong);border-radius:50%;background:transparent;flex:none}
+.svc.owned .pip{border-color:var(--ok);background:var(--ok)}
+.svc-expected{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .svc-note{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .g-score{min-width:88px;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .score-line{font-family:var(--mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.1}
@@ -276,7 +342,7 @@ main{padding:22px 0 80px}
 .cal-ev.starred .mu{color:var(--accent);font-weight:700}
 .star-pip{font-size:10px;line-height:1;color:var(--accent);flex:none}
 .game.has-star{border-left-color:var(--accent)}
-.game.is-live.has-star{border-left-color:var(--live)}
+.game.is-live.has-star{border-left-color:var(--accent)}
 /* The venue's own day, where it differs from the reader's. A Saturday
    in Auckland is a Friday in Vancouver and the fixture is correctly
    grouped under Friday; this says so instead of looking like a mistake. */
@@ -294,6 +360,16 @@ main{padding:22px 0 80px}
 .ru-stars{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
 .ru-star{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
 .ru-star[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.race-picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;padding:2px 0 4px}
+.race-pick{display:flex;align-items:center;gap:9px;min-height:44px;padding:7px 10px;text-align:left;
+  border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2)}
+.race-pick:hover{border-color:var(--accent)}
+.race-pick[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.race-pick-star{font-size:17px;line-height:1;color:var(--muted);flex:none}
+.race-pick[aria-pressed="true"] .race-pick-star{color:var(--accent)}
+.race-pick-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.race-pick-copy b{font-size:12.5px}
+.race-pick-copy small{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--muted)}
 /* The tennis star sits on the row rather than in a picker, so it is a
    glyph and not a chip: it appears twice on every tennis row and a
    bordered pill each time would crowd out the names it belongs to. */
@@ -308,8 +384,12 @@ main{padding:22px 0 80px}
    to understand why most of the draw is missing, not a chrome label like
    COMPETITIONS beside it. On the page ground, --muted lands at 4.28:1
    and this at 8.4. */
-.tennis-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 0 8px;
-  font-size:12px;color:var(--ink-2)}
+.tennis-note{margin:-2px 0 10px;border:1px dashed var(--line-strong);border-radius:9px;background:var(--surface)}
+.tennis-note summary{display:flex;align-items:center;gap:8px;min-height:38px;padding:7px 10px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+.tennis-note summary::-webkit-details-marker{display:none}
+.tennis-note summary::after{content:"\25BE";margin-left:auto;color:var(--muted);font-size:10px}
+.tennis-note[open] summary::after{content:"\25B4"}
+.tennis-note-in{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 10px 10px;font-size:11.5px;color:var(--ink-2)}
 .ru-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:2px 0 8px}
 
 /* ---------- empty ---------- */
@@ -351,19 +431,62 @@ main{padding:22px 0 80px}
 .note code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
 
 @media (max-width:760px){
-  .wrap{padding:0 14px}
-  .brand-sub{display:none}
-  .topbar-in{height:auto;padding:10px 0;flex-wrap:wrap;gap:8px}
-  .game{grid-template-columns:64px 1fr auto;gap:10px;padding:12px 8px 12px 10px}
-  .g-watch{grid-column:2/3;align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:10px}
-  .g-score{grid-column:3;grid-row:1;min-width:0}
-  /* Saving a game was unreachable on a phone. It sits beside the watch
-     row now, at a size a thumb can actually hit. */
-  .bell{grid-column:3;grid-row:2;justify-self:end;align-self:center;width:44px;height:44px}
+  .wrap{
+    padding-left:max(14px, env(safe-area-inset-left));
+    padding-right:max(14px, env(safe-area-inset-right));
+  }
+  /* Vertical padding only: a padding shorthand here used to erase the
+     horizontal safe-area gutter inherited from .wrap and clip both ends
+     of the header on an iPhone. */
+  .topbar-in{height:54px;padding-top:5px;padding-bottom:5px;flex-wrap:nowrap;gap:6px}
+  .brand{flex:1 1 auto;margin-right:0;overflow:visible}
+  .top-actions{gap:5px}
+  .icon-btn{padding:5px 7px;gap:5px;font-size:11.5px}
+  .view-toggle{min-width:64px}
+  /* One phone hierarchy for every sport: time and save action first,
+     the thing happening beside its result, then viewing services across
+     the full width. It gives names and event details the room previously
+     spent on a permanent time column. */
+  .game{
+    grid-template-columns:minmax(0,1fr) minmax(70px,auto);
+    grid-template-areas:"time bell" "match score" "watch watch";
+    gap:7px 10px;align-items:start;padding:11px 10px
+  }
+  .g-time{grid-area:time;align-self:center;font-size:11.5px;color:var(--muted)}
+  .g-match{grid-area:match;gap:5px}
+  .g-watch{grid-area:watch;align-items:center;text-align:left;flex-direction:row;flex-wrap:wrap;gap:7px 12px}
+  .g-score{grid-area:score;align-self:start;min-width:0}
+  /* Saving remains a 44px target and now occupies the same predictable
+     top-right position on every kind of card. */
+  .bell{grid-area:bell;justify-self:end;align-self:start;width:44px;height:44px}
   .bell svg{width:18px;height:18px}
+  /* Specialty results use that same hierarchy with a full-width result
+     line: tennis needs room for sets, cycling for three rider names. */
+  .tennis-game,.event-game{
+    grid-template-columns:minmax(0,1fr) 44px;
+    grid-template-areas:"time bell" "match match" "score score" "watch watch";
+  }
+  .tennis-game .g-match,.event-game .g-match{gap:6px}
+  .tennis-game .g-teams{display:grid;grid-template-columns:minmax(0,1fr);gap:3px}
+  .tennis-game .vs{font-size:9px}
+  .tennis-game .g-score{
+    grid-area:score;display:flex;flex-direction:row;justify-content:flex-start;
+    align-items:baseline;flex-wrap:wrap;gap:4px 9px;min-width:0;text-align:left
+  }
+  .tennis-game .g-score .conf-note,.tennis-game .next-up{
+    flex-basis:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.45
+  }
+  .tennis-game .match-note{
+    font-family:var(--display);font-size:11px;letter-spacing:0;text-transform:none
+  }
+  .tennis-game .sets{justify-content:flex-start}
+  .event-game .g-score{align-items:flex-start;text-align:left;width:100%}
+  .event-game .podium{width:100%;text-align:left;line-height:1.65}
   .cal-cell{min-height:70px}
   .cal-ev .tm{display:none}
-  .rail-label{display:none}
+  .rail-head{padding-top:7px;padding-bottom:5px}
+  .rail-in{min-height:0}
+  .rail-card{flex-basis:min(248px,76vw)}
 }
 
 /* ---------- v2: coverage, confidence, competitions ---------- */
@@ -389,16 +512,15 @@ main{padding:22px 0 80px}
    unlikely. Reclaiming a few pixels of gap gives the name more room
    without narrowing the score column, which has to stay legible. */
 @media (max-width:360px){
-  /* Four controls and a wordmark do not fit one row at 320, and they are
-     not meant to: the bar wraps. What these do is keep the wrap to two
-     rows rather than three, by spending less on padding and on the word
-     "My", which the count beside the label makes redundant anyway. */
-  .topbar-in{gap:7px}
-  .icon-btn{padding:6px 9px;gap:6px}
-  .lbl-full{display:none}
-  .lbl-short{display:inline}
-  .seg button{padding:5px 9px}
-  .brand-name{font-size:15px}
+  .topbar-in{gap:4px}
+  .brand-name{font-size:14.5px}
+  .app-menu-toggle{gap:6px;padding-left:0;padding-right:1px}
+  .top-actions{gap:4px}
+  .icon-btn{padding:5px 7px;gap:4px;font-size:11.5px}
+  .view-toggle{min-width:64px}
+  .tool-btn{padding-left:5px;padding-right:5px}
+  .tool-label{gap:3px;font-size:9.5px;white-space:nowrap}
+  .tool-state{font-size:7.5px}
   /* The open and closed eyes already differ, and the button keeps an
      aria-label saying which it is, so the word is the one thing here
      that can go without taking meaning with it. */
@@ -429,8 +551,19 @@ main{padding:22px 0 80px}
   .sets{gap:3px;font-size:11px}
 }
 
-.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 4px}
+.filters{margin:12px 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.filters summary{
+  display:flex;align-items:center;gap:9px;min-height:44px;padding:0 12px;cursor:pointer;
+  list-style:none;color:var(--ink-2);
+}
+.filters summary::-webkit-details-marker{display:none}
 .filters .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.filter-state{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted)}
+.filter-action{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent)}
+.filter-action .when-open{display:none}
+.filters[open] .filter-action .when-closed{display:none}
+.filters[open] .filter-action .when-open{display:inline}
+.filter-options{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 12px 12px;border-top:1px solid var(--line)}
 .fchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
 .fchip i{width:7px;height:7px;border-radius:50%;flex:none;opacity:.35}
 .fchip[aria-pressed="true"]{color:var(--ink);border-color:var(--line-strong)}
@@ -438,6 +571,34 @@ main{padding:22px 0 80px}
    in the pressed/unpressed language the chips beside it use. */
 .fchip-all{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border-style:dashed}
 .fchip[aria-pressed="true"] i{opacity:1}
+
+/* One small control surface replaces three stacked disclosures. The
+   strip adapts to what is useful: if no race exists, sport and history
+   split the width instead of leaving a dead third. */
+.home-tools{margin:14px 0 20px}
+.tool-strip{display:grid;grid-template-columns:repeat(var(--tool-count),minmax(0,1fr));border:1px solid var(--line);border-radius:11px;background:var(--surface);overflow:hidden}
+.tool-btn{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;min-height:54px;padding:8px 12px;text-align:left;border-right:1px solid var(--line)}
+.tool-btn:last-child{border-right:none}
+.tool-btn:hover,.tool-btn[aria-expanded="true"]{background:var(--surface-2)}
+.tool-label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;min-width:0}
+.tool-label .picker-chevron{margin-left:auto}
+.tool-btn[aria-expanded="true"] .picker-chevron{transform:rotate(225deg);margin-top:4px;margin-bottom:0}
+.tool-state{font-family:var(--mono);font-size:9px;letter-spacing:.055em;text-transform:uppercase;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tool-panel{border:1px solid var(--line);border-top:0;border-radius:0 0 11px 11px;background:var(--surface);overflow:hidden}
+.tool-panel .filter-options{border-top:0}
+.tool-panel .results-in{padding:14px 12px 2px}
+.tool-panel .races-in{padding:12px}
+.tool-empty{padding:15px;font-size:12.5px;color:var(--muted)}
+.home-race-select{display:flex;gap:6px;overflow-x:auto;padding:10px 12px 0;scrollbar-width:none}
+.home-race-select::-webkit-scrollbar{display:none}
+.home-race-option{flex:none;max-width:230px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-race-option[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+@media (max-width:519px){
+  .home-tools{margin-top:10px;margin-bottom:16px}
+  .tool-btn{min-height:50px;padding:7px 6px}
+  .tool-label{font-size:10.5px}
+  .tool-state{font-size:8px}
+}
 
 /* Coverage lives in the My services drawer, not in the page body. These
    are the pieces it is built from; the panel's own <details> chrome went
@@ -462,12 +623,8 @@ main{padding:22px 0 80px}
 .svc-hint b{font-weight:700;color:var(--ink)}
 .svc-hint .icon-btn{margin-left:auto;flex:none}
 
-.tag-cov{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:4px;font-weight:600}
-.tag-cov.have{background:var(--ok-soft);color:var(--ok)}
-.tag-cov.need{background:var(--warn-soft);color:var(--warn)}
 .svc.unconfirmed{color:var(--warn)}
-.svc.unconfirmed .pip{background:var(--warn)}
-.svc.expected{border-bottom:1px dashed var(--line-strong)}
+.svc.unconfirmed .pip{border-color:var(--warn);background:var(--warn)}
 .conf-note{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .conf-note.warn{color:var(--warn)}
 .tbd{opacity:.75;font-style:normal}
@@ -489,7 +646,7 @@ main{padding:22px 0 80px}
 /* ---- Race: the standings slice that says why a fixture matters ----
    Built to the same shape as the history panel above it, so the two read
    as one column of context rather than two different ideas. */
-.races{margin:14px 0 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.races{margin:14px 0 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
 /* Shut, this is one row: a title and a count on the first line and the
    standings line under it, both clipped rather than wrapped so the row
    cannot grow into a paragraph on a narrow screen. */
@@ -508,6 +665,10 @@ main{padding:22px 0 80px}
 .race-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px 8px}
 .race-head i{width:8px;height:8px;border-radius:2px;flex:none}
 .race-head b{font-weight:800;font-stretch:112%;font-size:13.5px}
+.race-star{width:44px;height:44px;margin:-13px 0 -13px -7px;border:0;background:none;
+  display:grid;place-items:center;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.race-star:hover{color:var(--accent)}
+.race-star[aria-pressed="true"]{color:var(--accent)}
 /* Deliberately not subtle, and deliberately ahead of the scope line:
    this is the difference between a table that is true now and one that
    was true on Sunday. */
@@ -592,6 +753,7 @@ main{padding:22px 0 80px}
 .pill.confirmed{background:var(--ok-soft);color:var(--ok)}
 .pill.expected{background:var(--accent-soft);color:var(--accent)}
 .pill.unknown{background:var(--warn-soft);color:var(--warn)}
+.pill.race-follow{background:var(--accent-soft);color:var(--accent)}
 @media (max-width:760px){
   .svc-grid{grid-template-columns:repeat(2,1fr)}
   .svc-card{padding:8px 9px}
@@ -603,31 +765,39 @@ main{padding:22px 0 80px}
 <header class="topbar">
   <div class="wrap topbar-in">
     <div class="brand">
-      <div class="brand-mark">GD</div>
-      <div>
-        <h1 class="brand-name">Game Day North</h1>
-        <div class="brand-sub">Where to watch, coast to coast</div>
+      <button class="app-menu-toggle" id="appMenuToggle" aria-expanded="false" aria-controls="appMenu">
+        <span class="brand-name">Game Day North</span>
+        <span class="picker-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="app-menu" id="appMenu" role="menu" hidden>
+        <button class="menu-item" id="teamsToggle" role="menuitem" aria-pressed="false">My teams <span class="menu-count" id="teamCount"></span></button>
+        <button class="menu-item" id="servicesToggle" role="menuitem" aria-pressed="false">My services <span class="menu-count" id="serviceCount"></span></button>
       </div>
     </div>
-    <div class="seg" role="group" aria-label="View">
-      <button id="v-list" aria-pressed="true">List</button>
-      <button id="v-cal" aria-pressed="false">Calendar</button>
+    <div class="top-actions">
+      <button class="icon-btn" id="scoreToggle" aria-pressed="true" title="Show or hide scores everywhere">
+        <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span id="scoreToggleLabel">Scores on</span>
+      </button>
+      <button class="icon-btn view-toggle" id="viewToggle" aria-label="Switch to calendar view">Calendar</button>
+      <button class="icon-btn setup-done" id="setupDone" hidden>Done</button>
     </div>
-    <button class="icon-btn" id="scoreToggle" aria-pressed="true" title="Show or hide scores everywhere">
-      <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-      <span id="scoreToggleLabel">Scores on</span>
-    </button>
-    <button class="icon-btn" id="teamsToggle" aria-pressed="false"><span class="lbl-full">My teams</span><span class="lbl-short">Teams</span> <span id="teamCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
-    <button class="icon-btn" id="servicesToggle" aria-pressed="false"><span class="lbl-full">My services</span><span class="lbl-short">Services</span> <span id="serviceCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
   </div>
 </header>
 
-<div class="rail"><div class="wrap rail-in" id="rail"></div></div>
+<section class="whats-on" aria-labelledby="railHeading">
+  <div class="wrap rail-head">
+    <h2 id="railHeading">What&rsquo;s on</h2>
+    <span class="rail-count" id="railCount"></span>
+    <button class="rail-see" id="railSeeAll" hidden>See all</button>
+  </div>
+  <div class="rail"><div class="wrap rail-in" id="rail"></div></div>
+</section>
 
 <section class="drawer" id="drawer" hidden>
   <div class="wrap drawer-in">
     <div class="drawer-head">
-      <h2>Pick your teams &amp; tennis</h2>
+      <h2>Choose what to follow</h2>
       <span class="count" id="drawerCount"></span>
       <input class="search" id="teamSearch" type="search" placeholder="Search teams…" aria-label="Search teams">
     </div>
@@ -643,7 +813,7 @@ main{padding:22px 0 80px}
 <section class="drawer" id="svcDrawer" hidden>
   <div class="wrap drawer-in">
     <div class="drawer-head">
-      <h2>My services</h2>
+      <h2>Choose your services</h2>
       <span class="count" id="svcCount"></span>
       <p class="drawer-sub" id="svcSummary"></p>
     </div>
@@ -772,8 +942,8 @@ const SRC = {
   atptv:   {label:"ATP Tour — Watch Live, broadcaster list", url:"https://www.atptour.com/en/video/watch-live"},
   usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"}
 };
-const tv = n => ({name:n, kind:"tv"});
-const st = n => ({name:n, kind:"stream"});
+const tv = (n, confidence) => ({name:n, kind:"tv", confidence});
+const st = (n, confidence) => ({name:n, kind:"stream", confidence});
 const CDN_MLS = ["van-mls","tfc","mtl-mls"];
 
 /* Tennis rights attach to a tournament, never to a player. Following
@@ -791,7 +961,7 @@ const CDN_MLS = ["van-mls","tfc","mtl-mls"];
 
    A Grand Slam is not an ATP tour event and its rights are sold
    separately, so the ATP listing says nothing about Melbourne, Paris or
-   Wimbledon — those resolve to Coverage TBD rather than being assumed to
+   Wimbledon — those resolve to Coverage not confirmed rather than being assumed to
    follow the tour. Neither source covers the WTA tour at all, so a WTA
    event outside a Slam is unknown too. Guessing here would put a service
    badge on a match nobody can confirm is carried. */
@@ -873,7 +1043,7 @@ const RIGHTS = [
   {comp:"LIGUE1", carriers:[], confidence:"unknown", note:"Canadian carrier not confirmed", src:SRC.none, checked:CHECKED},
 
   /* ---------------- MLS ---------------- */
-  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)), carriers:[st("MLS Season Pass"), tv("TSN")], confidence:"expected",
+  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)), carriers:[st("MLS Season Pass", "confirmed"), tv("TSN", "expected")], confidence:"expected",
    note:"Apple carries every match; TSN/RDS simulcast at least one Canadian club match a week — that simulcast window runs to 2026", src:SRC.wikica, checked:CHECKED},
   {comp:"MLS", carriers:[st("MLS Season Pass")], confidence:"confirmed",
    note:"Apple is global rightsholder, every match, through 2032", src:SRC.wikica, checked:CHECKED},
@@ -1367,7 +1537,9 @@ const raceAutoAllowed = view => !view || view.auto !== false;
    title race four places above it. */
 const RACE_GAP_TOLERANCE = 2;
 
-const RACE_AUTO = "auto", RACE_PIN = "pin", RACE_HIDE = "hide";
+const RACE_AUTO = "auto";
+const RACE_PIN = "pin";
+const RACE_HIDE = "hide";
 function racePrefOf(id){
   const v = racePrefs && racePrefs[id];
   return v === RACE_PIN || v === RACE_HIDE ? v : RACE_AUTO;
@@ -1383,12 +1555,71 @@ const raceCardId = (view, grp) => view.id + (view.kindIs ? ":" + grp.group : "")
    under someone part-way through pinning it should not drop them back to
    the top of the document. */
 const racePrefBtnId = (raceId, pref, kind) => "rp-" + (kind || "card") + "-" + pref + "-" + raceId;
+function raceStarHtml(card, now){
+  const rows = raceRowsWithinGameGap(card.view, card.grp, now);
+  if(!rows.length) return "";
+  const on = racePrefOf(card.id) === RACE_PIN;
+  const verb = on ? "Unfollow" : "Follow";
+  return '<button class="race-star" id="' + esc(racePrefBtnId(card.id, RACE_PIN, "star"))
+    + '" data-race-star="' + esc(card.id) + '" aria-pressed="' + on + '"'
+    + ' title="' + verb + ' ' + esc(card.title) + '" aria-label="' + verb + ' '
+    + esc(card.title) + (on ? '' : ' and include teams within 3.5 games of the line') + '">'
+    + '<span aria-hidden="true">' + (on ? '&#9733;' : '&#9734;') + '</span></button>';
+}
 
 /* The groups a view applies to: one named group, or every division of a
    competition where the view covers all of them. */
 function raceGroupsFor(view){
   return STANDINGS.filter(g=>g.comp === view.comp
     && (view.kindIs ? g.kind === view.kindIs : g.group === view.group));
+}
+
+/* Following a race adds the clubs whose published games-behind figure
+   places them within 3.5 games of its line. The source has already
+   measured this number against the line; using `gbv` keeps the window
+   exact and avoids manufacturing a games-back figure for points tables.
+
+   `pin` is retained as the stored value so preferences written by the
+   earlier Pin control migrate into followed races without being lost. */
+const RACE_GAME_GAP = 3.5;
+function raceRowsWithinGameGap(view, grp, now){
+  const when = now == null ? Date.now() : now;
+  if(!grp || !Array.isArray(grp.rows) || !grp.rows.length) return [];
+  if(!grp.played || grp.played.max <= 0 || raceCutoff(view, grp) == null) return [];
+  if(grp.heldFrom){
+    const from = Date.parse(grp.heldFrom);
+    if(!Number.isFinite(from) || when - from > RACE_MAX_AGE) return [];
+  }
+  return grp.rows.filter(r=>r && r.id && Number.isFinite(r.gbv)
+    && Math.abs(r.gbv) <= RACE_GAME_GAP && (r.gp == null || r.gp > 0));
+}
+function followedRaceTeams(now){
+  const ids = new Set(), byTeam = new Map(), races = [];
+  for(const view of RACES){
+    for(const grp of raceGroupsFor(view)){
+      const id = raceCardId(view, grp);
+      if(racePrefOf(id) !== RACE_PIN) continue;
+      const rows = raceRowsWithinGameGap(view, grp, now);
+      if(!rows.length) continue;
+      const title = view.title || grp.scope;
+      races.push({id, view, grp, rows, title, comp:grp.comp});
+      rows.forEach(r=>{
+        if(!TEAMS[r.id]) return;
+        ids.add(r.id);
+        if(!byTeam.has(r.id)) byTeam.set(r.id, []);
+        byTeam.get(r.id).push(title);
+      });
+    }
+  }
+  return {ids, byTeam, races};
+}
+let raceIncluded = new Set(), raceByTeam = new Map(), followedRaces = [];
+function syncRaceTeams(now){
+  const next = followedRaceTeams(now);
+  raceIncluded = next.ids;
+  raceByTeam = next.byTeam;
+  followedRaces = next.races;
+  return raceIncluded;
 }
 
 /* Which rows to show: the places either side of the line, plus each
@@ -1963,6 +2194,13 @@ let liveNote = "", liveErr = "";
    something about caching. The abort signal is applied last so a caller
    can never drop the timeout. */
 async function jget(url, ms, init){
+  /* A capacitor://localhost page has a different origin from every
+     sports feed. On iOS, use the native URLSession-backed request in
+     the small bundled bridge rather than weakening CORS or ATS. The web
+     build keeps the browser fetch it has always used. */
+  if(typeof window !== "undefined" && window.GDNNative && window.GDNNative.isNative && /^https:\/\//.test(url)){
+    return await window.GDNNative.getJson(url, ms||9000);
+  }
   const ctl = new AbortController();
   const timer = setTimeout(()=>ctl.abort(), ms||9000);
   try{
@@ -2084,6 +2322,63 @@ function parseSummary(sum, comp){
    because a file refreshed every half hour cannot follow a game.
    ------------------------------------------------------------------ */
 let staticAt = 0, staticCount = 0, staticTennis = null;
+let staticSource = "none", staticFetchError = "";
+
+/* A bad remote document never becomes the saved good copy. The limits
+   are intentionally above today's file (about 0.8 MB / 1,853 fixtures)
+   but finite, so a broken deployment cannot hand the WebView an
+   unbounded array or a payload with no meaningful freshness stamp. */
+function validStaticPayload(r){
+  try{
+    if(!r || typeof r!=="object" || Array.isArray(r)) return false;
+    const encoded = JSON.stringify(r);
+    if(new TextEncoder().encode(encoded).byteLength > 3*1024*1024) return false;
+    const made = Date.parse(r.generated);
+    if(!Number.isFinite(made) || made > Date.now()+24*60*60*1000) return false;
+    if(!Array.isArray(r.fixtures) || r.fixtures.length>5000) return false;
+    if(!r.fixtures.every(f=>f && typeof f==="object" && typeof f.comp==="string"
+      && f.home && typeof f.home==="object" && f.away && typeof f.away==="object"
+      && Number.isFinite(Number(f.start)))) return false;
+    if(r.rugby!=null && (!Array.isArray(r.rugby) || r.rugby.length>500)) return false;
+    if(r.cycling!=null && (!Array.isArray(r.cycling) || r.cycling.length>50)) return false;
+    if(r.tennis!=null){
+      if(typeof r.tennis!=="object" || Array.isArray(r.tennis)) return false;
+      if(r.tennis.matches!=null && (!Array.isArray(r.tennis.matches) || r.tennis.matches.length>5000)) return false;
+      if(r.tennis.tournaments!=null && (!Array.isArray(r.tennis.tournaments) || r.tennis.tournaments.length>1000)) return false;
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
+async function readStaticPayload(){
+  const bundled = async () => {
+    const data = await jget(new URL("data.json", location.href).href, 12000, {cache:"no-cache"});
+    if(!validStaticPayload(data)) throw new Error("Invalid bundled schedule");
+    return data;
+  };
+  const native = typeof window!=="undefined" && window.GDNNative && window.GDNNative.isNative;
+  if(!native) return {data:await bundled(), source:"site"};
+
+  try{
+    const data = await jget(window.GDNNative.dataUrl, 12000);
+    if(!validStaticPayload(data)) throw new Error("Invalid remote schedule");
+    try{ await window.GDNNative.writeCachedSchedule(data); }
+    catch(e){ console.warn("Could not save the offline schedule", e); }
+    staticFetchError = "";
+    return {data, source:"remote"};
+  }catch(e){
+    staticFetchError = (e && e.message || String(e)).slice(0,120);
+  }
+
+  try{
+    const data = await window.GDNNative.readCachedSchedule();
+    if(!validStaticPayload(data)) throw new Error("Invalid saved schedule");
+    return {data, source:"cache"};
+  }catch(e){}
+
+  return {data:await bundled(), source:"bundle"};
+}
+
 function staticTeam(t, comp){
   if(t.id && TEAMS[t.id]) return TEAMS[t.id];
   const key = "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
@@ -2095,7 +2390,7 @@ function staticTeam(t, comp){
   return TEAMS[key];
 }
 async function loadStatic(){
-  let r;
+  let loaded, r;
   /* GitHub Pages serves data.json with max-age=600, so a browser that
      already has a copy will answer from it for ten minutes — long enough
      for a score the scheduled job has already committed to stay
@@ -2103,14 +2398,19 @@ async function loadStatic(){
      "do not cache": the copy is still stored and still sent back with
      its validator, so an unchanged file costs a 304 and no body. Only
      this file asks for it; the API calls keep ordinary caching. */
-  try{ r = await jget(new URL("data.json", location.href).href, 12000, {cache:"no-cache"}); }
+  try{ loaded = await readStaticPayload(); r = loaded.data; staticSource = loaded.source; }
   catch(e){ return 0; }
-  if(!r || !Array.isArray(r.fixtures)) return 0;
+  if(!validStaticPayload(r)) return 0;
+  /* A followed race is another route into the board. Read its standings
+     before filtering fixtures so the race teams are known on the same
+     pass; otherwise they would not appear until a later refresh. */
+  attachStandings(r.standings);
+  syncRaceTeams(Date.now());
   const built = [];
   r.fixtures.forEach(f=>{
     if(!f || !f.home || !f.away || !f.start) return;
     const home = staticTeam(f.home, f.comp), away = staticTeam(f.away, f.comp);
-    if(!selected.has(home.id) && !selected.has(away.id)) return;
+    if(!followsTeam(home) && !followsTeam(away)) return;
     built.push({eid:f.eid || null, comp:f.comp, home, away, start:f.start, moved:null,
       real:true, espn:true, listed:true, fromFeed:true, venue:f.venue || null,
       localDow:new Date(f.start).getUTCDay(), slotHour:new Date(f.start).getUTCHours(), stage:"",
@@ -2126,10 +2426,8 @@ async function loadStatic(){
      are: switching a tour on should show the top of the draw straight
      away rather than the whole of it until the next refresh. */
   attachRankings(staticTennis && staticTennis.rankings, staticTennis && staticTennis.rankedAt);
-  /* Standings are not fixtures and are not merged into them: they are
-     held on their own and read by the Race section alone. A file with no
-     standings block empties them, so a race can never outlive its data. */
-  attachStandings(r.standings);
+  /* Standings were attached before fixtures so followed-race teams could
+     take part in the same load. They remain separate from fixture rows. */
   /* Same bargain as the standings above, read by the record under a team
      name rather than by a Race card. A file with no tables leaves every
      record absent, which is exactly what should happen. */
@@ -2840,7 +3138,7 @@ async function fillScores(){
 }
 
 async function loadLive(){
-  const mine = [...selected].map(id=>TEAMS[id]).filter(Boolean);
+  const mine = [...new Set([...selected, ...raceIncluded])].map(id=>TEAMS[id]).filter(Boolean);
   if(!mine.length){ return; }
   const naJobs = [], soccerComps = new Set();
   mine.forEach(t=>{
@@ -2899,8 +3197,8 @@ async function loadLive(){
     if(got) ok++; else errs.push(comp+": no fixtures published");
   }));
   if(!ok) throw new Error(errs[0] || "no source reachable");
-  // keep only fixtures that involve a team you follow
-  const keep = built.filter(g=>selected.has(g.home.id) || selected.has(g.away.id));
+  // keep fixtures for direct selections and the current followed-race window
+  const keep = built.filter(g=>followsTeam(g.home) || followsTeam(g.away));
   const dedup = [];
   keep.forEach(g=>{
     const i = dedup.findIndex(x=>sameGame(x, g));
@@ -3124,7 +3422,7 @@ let rugbyStars, tennisStars;
 const rugbyOn = () => selected.has(RUGBY_FOLLOW);
 let alerts = new Set(LS.get("gdn.alerts", []));
 let revealed = new Set(), view="list", calMonth=new Date(2026,7,1), selDay=null, search="";
-let rightsOpen = false;
+let rightsOpen = false, filtersOpen = false;
 /* Recent results opens the list, so it starts closed: the question this
    page answers is what is on next, and history that arrived expanded
    would push tonight's game below the fold to say something nobody
@@ -3165,6 +3463,7 @@ let racePrefs = (function(){
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
 })();
 let raceFull = new Set();
+let raceSelected = null;
 let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the sample set   // panels keep their open/closed state across re-renders
 
 function persist(){
@@ -3192,7 +3491,10 @@ function shareLink(){
        build that does not know them. */
     if(tennisTours.size) parts.push("tt="+[...tennisTours].sort().join("."));
     if(tennisEvents.size) parts.push("te="+[...tennisEvents].sort().join("."));
-    return location.origin + location.pathname + "#" + parts.join("&");
+    const publicPage = (typeof window!=="undefined" && window.GDNNative && window.GDNNative.isNative)
+      ? window.GDNNative.webUrl
+      : location.origin + location.pathname;
+    return publicPage + "#" + parts.join("&");
   }catch(e){ return ""; }
 }
 
@@ -3304,9 +3606,17 @@ function tennisWorthShowing(m){
   }
   return false;
 }
+const followsTeam = t => !!(t && (selected.has(t.id)
+  || (typeof raceIncluded !== "undefined" && raceIncluded.has(t.id))));
+const inFollowedRace = g => !!(g && !g.rugby && !g.tennis && !g.event
+  && typeof raceIncluded !== "undefined"
+  && ((g.home && raceIncluded.has(g.home.id)) || (g.away && raceIncluded.has(g.away.id))));
 const isMine = g => g.rugby ? rugbyOn()
   : g.tennis ? tennisMine(g)
-  : ((g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id)));
+  : ((g.home && (selected.has(g.home.id)
+      || (typeof raceIncluded !== "undefined" && raceIncluded.has(g.home.id))))
+    || (g.away && (selected.has(g.away.id)
+      || (typeof raceIncluded !== "undefined" && raceIncluded.has(g.away.id)))));
 const isStarred = t => !!(t && t.nation && rugbyStars.has(t.nation));
 const isStarredPlayer = p => !!(p && p.id && tennisStars.has(String(p.id)));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
@@ -3469,6 +3779,28 @@ function servicesFor(g){
   return ids;
 }
 const covered = g => { const ids = servicesFor(g); return ids.length ? ids.some(s=>services.has(s)) : false; };
+/* An inferred carrier is useful while a game is distant. Inside five
+   days it either has a fixture-level confirmation or it does not: stop
+   presenting the inference as somewhere the viewer can watch. A carrier
+   may override its rule's confidence where a mixed rule has one certain
+   home and one possible simulcast (MLS Season Pass vs TSN). */
+function visibleRights(g, now){
+  const rights = resolveRights(g);
+  const near = g.start <= now + 5*DAY;
+  const carriers = rights.carriers.filter(w=>!near || (w.confidence || rights.confidence) !== "expected");
+  return Object.assign({}, rights, {carriers});
+}
+function carrierHtml(w, rights){
+  const serviceId = CARRIER_SERVICE[w.name];
+  const owned = !!(serviceId && services.has(serviceId));
+  const expected = (w.confidence || rights.confidence) === "expected";
+  const ownership = serviceId ? (owned ? "In your services" : "Not in your services") : "";
+  const label = [w.name, ownership, expected ? "Expected" : "Confirmed"].filter(Boolean).join(" — ");
+  return '<span class="svc '+w.kind+(owned?' owned':'')+(expected?' expected':'')+'"'
+    + ' title="'+esc([rights.note, ownership].filter(Boolean).join(" · "))+'" aria-label="'+esc(label)+'">'
+    + '<span class="pip" aria-hidden="true"></span>'+esc(w.name)
+    + (expected?'<span class="svc-expected">Expected</span>':'')+'</span>';
+}
 function coverageReport(now){
   const window = myGames().filter(g=>g.start>=now && g.start<now+90*DAY);
   const need = {}, out = {total:window.length, have:0, unknown:0};
@@ -3536,9 +3868,15 @@ const leadNote = g => (g.leader && g.leaderStage)
 /* A race is an event, not a matchup: one name, a stage, a route, and no
    scoreline. It shares the row grid so the columns still line up. */
 function eventRow(g, now){
-  const c = COMPS[g.comp], rights = resolveRights(g);
+  const c = COMPS[g.comp], rights = visibleRights(g, now);
   const day = localKey(g.start), today = ymd(new Date(now));
   const state = day < today ? "done" : day > today ? "ahead" : "today";
+  /* "Today" is a date group, not a live state. A stage is only racing
+     after its known start and before its expected finish, while it has
+     no result. This keeps a completed stage from borrowing the live tint. */
+  const racing = state === "today" && !g.podium
+    && !(g.timeKnown && now < g.start)
+    && !(g.finishUtc && now > g.finishUtc);
 
   const timeCell = g.timeKnown
     ? '<div class="g-time">'+esc(fmtTime(g.start))+'</div>'
@@ -3553,15 +3891,10 @@ function eventRow(g, now){
 
   let watch;
   if(!rights.carriers.length){
-    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Carrier TBC</span></div>';
+    watch = '<div class="g-watch"><span class="svc unconfirmed" title="'+esc(rights.note)+'"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const ids = servicesFor(g);
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs '+esc(((SERVICES[ids[0]]||{}).label)||"a sub")+'</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc '+w.kind+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   const reveal = showScores || revealed.has(g.id);
@@ -3600,7 +3933,7 @@ function eventRow(g, now){
 
   const on = alerts.has(g.id);
   const bell = saveButton(g.id, on, g.race || "this race");
-  return '<div class="game'+(state==="today"?" is-live":"")+'">'+timeCell
+  return '<div class="game event-game'+(racing?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell
     + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
 }
 
@@ -3645,7 +3978,7 @@ const RUGBY_STATE_TEXT = {
 };
 
 function rugbyRow(g, now){
-  const c = COMPS[g.comp], rights = resolveRights(g);
+  const c = COMPS[g.comp], rights = visibleRights(g, now);
   const state = (g.ru && g.ru.state) || "unknown";
   const live = rugbyIsActive(state) && state !== "unknown";
   const reveal = showScores || revealed.has(g.id);
@@ -3677,20 +4010,14 @@ function rugbyRow(g, now){
     + '</div>';
 
   /* Rugby carriage is unverified far more often than it is verified, so
-     the unknown case says "Coverage TBD" rather than naming a carrier
+     the unknown case says "Coverage not confirmed" rather than naming a carrier
      nobody has confirmed. */
   let watch;
   if(!rights.carriers.length){
-    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Coverage TBD</span>'
-      + '<span class="conf-note warn" title="'+esc(rights.note)+'">Not confirmed in Canada</span></div>';
+    watch = '<div class="g-watch"><span class="svc unconfirmed" title="'+esc(rights.note)+'"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs '+esc(SERVICES[servicesFor(g)[0]]?SERVICES[servicesFor(g)[0]].label:"a sub")+'</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc '+w.kind+(rights.confidence==="expected"?" expected":"")+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
-      + (rights.confidence==="expected"?'<span class="conf-note">Expected</span>':"")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   const said = RUGBY_STATE_TEXT[state] || "";
@@ -3724,7 +4051,7 @@ function rugbyRow(g, now){
   scoreCell += '</div>';
 
   const bell = saveButton(g.id, alerts.has(g.id), g.home.name + " v " + g.away.name);
-  return '<div class="game'+(live?" is-live":"")+(starA||starB?" has-star":"")+'">'
+  return '<div class="game'+(live?" is-live":"")+(starA||starB?" has-star":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'
     + timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
@@ -3772,12 +4099,12 @@ function venueTag(g){
    so the columns still line up with everything else. */
 const TENNIS_STATE = {
   live:     {text:"Live",      live:true},
-  suspended:{text:"Suspended", live:true,  note:"Play stopped &mdash; not finished"},
+  suspended:{text:"Suspended", live:true},
   final:    {text:"Final"},
-  retired:  {text:"Retired",   note:"Ended early &mdash; opponent retired"},
-  walkover: {text:"Walkover",  note:"Not played &mdash; opponent withdrew"},
-  canceled: {text:"Canceled",  note:"Match called off"},
-  postponed:{text:"Postponed", note:"Moved &mdash; new time not published"},
+  retired:  {text:"Retired",   note:"Opponent retired"},
+  walkover: {text:"Walkover",  note:"Opponent withdrew"},
+  canceled: {text:"Canceled"},
+  postponed:{text:"Postponed", note:"New time not published"},
   unknown:  {text:"Status unavailable"}
 };
 /* One set as it is actually written: games, and the tiebreak in
@@ -3820,7 +4147,7 @@ function setText(m, i, flip){
   return (a === null ? "-" : a) + "-" + (b === null ? "-" : b) + pick;
 }
 function tennisRow(g, now){
-  const m = g.match, c = COMPS[g.comp], rights = resolveRights(g);
+  const m = g.match, c = COMPS[g.comp], rights = visibleRights(g, now);
   const state = TENNIS_STATE[m.status] || TENNIS_STATE.unknown;
   const started = now >= m.start;
   /* Everything that says how the match went — the score, which name is
@@ -3906,16 +4233,10 @@ function tennisRow(g, now){
   let watch;
   if(!rights.carriers.length){
     watch = '<div class="g-watch"><span class="svc unconfirmed" title="' + esc(rights.note)
-      + '"><span class="pip"></span>Coverage TBD</span></div>';
+      + '"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const ids = servicesFor(g);
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs ' + esc(((SERVICES[ids[0]] || {}).label) || "a sub") + '</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc ' + w.kind + '" title="' + esc(rights.note)
-          + '"><span class="pip"></span>' + esc(w.name) + '</span>').join("")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   const played = (m.sets || []).some((_, i) => setText(m, i));
@@ -3933,6 +4254,10 @@ function tennisRow(g, now){
     right += '<button class="hidden-score" data-reveal="' + esc(g.id) + '">Reveal</button>'
       + '<span class="score-state">' + state.text + ' &middot; hidden</span>';
   } else {
+    /* Exceptional states are explanatory context, not part of the
+       scoreline. Hold the note until after any next-opponent line so a
+       result reads: what happened, what comes next, then why it ended. */
+    const specialNote = state.note || "";
     right += '<span class="score-state' + (state.live ? " live" : "") + '">'
       + (state.live ? '<span class="dot-live"></span>' : "") + state.text + '</span>';
     if(played){
@@ -3953,13 +4278,14 @@ function tennisRow(g, now){
       right += '<span class="conf-note">'
         + [m.label ? esc(m.label) : "", tally ? tally + " in sets" : ""].filter(Boolean).join(" &middot; ")
         + '</span>';
-    else if(state.note) right += '<span class="conf-note">' + state.note + '</span>';
-    else if(!played && m.status !== "scheduled") right += '<span class="conf-note">No score published</span>';
+    else if(!specialNote && !played && m.status !== "scheduled")
+      right += '<span class="conf-note">No score published</span>';
     /* Only once the match is settled and its result is being shown:
        naming a next opponent says who won, so it waits on the same
        reveal the score does. */
     const nxt = m.winner != null ? nextOpponentLine(m) : null;
     if(nxt) right += '<span class="next-up">' + esc(nxt) + '</span>';
+    if(specialNote) right += '<span class="conf-note match-note">' + specialNote + '</span>';
   }
   right += '</div>';
 
@@ -3968,7 +4294,7 @@ function tennisRow(g, now){
      the title and left in the button is not blanked. */
   const label = m.players.map(p=>playerSpoiled(m, p) ? TBD_PLAYER.name : p.name).join(" v ");
   const bell = saveButton(g.id, alerts.has(g.id), label);
-  return '<div class="game' + (state.live ? " is-live" : "") + '">' + timeCell
+  return '<div class="game tennis-game' + (state.live ? " is-live" : "") + '" data-game-id="' + esc(String(g.id)) + '" tabindex="-1">' + timeCell
     + '<div class="g-match">' + title + meta + '</div>' + watch + right + bell + '</div>';
 }
 
@@ -3979,9 +4305,12 @@ function gameRow(g, now){
   const st = stateOf(g, now), ts = timeState(g, now), c = COMPS[g.comp];
   const o = orderedTeams(g);
   if(ts.state==="tbd"){ if(o.flip) o.a = null; else o.b = null; }
-  const rights = resolveRights(g);
+  const rights = visibleRights(g, now);
   const reveal = showScores || revealed.has(g.id);
-  const mineA = o.a && selected.has(o.a.id), mineB = o.b && selected.has(o.b.id);
+  const mineA = o.a && (selected.has(o.a.id)
+    || (typeof raceIncluded !== "undefined" && raceIncluded.has(o.a.id)));
+  const mineB = o.b && (selected.has(o.b.id)
+    || (typeof raceIncluded !== "undefined" && raceIncluded.has(o.b.id)));
 
   let timeCell = '<div class="g-time">'+(ts.state==="tbd"||ts.state==="tbc" ? '<span class="tbd">'+esc(fmtTime(g.start))+'</span>' : esc(fmtTime(g.start)));
   if(g.moved) timeCell += '<span class="was">'+esc(fmtTime(g.moved))+'</span><span class="moved">Time moved</span>';
@@ -4009,7 +4338,10 @@ function gameRow(g, now){
 
   const meta = '<div class="g-meta">'
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
-    + (g.listed?'<span class="pill confirmed" title="Real fixture from a published TV listing">Listed</span>':"")
+    + (typeof inFollowedRace !== "undefined" && inFollowedRace(g)
+      ?'<span class="pill race-follow" title="Included because you follow this playoff race">In followed race</span>':"")
+    + (g.listed && g.start > now + 5*DAY
+      ?'<span class="pill confirmed" title="Published fixture more than five days away">Listed</span>':"")
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
     + venueTag(g)
     /* Said on the fixture itself, not only in a note at the foot of the
@@ -4023,16 +4355,10 @@ function gameRow(g, now){
 
   let watch;
   if(!rights.carriers.length){
-    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Carrier TBC</span>'
-      + '<span class="conf-note warn" title="'+esc(rights.note)+'">Not confirmed in Canada</span></div>';
+    watch = '<div class="g-watch"><span class="svc unconfirmed" title="'+esc(rights.note)+'"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs '+esc(SERVICES[servicesFor(g)[0]]?SERVICES[servicesFor(g)[0]].label:"a sub")+'</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc '+w.kind+(rights.confidence==="expected"?" expected":"")+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
-      + (rights.confidence==="expected"?'<span class="conf-note">Expected</span>':"")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   let scoreCell = '<div class="g-score">';
@@ -4067,7 +4393,7 @@ function gameRow(g, now){
 
   const on = alerts.has(g.id);
   const bell = saveButton(g.id, on, fullName(g.home) + " v " + fullName(g.away));
-  return '<div class="game'+(st.status==="live"?" is-live":"")+'">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
+  return '<div class="game'+(st.status==="live"?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
 function daySection(key, games, now, todayKey){
@@ -4075,10 +4401,14 @@ function daySection(key, games, now, todayKey){
   const diff = Math.round((new Date(y,m-1,d) - new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()))/DAY);
   let rel = key===todayKey ? "Today" : diff===1 ? "Tomorrow" : (diff>1&&diff<7) ? "In "+diff+" days" : "";
   const liveN = games.filter(g=>stateOf(g,now).status==="live").length;
+  /* Saving a game has a visible payoff: it stays at the top of its date.
+     Everything not saved remains chronological underneath it. */
+  const ordered = games.slice().sort((a,b)=>
+    Number(alerts.has(b.id))-Number(alerts.has(a.id)) || a.start-b.start);
   return '<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(key))+'</h3>'
     + (rel?'<span class="rel">'+esc(rel)+'</span>':'')
     + '<span class="n">'+games.length+(games.length===1?" game":" games")+(liveN?" &middot; "+liveN+" live":"")+'</span></div>'
-    + '<div class="day-games">'+games.map(g=>gameRow(g,now)).join("")+'</div></section>';
+    + '<div class="day-games">'+ordered.map(g=>gameRow(g,now)).join("")+'</div></section>';
 }
 function groupByDay(games){
   const map = new Map();
@@ -4111,13 +4441,19 @@ function welcomeBanner(){
      everything but NHL   tap NHL off, exactly as before
 
    `hiddenComps` is untouched underneath — the same set, written the same
-   way — so an x= share link made before this existed still decodes. */
+   way — so an x= share link made before this existed still decodes.
+
+   The controls live inside one disclosure row now. A phone should not
+   spend two permanent lines on a setting that is changed occasionally,
+   but opening it still reveals the same multi-select choices. */
 function renderFilters(){
+  const compact=arguments[0];
   const comps = myComps();
   if(comps.length<2) return "";
   const allHidden = comps.every(c=>hiddenComps.has(c));
-  return '<div class="filters"><span class="lbl">Competitions</span>'
-    + comps.map(c=>'<button class="fchip" data-comp="'+c+'" aria-pressed="'+(!hiddenComps.has(c))+'">'
+  const shown = comps.filter(c=>!hiddenComps.has(c)).length;
+  const state = allHidden ? "None showing" : shown===comps.length ? "All "+comps.length+" showing" : shown+" of "+comps.length+" showing";
+  const options = '<div class="filter-options">' + comps.map(c=>'<button class="fchip" data-comp="'+c+'" aria-pressed="'+(!hiddenComps.has(c))+'">'
         + '<i style="background:'+COMPS[c].color+'"></i>'+esc(COMPS[c].short)+'</button>').join("")
     /* A stable id, because the attribute below flips on every press and
        focus is restored by whatever identified the element before the
@@ -4126,6 +4462,11 @@ function renderFilters(){
     + '<button class="fchip fchip-all" id="compsAll" data-comps-all="'+(allHidden ? "show" : "clear")+'">'
     + (allHidden ? "Show all" : "Clear all") + '</button>'
     + '</div>';
+  if(compact) return options;
+  return '<details class="filters"'+(filtersOpen?' open':'')+'><summary>'
+    + '<span class="lbl">Competitions</span><span class="filter-state">'+state+'</span>'
+    + '<span class="filter-action" aria-hidden="true"><span class="when-closed">Change</span><span class="when-open">Done</span></span>'
+    + '</summary>' + options + '</details>';
 }
 /* What the top-of-the-draw filter is doing, in one line, next to the
    control that undoes it.
@@ -4147,10 +4488,11 @@ function tennisNote(){
     ? "Showing all " + (shown + hidden) + " tennis matches in the draw."
     : "Showing " + shown + " of " + (shown + hidden) + " tennis matches &mdash; the top "
       + TENNIS_TOP + ", the quarterfinals on, and players you have starred.";
-  return '<div class="tennis-note"><span>' + said + '</span>'
+  return '<details class="tennis-note"><summary>Top tennis shown <span class="conf-note">' + shown + ' of ' + (shown + hidden) + '</span></summary>'
+    + '<div class="tennis-note-in"><span>' + said + '</span>'
     + '<button class="fchip fchip-all" id="tennisAll" data-tennis-all="'
     + (tennisAll ? "top" : "all") + '">'
-    + (tennisAll ? "Show the top " + TENNIS_TOP : "Show every match") + '</button></div>';
+    + (tennisAll ? "Show the top " + TENNIS_TOP : "Show every match") + '</button></div></details>';
 }
 
 /* Clearing hides every competition currently offered; showing empties
@@ -4213,10 +4555,13 @@ function servicesHint(){
 }
 
 /* ---------- results that already happened ---------- */
-function renderResults(now, todayKey){
+function renderResults(now, todayKey, compact){
   // Nothing followed yet: an empty results panel would say nothing useful,
   // and the welcome banner already explains what to do.
-  if(!selected.size) return "";
+  if(!selected.size
+    && (typeof raceIncluded === "undefined" || !raceIncluded.size)
+    && (typeof tennisTours === "undefined" || !tennisTours.size)
+    && (typeof rugbyOn === "undefined" || !rugbyOn())) return "";
   const midnight = new Date(); midnight.setHours(0,0,0,0);
   // whole calendar days, so a day never appears half-shown. The same
   // three days spoiledTeams reads, from the same constant, so the games
@@ -4227,6 +4572,7 @@ function renderResults(now, todayKey){
   const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime()
     && (g.listed || g.espn) && !g.event).sort((a,b)=>b.start-a.start);
   if(!past.length){
+    if(compact) return '<div class="tool-empty">No confirmed fixtures for your teams in the last three days. Real fixtures appear here as soon as the feed covers them.</div>';
     return '<details class="results"'+(resultsOpen?" open":"")+'>'
       + '<summary>Recent results<span class="conf-note">last 3 days &middot; nothing confirmed</span></summary>'
       + '<div class="results-in"><div class="note">No confirmed fixtures for your teams in the last three days. '
@@ -4249,6 +4595,7 @@ function renderResults(now, todayKey){
         ? (scored ? ' &middot; ' + scored + ' final score' + (scored===1?"":"s")
                   : ' &middot; no scores available')
         : '');
+  if(compact) return '<div class="results-in">'+inner+'</div>';
   return '<details class="results"'+(resultsOpen?" open":"")+'>'
     + '<summary>Recent results<span class="conf-note">'+counts+'</span></summary>'
     + '<div class="results-in">'+inner+'</div></details>';
@@ -4401,6 +4748,7 @@ function raceCardHtml(card, now){
   return '<section class="race-card">'
     + '<div class="race-head"><i style="background:' + esc(comp.color) + '"></i>'
     + '<b>' + esc(card.title) + '</b>'
+    + raceStarHtml(card, when)
     + (heldAt ? '<span class="race-stale">Not current &middot; last read '
         + esc(raceAge(heldAt, when)) + '</span>' : "")
     + '<span class="race-scope">' + esc(comp.short) + ' &middot; ' + esc(played) + '</span></div>'
@@ -4412,12 +4760,6 @@ function raceCardHtml(card, now){
     + '<div class="race-acts">'
     + '<button class="race-more" data-race="' + esc(card.id) + '" aria-pressed="' + full + '">'
     + (full ? "Show the race" : "Full table") + '</button>'
-    /* Two plain buttons rather than a menu. A menu would hide both
-       behind a tap and cost a popover this page has nowhere to put. */
-    + '<button class="race-pref" id="' + esc(racePrefBtnId(card.id, RACE_PIN)) + '"'
-    + ' data-race-pref="' + esc(card.id) + '" data-pref="'
-    + (card.pinned ? RACE_AUTO : RACE_PIN) + '" aria-pressed="' + !!card.pinned + '">'
-    + (card.pinned ? "Pinned" : "Pin") + '</button>'
     + '<button class="race-pref" id="' + esc(racePrefBtnId(card.id, RACE_HIDE)) + '"'
     + ' data-race-pref="' + esc(card.id) + '" data-pref="' + RACE_HIDE + '">Hide</button>'
     + '</div></div></section>';
@@ -4483,19 +4825,19 @@ function racePrefsHtml(now){
     + label + '</button>';
   return '<details class="race-prefs"><summary>Customize</summary><div class="race-prefs-in">'
     + '<p class="race-prefs-note">Auto shows a race when a club you follow is near the line, or '
-    + 'when a season is far enough along that the race matters on its own. Pin one to see it '
-    + 'whenever there is a table; hide one to stop it appearing. This changes nothing about '
-    + 'which teams you follow.</p>'
+    + 'when a season is far enough along that the race matters on its own. Follow one to keep it '
+    + 'here; when games-behind data is available, teams within 3.5 games of its line also join '
+    + 'your schedule. Hide one to stop it appearing. Your My Teams choices stay unchanged.</p>'
     + rows.map(c => '<div class="race-opt-row"><span class="race-opt-name">'
         + esc(c.title) + '<i>' + esc((COMPS[c.comp] || {short:c.comp}).short)
-        + (raceAutoAllowed(c.view) ? "" : " &middot; pin to see it") + '</i></span>'
+        + (raceAutoAllowed(c.view) ? "" : " &middot; follow to see it") + '</i></span>'
         + '<span class="race-opt-set">' + button(c, RACE_AUTO, "Auto")
-        + button(c, RACE_PIN, "Pin") + button(c, RACE_HIDE, "Hide") + '</span></div>').join("")
+        + button(c, RACE_PIN, "Follow") + button(c, RACE_HIDE, "Hide") + '</span></div>').join("")
     + '</div></details>';
 }
 
-function renderRaces(now){
-  if(!selected.size) return "";
+function renderRaces(now, compact){
+  if(!selected.size && !followedRaces.length) return "";
   /* Every figure in this section is a result. Someone who has turned
      scores off has said they do not want last night's outcome on screen,
      and a table that moved overnight tells them anyway. */
@@ -4508,6 +4850,14 @@ function renderRaces(now){
   const held = cards.some(c => raceHeldAt(c.grp));
   const line = cards.slice(0, 2).map(raceShort).join(" \u00b7 ")
     + (cards.length > 2 ? " \u00b7 +" + (cards.length - 2) + " more" : "");
+  if(compact){
+    if(!cards.some(c=>c.id===raceSelected)) raceSelected=cards[0].id;
+    const chosen=cards.find(c=>c.id===raceSelected) || cards[0];
+    const picker=cards.length>1 ? '<div class="home-race-select" aria-label="Choose a race">'
+      + cards.map(c=>'<button class="home-race-option" data-race-select="'+esc(c.id)+'" aria-pressed="'+(c.id===chosen.id)+'">'
+          + esc(c.title)+'</button>').join("") + '</div>' : "";
+    return picker + '<div class="races-in">' + raceCardHtml(chosen, now) + racePrefsHtml(now) + '</div>';
+  }
   return '<details class="races"' + (racesOpen ? " open" : "") + '>'
     + '<summary><span class="races-head"><b>In the Race</b>'
     + '<span class="conf-note">' + cards.length + ' relevant'
@@ -4529,14 +4879,17 @@ function renderRights(){
         + '<td>'+(r.carriers.length ? r.carriers.map(c=>esc(c.name)).join(", ") : "&mdash;")+'</td>'
         + '<td><span class="pill '+r.confidence+'">'+r.confidence+'</span></td>'
         + '<td>'+esc(r.note)+'</td>'
-        + '<td>'+(r.src&&r.src.url?'<a href="'+esc(r.src.url)+'" target="_blank" rel="noopener">'+esc(r.src.label)+'</a>':esc(r.src?r.src.label:"&mdash;"))+'</td>'
+        + '<td>'+(r.src&&r.src.url?'<a href="'+esc(r.src.url)+'" target="_blank" rel="noopener noreferrer">'+esc(r.src.label)+'</a>':esc(r.src?r.src.label:"&mdash;"))+'</td>'
         + '<td style="white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--muted)">'+esc(r.checked||"&mdash;")+'</td></tr>').join("")
     + '</tbody></table></div></details>';
 }
 
 function noteBlock(){
   const n = alerts.size;
-  const listed = myGames().filter(g=>g.listed||g.espn).length;
+  const savedSchedule = staticSource==="cache" || staticSource==="bundle";
+  const savedLabel = staticSource==="cache" ? "the last saved schedule" : "the schedule bundled with this app";
+  const statePlace = (typeof window!=="undefined" && window.GDNNative && window.GDNNative.isNative)
+    ? "on this device" : "in this browser";
   /* Tennis has its own source and its own way of being unavailable, so
      it gets its own sentence rather than being folded into the schedule
      line — a viewer following a player deserves to know the difference
@@ -4561,9 +4914,14 @@ function noteBlock(){
   };
   const liveLine = liveMode===true
       ? (dataStale
-          ? '<b class="stale-h">Showing an older schedule.</b> The saved schedule was built <b>'
-            + esc(agoText(dataAge||Date.now())) + '</b> and the live feed could not be reached, so times and '
-            + 'carriers may have moved since. Nothing here is invented &mdash; it is simply old. '
+          ? '<b class="stale-h">Showing an older'+(savedSchedule?' saved':'')+' schedule.</b> It was updated <b>'
+            + esc(agoText(dataAge||Date.now())) + '</b>. '+(savedSchedule
+              ? 'The online schedule refresh is unavailable, so times and carriers may have moved since. '
+              : 'The live feed could not be reached, so times and carriers may have moved since. ')
+            + 'Nothing here is invented &mdash; it is simply old. '
+          : savedSchedule
+            ? '<b>Showing '+esc(savedLabel)+'.</b> The online schedule refresh is unavailable; '
+              + 'the app will replace this copy after the next successful refresh. '
           : staticCount
             ? '<b>Live scores on.</b> Fixtures come from this site\'s own schedule file, rebuilt on a schedule; anything in progress is read live. '
             : '<b>Live scores on.</b> Fixtures and scores are read live from ESPN\'s public feed. ')
@@ -4578,26 +4936,81 @@ function noteBlock(){
         + (liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
       : '<b>Checking for live data&hellip;</b> ';
   return '<div class="note">' + liveLine
-    + 'Fixtures marked <span class="pill confirmed">Listed</span> are real'
-    + (listed?' &mdash; <b>'+listed+'</b> of your upcoming games right now':'')
-    + '. Everything else is projected from the rights table below, which is real and sourced. '
-    + 'Your teams, services and score setting are stored in this browser only &mdash; anyone else opening the same link sets up their own. '
-    + (n? '<b>'+n+'</b> game'+(n===1?"":"s")+' saved in this browser.'
-        : 'Save a game to mark it here &mdash; a bookmark in this browser, not a notification.')
+    + 'Games inside five days show only confirmed carriers. Longer-range coverage may be marked <span class="pill expected">Expected</span> until a fixture-level listing appears. '
+    + 'Your teams, services and score setting are stored '+statePlace+' only &mdash; anyone else opening the same link sets up their own. '
+    + (n? '<b>'+n+'</b> game'+(n===1?"":"s")+' saved '+statePlace+'.'
+        : 'Save a game to mark it here &mdash; a bookmark '+statePlace+', not a notification.')
     + '</div>';
 }
 function emptyState(){
-  if(!selected.size)
-    return '<div class="empty"><b>No teams picked yet</b>Choose your teams and their real fixtures fill in here.'
+  if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn())
+    return '<div class="empty"><b>Nothing followed yet</b>Choose teams or star a playoff race and their real fixtures fill in here.'
       + '<div><button class="icon-btn" id="emptyPick">Choose teams</button></div></div>';
   if(liveMode===false)
     return '<div class="empty"><b>Can\'t reach the schedule right now</b>'
       + 'Nothing real to show, and it will not invent fixtures to fill the space. Reload once you are back online.</div>';
   if(liveMode===null)
-    return '<div class="empty"><b>Loading fixtures&hellip;</b>Fetching real schedules for your teams.</div>';
+    return '<div class="empty"><b>Loading fixtures&hellip;</b>Fetching real schedules for your teams and followed races.</div>';
   return '<div class="empty"><b>Nothing scheduled</b>'
-    + 'No published fixtures for your teams in the window we look at. Leagues out of season have none yet &mdash; they appear as soon as the schedule is released.'
-    + '<div><button class="icon-btn" id="emptyPick">Change teams</button></div></div>';
+    + 'No published fixtures for your teams or followed races in the window we look at. Leagues out of season have none yet &mdash; they appear as soon as the schedule is released.'
+      + '<div><button class="icon-btn" id="emptyPick">Change teams</button></div></div>';
+}
+
+function homeFilterState(){
+  const comps=myComps();
+  if(comps.length<2) return null;
+  const shown=comps.filter(c=>!hiddenComps.has(c)).length;
+  return {shown, total:comps.length, text:shown===comps.length ? comps.length+" sports" : shown+" of "+comps.length+" sports"};
+}
+function homeResultsState(now){
+  if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn()) return null;
+  const midnight=new Date(now); midnight.setHours(0,0,0,0);
+  const from=midnight.getTime()-RESULTS_DAYS*DAY;
+  const past=myGames().filter(g=>g.start>=from && g.start<midnight.getTime()
+    && (g.listed || g.espn) && !g.event);
+  const scored=past.filter(g=>stateOf(g,now).score).length;
+  return {past, text:past.length ? past.length+" game"+(past.length===1?"":"s")
+      +(showScores&&scored ? " \u00b7 "+scored+" final"+(scored===1?"":"s") : "") : "Nothing confirmed"};
+}
+function homeRaceState(now){
+  if((!selected.size && !followedRaces.length) || !showScores) return null;
+  const cards=raceCards(now,selected);
+  if(!cards.length) return null;
+  return {cards, text:raceShort(cards[0])+(cards.length>1 ? " \u00b7 +"+(cards.length-1) : "")};
+}
+function toggleHomeTool(kind){
+  const was = kind==="filters" ? filtersOpen : kind==="races" ? racesOpen : resultsOpen;
+  filtersOpen=kind==="filters" && !was;
+  racesOpen=kind==="races" && !was;
+  resultsOpen=kind==="results" && !was;
+  LS.set(RACES_OPEN_KEY,racesOpen);
+  LS.set(RESULTS_OPEN_KEY,resultsOpen);
+}
+function renderHomeTools(now,todayKey){
+  const filter=homeFilterState(), race=homeRaceState(now), results=homeResultsState(now);
+  const tools=[];
+  if(filter) tools.push({kind:"filters",label:"All sports",state:filter.text,open:filtersOpen});
+  if(race) tools.push({kind:"races",label:"In the Race",state:race.text,open:racesOpen});
+  if(results) tools.push({kind:"results",label:"Recent results",state:results.text,open:resultsOpen});
+  if(!tools.length) return "";
+  /* Old builds allowed results and races to be remembered open together.
+     Pick one deterministically on the first render; every new press uses
+     toggleHomeTool and therefore keeps the surface single-panel. */
+  const open=tools.find(t=>t.kind==="filters"&&t.open)
+    || tools.find(t=>t.kind==="races"&&t.open)
+    || tools.find(t=>t.kind==="results"&&t.open);
+  const buttons=tools.map(t=>'<button class="tool-btn" data-home-tool="'+t.kind+'" aria-expanded="'+(!!open&&open.kind===t.kind)+'">'
+      + '<span class="tool-label">'+t.label+'<span class="picker-chevron" aria-hidden="true"></span></span>'
+      + '<span class="tool-state">'+esc(t.state)+'</span></button>').join("");
+  let panel="";
+  if(open){
+    const inside=open.kind==="filters" ? renderFilters(true)
+      : open.kind==="races" ? renderRaces(now,true)
+      : renderResults(now,todayKey,true);
+    panel='<div class="tool-panel" data-tool-panel="'+open.kind+'">'+inside+'</div>';
+  }
+  return '<section class="home-tools" aria-label="Schedule controls"><div class="tool-strip" style="--tool-count:'+tools.length+'">'
+    + buttons + '</div>' + panel + '</section>';
 }
 
 function renderList(now, todayKey){
@@ -4619,12 +5032,14 @@ function renderList(now, todayKey){
      rights table and the data note stay at the bottom: reference, not
      answer. */
   if(!games.length){
-    return welcomeBanner() + renderFilters() + tennisNote() + servicesHint()
-      + renderResults(now, todayKey) + renderRaces(now) + emptyState();
+    return welcomeBanner() + renderHomeTools(now,todayKey) + emptyState();
   }
-  let out = welcomeBanner() + renderFilters() + tennisNote() + servicesHint()
-    + renderResults(now, todayKey) + renderRaces(now);
-  groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
+  let out = welcomeBanner() + renderHomeTools(now,todayKey);
+  let tennisHelp=tennisNote();
+  groupByDay(games).forEach((gs,k)=>{
+    if(tennisHelp && gs.some(g=>g.tennis)){ out+=tennisHelp; tennisHelp=""; }
+    out += daySection(k, gs, now, todayKey);
+  });
   return out + renderRights() + noteBlock();
 }
 
@@ -4695,26 +5110,51 @@ function renderCalendar(now, todayKey){
     detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day">'+(gs.length?daySection(selDay,gs,now,todayKey)
       :'<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(selDay))+'</h3><span class="n">No games</span></div></section>')+'</div>';
   } else detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day"><div class="note">Pick a day to see start times, scores and where each game is carried.</div></div>';
-  return welcomeBanner()+renderFilters()+tennisNote()+head+grid+detail;
+  return welcomeBanner()+renderHomeTools(now,todayKey)+head+grid+detail;
 }
 
-/* A stage on today's card is not racing all day. The rail follows the
-   same clock the row does: the start time until it starts, a live dot
-   only while it is actually on, and "Finished" once the expected
-   arrival has passed. With no published timetable there is no clock to
-   follow, and the day is all that is honestly known. */
-const railEventMeta = (g, now) => (g.timeKnown && now < g.start) ? esc(fmtTime(g.start))
-  : (g.finishUtc && now > g.finishUtc) ? "Finished"
-  : (g.timeKnown || g.finishUtc) ? '<span class="dot-live"></span>Racing now'
-  : "Racing today";
 /* Who is playing, whatever the sport. The rail and the "next up" line
    both needed this: reaching for home and away gave tennis "TBD v TBD",
    because a match has neither. */
 function matchupLabel(g){
   if(g.tennis) return g.match.players.map(p=>p.name).join(" v ");
-  if(g.event) return g.race || "";
+  if(g.event) return [g.race, g.stage].filter(Boolean).join(" \u00b7 ");
   const o = orderedTeams(g);
   return fullName(o.a) + " " + o.sep + " " + fullName(o.b);
+}
+function railMatchupParts(g){
+  if(g.event) return {event:[g.race,g.stage].filter(Boolean).join(" \u00b7 ")};
+  if(g.tennis) return {a:g.match.players[0].name,b:g.match.players[1].name,sep:"v"};
+  const o=orderedTeams(g);
+  return {a:fullName(o.a),b:fullName(o.b),sep:o.sep};
+}
+/* Only a source-confirmed finish puts a game in the finished group. An
+   unresolved score after its nominal start is not silently called
+   finished. Finished items stay in today's rail; they move behind live
+   and upcoming events rather than disappearing. */
+function railFinished(g, now){
+  if(g.event) return !!g.finishUtc && now > g.finishUtc;
+  if(g.tennis) return !!TENNIS_SETTLED[g.match.status];
+  if(g.rugby){
+    const st = g.ru && g.ru.state;
+    return st === "final" || st === "postponed" || st === "cancelled" || st === "abandoned";
+  }
+  return stateOf(g, now).status === "final";
+}
+function railState(g, now){
+  if(railFinished(g, now)) return "final";
+  if(g.event) return now >= g.start ? "live" : "upcoming";
+  if(g.tennis) return g.match.status==="live" || g.match.status==="suspended" ? "live" : "upcoming";
+  return stateOf(g, now).status === "live" ? "live" : "upcoming";
+}
+/* A start time is useful beside a matchup only when the source actually
+   knows it. Status, score and coverage do not belong in this strip. */
+function railTime(g, now){
+  if(g.event) return g.timeKnown ? fmtTime(g.start) : "";
+  if(g.tennis) return g.match.timeKnown ? fmtTime(g.start) : "";
+  if(g.rugby) return g.ru && g.ru.timeTBD ? "" : fmtTime(g.start);
+  const ts = timeState(g, now);
+  return ts.state === "tbd" || ts.state === "tbc" ? "" : fmtTime(g.start);
 }
 /* Defensive on the optional parts of the contract. A browser holding a
    cached page while a newer data.json answers it — or the reverse — is a
@@ -4724,62 +5164,69 @@ function matchupLabel(g){
    one, now between the page and the committed file.) */
 const setsWon = (m, i) => (m.setWins || []).filter(w => w === i).length;
 
+/* The rail is an agenda, not a second scoreboard: what needs attention
+   is first, what starts later follows, and completed events remain at
+   the back for the rest of the day. The newest final is closest to the
+   unfinished group. */
+function railCompare(a, b, now){
+  const rank = {live:0, upcoming:1, final:2};
+  const as=railState(a,now), bs=railState(b,now);
+  if(rank[as]!==rank[bs]) return rank[as]-rank[bs];
+  if(as==="final") return b.start-a.start;
+  if(as==="upcoming"){
+    const unknown=Number(railTime(a,now)==="")-Number(railTime(b,now)==="");
+    if(unknown) return unknown;
+  }
+  return a.start-b.start;
+}
+function railStateLabel(g, now){
+  const state=railState(g,now);
+  if(state==="live") return "Live";
+  if(state!=="final") return railTime(g,now);
+  if(g.event) return "Finished";
+  if(g.tennis) return (TENNIS_STATE[g.match.status]||TENNIS_STATE.unknown).text;
+  if(g.rugby && g.ru && g.ru.label) return g.ru.label;
+  return "Final";
+}
+
 function renderRail(now, todayKey){
   const el=document.getElementById("rail");
-  const today=myGames().filter(g=>localKey(g.start)===todayKey);
-  // live first — read from the match for tennis, which has no home side
-  // for stateOf() to reason about
-  const rankOf = g => g.tennis
-    ? (g.match.status==="live"||g.match.status==="suspended" ? 0 : g.match.status==="scheduled" ? 1 : 2)
-    : (st=>st==="live"?0:st==="scheduled"?1:2)(stateOf(g,now).status);
-  today.sort((a,b)=>rankOf(a)-rankOf(b)||a.start-b.start);
-  const label='<div class="rail-label"><b>Today</b><span>'+esc(fmtDayLong(todayKey))+'</span></div>';
+  const count=document.getElementById("railCount");
+  const see=document.getElementById("railSeeAll");
+  /* Competition filters shape the full schedule below, not this personal
+     agenda. A hidden league can still contain one of the teams, players
+     or races the viewer explicitly follows. */
+  const today=GAMES.filter(g=>isMine(g) && localKey(g.start)===todayKey);
+  today.sort((a,b)=>railCompare(a,b,now));
+  count.textContent=today.length+" today";
+  see.hidden=today.length<2;
+  see.setAttribute("data-first-game",today.length ? String(today[0].id) : "");
   if(!today.length){
     const next=myGames().find(g=>g.start>now);
-    el.innerHTML=label+(next
+    el.innerHTML=next
       ? '<div class="rail-empty">Nothing on today. Next up: '
         + '<b>'+esc(matchupLabel(next))+'</b>'
         + ' &middot; ' + esc(fmtDayLong(localKey(next.start)))
         + ' &middot; <span class="countdown" data-start="'+next.start+'">'+esc(countdownText(next.start,now))+'</span></div>'
-      : '<div class="rail-empty">Nothing on today.</div>');
+      : '<div class="rail-empty">Nothing on today.</div>';
     return;
   }
   /* One unrenderable card must not leave the whole rail showing whatever
      it happened to say before. */
   const card = g => { try{ return railCard(g, now); }catch(e){ return ""; } };
-  el.innerHTML=label+'<div class="rail-scroll">'+today.map(card).join("")+'</div>';
+  el.innerHTML='<div class="rail-scroll">'+today.map(card).join("")+'</div>';
 }
 function railCard(g, now){
-  if(g.event){
-    const r=resolveRights(g);
-    return '<div class="rail-card"><div class="rail-row"><span class="t">'+esc(g.race)+'</span></div>'
-      + '<div class="rail-row"><span class="t" style="color:var(--panel-muted)">'+esc(g.stage||"")+'</span></div>'
-      + '<div class="rail-meta">'+railEventMeta(g, now)+'<span>&middot;</span><span>'
-      + esc(r.carriers.length?r.carriers[0].name:"TBC")+'</span></div></div>';
-  }
-  if(g.tennis){
-    /* A card of its own. Sets won per player is a real tennis number —
-       ESPN says who took each set — where a single scoreline would not
-       be. The set-by-set line stays on the row in the list. */
-    const m=g.match, r=resolveRights(g), stt=TENNIS_STATE[m.status]||TENNIS_STATE.unknown;
-    const reveal=showScores||revealed.has(g.id);
-    const played=(m.sets||[]).some((_,i)=>setText(m,i));
-    const line=i=>'<div class="rail-row"><span class="t">'+esc(m.players[i].short||m.players[i].name)+'</span>'
-      +'<span class="s">'+(m.status==="scheduled"?"&nbsp;":!played?"&ndash;":reveal?setsWon(m,i):"&bull;")+'</span></div>';
-    const meta=stt.live?'<span class="dot-live"></span>'+esc(m.label||stt.text)
-      : m.status==="scheduled"?esc(m.timeKnown?fmtTime(g.start):"Time TBD") : esc(stt.text);
-    return '<div class="rail-card">'+line(0)+line(1)
-      +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'
-      +esc(r.carriers.length?r.carriers[0].name:"TBD")+'</span></div></div>';
-  }
-
-  const s=stateOf(g,now), o=orderedTeams(g), rights=resolveRights(g);
-  const reveal=showScores||revealed.has(g.id), sc=s.score?scoreFor(g,s):null;
-  const line=(t,first)=>'<div class="rail-row"><span class="t">'+esc(fullName(t))+'</span><span class="s">'
-    +(s.status==="scheduled"?"&nbsp;":!sc?"&ndash;":reveal?(first?sc[0]:sc[1]):"&bull;")+'</span></div>';
-  const meta=s.status==="live"?'<span class="dot-live"></span>'+esc(s.label):s.status==="final"?"Final":esc(fmtTime(g.start));
-  return '<div class="rail-card">'+line(o.a,true)+line(o.b,false)
-    +'<div class="rail-meta">'+meta+'<span>&middot;</span><span>'+esc(rights.carriers.length?rights.carriers[0].name:"TBC")+'</span></div></div>';
+  const label=matchupLabel(g), parts=railMatchupParts(g), state=railState(g,now), meta=railStateLabel(g,now);
+  const comp=(COMPS[g.comp]||{short:g.comp||"Event"}).short;
+  const names=parts.event
+    ? '<span class="rail-event">'+esc(parts.event)+'</span>'
+    : '<span class="rail-matchup"><span>'+esc(parts.a)+'</span><span class="rail-v">'+esc(parts.sep)+'</span><span>'+esc(parts.b)+'</span></span>';
+  const status=state==="live" ? '<span class="rail-live">Live</span>'
+    : (meta ? '<span class="rail-time '+state+'">'+esc(meta)+'</span>' : '<span></span>');
+  return '<button class="rail-card '+state+'" data-rail-game="'+esc(String(g.id))+'" aria-label="Jump to '+esc(label)+' in the schedule'+(meta?', '+esc(meta):'')+'">'
+    + names + '<span class="rail-sport">'+esc(comp)+'</span>' + status
+    + '</button>';
 }
 
 /* Rugby is followed as a competition and starred as a nation, and those
@@ -4802,7 +5249,14 @@ function renderRugbyPicker(){
     .filter(t=>!q || t.name.toLowerCase().includes(q))
     .sort((a,b)=>a.name.localeCompare(b.name));
 
-  let out = '<div class="lg-group"><div class="lg-title"><b>Rugby union</b><span class="bar"></span></div>'
+  const sectionMatch = !q || "rugby union men's international".includes(q) || nations.length;
+  if(!sectionMatch) return "";
+  const open = typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("rugby");
+  const summary = on ? "On" + (rugbyStars.size ? " · " + rugbyStars.size + " starred" : "") : "Off";
+
+  let out = '<details class="lg-group picker-section" data-picker-section="rugby"' + (open?' open':'') + '>'
+    + '<summary class="lg-title"><b>Rugby union</b><span class="picker-summary">' + esc(summary) + '</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
     + '<div class="chips"><button class="chip" data-team="'+RUGBY_FOLLOW+'" aria-pressed="'+on+'">'
     + '<span class="crest" style="background:'+COMPS.RUNC.color+'">RU</span>Men&rsquo;s International Rugby</button></div>';
   if(!on){
@@ -4820,7 +5274,46 @@ function renderRugbyPicker(){
           + esc(t.name)+'</button>').join("") + '</div>'
       : '<p class="ru-note">No international fixtures are loaded yet, so there is nothing to star.</p>';
   }
-  return out + '</div>';
+  return out + '</div></details>';
+}
+
+/* A race is followed independently of My Teams. Only races whose source
+   publishes a games-behind figure are offered here, because that is the
+   only honest way to apply Jonah's 3.5-game window. */
+function racePickerCandidates(now){
+  return raceCandidates(now == null ? Date.now() : now, selected)
+    .map(c=>Object.assign({}, c, {nearby:raceRowsWithinGameGap(c.view, c.grp, now)}))
+    .filter(c=>c.nearby.length)
+    .sort((a,b)=>a.comp.localeCompare(b.comp)||a.title.localeCompare(b.title));
+}
+function racePickerKey(now){
+  return racePickerCandidates(now).map(c=>c.id+":"+c.nearby.map(r=>r.id).join(",")).join("|");
+}
+function racePickerHtml(q, now){
+  const needle = String(q || "").trim().toLowerCase();
+  const rows = racePickerCandidates(now)
+    .filter(c=>!needle || (c.title + " " + ((COMPS[c.comp] || {}).name || c.comp)).toLowerCase().includes(needle));
+  if(!rows.length) return "";
+  const open = typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("races");
+  const followed = rows.filter(c=>racePrefOf(c.id) === RACE_PIN).length;
+  return '<details class="lg-group picker-section" data-picker-section="races"' + (open?' open':'') + '>'
+    + '<summary class="lg-title"><b>Playoff races</b><span class="lg-count">' + rows.length + '</span>'
+    + '<span class="picker-summary">' + (followed ? followed + ' followed' : 'None followed') + '</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
+    + '<p class="ru-note">Star a race and teams within 3.5 games of its line join your schedule and What&rsquo;s On. '
+    + 'They remain race teams rather than My Teams.</p><div class="race-picks">'
+    + rows.map(c=>{
+        const on = racePrefOf(c.id) === RACE_PIN;
+        const verb = on ? "Unfollow" : "Follow";
+        return '<button class="race-pick" id="' + esc(racePrefBtnId(c.id, RACE_PIN, "picker"))
+          + '" data-race-star="' + esc(c.id) + '" aria-pressed="' + on + '" aria-label="'
+          + verb + ' ' + esc(c.title) + '"><span class="race-pick-star" aria-hidden="true">'
+          + (on ? '&#9733;' : '&#9734;') + '</span><span class="race-pick-copy"><b>'
+          + esc(c.title) + '</b><small>' + esc((COMPS[c.comp] || {short:c.comp}).short)
+          + ' &middot; ' + c.nearby.length + ' team' + (c.nearby.length===1?'':'s')
+          + ' within 3.5 games</small></span></button>';
+      }).join("")
+    + '</div></div></details>';
 }
 
 /* How many clubs a league shows before it asks you to search.
@@ -4834,37 +5327,113 @@ function renderRugbyPicker(){
    Searching lifts the cap entirely: if you asked for something by name,
    you get every club that matches. */
 const PICKER_CAP = 12;
+let pickerOpenSections = new Set();
+function pickerLeagueTeams(lg){
+  return pickable.filter(t=>t.home===lg);
+}
+function toggleLeagueTeams(lg){
+  const teams = pickerLeagueTeams(lg);
+  const remove = teams.length > 0 && teams.every(t=>selected.has(t.id));
+  teams.forEach(t=>remove ? selected.delete(t.id) : selected.add(t.id));
+  return {selected:!remove, total:teams.length};
+}
+function pickedTeamCount(){
+  return pickable.reduce((n,t)=>n+(selected.has(t.id)?1:0),0);
+}
+function clearAllPickedTeams(){
+  let removed = 0;
+  pickable.forEach(t=>{ if(selected.delete(t.id)) removed++; });
+  return removed;
+}
 function renderDrawer(){
+  if(typeof syncRaceTeams === "function") syncRaceTeams(Date.now());
   const q=search.trim().toLowerCase();
+  const groupRoot = document.getElementById("teamGroups");
+  if(typeof pickerOpenSections !== "undefined" && groupRoot && groupRoot.querySelectorAll){
+    pickerOpenSections = new Set([...groupRoot.querySelectorAll("details[data-picker-section][open]")]
+      .map(el=>el.getAttribute("data-picker-section")));
+  }
+  const picked=pickable.filter(t=>selected.has(t.id))
+    .sort((a,b)=>fullName(a).localeCompare(fullName(b)));
+  /* A full league is one choice at this point, not thirty-two chips.
+     Keep partial leagues itemised so every individual team can still be
+     removed without reopening its section. */
+  const fullLeagues=Object.keys(COMPS).map(lg=>{
+    const teams=pickerLeagueTeams(lg);
+    return teams.length>1 && teams.every(t=>selected.has(t.id)) ? {lg,teams} : null;
+  }).filter(Boolean);
+  const inFullLeague=new Set(fullLeagues.flatMap(x=>x.teams.map(t=>t.id)));
+  const pickedSingles=picked.filter(t=>!inFullLeague.has(t.id));
+  const leagueFollowing=fullLeagues.map(x=>
+    '<button class="chip follow-chip" data-league-all="'+esc(x.lg)+'" aria-pressed="true" title="Stop following every '+esc(COMPS[x.lg].name)+' team">'
+      + esc(COMPS[x.lg].short)+' <span class="chip-meta">'+x.teams.length+' teams</span>'
+      + '<span class="chip-remove" aria-hidden="true">&times;</span></button>'
+  ).join("");
+  /* Tennis is followed as a sport, not as a team. It still belongs in
+     the quick summary: otherwise switching it off means finding the
+     Tennis accordion again at the bottom of a long picker. */
+  const tennisFollowing = tennisTours.size
+    ? '<button class="chip follow-chip" data-tennis-off aria-pressed="true" title="Stop following tennis">'
+      + 'Tennis <span class="chip-meta">'+esc([...tennisTours].sort().join(" + "))+'</span>'
+      + '<span class="chip-remove" aria-hidden="true">&times;</span></button>'
+    : "";
+  const followingCount = picked.length + (tennisFollowing ? 1 : 0);
+  const totalPickedTeams = pickedTeamCount();
+  const clearTeamsButton = totalPickedTeams
+    ? '<button class="picker-clear" data-clear-teams>Clear all teams</button>'
+    : "";
+  const pickedHtml = followingCount
+    ? '<div class="picked-first"><div class="lg-title"><b>Following</b><span class="bar"></span>'
+      + clearTeamsButton+'<span class="lg-count">'+followingCount+'</span></div><div class="chips">'
+      + leagueFollowing
+      + pickedSingles.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="true" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
+          + crest(t)+esc(fullName(t))+'</button>').join("") + tennisFollowing + '</div></div>'
+    : "";
   const groups=Object.keys(COMPS).map(lg=>{
-    const all=pickable.filter(t=>t.home===lg && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)));
+    const leagueAll=pickerLeagueTeams(lg);
+    const all=leagueAll.filter(t=>!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q));
     if(!all.length) return "";
     /* A club you follow is never hidden behind a cap: the picker is also
        how you un-follow one. */
     const mine=all.filter(t=>selected.has(t.id));
+    const leaguePicked=leagueAll.filter(t=>selected.has(t.id)).length;
+    const wholeLeaguePicked=leagueAll.length>0 && leaguePicked===leagueAll.length;
     const rest=all.filter(t=>!selected.has(t.id));
     const ts = q ? all : mine.concat(rest).slice(0, Math.max(PICKER_CAP, mine.length));
     const hidden = all.length - ts.length;
-    return '<div class="lg-group"><div class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
+    const open = !!q || (typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("league-"+lg));
+    return '<details class="lg-group picker-section" data-picker-section="league-'+esc(lg)+'"'+(open?' open':'')+'>'
+      + '<summary class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
       + (all.length > PICKER_CAP ? '<span class="lg-count">'+all.length+'</span>' : "")
-      + '<span class="bar"></span></div><div class="chips">'
+      + '<span class="picker-summary">'+(leaguePicked ? leaguePicked+' picked' : 'Choose teams')+'</span>'
+      + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
+      + '<div class="picker-bulk-row"><span>'+leaguePicked+' of '+leagueAll.length+' selected</span>'
+      + '<button class="picker-bulk" data-league-all="'+esc(lg)+'" aria-pressed="'+wholeLeaguePicked+'">'
+      + (wholeLeaguePicked?'Remove all ':'Add all ')+leagueAll.length+'</button></div><div class="chips">'
       + ts.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="'+selected.has(t.id)+'" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
           + crest(t)+esc(fullName(t))
           + (t.comps.length>1?'<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+t.comps.length+' comps</span>':'')
           + '</button>').join("")
       + (hidden ? '<span class="chips-more">'+hidden+' more &mdash; search to find them</span>' : "")
-      + '</div></div>';
+      + '</div></div></details>';
   }).join("");
-  document.getElementById("teamGroups").innerHTML = (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
+  document.getElementById("teamGroups").innerHTML = pickedHtml
+    + (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
+    + (typeof racePickerHtml === "function" ? racePickerHtml(q, Date.now()) : "")
     + renderRugbyPicker()
     + tennisPicker(q)
-    + '<div class="lg-group"><div class="lg-title"><b>Your link</b><span class="bar"></span></div>'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    + '<details class="lg-group picker-section" data-picker-section="link"'
+    + (typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("link")?' open':'')+'>'
+    + '<summary class="lg-title"><b>Your link</b><span class="picker-summary">Share these teams</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary>'
+    + '<div class="picker-body" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
     + '<button class="icon-btn" id="copyLink">Copy</button>'
-    + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></div>';
+    + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></details>';
   // textContent, so the separator is the character rather than an entity
   document.getElementById("drawerCount").textContent = selected.size+" selected"
+    + (typeof followedRaces !== "undefined" && followedRaces.length
+      ? " \u00b7 "+followedRaces.length+" race"+(followedRaces.length===1?"":"s")+" followed" : "")
     + (tennisTours.size ? " \u00b7 tennis: "+[...tennisTours].sort().join(", ")
         + (tennisEvents.size ? " ("+tennisEvents.size+" tournament"+(tennisEvents.size===1?"":"s")+")" : "") : "");
 }
@@ -4884,6 +5453,11 @@ function renderDrawer(){
    season calendar. ESPN publishes singles draws only a few days out;
    there is no honest way to offer next month's events here. */
 function tennisPicker(q){
+  const needle = normName(q || "");
+  const sectionMatch = !needle
+    || normName("tennis atp wta men's singles women's singles").includes(needle)
+    || [...TOURNEYS.values()].some(t=>normName(t.name).includes(needle));
+  if(!sectionMatch) return "";
   const tours = [["ATP","ATP","Men's singles"],["WTA","WTA","Women's singles"]];
   const on = tennisTours.size;
   const tourChips = tours.map(([id,label,sub])=>
@@ -4913,17 +5487,21 @@ function tennisPicker(q){
         + '</div>';
     }
   }
-  return '<div class="lg-group"><div class="lg-title"><b>Tennis</b><span class="bar"></span>'
-    + '<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">singles only</span></div>'
+  const open = typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("tennis");
+  const summary = on ? [...tennisTours].sort().join(" + ") : "Off";
+  return '<details class="lg-group picker-section" data-picker-section="tennis"' + (open?' open':'') + '>'
+    + '<summary class="lg-title"><b>Tennis</b><span class="picker-summary">'+esc(summary)+'</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
     + '<div class="chips">'+tourChips+'</div>'
     + events
     + (on ? '' : '<div class="empty" style="margin-top:6px">Switch on a tour to see what is being played.</div>')
-    + '</div>';
+    + '</div></details>';
 }
 
 /* ============================ render + events ============================ */
 function render(){
   const now=Date.now(), todayKey=ymd(new Date(now));
+  syncRaceTeams(now);
   const main = document.getElementById("main");
   /* This runs every thirty seconds. Replacing the subtree throws away
      whatever the keyboard was on, which on a page of buttons means focus
@@ -4936,6 +5514,8 @@ function render(){
       : active.getAttribute("data-comp") ? "comp:" + active.getAttribute("data-comp")
       : active.getAttribute("data-reveal") ? "reveal:" + active.getAttribute("data-reveal")
       : active.getAttribute("data-race") ? "race:" + active.getAttribute("data-race")
+      : active.getAttribute("data-home-tool") ? "tool:" + active.getAttribute("data-home-tool")
+      : active.getAttribute("data-race-select") ? "raceSelect:" + active.getAttribute("data-race-select")
       : active.getAttribute("data-player") ? "player:" + active.getAttribute("data-player")
       : active.id ? "id:" + active.id : null)
     : null;
@@ -4947,21 +5527,25 @@ function render(){
   if(focusKey){
     const [kind, val] = [focusKey.slice(0, focusKey.indexOf(":")), focusKey.slice(focusKey.indexOf(":")+1)];
     const attr = {day:"data-day", alert:"data-alert", comp:"data-comp",
-                  reveal:"data-reveal", race:"data-race", player:"data-player"}[kind];
+                  reveal:"data-reveal", race:"data-race", tool:"data-home-tool",
+                  raceSelect:"data-race-select", player:"data-player"}[kind];
     let el = null;
     try{ el = kind==="id" ? main.querySelector("#"+CSS.escape(val))
                           : main.querySelector("["+attr+'="'+CSS.escape(val)+'"]'); }catch(e){}
     if(el) el.focus();
   }
   renderRail(now,todayKey);
-  document.getElementById("teamCount").textContent=selected.size+(tennisTours.size?"+tennis":"");
+  /* The header count is My Teams only. Tennis, rugby and followed races
+     have their own summaries inside the drawer. */
+  document.getElementById("teamCount").textContent=selected.size;
   document.getElementById("serviceCount").textContent=services.size;
   /* The drawer is outside #main, so nothing above redrew it. Coverage
      counts move whenever the fixtures do, and a drawer left open through
      a refresh would otherwise sit on figures from half an hour ago. */
   if(!svcDrawer.hasAttribute("hidden")) renderServices();
-  document.getElementById("v-list").setAttribute("aria-pressed",view==="list");
-  document.getElementById("v-cal").setAttribute("aria-pressed",view==="calendar");
+  const viewButton=document.getElementById("viewToggle");
+  viewButton.textContent=view==="list" ? "Calendar" : "List";
+  viewButton.setAttribute("aria-label",view==="list" ? "Switch to calendar view" : "Switch to list view");
   const stg=document.getElementById("scoreToggle");
   stg.setAttribute("aria-pressed",showScores);
   const scoreLabel = showScores ? "Scores on" : "Scores hidden";
@@ -4972,6 +5556,8 @@ function render(){
   stg.setAttribute("aria-label", scoreLabel);
   const rt=document.querySelector(".rights");
   if(rt) rt.addEventListener("toggle",()=>{ rightsOpen=rt.open; });
+  const ft=document.querySelector(".filters");
+  if(ft) ft.addEventListener("toggle",()=>{ filtersOpen=ft.open; });
   const rc=document.querySelector(".races");
   if(rc) rc.addEventListener("toggle",()=>{ racesOpen=rc.open; LS.set(RACES_OPEN_KEY, rc.open); });
   const rs=document.querySelector(".results");
@@ -4987,6 +5573,13 @@ function render(){
 }
 const drawer=document.getElementById("drawer");
 const svcDrawer=document.getElementById("svcDrawer");
+const appMenu=document.getElementById("appMenu");
+const appMenuToggle=document.getElementById("appMenuToggle");
+const setupDone=document.getElementById("setupDone");
+function setAppMenu(open){
+  appMenu.hidden=!open;
+  appMenuToggle.setAttribute("aria-expanded",open);
+}
 /* Two full-width strips under a sticky header, open together, leave a
    phone with no schedule on screen at all. So they take turns: opening
    one closes the other, and the buttons say which is showing. */
@@ -4995,23 +5588,90 @@ const DRAWERS = [
   {panel: svcDrawer, toggle: "servicesToggle", draw: () => renderServices()}
 ];
 function showDrawer(which){
+  if(typeof setAppMenu==="function") setAppMenu(false);
   DRAWERS.forEach(d=>{
     const open = d === which;
     if(open){ d.panel.removeAttribute("hidden"); d.draw(); }
     else d.panel.setAttribute("hidden","");
     document.getElementById(d.toggle).setAttribute("aria-pressed", open);
   });
+  const setupOpen=!!which;
+  document.body.classList.toggle("setup-mode",setupOpen);
+  if(setupOpen){
+    document.getElementById("scoreToggle").setAttribute("hidden","");
+    document.getElementById("viewToggle").setAttribute("hidden","");
+    setupDone.removeAttribute("hidden");
+  }else{
+    document.getElementById("scoreToggle").removeAttribute("hidden");
+    document.getElementById("viewToggle").removeAttribute("hidden");
+    setupDone.setAttribute("hidden","");
+  }
 }
 const openDrawer = which => showDrawer(DRAWERS.find(d=>d.panel===which));
 const toggleDrawer = which => showDrawer(which.hasAttribute("hidden") ? DRAWERS.find(d=>d.panel===which) : null);
-document.getElementById("v-list").addEventListener("click",()=>{view="list";render();});
-document.getElementById("v-cal").addEventListener("click",()=>{view="calendar"; if(!selDay) selDay=ymd(new Date()); calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1); render();});
+function toggleRaceFollow(id){
+  const on = racePrefOf(id) === RACE_PIN;
+  setRacePref(id, on ? RACE_AUTO : RACE_PIN);
+  syncRaceTeams(Date.now());
+  if(!drawer.hasAttribute("hidden")) renderDrawer();
+  render();
+  /* The committed file already carries every fixture. Reloading it here
+     makes the newly included clubs appear immediately; the live path is
+     the fallback when that file is unavailable. */
+  refreshLive();
+}
+appMenuToggle.addEventListener("click",()=>setAppMenu(appMenu.hidden));
+document.addEventListener("click",e=>{ if(!appMenu.hidden && !e.target.closest(".brand")) setAppMenu(false); });
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  if(!appMenu.hidden){ setAppMenu(false); appMenuToggle.focus(); return; }
+  if(DRAWERS.some(d=>!d.panel.hasAttribute("hidden"))){ showDrawer(null); appMenuToggle.focus(); }
+});
+setupDone.addEventListener("click",()=>{ showDrawer(null); appMenuToggle.focus(); });
+document.getElementById("viewToggle").addEventListener("click",()=>{
+  if(view==="list"){
+    view="calendar";
+    if(!selDay) selDay=ymd(new Date());
+    calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  } else view="list";
+  render();
+});
 document.getElementById("scoreToggle").addEventListener("click",()=>{showScores=!showScores; if(showScores) revealed.clear(); persist(); render();});
 document.getElementById("teamsToggle").addEventListener("click",function(){
   if(firstRun){ firstRun=false; LS.set("gdn.seen",true); render(); }
   toggleDrawer(drawer);
 });
 document.getElementById("servicesToggle").addEventListener("click",()=>toggleDrawer(svcDrawer));
+function jumpToGame(id){
+  /* The rail is intentionally independent of the competition filter.
+     If its destination is hidden, reveal that competition so the jump
+     cannot land on nothing. */
+  const game=GAMES.find(g=>String(g.id)===id);
+  const revealComp=!!(game && hiddenComps.has(game.comp));
+  if(revealComp){ hiddenComps.delete(game.comp); persist(); }
+  if(view!=="list" || revealComp){ view="list"; render(); }
+  /* Wait until a calendar-to-list redraw has put the destination into
+     the document, then center it below the sticky header. */
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target=[...document.querySelectorAll("[data-game-id]")]
+      .find(row=>row.getAttribute("data-game-id")===id);
+    if(!target) return;
+    target.scrollIntoView({behavior:"smooth",block:"center"});
+    try{ target.focus({preventScroll:true}); }catch(err){ target.focus(); }
+    target.classList.remove("rail-jump");
+    void target.offsetWidth;
+    target.classList.add("rail-jump");
+    setTimeout(()=>target.classList.remove("rail-jump"),1600);
+  }));
+}
+document.getElementById("rail").addEventListener("click",function(e){
+  const item=e.target.closest("[data-rail-game]");
+  if(item) jumpToGame(item.getAttribute("data-rail-game"));
+});
+document.getElementById("railSeeAll").addEventListener("click",function(){
+  const id=this.getAttribute("data-first-game");
+  if(id) jumpToGame(id);
+});
 /* The service cards used to be in #main and were handled by its listener.
    They are in the drawer now, which that listener never sees. */
 svcDrawer.addEventListener("click",function(e){
@@ -5030,6 +5690,37 @@ svcDrawer.addEventListener("click",function(e){
 });
 document.getElementById("teamSearch").addEventListener("input",function(){search=this.value;renderDrawer();});
 document.getElementById("teamGroups").addEventListener("click",function(e){
+  const clearTeams=e.target.closest("[data-clear-teams]");
+  if(clearTeams){
+    if(clearTeams.getAttribute("data-confirm")!=="true"){
+      const count=pickedTeamCount();
+      clearTeams.setAttribute("data-confirm","true");
+      clearTeams.classList.add("confirm");
+      clearTeams.textContent="Tap again to clear "+count;
+      setTimeout(()=>{
+        if(!clearTeams.isConnected || clearTeams.getAttribute("data-confirm")!=="true") return;
+        clearTeams.removeAttribute("data-confirm");
+        clearTeams.classList.remove("confirm");
+        clearTeams.textContent="Clear all teams";
+      },3500);
+      return;
+    }
+    clearAllPickedTeams();
+    persist(); renderDrawer(); render(); refreshAfterPicks(); return;
+  }
+  const wholeLeague=e.target.closest("[data-league-all]");
+  if(wholeLeague){
+    toggleLeagueTeams(wholeLeague.getAttribute("data-league-all"));
+    persist(); renderDrawer(); render(); refreshAfterPicks(); return;
+  }
+  const tennisOff=e.target.closest("[data-tennis-off]");
+  if(tennisOff){
+    tennisTours.clear();
+    tennisEvents.clear();
+    persist(); renderDrawer(); render(); refreshAfterPicks(); return;
+  }
+  const race=e.target.closest("[data-race-star]");
+  if(race){ toggleRaceFollow(race.getAttribute("data-race-star")); return; }
   /* Starring a nation lives here, in the drawer's own listener, and not
      in the one on #main: the nation buttons are rendered into
      #teamGroups, so a handler on #main never sees the click at all. */
@@ -5066,13 +5757,21 @@ document.getElementById("teamGroups").addEventListener("click",function(e){
   }
 });
 document.getElementById("main").addEventListener("click",function(e){
+  const home=e.target.closest("[data-home-tool]");
+  if(home){ toggleHomeTool(home.getAttribute("data-home-tool")); render(); return; }
+  const raceChoice=e.target.closest("[data-race-select]");
+  if(raceChoice){ raceSelected=raceChoice.getAttribute("data-race-select"); racesOpen=true; render(); return; }
   const rev=e.target.closest("[data-reveal]"); if(rev){ revealed.add(rev.getAttribute("data-reveal")); render(); return; }
+  const star=e.target.closest("[data-race-star]");
+  if(star){ toggleRaceFollow(star.getAttribute("data-race-star")); return; }
   const rp=e.target.closest("[data-race-pref]"); if(rp){
     const id=rp.getAttribute("data-race-pref"), want=rp.getAttribute("data-pref");
     /* Pressing the state a race is already in returns it to Auto, so the
        three buttons behave as one setting rather than as a trap. */
     setRacePref(id, racePrefOf(id) === want ? RACE_AUTO : want);
-    render(); return; }
+    syncRaceTeams(Date.now());
+    if(!drawer.hasAttribute("hidden")) renderDrawer();
+    render(); refreshLive(); return; }
   const rc=e.target.closest("[data-race]"); if(rc){ const id=rc.getAttribute("data-race");
     raceFull.has(id)?raceFull.delete(id):raceFull.add(id); render(); return; }
   const al=e.target.closest("[data-alert]"); if(al){ const id=al.getAttribute("data-alert"); alerts.has(id)?alerts.delete(id):alerts.add(id); persist(); render(); return; }
@@ -5145,8 +5844,10 @@ async function runRefresh(){
      the set it is derived from actually changes, rather than on every
      refresh, which would throw away focus in the open drawer. */
   const rugbyBefore = rugbyCount;
+  const raceBefore = racePickerKey(Date.now());
   try{ held = await loadStatic(); }catch(e){ held = 0; }
-  if(rugbyCount !== rugbyBefore && !drawer.hasAttribute("hidden")) renderDrawer();
+  const racesChanged = racePickerKey(Date.now()) !== raceBefore;
+  if((rugbyCount !== rugbyBefore || racesChanged) && !drawer.hasAttribute("hidden")) renderDrawer();
   const fresh = held > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
   if(held > 0){
     liveMode = true; liveErr = "";
@@ -5166,9 +5867,12 @@ async function runRefresh(){
     try{ ruFilled = await fillRugbyScores(); }
     catch(e){ rugbyLiveErr = (e && e.message || String(e)).slice(0,80); }
     if(filled || ruFilled){ rememberResults(); }
-    liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from the schedule file"
+    const scheduleLabel = staticSource==="cache" ? "the last saved schedule"
+      : staticSource==="bundle" ? "the schedule bundled with this app" : "the schedule file";
+    liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from " + scheduleLabel
       + (filled + ruFilled ? ", " + (filled+ruFilled) + " score" + (filled+ruFilled===1?"":"s") + " live" : "")
-      + " &middot; updated " + agoText(staticAt);
+      + " &middot; updated " + agoText(staticAt)
+      + ((staticSource==="cache" || staticSource==="bundle") ? " &middot; online refresh unavailable" : "");
     render();
     return;
   }
@@ -5215,7 +5919,7 @@ let pickTimer = null;
 function refreshAfterPicks(){
   clearTimeout(pickTimer);
   pickTimer = setTimeout(()=>{
-    if(selected.size) refreshLive();
+    if(selected.size || raceIncluded.size) refreshLive();
     /* Switching a tour on or off changes which of the matches already
        held are mine, which is a re-read of what is in hand rather than a
        request. */
@@ -5263,7 +5967,8 @@ document.addEventListener("visibilitychange", ()=>{
   if(liveMode !== false) refreshLive();
 });
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
-if(!selected.size) openDrawer(drawer);
+syncRaceTeams(Date.now());
+if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn()) openDrawer(drawer);
 persist(); renderDrawer(); render();
 })();
 </script>

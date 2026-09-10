@@ -1,4 +1,17 @@
 node_modules/
+dist/
+public/
 .DS_Store
 *.log
 test-output/
+.env
+.env.*
+!.env.example
+.vercel/
+*.cer
+*.key
+*.mobileprovision
+*.p12
+*.p8
+*.pem
+*.pfx

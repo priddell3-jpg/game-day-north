@@ -1,0 +1,8 @@
+{
+  "appId": "com.priddell.gamedaynorth",
+  "appName": "Game Day North",
+  "webDir": "dist",
+  "server": {
+    "iosScheme": "capacitor"
+  }
+}
