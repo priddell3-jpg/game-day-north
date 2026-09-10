@@ -457,9 +457,14 @@ main{padding:22px 0 80px}
   .tennis-game .vs{font-size:9px}
   .tennis-game .g-score{
     grid-area:score;display:flex;flex-direction:row;justify-content:flex-start;
-    align-items:baseline;gap:4px 9px;min-width:0;text-align:left
+    align-items:baseline;flex-wrap:wrap;gap:4px 9px;min-width:0;text-align:left
   }
-  .tennis-game .g-score .conf-note{flex-basis:100%}
+  .tennis-game .g-score .conf-note,.tennis-game .next-up{
+    flex-basis:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.45
+  }
+  .tennis-game .match-note{
+    font-family:var(--display);font-size:11px;letter-spacing:0;text-transform:none
+  }
   .tennis-game .sets{justify-content:flex-start}
   .event-game .g-score{align-items:flex-start;text-align:left;width:100%}
   .event-game .podium{width:100%;text-align:left;line-height:1.65}
@@ -4254,7 +4259,7 @@ function tennisRow(g, now){
       right += '<span class="conf-note">'
         + [m.label ? esc(m.label) : "", tally ? tally + " in sets" : ""].filter(Boolean).join(" &middot; ")
         + '</span>';
-    else if(state.note) right += '<span class="conf-note">' + state.note + '</span>';
+    else if(state.note) right += '<span class="conf-note match-note">' + state.note + '</span>';
     else if(!played && m.status !== "scheduled") right += '<span class="conf-note">No score published</span>';
     /* Only once the match is settled and its result is being shown:
        naming a next opponent says who won, so it waits on the same

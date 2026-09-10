@@ -133,6 +133,14 @@ test("tennis gets a full-width set-score line on phones", () => {
   assert.match(row, /grid-template-columns\s*:\s*minmax\(0,1fr\)\s+44px/);
   assert.match(row, /grid-template-areas\s*:\s*"time bell" "match match" "score score" "watch watch"/);
   assert.match(ruleFor(mobile, ".tennis-game .g-score"), /flex-direction\s*:\s*row/);
+  assert.match(ruleFor(mobile, ".tennis-game .g-score"), /flex-wrap\s*:\s*wrap/);
+  const next = ruleFor(mobile, ".tennis-game .g-score .conf-note,.tennis-game .next-up");
+  assert.match(next, /flex-basis\s*:\s*100%/);
+  assert.match(next, /white-space\s*:\s*normal/);
+  assert.match(next, /overflow-wrap\s*:\s*anywhere/);
+  const note = ruleFor(mobile, ".tennis-game .match-note");
+  assert.match(note, /text-transform\s*:\s*none/);
+  assert.match(note, /letter-spacing\s*:\s*0/);
 });
 
 test("cycling gets the same specialty layout and a readable podium", () => {

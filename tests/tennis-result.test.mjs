@@ -184,6 +184,7 @@ test("a retirement is a result: winner first, def, and the sets that were played
   assert.ok(html.indexOf("Carlos Alcaraz") < html.indexOf("Tommy Paul"));
   assert.match(html, /<b>6<\/b>-4/, "the completed set, turned round");
   assert.match(html, /2-1/, "and the one abandoned, unmarked");
+  assert.match(html, /class="conf-note match-note"/, "the unusual ending gets its own message row");
 });
 
 test("a walkover has a winner and no sets, and can still be hidden and revealed", () => {
