@@ -19,12 +19,13 @@ const NAMES = ["esc", "COMPS", "SOCCER", "TEAM_MANIFEST", "TEAMS", "fullName",
   "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "attachStandings", "raceZoneHit", "raceCutoff",
   "racePhase", "RACE_PHASES", "racePhaseOf", "raceRelevance", "RACE_PRIORITY",
   "racePriority", "raceAutoAllowed", "RACE_GAP_TOLERANCE", "RACE_AUTO", "racePrefOf",
-  "setRacePref", "raceCardId", "racePrefBtnId", "raceFollowsComp", "raceGroupsFor", "raceSlice",
+  "RACE_PIN", "RACE_HIDE", "setRacePref", "raceCardId", "racePrefBtnId", "raceStarHtml", "raceFollowsComp", "raceGroupsFor",
+  "RACE_GAME_GAP", "raceRowsWithinGameGap", "followedRaceTeams", "syncRaceTeams", "raceSlice",
   "RACE_PER_COMP", "raceCandidates", "racePrimaries", "raceAssignClubs", "raceCards",
   "RACE_CLINCH",
   "raceAge", "raceHeldAt", "raceOrdinal", "raceRowName", "raceShortName", "raceFigures",
   "raceOrigin", "raceLineHtml", "raceRowHtml", "raceCardHtml", "raceGapPhrase", "raceShort",
-  "racePrefsHtml", "renderRaces"];
+  "racePrefsHtml", "renderRaces", "racePickerCandidates", "racePickerKey", "racePickerHtml"];
 
 /* A fresh page scope per case. `showScores` and the followed set are read
    by the code under test and never written by it, so they are baked into
@@ -40,6 +41,7 @@ function page(opts = {}){
     + "const written = {};\n"
     + "const LS = {get:(k,d)=>d, set:(k,v)=>{ written[k] = v; }};\n"
     + "let racePrefs = " + JSON.stringify(opts.prefs || {}) + ";\n"
+    + "let raceIncluded = new Set(), raceByTeam = new Map(), followedRaces = [];\n"
     + "const selected = new Set(" + JSON.stringify(opts.picks || []) + ");\n"
     + "const hiddenComps = new Set(" + JSON.stringify(opts.hidden || []) + ");\n"
     + "const showScores = " + (opts.scores === false ? "false" : "true") + ";\n";
@@ -645,7 +647,76 @@ test("two lines the same distance away go to the one worth more", () => {
 
 /* ============ pin and hide ============ */
 
-test("pinning shows a race Auto is declining to show", () => {
+test("following a wild-card race includes exactly the 3.5-game window", () => {
+  const P = page({ prefs: { "mlb-wc-al": "pin" } });
+  P.attachStandings(MLB);
+  const al = grp(MLB, "AL");
+  const rows = P.raceRowsWithinGameGap(view(P, "mlb-wc-al"), al, NOW);
+  assert.equal(P.RACE_GAME_GAP, 3.5);
+  assert.deepEqual(rows.map(r=>r.id), ["cle", "tor-mlb", "tex", "bal-mlb"]);
+  assert.ok(rows.every(r=>Math.abs(r.gbv) <= 3.5));
+  assert.ok(!rows.some(r=>r.id === "min-mlb"), "four and a half games back is outside the window");
+
+  const followed = P.followedRaceTeams(NOW);
+  assert.deepEqual([...followed.ids], ["cle", "tor-mlb", "tex", "bal-mlb"]);
+  assert.equal(followed.races[0].title, "AL Wild Card");
+});
+
+test("following a race never turns its clubs into My Teams", () => {
+  const picks = ["liv"];
+  const P = page({ picks, prefs: { "mlb-wc-al": "pin" } });
+  P.attachStandings(MLB);
+  P.syncRaceTeams(NOW);
+  assert.deepEqual([...P.followedRaceTeams(NOW).ids], ["cle", "tor-mlb", "tex", "bal-mlb"]);
+  assert.deepEqual(picks, ["liv"], "the caller's selected-team list is unchanged");
+  const src = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
+  const follow = src.slice(src.indexOf("function followedRaceTeams"), src.indexOf("function raceSlice"));
+  assert.ok(!/selected\.(add|delete)/.test(follow));
+});
+
+test("a race can be followed even when none of its clubs are My Teams", () => {
+  const P = page({ prefs: { "mlb-wc-al": "pin" } });
+  P.attachStandings(MLB);
+  P.syncRaceTeams(NOW);
+  const cards = P.raceCards(NOW, new Set());
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].id, "mlb-wc-al");
+  assert.match(P.renderRaces(NOW), /AL Wild Card/);
+});
+
+test("the race card and team drawer use the same star preference", () => {
+  const P = page({ picks: ["tor-mlb"], prefs: { "mlb-wc-al": "pin" } });
+  P.attachStandings(MLB);
+  P.syncRaceTeams(NOW);
+  const card = P.raceCards(NOW, new Set(["tor-mlb"]))[0];
+  const cardHtml = P.raceCardHtml(card, NOW);
+  assert.match(cardHtml, /class="race-star"/);
+  assert.match(cardHtml, /data-race-star="mlb-wc-al"[^>]*aria-pressed="true"/);
+  assert.match(cardHtml, /&#9733;/);
+  const starRule = ruleFor(styleText(), ".race-star");
+  assert.match(starRule, /width:44px/);
+  assert.match(starRule, /height:44px/);
+
+  const picker = P.racePickerHtml("", NOW);
+  assert.match(picker, /Playoff races/);
+  assert.match(picker, /AL Wild Card/);
+  assert.match(picker, /4 teams within 3\.5 games/);
+  assert.match(picker, /data-race-star="mlb-wc-al"[^>]*aria-pressed="true"/);
+});
+
+test("static and live fixture loading both include followed-race teams", () => {
+  const src = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
+  const loadStatic = src.slice(src.indexOf("async function loadStatic"), src.indexOf("async function loadLive"));
+  assert.ok(loadStatic.indexOf("attachStandings(r.standings)") < loadStatic.indexOf("r.fixtures.forEach"),
+    "the race window must be known before the fixture file is filtered");
+  assert.match(loadStatic, /if\(!followsTeam\(home\) && !followsTeam\(away\)\) return/);
+
+  const loadLive = src.slice(src.indexOf("async function loadLive"), src.indexOf("/* ============================================================\n   CYCLING"));
+  assert.match(loadLive, /\.\.\.selected, \.\.\.raceIncluded/);
+  assert.match(loadLive, /followsTeam\(g\.home\) \|\| followsTeam\(g\.away\)/);
+});
+
+test("following shows a race Auto is declining to show", () => {
   const picks = ["liv"];
   const plain = page({ picks });
   plain.attachStandings(EPL);
@@ -658,7 +729,8 @@ test("pinning shows a race Auto is declining to show", () => {
   assert.equal(cards[0].id, "epl-ucl");
   assert.equal(cards[0].reason, "pinned");
   assert.ok(cards[0].pinned);
-  assert.ok(pinned.raceCardHtml(cards[0], NOW).includes("Pinned"));
+  assert.doesNotMatch(pinned.raceCardHtml(cards[0], NOW), /class="race-star"/,
+    "a points table cannot honestly promise a 3.5-game schedule window");
 });
 
 test("pinning cannot invent a table that is not there", () => {
@@ -855,7 +927,7 @@ test("pinning the European places renders them", () => {
   assert.ok(euro.pinned);
   assert.match(P.raceCardHtml(euro, NOW), /European places/);
   /* And Customize says why it never turned up by itself. */
-  assert.match(P.racePrefsHtml(NOW), /European places<i>EPL &middot; pin to see it<\/i>/);
+  assert.match(P.racePrefsHtml(NOW), /European places<i>EPL &middot; follow to see it<\/i>/);
 });
 
 test("relegation still wins when a club is genuinely in danger", () => {

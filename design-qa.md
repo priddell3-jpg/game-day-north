@@ -71,3 +71,48 @@ horizontal scrolling without horizontal page overflow.
   in the already-open Xcode project; the shipped safe-area CSS is unchanged.
 
 final result: passed
+
+---
+
+# Followed races / follow drawer / saved-game design QA
+
+Date: 2026-09-10
+
+## Viewports and states checked
+
+- 390 × 844, normal list state: `/private/tmp/gdn-design-audit/01-top.png`.
+- 390 × 844, reorganized follow drawer: `/private/tmp/gdn-design-audit/02-follow-drawer.png`.
+- 390 × 844, AL Wild Card followed: `/private/tmp/gdn-design-audit/03-race-followed.png`.
+- 320 × 800, narrow list state: `/private/tmp/gdn-design-audit/04-narrow.png`.
+- The user's cramped Race-to-date screenshot and the rebuilt 390 px list were
+  inspected together. The new measured gap is 18 px.
+
+## Behaviour and interaction checks
+
+- My Teams remains visible at the top of the drawer. League lists, playoff
+  races, rugby, tennis and the share link are compact expandable rows.
+- Expanding a row and changing a preference keeps that row open through the
+  redraw.
+- Following the AL Wild Card includes its three current teams within 3.5
+  published games of the line. The drawer says `1 race followed`; the header
+  and saved My Teams set remain at five.
+- Race-added fixtures appear in the schedule with an `In followed race` label.
+- Saving the 12:07 PM Blue Jays game moved it above the unsaved 7:00 AM game
+  on the same date. Removing the save restored chronological order.
+- The What's On strip kept live/upcoming/finished priority rather than being
+  reordered by a saved game.
+- Both 390 px and 320 px states had no horizontal page overflow. Browser
+  console warnings/errors: none.
+
+## Build verification
+
+- Automated tests: 883 passed, 0 failed.
+- Web build: passed.
+- Capacitor iOS asset build/sync: passed.
+- Bundled iOS `public/index.html` and the generated native `dist/index.html`:
+  byte-for-byte identical.
+- Command-line native compilation could not access the host Simulator service
+  under the Codex filesystem sandbox. The already-open Xcode project remains
+  the final native launch check.
+
+final result: passed, with native launch to be confirmed in Xcode

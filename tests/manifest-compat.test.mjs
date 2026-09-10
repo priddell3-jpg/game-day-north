@@ -239,6 +239,14 @@ test("a big league does not render as a wall of chips", () => {
   assert.match(html, /class="lg-count"/, "and the group says how many it has");
 });
 
+test("the picker keeps My Teams visible and folds the long sport lists", () => {
+  const html = drawer({ selected: ["van-nhl", "liv"] });
+  assert.ok(html.indexOf("My teams") < html.indexOf("data-picker-section=\"league-NHL\""));
+  assert.match(html, /<details class="lg-group picker-section" data-picker-section="league-NHL"/);
+  assert.match(SRC, /data-picker-section="rugby"/);
+  assert.match(SRC, /data-picker-section="tennis"/);
+});
+
 test("searching lifts the cap, because you asked for something by name", () => {
   const all = drawer();
   /* A search that matches one whole league returns all of it, where an

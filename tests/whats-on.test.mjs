@@ -29,6 +29,21 @@ test("the rail is personal but independent of the competition filter", () => {
   assert.doesNotMatch(body, /today=myGames\(\)/);
 });
 
+test("a followed-race team qualifies without becoming a selected team", () => {
+  const preamble = `
+    const selected = new Set(["mine"]);
+    const raceIncluded = new Set(["race"]);
+    const rugbyOn = () => false;
+    const tennisMine = () => false;
+  `;
+  const {followsTeam, inFollowedRace, isMine} = loadFromPage(
+    ["followsTeam", "inFollowedRace", "isMine"], preamble);
+  const game = {home:{id:"race"}, away:{id:"other"}};
+  assert.equal(followsTeam(game.home), true);
+  assert.equal(isMine(game), true);
+  assert.equal(inFollowedRace(game), true);
+});
+
 test("live, upcoming, and final games are ordered into stable groups", () => {
   const preamble = `
     const TENNIS_SETTLED = {final:1, retired:1, walkover:1, canceled:1, postponed:1};

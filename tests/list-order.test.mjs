@@ -184,6 +184,23 @@ test("only whole past days count, so today's game is not a result", () => {
   assert.match(html, /last 3 days &middot; 1 game/);
 });
 
+test("saving a game keeps it at the top of its day", () => {
+  const pre = `
+    const DAY = 86400000;
+    const alerts = new Set(["saved"]);
+    const stateOf = () => ({status:"scheduled"});
+    const esc = String;
+    const fmtDayLong = String;
+    const gameRow = g => "<i>" + g.id + "</i>";
+  `;
+  const {daySection} = loadFromPage(["daySection"], pre);
+  const html = daySection("2026-09-11", [
+    {id:"late", start:300}, {id:"saved", start:400}, {id:"early", start:100}
+  ], 0, "2026-09-10");
+  assert.ok(html.indexOf("saved") < html.indexOf("early"), "the saved game comes first");
+  assert.ok(html.indexOf("early") < html.indexOf("late"), "unsaved games remain chronological");
+});
+
 /* ---- the preference that survives the visit ---- */
 
 test("the open state is stored under its own key, read as a strict boolean", () => {

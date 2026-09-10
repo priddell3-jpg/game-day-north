@@ -199,6 +199,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .chips-more{align-self:center;font-size:11.5px;color:var(--muted);padding:0 4px}
 .lg-title b{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .lg-title .bar{height:1px;flex:1;background:var(--line)}
+.picker-section{margin:0 0 8px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.picker-section>.lg-title{min-height:44px;margin:0;padding:0 10px;cursor:pointer;list-style:none;user-select:none}
+.picker-section>.lg-title::-webkit-details-marker{display:none}
+.picker-section>.lg-title:hover b{color:var(--ink-2)}
+.picker-summary{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.03em}
+.picker-chevron{width:7px;height:7px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+  transform:rotate(45deg);transition:transform .15s;flex:none;margin:0 4px 4px 2px}
+.picker-section[open]>.lg-title .picker-chevron{transform:rotate(225deg);margin:4px 4px 0 2px}
+.picker-body{padding:0 10px 10px}
+.picked-first{margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.picked-first .lg-title{margin-bottom:7px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{
   display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 6px;border-radius:99px;
@@ -332,6 +343,16 @@ main{padding:22px 0 80px}
 .ru-stars{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
 .ru-star{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
 .ru-star[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.race-picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;padding:2px 0 4px}
+.race-pick{display:flex;align-items:center;gap:9px;min-height:44px;padding:7px 10px;text-align:left;
+  border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2)}
+.race-pick:hover{border-color:var(--accent)}
+.race-pick[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.race-pick-star{font-size:17px;line-height:1;color:var(--muted);flex:none}
+.race-pick[aria-pressed="true"] .race-pick-star{color:var(--accent)}
+.race-pick-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.race-pick-copy b{font-size:12.5px}
+.race-pick-copy small{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--muted)}
 /* The tennis star sits on the row rather than in a picker, so it is a
    glyph and not a chip: it appears twice on every tennis row and a
    bordered pill each time would crowd out the names it belongs to. */
@@ -548,7 +569,7 @@ main{padding:22px 0 80px}
 /* ---- Race: the standings slice that says why a fixture matters ----
    Built to the same shape as the history panel above it, so the two read
    as one column of context rather than two different ideas. */
-.races{margin:14px 0 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.races{margin:14px 0 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
 /* Shut, this is one row: a title and a count on the first line and the
    standings line under it, both clipped rather than wrapped so the row
    cannot grow into a paragraph on a narrow screen. */
@@ -567,6 +588,10 @@ main{padding:22px 0 80px}
 .race-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px 8px}
 .race-head i{width:8px;height:8px;border-radius:2px;flex:none}
 .race-head b{font-weight:800;font-stretch:112%;font-size:13.5px}
+.race-star{width:44px;height:44px;margin:-13px 0 -13px -7px;border:0;background:none;
+  display:grid;place-items:center;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.race-star:hover{color:var(--accent)}
+.race-star[aria-pressed="true"]{color:var(--accent)}
 /* Deliberately not subtle, and deliberately ahead of the scope line:
    this is the difference between a table that is true now and one that
    was true on Sunday. */
@@ -651,6 +676,7 @@ main{padding:22px 0 80px}
 .pill.confirmed{background:var(--ok-soft);color:var(--ok)}
 .pill.expected{background:var(--accent-soft);color:var(--accent)}
 .pill.unknown{background:var(--warn-soft);color:var(--warn)}
+.pill.race-follow{background:var(--accent-soft);color:var(--accent)}
 @media (max-width:760px){
   .svc-grid{grid-template-columns:repeat(2,1fr)}
   .svc-card{padding:8px 9px}
@@ -692,7 +718,7 @@ main{padding:22px 0 80px}
 <section class="drawer" id="drawer" hidden>
   <div class="wrap drawer-in">
     <div class="drawer-head">
-      <h2>Pick your teams &amp; tennis</h2>
+      <h2>Choose what to follow</h2>
       <span class="count" id="drawerCount"></span>
       <input class="search" id="teamSearch" type="search" placeholder="Search teams…" aria-label="Search teams">
     </div>
@@ -4249,7 +4275,9 @@ const raceAutoAllowed = view => !view || view.auto !== false;
    title race four places above it. */
 const RACE_GAP_TOLERANCE = 2;
 
-const RACE_AUTO = "auto", RACE_PIN = "pin", RACE_HIDE = "hide";
+const RACE_AUTO = "auto";
+const RACE_PIN = "pin";
+const RACE_HIDE = "hide";
 function racePrefOf(id){
   const v = racePrefs && racePrefs[id];
   return v === RACE_PIN || v === RACE_HIDE ? v : RACE_AUTO;
@@ -4265,12 +4293,71 @@ const raceCardId = (view, grp) => view.id + (view.kindIs ? ":" + grp.group : "")
    under someone part-way through pinning it should not drop them back to
    the top of the document. */
 const racePrefBtnId = (raceId, pref, kind) => "rp-" + (kind || "card") + "-" + pref + "-" + raceId;
+function raceStarHtml(card, now){
+  const rows = raceRowsWithinGameGap(card.view, card.grp, now);
+  if(!rows.length) return "";
+  const on = racePrefOf(card.id) === RACE_PIN;
+  const verb = on ? "Unfollow" : "Follow";
+  return '<button class="race-star" id="' + esc(racePrefBtnId(card.id, RACE_PIN, "star"))
+    + '" data-race-star="' + esc(card.id) + '" aria-pressed="' + on + '"'
+    + ' title="' + verb + ' ' + esc(card.title) + '" aria-label="' + verb + ' '
+    + esc(card.title) + (on ? '' : ' and include teams within 3.5 games of the line') + '">'
+    + '<span aria-hidden="true">' + (on ? '&#9733;' : '&#9734;') + '</span></button>';
+}
 
 /* The groups a view applies to: one named group, or every division of a
    competition where the view covers all of them. */
 function raceGroupsFor(view){
   return STANDINGS.filter(g=>g.comp === view.comp
     && (view.kindIs ? g.kind === view.kindIs : g.group === view.group));
+}
+
+/* Following a race adds the clubs whose published games-behind figure
+   places them within 3.5 games of its line. The source has already
+   measured this number against the line; using `gbv` keeps the window
+   exact and avoids manufacturing a games-back figure for points tables.
+
+   `pin` is retained as the stored value so preferences written by the
+   earlier Pin control migrate into followed races without being lost. */
+const RACE_GAME_GAP = 3.5;
+function raceRowsWithinGameGap(view, grp, now){
+  const when = now == null ? Date.now() : now;
+  if(!grp || !Array.isArray(grp.rows) || !grp.rows.length) return [];
+  if(!grp.played || grp.played.max <= 0 || raceCutoff(view, grp) == null) return [];
+  if(grp.heldFrom){
+    const from = Date.parse(grp.heldFrom);
+    if(!Number.isFinite(from) || when - from > RACE_MAX_AGE) return [];
+  }
+  return grp.rows.filter(r=>r && r.id && Number.isFinite(r.gbv)
+    && Math.abs(r.gbv) <= RACE_GAME_GAP && (r.gp == null || r.gp > 0));
+}
+function followedRaceTeams(now){
+  const ids = new Set(), byTeam = new Map(), races = [];
+  for(const view of RACES){
+    for(const grp of raceGroupsFor(view)){
+      const id = raceCardId(view, grp);
+      if(racePrefOf(id) !== RACE_PIN) continue;
+      const rows = raceRowsWithinGameGap(view, grp, now);
+      if(!rows.length) continue;
+      const title = view.title || grp.scope;
+      races.push({id, view, grp, rows, title, comp:grp.comp});
+      rows.forEach(r=>{
+        if(!TEAMS[r.id]) return;
+        ids.add(r.id);
+        if(!byTeam.has(r.id)) byTeam.set(r.id, []);
+        byTeam.get(r.id).push(title);
+      });
+    }
+  }
+  return {ids, byTeam, races};
+}
+let raceIncluded = new Set(), raceByTeam = new Map(), followedRaces = [];
+function syncRaceTeams(now){
+  const next = followedRaceTeams(now);
+  raceIncluded = next.ids;
+  raceByTeam = next.byTeam;
+  followedRaces = next.races;
+  return raceIncluded;
 }
 
 /* Which rows to show: the places either side of the line, plus each
@@ -5052,11 +5139,16 @@ async function loadStatic(){
   try{ loaded = await readStaticPayload(); r = loaded.data; staticSource = loaded.source; }
   catch(e){ return 0; }
   if(!validStaticPayload(r)) return 0;
+  /* A followed race is another route into the board. Read its standings
+     before filtering fixtures so the race teams are known on the same
+     pass; otherwise they would not appear until a later refresh. */
+  attachStandings(r.standings);
+  syncRaceTeams(Date.now());
   const built = [];
   r.fixtures.forEach(f=>{
     if(!f || !f.home || !f.away || !f.start) return;
     const home = staticTeam(f.home, f.comp), away = staticTeam(f.away, f.comp);
-    if(!selected.has(home.id) && !selected.has(away.id)) return;
+    if(!followsTeam(home) && !followsTeam(away)) return;
     built.push({eid:f.eid || null, comp:f.comp, home, away, start:f.start, moved:null,
       real:true, espn:true, listed:true, fromFeed:true, venue:f.venue || null,
       localDow:new Date(f.start).getUTCDay(), slotHour:new Date(f.start).getUTCHours(), stage:"",
@@ -5072,10 +5164,8 @@ async function loadStatic(){
      are: switching a tour on should show the top of the draw straight
      away rather than the whole of it until the next refresh. */
   attachRankings(staticTennis && staticTennis.rankings, staticTennis && staticTennis.rankedAt);
-  /* Standings are not fixtures and are not merged into them: they are
-     held on their own and read by the Race section alone. A file with no
-     standings block empties them, so a race can never outlive its data. */
-  attachStandings(r.standings);
+  /* Standings were attached before fixtures so followed-race teams could
+     take part in the same load. They remain separate from fixture rows. */
   /* Same bargain as the standings above, read by the record under a team
      name rather than by a Race card. A file with no tables leaves every
      record absent, which is exactly what should happen. */
@@ -5786,7 +5876,7 @@ async function fillScores(){
 }
 
 async function loadLive(){
-  const mine = [...selected].map(id=>TEAMS[id]).filter(Boolean);
+  const mine = [...new Set([...selected, ...raceIncluded])].map(id=>TEAMS[id]).filter(Boolean);
   if(!mine.length){ return; }
   const naJobs = [], soccerComps = new Set();
   mine.forEach(t=>{
@@ -5845,8 +5935,8 @@ async function loadLive(){
     if(got) ok++; else errs.push(comp+": no fixtures published");
   }));
   if(!ok) throw new Error(errs[0] || "no source reachable");
-  // keep only fixtures that involve a team you follow
-  const keep = built.filter(g=>selected.has(g.home.id) || selected.has(g.away.id));
+  // keep fixtures for direct selections and the current followed-race window
+  const keep = built.filter(g=>followsTeam(g.home) || followsTeam(g.away));
   const dedup = [];
   keep.forEach(g=>{
     const i = dedup.findIndex(x=>sameGame(x, g));
@@ -6253,9 +6343,17 @@ function tennisWorthShowing(m){
   }
   return false;
 }
+const followsTeam = t => !!(t && (selected.has(t.id)
+  || (typeof raceIncluded !== "undefined" && raceIncluded.has(t.id))));
+const inFollowedRace = g => !!(g && !g.rugby && !g.tennis && !g.event
+  && typeof raceIncluded !== "undefined"
+  && ((g.home && raceIncluded.has(g.home.id)) || (g.away && raceIncluded.has(g.away.id))));
 const isMine = g => g.rugby ? rugbyOn()
   : g.tennis ? tennisMine(g)
-  : ((g.home&&selected.has(g.home.id)) || (g.away&&selected.has(g.away.id)));
+  : ((g.home && (selected.has(g.home.id)
+      || (typeof raceIncluded !== "undefined" && raceIncluded.has(g.home.id))))
+    || (g.away && (selected.has(g.away.id)
+      || (typeof raceIncluded !== "undefined" && raceIncluded.has(g.away.id)))));
 const isStarred = t => !!(t && t.nation && rugbyStars.has(t.nation));
 const isStarredPlayer = p => !!(p && p.id && tennisStars.has(String(p.id)));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
@@ -6930,7 +7028,10 @@ function gameRow(g, now){
   if(ts.state==="tbd"){ if(o.flip) o.a = null; else o.b = null; }
   const rights = resolveRights(g);
   const reveal = showScores || revealed.has(g.id);
-  const mineA = o.a && selected.has(o.a.id), mineB = o.b && selected.has(o.b.id);
+  const mineA = o.a && (selected.has(o.a.id)
+    || (typeof raceIncluded !== "undefined" && raceIncluded.has(o.a.id)));
+  const mineB = o.b && (selected.has(o.b.id)
+    || (typeof raceIncluded !== "undefined" && raceIncluded.has(o.b.id)));
 
   let timeCell = '<div class="g-time">'+(ts.state==="tbd"||ts.state==="tbc" ? '<span class="tbd">'+esc(fmtTime(g.start))+'</span>' : esc(fmtTime(g.start)));
   if(g.moved) timeCell += '<span class="was">'+esc(fmtTime(g.moved))+'</span><span class="moved">Time moved</span>';
@@ -6958,6 +7059,8 @@ function gameRow(g, now){
 
   const meta = '<div class="g-meta">'
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
+    + (typeof inFollowedRace !== "undefined" && inFollowedRace(g)
+      ?'<span class="pill race-follow" title="Included because you follow this playoff race">In followed race</span>':"")
     + (g.listed?'<span class="pill confirmed" title="Real fixture from a published TV listing">Listed</span>':"")
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
     + venueTag(g)
@@ -7024,10 +7127,14 @@ function daySection(key, games, now, todayKey){
   const diff = Math.round((new Date(y,m-1,d) - new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()))/DAY);
   let rel = key===todayKey ? "Today" : diff===1 ? "Tomorrow" : (diff>1&&diff<7) ? "In "+diff+" days" : "";
   const liveN = games.filter(g=>stateOf(g,now).status==="live").length;
+  /* Saving a game has a visible payoff: it stays at the top of its date.
+     Everything not saved remains chronological underneath it. */
+  const ordered = games.slice().sort((a,b)=>
+    Number(alerts.has(b.id))-Number(alerts.has(a.id)) || a.start-b.start);
   return '<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(key))+'</h3>'
     + (rel?'<span class="rel">'+esc(rel)+'</span>':'')
     + '<span class="n">'+games.length+(games.length===1?" game":" games")+(liveN?" &middot; "+liveN+" live":"")+'</span></div>'
-    + '<div class="day-games">'+games.map(g=>gameRow(g,now)).join("")+'</div></section>';
+    + '<div class="day-games">'+ordered.map(g=>gameRow(g,now)).join("")+'</div></section>';
 }
 function groupByDay(games){
   const map = new Map();
@@ -7174,7 +7281,10 @@ function servicesHint(){
 function renderResults(now, todayKey){
   // Nothing followed yet: an empty results panel would say nothing useful,
   // and the welcome banner already explains what to do.
-  if(!selected.size) return "";
+  if(!selected.size
+    && (typeof raceIncluded === "undefined" || !raceIncluded.size)
+    && (typeof tennisTours === "undefined" || !tennisTours.size)
+    && (typeof rugbyOn === "undefined" || !rugbyOn())) return "";
   const midnight = new Date(); midnight.setHours(0,0,0,0);
   // whole calendar days, so a day never appears half-shown. The same
   // three days spoiledTeams reads, from the same constant, so the games
@@ -7359,6 +7469,7 @@ function raceCardHtml(card, now){
   return '<section class="race-card">'
     + '<div class="race-head"><i style="background:' + esc(comp.color) + '"></i>'
     + '<b>' + esc(card.title) + '</b>'
+    + raceStarHtml(card, when)
     + (heldAt ? '<span class="race-stale">Not current &middot; last read '
         + esc(raceAge(heldAt, when)) + '</span>' : "")
     + '<span class="race-scope">' + esc(comp.short) + ' &middot; ' + esc(played) + '</span></div>'
@@ -7370,12 +7481,6 @@ function raceCardHtml(card, now){
     + '<div class="race-acts">'
     + '<button class="race-more" data-race="' + esc(card.id) + '" aria-pressed="' + full + '">'
     + (full ? "Show the race" : "Full table") + '</button>'
-    /* Two plain buttons rather than a menu. A menu would hide both
-       behind a tap and cost a popover this page has nowhere to put. */
-    + '<button class="race-pref" id="' + esc(racePrefBtnId(card.id, RACE_PIN)) + '"'
-    + ' data-race-pref="' + esc(card.id) + '" data-pref="'
-    + (card.pinned ? RACE_AUTO : RACE_PIN) + '" aria-pressed="' + !!card.pinned + '">'
-    + (card.pinned ? "Pinned" : "Pin") + '</button>'
     + '<button class="race-pref" id="' + esc(racePrefBtnId(card.id, RACE_HIDE)) + '"'
     + ' data-race-pref="' + esc(card.id) + '" data-pref="' + RACE_HIDE + '">Hide</button>'
     + '</div></div></section>';
@@ -7441,19 +7546,19 @@ function racePrefsHtml(now){
     + label + '</button>';
   return '<details class="race-prefs"><summary>Customize</summary><div class="race-prefs-in">'
     + '<p class="race-prefs-note">Auto shows a race when a club you follow is near the line, or '
-    + 'when a season is far enough along that the race matters on its own. Pin one to see it '
-    + 'whenever there is a table; hide one to stop it appearing. This changes nothing about '
-    + 'which teams you follow.</p>'
+    + 'when a season is far enough along that the race matters on its own. Follow one to keep it '
+    + 'here; when games-behind data is available, teams within 3.5 games of its line also join '
+    + 'your schedule. Hide one to stop it appearing. Your My Teams choices stay unchanged.</p>'
     + rows.map(c => '<div class="race-opt-row"><span class="race-opt-name">'
         + esc(c.title) + '<i>' + esc((COMPS[c.comp] || {short:c.comp}).short)
-        + (raceAutoAllowed(c.view) ? "" : " &middot; pin to see it") + '</i></span>'
+        + (raceAutoAllowed(c.view) ? "" : " &middot; follow to see it") + '</i></span>'
         + '<span class="race-opt-set">' + button(c, RACE_AUTO, "Auto")
-        + button(c, RACE_PIN, "Pin") + button(c, RACE_HIDE, "Hide") + '</span></div>').join("")
+        + button(c, RACE_PIN, "Follow") + button(c, RACE_HIDE, "Hide") + '</span></div>').join("")
     + '</div></details>';
 }
 
 function renderRaces(now){
-  if(!selected.size) return "";
+  if(!selected.size && !followedRaces.length) return "";
   /* Every figure in this section is a result. Someone who has turned
      scores off has said they do not want last night's outcome on screen,
      and a table that moved overnight tells them anyway. */
@@ -7554,16 +7659,16 @@ function noteBlock(){
     + '</div>';
 }
 function emptyState(){
-  if(!selected.size)
-    return '<div class="empty"><b>No teams picked yet</b>Choose your teams and their real fixtures fill in here.'
+  if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn())
+    return '<div class="empty"><b>Nothing followed yet</b>Choose teams or star a playoff race and their real fixtures fill in here.'
       + '<div><button class="icon-btn" id="emptyPick">Choose teams</button></div></div>';
   if(liveMode===false)
     return '<div class="empty"><b>Can\'t reach the schedule right now</b>'
       + 'Nothing real to show, and it will not invent fixtures to fill the space. Reload once you are back online.</div>';
   if(liveMode===null)
-    return '<div class="empty"><b>Loading fixtures&hellip;</b>Fetching real schedules for your teams.</div>';
+    return '<div class="empty"><b>Loading fixtures&hellip;</b>Fetching real schedules for your teams and followed races.</div>';
   return '<div class="empty"><b>Nothing scheduled</b>'
-    + 'No published fixtures for your teams in the window we look at. Leagues out of season have none yet &mdash; they appear as soon as the schedule is released.'
+    + 'No published fixtures for your teams or followed races in the window we look at. Leagues out of season have none yet &mdash; they appear as soon as the schedule is released.'
     + '<div><button class="icon-btn" id="emptyPick">Change teams</button></div></div>';
 }
 
@@ -7787,7 +7892,14 @@ function renderRugbyPicker(){
     .filter(t=>!q || t.name.toLowerCase().includes(q))
     .sort((a,b)=>a.name.localeCompare(b.name));
 
-  let out = '<div class="lg-group"><div class="lg-title"><b>Rugby union</b><span class="bar"></span></div>'
+  const sectionMatch = !q || "rugby union men's international".includes(q) || nations.length;
+  if(!sectionMatch) return "";
+  const open = typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("rugby");
+  const summary = on ? "On" + (rugbyStars.size ? " · " + rugbyStars.size + " starred" : "") : "Off";
+
+  let out = '<details class="lg-group picker-section" data-picker-section="rugby"' + (open?' open':'') + '>'
+    + '<summary class="lg-title"><b>Rugby union</b><span class="picker-summary">' + esc(summary) + '</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
     + '<div class="chips"><button class="chip" data-team="'+RUGBY_FOLLOW+'" aria-pressed="'+on+'">'
     + '<span class="crest" style="background:'+COMPS.RUNC.color+'">RU</span>Men&rsquo;s International Rugby</button></div>';
   if(!on){
@@ -7805,7 +7917,46 @@ function renderRugbyPicker(){
           + esc(t.name)+'</button>').join("") + '</div>'
       : '<p class="ru-note">No international fixtures are loaded yet, so there is nothing to star.</p>';
   }
-  return out + '</div>';
+  return out + '</div></details>';
+}
+
+/* A race is followed independently of My Teams. Only races whose source
+   publishes a games-behind figure are offered here, because that is the
+   only honest way to apply Jonah's 3.5-game window. */
+function racePickerCandidates(now){
+  return raceCandidates(now == null ? Date.now() : now, selected)
+    .map(c=>Object.assign({}, c, {nearby:raceRowsWithinGameGap(c.view, c.grp, now)}))
+    .filter(c=>c.nearby.length)
+    .sort((a,b)=>a.comp.localeCompare(b.comp)||a.title.localeCompare(b.title));
+}
+function racePickerKey(now){
+  return racePickerCandidates(now).map(c=>c.id+":"+c.nearby.map(r=>r.id).join(",")).join("|");
+}
+function racePickerHtml(q, now){
+  const needle = String(q || "").trim().toLowerCase();
+  const rows = racePickerCandidates(now)
+    .filter(c=>!needle || (c.title + " " + ((COMPS[c.comp] || {}).name || c.comp)).toLowerCase().includes(needle));
+  if(!rows.length) return "";
+  const open = typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("races");
+  const followed = rows.filter(c=>racePrefOf(c.id) === RACE_PIN).length;
+  return '<details class="lg-group picker-section" data-picker-section="races"' + (open?' open':'') + '>'
+    + '<summary class="lg-title"><b>Playoff races</b><span class="lg-count">' + rows.length + '</span>'
+    + '<span class="picker-summary">' + (followed ? followed + ' followed' : 'None followed') + '</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
+    + '<p class="ru-note">Star a race and teams within 3.5 games of its line join your schedule and What&rsquo;s On. '
+    + 'They remain race teams rather than My Teams.</p><div class="race-picks">'
+    + rows.map(c=>{
+        const on = racePrefOf(c.id) === RACE_PIN;
+        const verb = on ? "Unfollow" : "Follow";
+        return '<button class="race-pick" id="' + esc(racePrefBtnId(c.id, RACE_PIN, "picker"))
+          + '" data-race-star="' + esc(c.id) + '" aria-pressed="' + on + '" aria-label="'
+          + verb + ' ' + esc(c.title) + '"><span class="race-pick-star" aria-hidden="true">'
+          + (on ? '&#9733;' : '&#9734;') + '</span><span class="race-pick-copy"><b>'
+          + esc(c.title) + '</b><small>' + esc((COMPS[c.comp] || {short:c.comp}).short)
+          + ' &middot; ' + c.nearby.length + ' team' + (c.nearby.length===1?'':'s')
+          + ' within 3.5 games</small></span></button>';
+      }).join("")
+    + '</div></div></details>';
 }
 
 /* How many clubs a league shows before it asks you to search.
@@ -7819,8 +7970,24 @@ function renderRugbyPicker(){
    Searching lifts the cap entirely: if you asked for something by name,
    you get every club that matches. */
 const PICKER_CAP = 12;
+let pickerOpenSections = new Set();
 function renderDrawer(){
+  if(typeof syncRaceTeams === "function") syncRaceTeams(Date.now());
   const q=search.trim().toLowerCase();
+  const groupRoot = document.getElementById("teamGroups");
+  if(typeof pickerOpenSections !== "undefined" && groupRoot && groupRoot.querySelectorAll){
+    pickerOpenSections = new Set([...groupRoot.querySelectorAll("details[data-picker-section][open]")]
+      .map(el=>el.getAttribute("data-picker-section")));
+  }
+  const picked=pickable.filter(t=>selected.has(t.id)
+      && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)))
+    .sort((a,b)=>fullName(a).localeCompare(fullName(b)));
+  const pickedHtml = picked.length
+    ? '<div class="picked-first"><div class="lg-title"><b>My teams</b><span class="bar"></span>'
+      + '<span class="lg-count">'+picked.length+'</span></div><div class="chips">'
+      + picked.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="true" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
+          + crest(t)+esc(fullName(t))+'</button>').join("") + '</div></div>'
+    : "";
   const groups=Object.keys(COMPS).map(lg=>{
     const all=pickable.filter(t=>t.home===lg && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)));
     if(!all.length) return "";
@@ -7830,26 +7997,36 @@ function renderDrawer(){
     const rest=all.filter(t=>!selected.has(t.id));
     const ts = q ? all : mine.concat(rest).slice(0, Math.max(PICKER_CAP, mine.length));
     const hidden = all.length - ts.length;
-    return '<div class="lg-group"><div class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
+    const open = !!q || (typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("league-"+lg));
+    return '<details class="lg-group picker-section" data-picker-section="league-'+esc(lg)+'"'+(open?' open':'')+'>'
+      + '<summary class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
       + (all.length > PICKER_CAP ? '<span class="lg-count">'+all.length+'</span>' : "")
-      + '<span class="bar"></span></div><div class="chips">'
+      + '<span class="picker-summary">'+(mine.length ? mine.length+' picked' : 'Choose teams')+'</span>'
+      + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body"><div class="chips">'
       + ts.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="'+selected.has(t.id)+'" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
           + crest(t)+esc(fullName(t))
           + (t.comps.length>1?'<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+t.comps.length+' comps</span>':'')
           + '</button>').join("")
       + (hidden ? '<span class="chips-more">'+hidden+' more &mdash; search to find them</span>' : "")
-      + '</div></div>';
+      + '</div></div></details>';
   }).join("");
-  document.getElementById("teamGroups").innerHTML = (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
+  document.getElementById("teamGroups").innerHTML = pickedHtml
+    + (groups||'<div class="empty">No teams match &ldquo;'+esc(search)+'&rdquo;</div>')
+    + (typeof racePickerHtml === "function" ? racePickerHtml(q, Date.now()) : "")
     + renderRugbyPicker()
     + tennisPicker(q)
-    + '<div class="lg-group"><div class="lg-title"><b>Your link</b><span class="bar"></span></div>'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    + '<details class="lg-group picker-section" data-picker-section="link"'
+    + (typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("link")?' open':'')+'>'
+    + '<summary class="lg-title"><b>Your link</b><span class="picker-summary">Share these teams</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary>'
+    + '<div class="picker-body" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     + '<input class="search" id="shareBox" readonly style="margin:0;flex:1;min-width:240px" value="'+esc(shareLink())+'">'
     + '<button class="icon-btn" id="copyLink">Copy</button>'
-    + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></div>';
+    + '<span style="font-size:12px;color:var(--muted)">Opens with your teams already picked, then tidies itself out of their address bar. Everyone else keeps their own.</span></div></details>';
   // textContent, so the separator is the character rather than an entity
   document.getElementById("drawerCount").textContent = selected.size+" selected"
+    + (typeof followedRaces !== "undefined" && followedRaces.length
+      ? " \u00b7 "+followedRaces.length+" race"+(followedRaces.length===1?"":"s")+" followed" : "")
     + (tennisTours.size ? " \u00b7 tennis: "+[...tennisTours].sort().join(", ")
         + (tennisEvents.size ? " ("+tennisEvents.size+" tournament"+(tennisEvents.size===1?"":"s")+")" : "") : "");
 }
@@ -7869,6 +8046,11 @@ function renderDrawer(){
    season calendar. ESPN publishes singles draws only a few days out;
    there is no honest way to offer next month's events here. */
 function tennisPicker(q){
+  const needle = normName(q || "");
+  const sectionMatch = !needle
+    || normName("tennis atp wta men's singles women's singles").includes(needle)
+    || [...TOURNEYS.values()].some(t=>normName(t.name).includes(needle));
+  if(!sectionMatch) return "";
   const tours = [["ATP","ATP","Men's singles"],["WTA","WTA","Women's singles"]];
   const on = tennisTours.size;
   const tourChips = tours.map(([id,label,sub])=>
@@ -7898,17 +8080,21 @@ function tennisPicker(q){
         + '</div>';
     }
   }
-  return '<div class="lg-group"><div class="lg-title"><b>Tennis</b><span class="bar"></span>'
-    + '<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">singles only</span></div>'
+  const open = typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("tennis");
+  const summary = on ? [...tennisTours].sort().join(" + ") : "Off";
+  return '<details class="lg-group picker-section" data-picker-section="tennis"' + (open?' open':'') + '>'
+    + '<summary class="lg-title"><b>Tennis</b><span class="picker-summary">'+esc(summary)+'</span>'
+    + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
     + '<div class="chips">'+tourChips+'</div>'
     + events
     + (on ? '' : '<div class="empty" style="margin-top:6px">Switch on a tour to see what is being played.</div>')
-    + '</div>';
+    + '</div></details>';
 }
 
 /* ============================ render + events ============================ */
 function render(){
   const now=Date.now(), todayKey=ymd(new Date(now));
+  syncRaceTeams(now);
   const main = document.getElementById("main");
   /* This runs every thirty seconds. Replacing the subtree throws away
      whatever the keyboard was on, which on a page of buttons means focus
@@ -7939,7 +8125,9 @@ function render(){
     if(el) el.focus();
   }
   renderRail(now,todayKey);
-  document.getElementById("teamCount").textContent=selected.size+(tennisTours.size?"+tennis":"");
+  /* The header count is My Teams only. Tennis, rugby and followed races
+     have their own summaries inside the drawer. */
+  document.getElementById("teamCount").textContent=selected.size;
   document.getElementById("serviceCount").textContent=services.size;
   /* The drawer is outside #main, so nothing above redrew it. Coverage
      counts move whenever the fixtures do, and a drawer left open through
@@ -7991,6 +8179,17 @@ function showDrawer(which){
 }
 const openDrawer = which => showDrawer(DRAWERS.find(d=>d.panel===which));
 const toggleDrawer = which => showDrawer(which.hasAttribute("hidden") ? DRAWERS.find(d=>d.panel===which) : null);
+function toggleRaceFollow(id){
+  const on = racePrefOf(id) === RACE_PIN;
+  setRacePref(id, on ? RACE_AUTO : RACE_PIN);
+  syncRaceTeams(Date.now());
+  if(!drawer.hasAttribute("hidden")) renderDrawer();
+  render();
+  /* The committed file already carries every fixture. Reloading it here
+     makes the newly included clubs appear immediately; the live path is
+     the fallback when that file is unavailable. */
+  refreshLive();
+}
 document.getElementById("v-list").addEventListener("click",()=>{view="list";render();});
 document.getElementById("v-cal").addEventListener("click",()=>{view="calendar"; if(!selDay) selDay=ymd(new Date()); calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1); render();});
 document.getElementById("scoreToggle").addEventListener("click",()=>{showScores=!showScores; if(showScores) revealed.clear(); persist(); render();});
@@ -8042,6 +8241,8 @@ svcDrawer.addEventListener("click",function(e){
 });
 document.getElementById("teamSearch").addEventListener("input",function(){search=this.value;renderDrawer();});
 document.getElementById("teamGroups").addEventListener("click",function(e){
+  const race=e.target.closest("[data-race-star]");
+  if(race){ toggleRaceFollow(race.getAttribute("data-race-star")); return; }
   /* Starring a nation lives here, in the drawer's own listener, and not
      in the one on #main: the nation buttons are rendered into
      #teamGroups, so a handler on #main never sees the click at all. */
@@ -8079,12 +8280,16 @@ document.getElementById("teamGroups").addEventListener("click",function(e){
 });
 document.getElementById("main").addEventListener("click",function(e){
   const rev=e.target.closest("[data-reveal]"); if(rev){ revealed.add(rev.getAttribute("data-reveal")); render(); return; }
+  const star=e.target.closest("[data-race-star]");
+  if(star){ toggleRaceFollow(star.getAttribute("data-race-star")); return; }
   const rp=e.target.closest("[data-race-pref]"); if(rp){
     const id=rp.getAttribute("data-race-pref"), want=rp.getAttribute("data-pref");
     /* Pressing the state a race is already in returns it to Auto, so the
        three buttons behave as one setting rather than as a trap. */
     setRacePref(id, racePrefOf(id) === want ? RACE_AUTO : want);
-    render(); return; }
+    syncRaceTeams(Date.now());
+    if(!drawer.hasAttribute("hidden")) renderDrawer();
+    render(); refreshLive(); return; }
   const rc=e.target.closest("[data-race]"); if(rc){ const id=rc.getAttribute("data-race");
     raceFull.has(id)?raceFull.delete(id):raceFull.add(id); render(); return; }
   const al=e.target.closest("[data-alert]"); if(al){ const id=al.getAttribute("data-alert"); alerts.has(id)?alerts.delete(id):alerts.add(id); persist(); render(); return; }
@@ -8157,8 +8362,10 @@ async function runRefresh(){
      the set it is derived from actually changes, rather than on every
      refresh, which would throw away focus in the open drawer. */
   const rugbyBefore = rugbyCount;
+  const raceBefore = racePickerKey(Date.now());
   try{ held = await loadStatic(); }catch(e){ held = 0; }
-  if(rugbyCount !== rugbyBefore && !drawer.hasAttribute("hidden")) renderDrawer();
+  const racesChanged = racePickerKey(Date.now()) !== raceBefore;
+  if((rugbyCount !== rugbyBefore || racesChanged) && !drawer.hasAttribute("hidden")) renderDrawer();
   const fresh = held > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
   if(held > 0){
     liveMode = true; liveErr = "";
@@ -8230,7 +8437,7 @@ let pickTimer = null;
 function refreshAfterPicks(){
   clearTimeout(pickTimer);
   pickTimer = setTimeout(()=>{
-    if(selected.size) refreshLive();
+    if(selected.size || raceIncluded.size) refreshLive();
     /* Switching a tour on or off changes which of the matches already
        held are mine, which is a re-read of what is in hand rather than a
        request. */
@@ -8278,7 +8485,8 @@ document.addEventListener("visibilitychange", ()=>{
   if(liveMode !== false) refreshLive();
 });
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
-if(!selected.size) openDrawer(drawer);
+syncRaceTeams(Date.now());
+if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn()) openDrawer(drawer);
 persist(); renderDrawer(); render();
 })();
 </script>

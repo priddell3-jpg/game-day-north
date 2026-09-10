@@ -470,7 +470,7 @@ test("a team matchup keeps the order its separator claims", () => {
 
 test("the picker offers tours first, then the tournaments inside them", () => {
   const at = SRC.indexOf("function tennisPicker");
-  const body = SRC.slice(at, SRC.indexOf("\n}", SRC.indexOf("return '<div class=\"lg-group\"><div class=\"lg-title\"><b>Tennis", at)));
+  const body = SRC.slice(at, SRC.indexOf("\n}", at) + 2);
   assert.ok(body.length > 200, "could not isolate tennisPicker");
   assert.match(body, /data-tour="/);
   assert.match(body, /data-event="/);
