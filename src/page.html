@@ -4239,6 +4239,10 @@ function tennisRow(g, now){
     right += '<button class="hidden-score" data-reveal="' + esc(g.id) + '">Reveal</button>'
       + '<span class="score-state">' + state.text + ' &middot; hidden</span>';
   } else {
+    /* Exceptional states are explanatory context, not part of the
+       scoreline. Hold the note until after any next-opponent line so a
+       result reads: what happened, what comes next, then why it ended. */
+    const specialNote = state.note || "";
     right += '<span class="score-state' + (state.live ? " live" : "") + '">'
       + (state.live ? '<span class="dot-live"></span>' : "") + state.text + '</span>';
     if(played){
@@ -4259,13 +4263,14 @@ function tennisRow(g, now){
       right += '<span class="conf-note">'
         + [m.label ? esc(m.label) : "", tally ? tally + " in sets" : ""].filter(Boolean).join(" &middot; ")
         + '</span>';
-    else if(state.note) right += '<span class="conf-note match-note">' + state.note + '</span>';
-    else if(!played && m.status !== "scheduled") right += '<span class="conf-note">No score published</span>';
+    else if(!specialNote && !played && m.status !== "scheduled")
+      right += '<span class="conf-note">No score published</span>';
     /* Only once the match is settled and its result is being shown:
        naming a next opponent says who won, so it waits on the same
        reveal the score does. */
     const nxt = m.winner != null ? nextOpponentLine(m) : null;
     if(nxt) right += '<span class="next-up">' + esc(nxt) + '</span>';
+    if(specialNote) right += '<span class="conf-note match-note">' + specialNote + '</span>';
   }
   right += '</div>';
 

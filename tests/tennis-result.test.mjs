@@ -178,13 +178,18 @@ test("the set scores turn round with the names", () => {
 test("a retirement is a result: winner first, def, and the sets that were played", () => {
   const m = match({status:"retired", label:"Retired", winner:1,
     sets:[[4,6],[1,2]], tiebreaks:[null,null], setWins:[1,null]});
-  const p = harness([m], s => s.replace("showScores = false", "showScores = true"));
+  const semi = match({id:"m2", round:"Semifinal", start:NOW + DAY,
+    status:"scheduled", label:"", winner:null, players:[ALCARAZ, SHELTON],
+    sets:[], tiebreaks:[], setWins:[]});
+  const p = harness([m, semi], s => s.replace("showScores = false", "showScores = true"));
   const html = p.tennisRow(asGame(m), NOW);
   assert.match(html, /class="vs">def</);
   assert.ok(html.indexOf("Carlos Alcaraz") < html.indexOf("Tommy Paul"));
   assert.match(html, /<b>6<\/b>-4/, "the completed set, turned round");
   assert.match(html, /2-1/, "and the one abandoned, unmarked");
   assert.match(html, /class="conf-note match-note"/, "the unusual ending gets its own message row");
+  assert.ok(html.indexOf('class="next-up"') < html.indexOf('class="conf-note match-note"'),
+    "what comes next is read before the special notice explaining the result");
 });
 
 test("a walkover has a winner and no sets, and can still be hidden and revealed", () => {

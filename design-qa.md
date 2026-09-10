@@ -259,7 +259,8 @@ Date: 2026-09-10
   use their own full-width result line.
 - Long next-round text now wraps on its own full-width line. Exceptional match
   messages such as retirement, walkover and suspension also receive a separate
-  sentence-case row instead of competing with the set scores.
+  sentence-case row below the next-opponent message instead of competing with
+  the set scores.
 - Cycling keeps the race, stage, route and distance together. A result podium
   receives a full-width, left-aligned line instead of a narrow right column.
 - Recent Results inherits this exact renderer, preventing a second card layout
