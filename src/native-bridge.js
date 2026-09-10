@@ -84,7 +84,7 @@ async function readCachedSchedule() {
 
 async function openExternal(rawUrl) {
   const url = new URL(rawUrl);
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
+  if (url.protocol !== "https:") {
     throw new Error("Blocked unsafe external link");
   }
   await Browser.open({ url: url.href });
@@ -116,7 +116,7 @@ if (native) {
       return;
     }
 
-    if (url.protocol === "https:" || url.protocol === "http:") {
+    if (url.protocol === "https:") {
       event.preventDefault();
       void openExternal(url.href).catch(error => console.error("External link failed", error));
       return;

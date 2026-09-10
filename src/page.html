@@ -4879,7 +4879,7 @@ function renderRights(){
         + '<td>'+(r.carriers.length ? r.carriers.map(c=>esc(c.name)).join(", ") : "&mdash;")+'</td>'
         + '<td><span class="pill '+r.confidence+'">'+r.confidence+'</span></td>'
         + '<td>'+esc(r.note)+'</td>'
-        + '<td>'+(r.src&&r.src.url?'<a href="'+esc(r.src.url)+'" target="_blank" rel="noopener">'+esc(r.src.label)+'</a>':esc(r.src?r.src.label:"&mdash;"))+'</td>'
+        + '<td>'+(r.src&&r.src.url?'<a href="'+esc(r.src.url)+'" target="_blank" rel="noopener noreferrer">'+esc(r.src.label)+'</a>':esc(r.src?r.src.label:"&mdash;"))+'</td>'
         + '<td style="white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--muted)">'+esc(r.checked||"&mdash;")+'</td></tr>').join("")
     + '</tbody></table></div></details>';
 }

@@ -417,7 +417,7 @@ A live score is a number that changes, so following one means asking again. Aski
 - **One refresh at a time.** The minute poll, the quarter-hour poll, the team picker and a returning tab can all ask at once; a caller that asks while a pass is running joins it rather than starting a second.
 - **Paused while the tab is hidden**, with one immediate refresh when it comes back.
 - **Cycling is never polled.** A stage podium is a result, not a live feed, and there is no live cycling source to poll; it arrives with the committed file.
-- **Tennis polls on its own loop**, against `/api/tennis` rather than ESPN directly, and only for the tours that actually have a live or unresolved match in view. It follows the same rules otherwise: one request at a time, paused with the tab, stopped once the source calls a match final, retired or walkover. The team and cycling paths are untouched by it.
+- **Tennis is not polled by each viewer.** The scheduled fixture build reads ATP and WTA, normalises the supported singles matches, and includes them in `data.json`. That keeps the large upstream response and its duplicate Grand Slam data out of browsers and phones. Tennis therefore has the same freshness as the committed schedule rather than a separate live-score loop.
 
 A fixture that has already been given a score is still polled while it is under way. Not doing that is what once froze a match at its halftime score for the rest of the night.
 
@@ -544,9 +544,7 @@ node build.js        # wraps src/page.html into a standalone index.html
 python3 -m http.server 8000
 ```
 
-`src/page.html` is the source of truth: a fragment with no `<!doctype>`, `<head>` or `<body>` of its own. `build.js` wraps it into the standalone `index.html` that GitHub Pages serves. No dependencies, no build step beyond that.
-
-The one piece of server is `api/tennis.js`, a Vercel function — see the tennis section above for why. Everything else still works with the page opened from a file: without it, tennis rows simply never appear. `api/package.json` exists only to mark that directory as ESM, so `build.js` stays a plain CommonJS script.
+`src/page.html` is the source of truth: a fragment with no `<!doctype>`, `<head>` or `<body>` of its own. `build.js` wraps it into the standalone `index.html` that GitHub Pages and Vercel serve. The deployed application is static: there are no Vercel Functions, databases, accounts, or server-side secrets. Tennis is already normalised into `data.json` by the scheduled fixture build.
 
 ### iOS
 
@@ -563,6 +561,16 @@ npm run ios:open
 On iOS, `data.json` refreshes from `https://game-day-north.vercel.app/data.json`. A validated response replaces the last-known-good copy in the app's Library directory. If that request fails, the app opens the saved copy; if there is no saved copy yet, it opens the snapshot bundled with the app. The page always displays the source and the payload's own `generated` freshness. ESPN and World Rugby JSON requests use Capacitor's native HTTP API, so the `capacitor://localhost` WebView does not depend on cross-origin browser permissions. External web links open through the system browser.
 
 Preferences keep their existing `gdn.*` localStorage keys under Capacitor's stable local origin. Share links retain the same hash format and use the public Game Day North URL rather than a local `capacitor://` address.
+
+### Hosting and security boundaries
+
+GitHub is the source repository and runs the scheduled sports-data builds. Vercel is the canonical public site and the iOS app's `data.json` origin. GitHub Pages can remain a static backup, but only the Vercel address is used in native code and share links.
+
+The iOS WebView never loads the Vercel page as its application shell. HTML, CSS, JavaScript, and fonts are copied into the signed app. Network responses are data only: the native bridge accepts HTTPS JSON from the exact hosts in `src/native-bridge.js`, and the page validates a remote schedule before replacing the last-known-good cache. External HTTPS links leave the WebView and open in the system browser. ATS remains at its strict default because `Info.plist` carries no arbitrary-load exception.
+
+The web build uses a content security policy that hashes its application script and limits network connections to the same known data hosts. Vercel adds clickjacking, referrer, MIME-sniffing, and browser-permission headers from `vercel.json`. Dependabot proposes dependency and GitHub Actions version updates monthly, while workflow actions are pinned to exact revisions. See `SECURITY.md` for the rule on secrets and private vulnerability reports.
+
+A future paid sports-data key must live behind a protected server endpoint; it must never be placed in `src/page.html`, `src/native-bridge.js`, `data.json`, an iOS bundle, or any other client-visible file.
 
 ### GitHub Pages
 

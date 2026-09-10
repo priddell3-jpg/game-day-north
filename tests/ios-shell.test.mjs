@@ -35,7 +35,8 @@ test("native JSON is HTTPS-only and restricted to the required hosts", () => {
 test("external navigation uses the native browser and blocks unsafe schemes", () => {
   assert.match(BRIDGE, /Browser\.open/);
   assert.match(BRIDGE, /event\.preventDefault\(\)/);
-  assert.match(BRIDGE, /url\.protocol !== "https:" && url\.protocol !== "http:"/);
+  assert.match(BRIDGE, /if \(url\.protocol !== "https:"\)/);
+  assert.doesNotMatch(BRIDGE, /url\.protocol === "http:"/);
 });
 
 const fixture = () => ({
