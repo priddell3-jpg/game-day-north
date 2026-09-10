@@ -239,9 +239,9 @@ test("a big league does not render as a wall of chips", () => {
   assert.match(html, /class="lg-count"/, "and the group says how many it has");
 });
 
-test("the picker keeps My Teams visible and folds the long sport lists", () => {
+test("the picker keeps followed choices visible and folds the long sport lists", () => {
   const html = drawer({ selected: ["van-nhl", "liv"] });
-  assert.ok(html.indexOf("My teams") < html.indexOf("data-picker-section=\"league-NHL\""));
+  assert.ok(html.indexOf("Following") < html.indexOf("data-picker-section=\"league-NHL\""));
   assert.match(html, /<details class="lg-group picker-section" data-picker-section="league-NHL"/);
   assert.match(SRC, /data-picker-section="rugby"/);
   assert.match(SRC, /data-picker-section="tennis"/);

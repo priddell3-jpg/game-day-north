@@ -13,7 +13,38 @@ test("the title opens a compact setup menu and the view is one switch", () => {
   assert.match(header, /id="teamsToggle"[^>]*role="menuitem"/);
   assert.match(header, /id="servicesToggle"[^>]*role="menuitem"/);
   assert.match(header, /id="viewToggle"/);
+  assert.match(header, /id="setupDone"[^>]*hidden/);
   assert.doesNotMatch(header, /id="v-list"|id="v-cal"/);
+});
+
+test("team and service setup become a focused screen with Done in the header", () => {
+  assert.match(CSS, /\.setup-mode \.whats-on,\.setup-mode main\{display:none\}/);
+  assert.match(CSS, /\.setup-mode \.drawer\{[^}]*min-height:calc\(100dvh/);
+  assert.match(CSS, /\.top-actions>\[hidden\]\{display:none\}/);
+  const at = SRC.indexOf("function showDrawer");
+  const body = SRC.slice(at, SRC.indexOf("const openDrawer", at));
+  assert.match(body, /document\.body\.classList\.toggle\("setup-mode",setupOpen\)/);
+  assert.match(body, /getElementById\("scoreToggle"\)\.setAttribute\("hidden"/);
+  assert.match(body, /getElementById\("viewToggle"\)\.setAttribute\("hidden"/);
+  assert.match(body, /setupDone\.removeAttribute\("hidden"\)/);
+  assert.match(SRC, /setupDone\.addEventListener\("click",\(\)=>\{ showDrawer\(null\)/);
+});
+
+test("followed tennis is removable from the top Following summary", () => {
+  const at = SRC.indexOf("function renderDrawer");
+  const body = SRC.slice(at, SRC.indexOf("/* Tennis, as a sport", at));
+  assert.match(body, /<b>Following<\/b>/);
+  assert.match(body, /data-tennis-off/);
+  const listenerAt = SRC.indexOf('document.getElementById("teamGroups").addEventListener');
+  const listener = SRC.slice(listenerAt, SRC.indexOf('const race=', listenerAt));
+  assert.match(listener, /tennisTours\.clear\(\)/);
+  assert.match(listener, /tennisEvents\.clear\(\)/);
+});
+
+test("What's On is shaded as a distinct region in the normal view", () => {
+  const rule = ruleFor(CSS, ".whats-on");
+  assert.match(rule, /color-mix\(in srgb,var\(--ground\) 94%,var\(--ink\) 6%\)/);
+  assert.match(rule, /border-bottom:1px solid var\(--line-strong\)/);
 });
 
 test("the home strip adapts to the controls that actually exist", () => {

@@ -72,8 +72,6 @@ horizontal scrolling without horizontal page overflow.
 
 final result: passed
 
----
-
 # Followed races / follow drawer / saved-game design QA
 
 Date: 2026-09-10
@@ -191,3 +189,46 @@ ordering are covered by the same render path and automated checks.
   user's Xcode simulator before this visual pass and is ready to rerun there.
 
 final result: passed
+
+---
+
+# Focused team and service setup design QA
+
+Date: 2026-09-10
+
+## Interaction result
+
+- Opening My Teams now enters a focused setup state. What's On, the score
+  control, the List/Calendar control and the schedule are removed from view;
+  `Choose what to follow` begins directly below the sticky header.
+- The right side of the header becomes a single `Done` action. Pressing it
+  restores the score and view controls, What's On and the schedule without
+  changing any selection made in the picker.
+- My Services uses the same focused state and is headed `Choose your services`.
+- Followed tennis now appears in the top `Following` group with its active
+  tour names and a one-press remove action. The existing player stars remain
+  stored if tennis is switched back on later.
+- Outside setup mode, What's On has a slightly darker surface and bottom rule
+  so it reads as a distinct region above the schedule.
+
+## Phone-width verification
+
+- Verified at 390 x 844: My Teams showed only Game Day North and Done in the
+  header; score, calendar, What's On and the schedule were not visible.
+- Done restored all four normal-view elements. The same replacement was then
+  verified for My Services.
+- Switched ATP on temporarily, verified `Tennis · ATP · x` appeared in the
+  top Following group, used it to switch tennis off, and confirmed it vanished.
+- No horizontal page overflow. Browser console warnings/errors: none.
+
+## Build verification
+
+- Automated tests: 895 passed, 0 failed.
+- Web build: passed; `index.html` regenerated from the shared source.
+- Capacitor asset build and iOS copy: passed; bundled `public/index.html` is
+  byte-for-byte identical to the generated native build.
+- The host simulator service and SwiftPM diagnostic cache remain inaccessible
+  to the command-line sandbox. The refreshed Xcode project is ready for the
+  existing interactive simulator to run.
+
+final result: passed, with native relaunch to be confirmed in Xcode

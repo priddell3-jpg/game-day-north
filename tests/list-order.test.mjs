@@ -237,8 +237,16 @@ const DOM_PRE = `
       hasAttribute(k){ return k === "hidden" ? this._hidden : (k in this._attrs); }
     };
   }
-  const NODES = {drawer: fakeEl(), svcDrawer: fakeEl(), teamsToggle: fakeEl(), servicesToggle: fakeEl()};
-  const document = {getElementById: id => NODES[id]};
+  const NODES = {
+    drawer: fakeEl(), svcDrawer: fakeEl(), teamsToggle: fakeEl(), servicesToggle: fakeEl(),
+    scoreToggle: fakeEl(), viewToggle: fakeEl(), setupDone: fakeEl()
+  };
+  const BODY_CLASSES = new Set();
+  const document = {
+    body: {classList: {toggle(k, on){ on ? BODY_CLASSES.add(k) : BODY_CLASSES.delete(k); }}},
+    getElementById: id => NODES[id]
+  };
+  const setupDone = NODES.setupDone;
   globalThis.__probe = {nodes: NODES, drew: []};
   const renderDrawer = () => globalThis.__probe.drew.push("teams");
   const renderServices = () => globalThis.__probe.drew.push("services");
@@ -270,6 +278,18 @@ test("the buttons say which drawer is showing", () => {
   assert.deepEqual(pressed(), {teams: "true", services: "false"});
   p.toggleDrawer(p.drawer);
   assert.deepEqual(pressed(), {teams: "false", services: "false"});
+});
+
+test("a drawer replaces the normal header actions until Done", () => {
+  const p = drawers();
+  p.openDrawer(p.drawer);
+  assert.equal(p.probe.nodes.scoreToggle.hasAttribute("hidden"), true);
+  assert.equal(p.probe.nodes.viewToggle.hasAttribute("hidden"), true);
+  assert.equal(p.probe.nodes.setupDone.hasAttribute("hidden"), false);
+  p.toggleDrawer(p.drawer);
+  assert.equal(p.probe.nodes.scoreToggle.hasAttribute("hidden"), false);
+  assert.equal(p.probe.nodes.viewToggle.hasAttribute("hidden"), false);
+  assert.equal(p.probe.nodes.setupDone.hasAttribute("hidden"), true);
 });
 
 test("opening a drawer draws it, and drawing it is what fills it", () => {
