@@ -30,6 +30,20 @@ test("Vercel sends the browser hardening headers", () => {
   assert.match(headers["permissions-policy"], /geolocation=\(\)/);
 });
 
+test("Vercel publishes only the staged web bundle", () => {
+  assert.equal(vercel.outputDirectory, "public");
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  assert.match(pkg.scripts.build, /scripts\/build-web\.mjs/);
+
+  const webBuild = readFileSync(new URL("../scripts/build-web.mjs", import.meta.url), "utf8");
+  assert.match(webBuild, /join\(root, "public"\)/);
+  assert.match(webBuild, /"index\.html"/);
+  assert.match(webBuild, /"data\.json"/);
+  assert.match(webBuild, /"fonts"/);
+  assert.doesNotMatch(webBuild, /"ios"/);
+  assert.doesNotMatch(webBuild, /"src"/);
+});
+
 test("new-tab links cannot retain an opener or send a referrer", () => {
   for(const tag of source.match(/<a\b[^>]*target="_blank"[^>]*>/gi) || []){
     assert.match(tag, /rel="[^"]*noopener[^"]*"/i);

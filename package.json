@@ -4,7 +4,7 @@
   "private": true,
   "description": "Game Day North web app and bundled Capacitor iOS shell",
   "scripts": {
-    "build": "node build.js",
+    "build": "node build.js && node scripts/build-web.mjs",
     "build:ios": "node build.js && node scripts/build-ios.mjs",
     "test": "node --test tests/*.test.mjs",
     "ios:sync": "npm run build:ios && cap sync ios",
