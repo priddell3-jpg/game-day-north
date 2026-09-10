@@ -116,6 +116,34 @@ test("the score toggle drops to its icon at 320, and keeps a name", () => {
   assert.match(SRC, /stg\.setAttribute\("aria-label", scoreLabel\)/);
 });
 
+test("every phone card uses one time, matchup, result and services hierarchy", () => {
+  const card = ruleFor(mobile, ".game");
+  assert.match(card, /grid-template-columns\s*:\s*minmax\(0,1fr\)\s+minmax\(70px,auto\)/);
+  assert.match(card, /grid-template-areas\s*:\s*"time bell" "match score" "watch watch"/);
+  assert.match(ruleFor(mobile, ".g-watch"), /grid-area\s*:\s*watch/);
+  assert.match(ruleFor(mobile, ".g-watch"), /flex-direction\s*:\s*row/);
+  assert.match(ruleFor(mobile, ".bell"), /grid-area\s*:\s*bell/);
+  assert.equal(ruleFor(mobile, ".results-in .game"), null,
+    "Recent results should inherit the universal card rather than drift into another layout");
+});
+
+test("tennis gets a full-width set-score line on phones", () => {
+  assert.match(SRC, /class="game tennis-game/);
+  const row = ruleFor(mobile, ".tennis-game,.event-game");
+  assert.match(row, /grid-template-columns\s*:\s*minmax\(0,1fr\)\s+44px/);
+  assert.match(row, /grid-template-areas\s*:\s*"time bell" "match match" "score score" "watch watch"/);
+  assert.match(ruleFor(mobile, ".tennis-game .g-score"), /flex-direction\s*:\s*row/);
+});
+
+test("cycling gets the same specialty layout and a readable podium", () => {
+  assert.match(SRC, /class="game event-game/);
+  assert.match(ruleFor(mobile, ".event-game .g-score"), /align-items\s*:\s*flex-start/);
+  assert.match(ruleFor(mobile, ".event-game .podium"), /text-align\s*:\s*left/);
+  assert.match(SRC, /const racing = state === "today" && !g\.podium/);
+  assert.match(SRC, /event-game'\+\(racing\?" is-live":""\)/,
+    "a stage that merely happened today must not look live after it finishes");
+});
+
 test("nothing in the header is pinned to a width it cannot give up", () => {
   const bar = /<header class="topbar">[\s\S]*?<\/header>/.exec(SRC)[0];
   assert.doesNotMatch(bar, /style="[^"]*width:\s*\d/);

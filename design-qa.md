@@ -232,3 +232,60 @@ Date: 2026-09-10
   existing interactive simulator to run.
 
 final result: passed, with native relaunch to be confirmed in Xcode
+
+---
+
+# Universal mobile game-card formatting audit
+
+Date: 2026-09-10
+
+## Evidence reviewed
+
+- Recent Results baseline: `/private/tmp/gdn-universal-card-audit/01-before-recent-results.png`.
+- Cycling baseline: `/private/tmp/gdn-universal-card-audit/02-before-cycling.png`.
+- Rebuilt cycling and tennis list at 390 x 844:
+  `/private/tmp/gdn-universal-card-audit/03-after-cycling.png`.
+- Rebuilt Recent Results at 390 x 844:
+  `/private/tmp/gdn-universal-card-audit/04-after-recent-results.png`.
+
+## Universal hierarchy
+
+- Every phone card now starts with a quiet time row and the 44 px save action
+  in the same top-right position. The matchup or event and its result follow;
+  viewing services always receive the full card width below.
+- Ordinary team games and rugby keep the existing content and score treatment;
+  only the narrow-screen flow changed.
+- Tennis names stack at full width and the match state, sets and live-set note
+  use their own full-width result line.
+- Cycling keeps the race, stage, route and distance together. A result podium
+  receives a full-width, left-aligned line instead of a narrow right column.
+- Recent Results inherits this exact renderer, preventing a second card layout
+  from drifting away from the main schedule.
+- A cycling event is tinted as live only while it is actually underway. Merely
+  occurring today no longer gives a completed stage live styling.
+
+## Visual and interaction result
+
+- The before screenshots showed severe horizontal starvation: tennis metadata
+  wrapped to one word per line and the cycling route competed with a three-name
+  podium. Both issues are removed in the rebuilt screenshots.
+- No horizontal overflow or browser console warnings/errors were found at
+  390 x 844. Existing colours, typography, card borders and spacing tokens were
+  retained so the change belongs to the current design system.
+- Save controls remain 44 x 44 px. Bookmark behaviour, score hiding, services,
+  records, links and card jump targets were not changed.
+
+## Evidence limits
+
+- The current refresh contained no live tennis match, so no honest live-state
+  screenshot was available. The shared live renderer and live tennis markup are
+  covered by the passing automated tests; VoiceOver and hardware touch testing
+  still require the iPhone/Xcode pass.
+
+## Build verification
+
+- Automated tests: 898 passed, 0 failed.
+- Web build: passed; `index.html` regenerated from the shared source.
+- Capacitor web assets rebuilt and copied into `ios/App/App/public/`.
+
+final result: passed, with physical-device accessibility verification pending

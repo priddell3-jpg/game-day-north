@@ -429,13 +429,40 @@ main{padding:22px 0 80px}
   .top-actions{gap:5px}
   .icon-btn{padding:5px 7px;gap:5px;font-size:11.5px}
   .view-toggle{min-width:64px}
-  .game{grid-template-columns:64px 1fr auto;gap:10px;padding:12px 8px 12px 10px}
-  .g-watch{grid-column:2/3;align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:10px}
-  .g-score{grid-column:3;grid-row:1;min-width:0}
-  /* Saving a game was unreachable on a phone. It sits beside the watch
-     row now, at a size a thumb can actually hit. */
-  .bell{grid-column:3;grid-row:2;justify-self:end;align-self:center;width:44px;height:44px}
+  /* One phone hierarchy for every sport: time and save action first,
+     the thing happening beside its result, then viewing services across
+     the full width. It gives names and event details the room previously
+     spent on a permanent time column. */
+  .game{
+    grid-template-columns:minmax(0,1fr) minmax(70px,auto);
+    grid-template-areas:"time bell" "match score" "watch watch";
+    gap:7px 10px;align-items:start;padding:11px 10px
+  }
+  .g-time{grid-area:time;align-self:center;font-size:11.5px;color:var(--muted)}
+  .g-match{grid-area:match;gap:5px}
+  .g-watch{grid-area:watch;align-items:center;text-align:left;flex-direction:row;flex-wrap:wrap;gap:7px 12px}
+  .g-score{grid-area:score;align-self:start;min-width:0}
+  /* Saving remains a 44px target and now occupies the same predictable
+     top-right position on every kind of card. */
+  .bell{grid-area:bell;justify-self:end;align-self:start;width:44px;height:44px}
   .bell svg{width:18px;height:18px}
+  /* Specialty results use that same hierarchy with a full-width result
+     line: tennis needs room for sets, cycling for three rider names. */
+  .tennis-game,.event-game{
+    grid-template-columns:minmax(0,1fr) 44px;
+    grid-template-areas:"time bell" "match match" "score score" "watch watch";
+  }
+  .tennis-game .g-match,.event-game .g-match{gap:6px}
+  .tennis-game .g-teams{display:grid;grid-template-columns:minmax(0,1fr);gap:3px}
+  .tennis-game .vs{font-size:9px}
+  .tennis-game .g-score{
+    grid-area:score;display:flex;flex-direction:row;justify-content:flex-start;
+    align-items:baseline;gap:4px 9px;min-width:0;text-align:left
+  }
+  .tennis-game .g-score .conf-note{flex-basis:100%}
+  .tennis-game .sets{justify-content:flex-start}
+  .event-game .g-score{align-items:flex-start;text-align:left;width:100%}
+  .event-game .podium{width:100%;text-align:left;line-height:1.65}
   .cal-cell{min-height:70px}
   .cal-ev .tm{display:none}
   .rail-head{padding-top:7px;padding-bottom:5px}
@@ -3807,6 +3834,12 @@ function eventRow(g, now){
   const c = COMPS[g.comp], rights = resolveRights(g);
   const day = localKey(g.start), today = ymd(new Date(now));
   const state = day < today ? "done" : day > today ? "ahead" : "today";
+  /* "Today" is a date group, not a live state. A stage is only racing
+     after its known start and before its expected finish, while it has
+     no result. This keeps a completed stage from borrowing the live tint. */
+  const racing = state === "today" && !g.podium
+    && !(g.timeKnown && now < g.start)
+    && !(g.finishUtc && now > g.finishUtc);
 
   const timeCell = g.timeKnown
     ? '<div class="g-time">'+esc(fmtTime(g.start))+'</div>'
@@ -3868,7 +3901,7 @@ function eventRow(g, now){
 
   const on = alerts.has(g.id);
   const bell = saveButton(g.id, on, g.race || "this race");
-  return '<div class="game'+(state==="today"?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell
+  return '<div class="game event-game'+(racing?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell
     + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
 }
 
@@ -4236,7 +4269,7 @@ function tennisRow(g, now){
      the title and left in the button is not blanked. */
   const label = m.players.map(p=>playerSpoiled(m, p) ? TBD_PLAYER.name : p.name).join(" v ");
   const bell = saveButton(g.id, alerts.has(g.id), label);
-  return '<div class="game' + (state.live ? " is-live" : "") + '" data-game-id="' + esc(String(g.id)) + '" tabindex="-1">' + timeCell
+  return '<div class="game tennis-game' + (state.live ? " is-live" : "") + '" data-game-id="' + esc(String(g.id)) + '" tabindex="-1">' + timeCell
     + '<div class="g-match">' + title + meta + '</div>' + watch + right + bell + '</div>';
 }
 
