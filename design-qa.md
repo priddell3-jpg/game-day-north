@@ -277,6 +277,13 @@ Date: 2026-09-10
   the same state is included in the carrier's accessible name.
 - Exceptional result notes state only the useful reason (`Opponent retired`,
   `Opponent withdrew`) and sit below any next-opponent message.
+- Team setup now keeps bulk actions separate from the accordion target. Each
+  opened league has an explicit Add all/Remove all control; a fully selected
+  league collapses to one removable summary chip instead of filling Following
+  with every club.
+- Clear all teams is always distinct from the league actions and requires a
+  second tap within 3.5 seconds. It removes team ids only, leaving tennis,
+  rugby stars and followed playoff races unchanged.
 
 ## Visual and interaction result
 
@@ -286,6 +293,9 @@ Date: 2026-09-10
 - No horizontal overflow or browser console warnings/errors were found at
   390 x 844. Existing colours, typography, card borders and spacing tokens were
   retained so the change belongs to the current design system.
+- The 390 x 844 interaction pass verified the NHL flow from 1 picked through
+  Add all 32, the compact NHL / 32 teams summary, and the guarded clear label
+  without clearing the test selection.
 - Save controls remain 44 x 44 px. Bookmark behaviour, score hiding, records,
   links and card jump targets were not changed.
 
@@ -298,7 +308,7 @@ Date: 2026-09-10
 
 ## Build verification
 
-- Automated tests: 901 passed, 0 failed.
+- Automated tests: 905 passed, 0 failed.
 - Web build: passed; `index.html` regenerated from the shared source.
 - Capacitor web assets rebuilt and copied into `ios/App/App/public/`.
 

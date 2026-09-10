@@ -173,6 +173,13 @@ test("the drawer has room for the coverage line it now carries", () => {
   assert.ok(ruleFor(css, ".svc-hint"), "the first-run hint must be styled");
 });
 
+test("team bulk actions are visually separate from the league disclosure", () => {
+  assert.match(ruleFor(css, ".picker-bulk-row"), /border-bottom\s*:\s*1px solid var\(--line\)/);
+  assert.match(ruleFor(css, ".picker-bulk,.picker-clear"), /min-height\s*:\s*34px/);
+  assert.match(ruleFor(css, ".picked-first .picker-clear"), /flex\s*:\s*none/);
+  assert.match(ruleFor(css, ".picker-clear.confirm"), /var\(--warn-soft\)/);
+});
+
 test("carrier ownership is shown on the service itself, without a second badge", () => {
   const pip = ruleFor(css, ".svc .pip");
   assert.match(pip, /border-radius\s*:\s*50%/);

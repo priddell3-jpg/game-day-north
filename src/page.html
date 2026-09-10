@@ -209,8 +209,18 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   transform:rotate(45deg);transition:transform .15s;flex:none;margin:0 4px 4px 2px}
 .picker-section[open]>.lg-title .picker-chevron{transform:rotate(225deg);margin:4px 4px 0 2px}
 .picker-body{padding:0 10px 10px}
+.picker-bulk-row{display:flex;align-items:center;gap:10px;justify-content:flex-end;min-height:42px;margin-bottom:7px;border-bottom:1px solid var(--line)}
+.picker-bulk-row span{margin-right:auto;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.picker-bulk,.picker-clear{
+  min-height:34px;padding:5px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);
+  color:var(--ink-2);font-size:11px;font-weight:700
+}
+.picker-bulk:hover,.picker-clear:hover{border-color:var(--line-strong)}
+.picker-bulk[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.picker-clear.confirm{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
 .picked-first{margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
 .picked-first .lg-title{margin-bottom:7px}
+.picked-first .picker-clear{flex:none}
 .follow-chip .chip-meta{font-family:var(--mono);font-size:9.5px;opacity:.72;text-transform:uppercase}
 .follow-chip .chip-remove{font-size:16px;line-height:1;opacity:.72;margin-left:1px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -5318,6 +5328,23 @@ function racePickerHtml(q, now){
    you get every club that matches. */
 const PICKER_CAP = 12;
 let pickerOpenSections = new Set();
+function pickerLeagueTeams(lg){
+  return pickable.filter(t=>t.home===lg);
+}
+function toggleLeagueTeams(lg){
+  const teams = pickerLeagueTeams(lg);
+  const remove = teams.length > 0 && teams.every(t=>selected.has(t.id));
+  teams.forEach(t=>remove ? selected.delete(t.id) : selected.add(t.id));
+  return {selected:!remove, total:teams.length};
+}
+function pickedTeamCount(){
+  return pickable.reduce((n,t)=>n+(selected.has(t.id)?1:0),0);
+}
+function clearAllPickedTeams(){
+  let removed = 0;
+  pickable.forEach(t=>{ if(selected.delete(t.id)) removed++; });
+  return removed;
+}
 function renderDrawer(){
   if(typeof syncRaceTeams === "function") syncRaceTeams(Date.now());
   const q=search.trim().toLowerCase();
@@ -5326,9 +5353,22 @@ function renderDrawer(){
     pickerOpenSections = new Set([...groupRoot.querySelectorAll("details[data-picker-section][open]")]
       .map(el=>el.getAttribute("data-picker-section")));
   }
-  const picked=pickable.filter(t=>selected.has(t.id)
-      && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)))
+  const picked=pickable.filter(t=>selected.has(t.id))
     .sort((a,b)=>fullName(a).localeCompare(fullName(b)));
+  /* A full league is one choice at this point, not thirty-two chips.
+     Keep partial leagues itemised so every individual team can still be
+     removed without reopening its section. */
+  const fullLeagues=Object.keys(COMPS).map(lg=>{
+    const teams=pickerLeagueTeams(lg);
+    return teams.length>1 && teams.every(t=>selected.has(t.id)) ? {lg,teams} : null;
+  }).filter(Boolean);
+  const inFullLeague=new Set(fullLeagues.flatMap(x=>x.teams.map(t=>t.id)));
+  const pickedSingles=picked.filter(t=>!inFullLeague.has(t.id));
+  const leagueFollowing=fullLeagues.map(x=>
+    '<button class="chip follow-chip" data-league-all="'+esc(x.lg)+'" aria-pressed="true" title="Stop following every '+esc(COMPS[x.lg].name)+' team">'
+      + esc(COMPS[x.lg].short)+' <span class="chip-meta">'+x.teams.length+' teams</span>'
+      + '<span class="chip-remove" aria-hidden="true">&times;</span></button>'
+  ).join("");
   /* Tennis is followed as a sport, not as a team. It still belongs in
      the quick summary: otherwise switching it off means finding the
      Tennis accordion again at the bottom of a long picker. */
@@ -5338,18 +5378,26 @@ function renderDrawer(){
       + '<span class="chip-remove" aria-hidden="true">&times;</span></button>'
     : "";
   const followingCount = picked.length + (tennisFollowing ? 1 : 0);
+  const totalPickedTeams = pickedTeamCount();
+  const clearTeamsButton = totalPickedTeams
+    ? '<button class="picker-clear" data-clear-teams>Clear all teams</button>'
+    : "";
   const pickedHtml = followingCount
     ? '<div class="picked-first"><div class="lg-title"><b>Following</b><span class="bar"></span>'
-      + '<span class="lg-count">'+followingCount+'</span></div><div class="chips">'
-      + picked.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="true" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
+      + clearTeamsButton+'<span class="lg-count">'+followingCount+'</span></div><div class="chips">'
+      + leagueFollowing
+      + pickedSingles.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="true" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
           + crest(t)+esc(fullName(t))+'</button>').join("") + tennisFollowing + '</div></div>'
     : "";
   const groups=Object.keys(COMPS).map(lg=>{
-    const all=pickable.filter(t=>t.home===lg && (!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q)));
+    const leagueAll=pickerLeagueTeams(lg);
+    const all=leagueAll.filter(t=>!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q));
     if(!all.length) return "";
     /* A club you follow is never hidden behind a cap: the picker is also
        how you un-follow one. */
     const mine=all.filter(t=>selected.has(t.id));
+    const leaguePicked=leagueAll.filter(t=>selected.has(t.id)).length;
+    const wholeLeaguePicked=leagueAll.length>0 && leaguePicked===leagueAll.length;
     const rest=all.filter(t=>!selected.has(t.id));
     const ts = q ? all : mine.concat(rest).slice(0, Math.max(PICKER_CAP, mine.length));
     const hidden = all.length - ts.length;
@@ -5357,8 +5405,11 @@ function renderDrawer(){
     return '<details class="lg-group picker-section" data-picker-section="league-'+esc(lg)+'"'+(open?' open':'')+'>'
       + '<summary class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
       + (all.length > PICKER_CAP ? '<span class="lg-count">'+all.length+'</span>' : "")
-      + '<span class="picker-summary">'+(mine.length ? mine.length+' picked' : 'Choose teams')+'</span>'
-      + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body"><div class="chips">'
+      + '<span class="picker-summary">'+(leaguePicked ? leaguePicked+' picked' : 'Choose teams')+'</span>'
+      + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'
+      + '<div class="picker-bulk-row"><span>'+leaguePicked+' of '+leagueAll.length+' selected</span>'
+      + '<button class="picker-bulk" data-league-all="'+esc(lg)+'" aria-pressed="'+wholeLeaguePicked+'">'
+      + (wholeLeaguePicked?'Remove all ':'Add all ')+leagueAll.length+'</button></div><div class="chips">'
       + ts.map(t=>'<button class="chip" data-team="'+t.id+'" aria-pressed="'+selected.has(t.id)+'" title="'+esc(t.comps.map(c=>COMPS[c].short).join(" · "))+'">'
           + crest(t)+esc(fullName(t))
           + (t.comps.length>1?'<span style="font-family:var(--mono);font-size:9.5px;opacity:.65">'+t.comps.length+' comps</span>':'')
@@ -5639,6 +5690,29 @@ svcDrawer.addEventListener("click",function(e){
 });
 document.getElementById("teamSearch").addEventListener("input",function(){search=this.value;renderDrawer();});
 document.getElementById("teamGroups").addEventListener("click",function(e){
+  const clearTeams=e.target.closest("[data-clear-teams]");
+  if(clearTeams){
+    if(clearTeams.getAttribute("data-confirm")!=="true"){
+      const count=pickedTeamCount();
+      clearTeams.setAttribute("data-confirm","true");
+      clearTeams.classList.add("confirm");
+      clearTeams.textContent="Tap again to clear "+count;
+      setTimeout(()=>{
+        if(!clearTeams.isConnected || clearTeams.getAttribute("data-confirm")!=="true") return;
+        clearTeams.removeAttribute("data-confirm");
+        clearTeams.classList.remove("confirm");
+        clearTeams.textContent="Clear all teams";
+      },3500);
+      return;
+    }
+    clearAllPickedTeams();
+    persist(); renderDrawer(); render(); refreshAfterPicks(); return;
+  }
+  const wholeLeague=e.target.closest("[data-league-all]");
+  if(wholeLeague){
+    toggleLeagueTeams(wholeLeague.getAttribute("data-league-all"));
+    persist(); renderDrawer(); render(); refreshAfterPicks(); return;
+  }
   const tennisOff=e.target.closest("[data-tennis-off]");
   if(tennisOff){
     tennisTours.clear();

@@ -195,8 +195,8 @@ test("every club keeps its colour, abbreviation and timezone", () => {
 /* The drawer, rendered against a chosen search term and selection. */
 function drawer(opts = {}){
   const SRC2 = readFileSync(new URL("src/page.html", root), "utf8");
-  const fn = /function renderDrawer\(\)\{[\s\S]*?\n\}/.exec(SRC2);
-  assert.ok(fn, "renderDrawer must exist");
+  const fn = /function pickerLeagueTeams\(lg\)\{[\s\S]*?function renderDrawer\(\)\{[\s\S]*?\n\}/.exec(SRC2);
+  assert.ok(fn, "the picker helpers and renderDrawer must exist");
   const P = board();
   const pickable = Object.values(P.TEAMS).filter(t => !t.ghost);
   const body = `
@@ -228,6 +228,17 @@ function drawer(opts = {}){
 const chips = html => (html.match(/data-team="/g) || []).length;
 const PICKER_CAP_VALUE = loadFromPage(["PICKER_CAP"]).PICKER_CAP;
 
+function bulkModel(ids = []){
+  const P = board();
+  const pickable = Object.values(P.TEAMS).filter(t => !t.ghost);
+  const preamble = "const pickable = " + JSON.stringify(pickable) + ";\n"
+    + "const selected = new Set(" + JSON.stringify(ids) + ");\n"
+    + "globalThis.__bulkSelected = selected;";
+  return loadFromPage(
+    ["pickerLeagueTeams","toggleLeagueTeams","pickedTeamCount","clearAllPickedTeams"],
+    preamble);
+}
+
 test("a big league does not render as a wall of chips", () => {
   const P = board();
   const nfl = Object.values(P.TEAMS).filter(t => t.home === "NFL" && !t.ghost).length;
@@ -245,6 +256,49 @@ test("the picker keeps followed choices visible and folds the long sport lists",
   assert.match(html, /<details class="lg-group picker-section" data-picker-section="league-NHL"/);
   assert.match(SRC, /data-picker-section="rugby"/);
   assert.match(SRC, /data-picker-section="tennis"/);
+});
+
+test("each league gets a deliberate Add all action inside the opened section", () => {
+  const P = board();
+  const nhl = Object.values(P.TEAMS).filter(t => t.home === "NHL" && !t.ghost).map(t => t.id);
+  const empty = drawer();
+  assert.match(empty, new RegExp('data-league-all="NHL" aria-pressed="false">Add all ' + nhl.length));
+  assert.match(empty, /<\/summary><div class="picker-body"><div class="picker-bulk-row">/,
+    "the bulk action appears after opening the league, not on the disclosure target");
+
+  const full = drawer({selected:nhl});
+  assert.match(full, new RegExp('data-league-all="NHL" aria-pressed="true">Remove all ' + nhl.length));
+  const following = full.slice(full.indexOf('class="picked-first"'), full.indexOf('<details class="lg-group', full.indexOf('class="picked-first"')));
+  assert.match(following, new RegExp('data-league-all="NHL"[^>]*>[\\s\\S]*?' + nhl.length + ' teams'));
+  assert.doesNotMatch(following, /data-team="/,
+    "a fully followed league is one removable summary, not thirty-two chips");
+});
+
+test("the same league action adds everyone, then removes only that league", () => {
+  const P = board();
+  const nhl = Object.values(P.TEAMS).filter(t => t.home === "NHL" && !t.ghost).map(t => t.id);
+  const m = bulkModel(["liv"]);
+  assert.deepEqual(m.toggleLeagueTeams("NHL"), {selected:true, total:nhl.length});
+  assert.ok(nhl.every(id => globalThis.__bulkSelected.has(id)));
+  assert.ok(globalThis.__bulkSelected.has("liv"), "another league is untouched");
+
+  assert.deepEqual(m.toggleLeagueTeams("NHL"), {selected:false, total:nhl.length});
+  assert.ok(nhl.every(id => !globalThis.__bulkSelected.has(id)));
+  assert.deepEqual([...globalThis.__bulkSelected], ["liv"]);
+});
+
+test("Clear all teams is a guarded master action and leaves non-team follows alone", () => {
+  const html = drawer({selected:["liv","van-nhl"]});
+  assert.match(html, /data-clear-teams>Clear all teams<\/button>/);
+  assert.doesNotMatch(drawer(), /data-clear-teams/);
+  assert.match(SRC, /data-confirm","true"/);
+  assert.match(SRC, /Tap again to clear/);
+
+  const m = bulkModel(["liv","van-nhl","rugby-intl"]);
+  assert.equal(m.pickedTeamCount(), 2);
+  assert.equal(m.clearAllPickedTeams(), 2);
+  assert.deepEqual([...globalThis.__bulkSelected], ["rugby-intl"],
+    "rugby, tennis and race preferences are separate from team ids");
 });
 
 test("searching lifts the cap, because you asked for something by name", () => {
