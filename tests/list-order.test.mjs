@@ -27,8 +27,8 @@ const SRC = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
 
 const renderListSrc = /function renderList\([\s\S]*?\n\}/.exec(SRC)[0];
 
-test("the list is composed in one order: setup, history, then the schedule", () => {
-  const order = ["welcomeBanner()", "renderFilters()", "servicesHint()", "renderResults("];
+test("the list is composed in one order: welcome, compact controls, then schedule", () => {
+  const order = ["welcomeBanner()", "renderHomeTools(now,todayKey)"];
   let at = -1;
   for(const piece of order){
     const next = renderListSrc.indexOf(piece, at + 1);
@@ -45,11 +45,10 @@ test("the reference material stays at the bottom", () => {
   assert.ok(renderListSrc.indexOf("noteBlock()") > days);
 });
 
-test("the empty branch keeps the same order, with results above the empty state", () => {
+test("the empty branch keeps compact controls above the empty state", () => {
   const empty = /if\(!games\.length\)\{[\s\S]*?\n  \}/.exec(renderListSrc)[0];
-  assert.ok(empty.indexOf("renderResults(") < empty.indexOf("emptyState()"),
-    "history above the empty state, as in the populated branch");
-  assert.ok(empty.indexOf("renderFilters()") < empty.indexOf("renderResults("));
+  assert.ok(empty.indexOf("renderHomeTools(now,todayKey)") < empty.indexOf("emptyState()"),
+    "the useful controls stay above the empty state");
 });
 
 test("the coverage panel is no longer built into the page body", () => {

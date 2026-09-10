@@ -116,3 +116,78 @@ Date: 2026-09-10
   the final native launch check.
 
 final result: passed, with native launch to be confirmed in Xcode
+
+---
+
+# Compact header, swipe agenda and adaptive context strip design QA
+
+Date: 2026-09-10
+
+## Visual truth
+
+- Approved direction: `/Users/patrick/.codex/generated_images/01a087cd-16f2-7d52-9b3f-0c488ab5eb5b/exec-7589a905-d9b8-4d9d-8ddd-eb5302c225d2.png`.
+- Final 390 × 844 implementation: `/private/tmp/gdn-redesign-final-390.png`.
+- Same-input comparison: `/private/tmp/gdn-design-compare.png`.
+- Final 320 × 844 implementation: `/private/tmp/gdn-redesign-final-320.png`.
+- Open states checked separately: title menu, sports filter, one-race panel,
+  and Recent results with five existing production game cards.
+
+The reference pictured a live four-game day; the current feed had no personal
+game on September 10, so the implementation comparison shows the designed
+zero-today fallback and the next known fixture instead. Live-rail styling and
+ordering are covered by the same render path and automated checks.
+
+## Visual comparison
+
+- The header is now one line at both widths: title/menu trigger, score control,
+  and List/Calendar switch. The full title fits at 390 px; the score label gives
+  way to its accessible eye control at 320 px.
+- My Teams and My Services moved into a compact title menu with their current
+  counts. The existing full-width drawers remain unchanged behind those rows.
+- What's On is a light, horizontally swipeable set of matchup cards. Cards use
+  names, sport and time/status only. A live item gets the sole strong red badge,
+  a light warm fill and a quiet red border; scores and team icons stay out.
+- All sports, In the Race and Recent results share one compact strip. All three
+  labels remain one line at 390 and 320 px. When a race is unavailable, the
+  remaining controls divide the available width automatically.
+- The one available race opens inline without pushing a selector above it.
+  Multiple-race markup includes a horizontal selector and the closed label adds
+  `+N`.
+- Recent results opens inline and reuses the existing game-card renderer. Team
+  icons, records, scores, Listed badges, carriers, venues and save controls
+  therefore remain identical to the main schedule.
+- The detailed game layout was not redesigned. Live rows now use only a very
+  light warm surface tint; the previous red left border was removed.
+- No horizontal page or header overflow was measured at either phone width.
+
+## Behaviour and interaction checks
+
+- Title menu opens, closes on outside press/Escape, and closes when either setup
+  drawer opens. Opening one setup drawer still closes the other.
+- Sports, race and results controls are mutually exclusive and retain the
+  existing stored race/results open preferences.
+- The race control is absent when there is no valid active race or scores are
+  hidden. One race shows its short status; multiple races expose a selector.
+- Recent results respects the score-visibility setting because it continues to
+  use the production row renderer.
+- Tennis's top-draw explanation moved beside the first tennis day as a compact
+  press disclosure; tennis match rows were not changed.
+- What's On still sorts live, upcoming and finished items, keeps finished games
+  for the local day, and jumps to the exact detailed row. The See all action
+  uses that same jump path.
+- Save/bookmark ordering, localStorage preferences, share links, external-link
+  routing, offline schedule cache and strict native host rules remain covered by
+  the passing suite.
+- Browser console errors: none.
+
+## Build verification
+
+- Automated tests: 891 passed, 0 failed.
+- Web build: passed; `index.html` regenerated from the shared source.
+- Capacitor asset build and iOS copy: passed; the same rebuilt interface is in
+  `ios/App/App/public/`.
+- Command-line Xcode launch remains blocked by Codex access to the host's
+  CoreSimulator/SwiftPM cache folders. The project was already running in the
+  user's Xcode simulator before this visual pass and is ready to rerun there.
+
+final result: passed

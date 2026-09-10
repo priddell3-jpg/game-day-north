@@ -57,15 +57,17 @@ test("the status text itself is never wrapped into ambiguity", () => {
   assert.match(ruleFor(css, ".countdown"), /white-space\s*:\s*nowrap/);
 });
 
-/* --- the header, now carrying a fourth control --- */
+/* --- the compact, one-line header --- */
 
-test("the top bar is allowed to wrap rather than overflow", () => {
-  /* A wordmark and four controls do not fit 320px on one line and are
-     not meant to. What must not happen is the row staying one line and
-     pushing a control off the side. */
+test("the top bar stays on one line because setup moved into the title menu", () => {
   const rule = ruleFor(mobile, ".topbar-in");
   assert.ok(rule, ".topbar-in must be addressed at the mobile breakpoint");
-  assert.match(rule, /flex-wrap\s*:\s*wrap/);
+  assert.match(rule, /flex-wrap\s*:\s*nowrap/);
+  const header = /<header class="topbar">[\s\S]*?<\/header>/.exec(SRC)[0];
+  assert.match(header, /id="appMenuToggle"/);
+  assert.match(header, /id="appMenu"/);
+  assert.ok(header.indexOf('id="teamsToggle"') > header.indexOf('id="appMenu"'));
+  assert.ok(header.indexOf('id="servicesToggle"') > header.indexOf('id="appMenu"'));
 });
 
 test("the iOS header reserves the native safe area", () => {
@@ -76,40 +78,34 @@ test("the iOS header reserves the native safe area", () => {
 
 test("the mobile header keeps its horizontal gutter while adding vertical padding", () => {
   const rule = ruleFor(mobile, ".topbar-in");
-  assert.match(rule, /padding-top\s*:\s*6px/);
-  assert.match(rule, /padding-bottom\s*:\s*6px/);
+  assert.match(rule, /padding-top\s*:\s*5px/);
+  assert.match(rule, /padding-bottom\s*:\s*5px/);
   assert.doesNotMatch(rule, /padding\s*:\s*10px\s+0/,
     "a shorthand must not erase the .wrap side padding");
 });
 
-test("what's on has a page heading outside the dark rail", () => {
+test("what's on has a page heading above the swipeable rail", () => {
   const section = /<section class="whats-on"[\s\S]*?<\/section>/.exec(SRC);
   assert.ok(section, "expected the What's on section");
   assert.ok(section[0].indexOf('class="rail-head"') < section[0].indexOf('class="rail"'));
   assert.match(section[0], /id="railCount"/);
 });
 
-test("the header buttons carry a short label for the narrowest screens", () => {
-  /* Both labels ship and the breakpoint chooses, rather than JavaScript
-     rewriting the button as the window moves. */
-  assert.match(css, /\.lbl-short\{display:none\}/);
-  const short = ruleFor(narrow, ".lbl-short");
-  const full = ruleFor(narrow, ".lbl-full");
-  assert.ok(short && full, "both labels must be addressed at 360");
-  assert.match(short, /display\s*:\s*inline/);
-  assert.match(full, /display\s*:\s*none/);
+test("teams and services no longer spend permanent header space", () => {
+  const header = /<header class="topbar">[\s\S]*?<\/header>/.exec(SRC)[0];
+  const menu = /<div class="app-menu"[\s\S]*?<\/div>\s*<\/div>/.exec(header)[0];
+  assert.match(menu, /My teams/);
+  assert.match(menu, /My services/);
+  assert.doesNotMatch(header.slice(header.indexOf('<div class="top-actions">')), /teamsToggle|servicesToggle/);
 });
 
-test("the narrow header compresses its controls enough to avoid a third row", () => {
-  assert.match(ruleFor(narrow, ".topbar-in"), /gap\s*:\s*6px/);
+test("the narrow header compresses its three visible pieces", () => {
+  assert.match(ruleFor(narrow, ".topbar-in"), /gap\s*:\s*4px/);
   const icon = ruleFor(narrow, ".icon-btn");
-  const seg = ruleFor(narrow, ".seg button");
-  const segWrap = ruleFor(narrow, ".seg");
-  assert.match(icon, /padding\s*:\s*5px(?:;|\})/);
+  const view = ruleFor(narrow, ".view-toggle");
+  assert.match(icon, /padding\s*:\s*5px\s+7px/);
   assert.match(icon, /font-size\s*:\s*11\.5px/);
-  assert.match(seg, /padding\s*:\s*5px\s+7px/);
-  assert.match(segWrap, /margin-left\s*:\s*0/,
-    "auto margin would consume the room the Services button needs");
+  assert.match(view, /min-width\s*:\s*64px/);
 });
 
 test("the score toggle drops to its icon at 320, and keeps a name", () => {

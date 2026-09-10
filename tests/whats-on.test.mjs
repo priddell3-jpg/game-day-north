@@ -82,8 +82,8 @@ test("every full schedule row carries a focusable jump destination", () => {
 });
 
 test("tapping a matchup switches to the list and highlights its row", () => {
-  const at = SRC.indexOf('document.getElementById("rail").addEventListener');
-  const body = SRC.slice(at, SRC.indexOf("/* The service cards", at));
+  const at = SRC.indexOf("function jumpToGame");
+  const body = SRC.slice(at, SRC.indexOf('document.getElementById("rail").addEventListener', at));
   assert.match(body, /view!=="list"/);
   assert.match(body, /scrollIntoView/);
   assert.match(body, /rail-jump/);

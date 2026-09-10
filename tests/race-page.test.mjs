@@ -523,15 +523,16 @@ test("below 360 the figures move under the name rather than truncating it", () =
 
 /* ============ where the section sits, and how much it costs shut ============ */
 
-test("history comes before the race, and both come before the schedule", () => {
+test("history and race share the compact controls before the schedule", () => {
   const src = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
   const list = src.slice(src.indexOf("function renderList("));
-  const results = list.indexOf("renderResults(now, todayKey)");
-  const races = list.indexOf("renderRaces(now)");
+  const tools = list.indexOf("renderHomeTools(now,todayKey)");
   const days = list.indexOf("groupByDay(games)");
-  assert.ok(results > -1 && races > -1 && days > -1);
-  assert.ok(results < races, "Recent results is above In the Race");
-  assert.ok(races < days, "and In the Race is above the schedule");
+  assert.ok(tools > -1 && days > -1);
+  assert.ok(tools < days, "the adaptive strip is above the schedule");
+  const home = src.slice(src.indexOf("function renderHomeTools("), src.indexOf("function renderList("));
+  assert.match(home, /kind:"races"/);
+  assert.match(home, /kind:"results"/);
 });
 
 test("the section arrives shut and remembers being opened", () => {

@@ -104,21 +104,21 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   backdrop-filter:saturate(1.4) blur(10px);
   border-bottom:1px solid var(--line);
 }
-.topbar-in{display:flex;align-items:center;gap:14px;height:60px}
-.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
-.brand-mark{
-  width:28px;height:28px;flex:none;border-radius:7px;background:var(--accent);
-  display:grid;place-items:center;color:#fff;font-family:var(--mono);
-  font-size:12px;font-weight:600;letter-spacing:-.5px;
+.topbar-in{display:flex;align-items:center;gap:8px;height:58px;white-space:nowrap}
+.brand{position:relative;display:flex;align-items:center;margin-right:auto;min-width:0}
+.app-menu-toggle{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:7px 3px;border-radius:8px;text-align:left}
+.app-menu-toggle:hover{background:var(--surface-2)}
+.app-menu-toggle[aria-expanded="true"] .picker-chevron{transform:rotate(225deg);margin-top:4px;margin-bottom:0}
+.brand-name{font-weight:800;font-stretch:118%;letter-spacing:-.2px;font-size:16px;overflow:hidden;text-overflow:ellipsis}
+.app-menu{
+  position:absolute;top:calc(100% + 8px);left:0;z-index:60;width:min(250px,calc(100vw - 28px));
+  padding:7px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 14px 34px rgba(12,17,32,.16)
 }
-.brand-name{font-weight:800;font-stretch:118%;letter-spacing:-.2px;font-size:16px;white-space:nowrap;margin:0}
-.brand-sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
-.seg button{
-  padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--muted);
-  transition:background .15s,color .15s;white-space:nowrap;
-}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.app-menu[hidden]{display:none}
+.app-menu .menu-item{display:flex;align-items:center;width:100%;min-height:44px;padding:9px 10px;border-radius:8px;text-align:left;font-size:13px;font-weight:700;color:var(--ink-2)}
+.app-menu .menu-item:hover,.app-menu .menu-item[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.app-menu .menu-count{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.top-actions{display:flex;align-items:center;gap:7px;flex:none}
 .icon-btn{
   display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--line);
   border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);
@@ -127,41 +127,45 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .icon-btn:hover{border-color:var(--line-strong)}
 .icon-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
 .eye{width:15px;height:15px;flex:none}
-/* Two words at a comfortable width, one at 320. The header carries four
-   controls now, and "My services" is the one that tipped it into a third
-   row on the narrowest phones. Both labels ship; the breakpoint chooses. */
-.lbl-short{display:none}
+.view-toggle{min-width:74px;justify-content:center}
 
 /* ---------- what's on ----------
-   The heading belongs to the page; the dark strip beneath it is only the
-   handful of things happening today. It is deliberately not a second
-   scoreboard. Scores, services and status stay in the full rows below. */
+   A compact personal agenda. It names what is happening and when, but it
+   never becomes a second scoreboard. Tapping any card lands on the full
+   row, where records, scores, services and the save control still live. */
 .whats-on{background:var(--ground)}
-.rail-head{display:flex;align-items:baseline;gap:9px;padding-top:9px;padding-bottom:6px}
+.rail-head{display:flex;align-items:center;gap:9px;padding-top:9px;padding-bottom:6px}
 .rail-head h2{
   margin:0;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.14em;
   text-transform:uppercase;color:var(--ink-2);
 }
 .rail-count{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.rail{background:var(--panel);color:var(--panel-ink);border-bottom:1px solid var(--line-strong);box-shadow:inset 0 -1px 0 var(--panel-line)}
-.rail-in{display:flex;align-items:stretch;min-height:48px}
-.rail-scroll{display:flex;overflow-x:auto;flex:1;scrollbar-width:none;overscroll-behavior-inline:contain}
+.rail-see{margin-left:auto;padding:4px 2px;font-size:11px;font-weight:700;color:var(--accent)}
+.rail-see[hidden]{display:none}
+.rail{background:var(--ground);color:var(--ink)}
+.rail-in{display:flex;align-items:stretch;min-height:0}
+.rail-scroll{display:flex;gap:8px;overflow-x:auto;flex:1;padding:0 0 10px;scrollbar-width:none;overscroll-behavior-inline:contain;scroll-snap-type:x proximity}
 .rail-scroll::-webkit-scrollbar{display:none}
 .rail-card{
-  flex:none;display:flex;align-items:baseline;gap:8px;min-width:max-content;
-  padding:11px 16px 11px 0;margin-right:16px;border-right:1px solid var(--panel-line);
-  color:var(--panel-ink);font-family:var(--mono);font-size:12px;text-align:left;white-space:nowrap;
+  flex:0 0 min(270px,74vw);display:grid;grid-template-columns:1fr auto;gap:5px 10px;
+  min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+  background:var(--surface);color:var(--ink);text-align:left;scroll-snap-align:start;box-shadow:0 1px 0 rgba(12,17,32,.02)
 }
-.rail-card:last-child{border-right:none;margin-right:0}
-.rail-card:hover{color:#fff}
+.rail-card.live{border-color:color-mix(in srgb,var(--live) 34%,var(--line));background:color-mix(in srgb,var(--live-soft) 52%,var(--surface))}
+.rail-card:hover{border-color:var(--line-strong)}
 .rail-card:active{opacity:.78}
-.rail-time{color:var(--panel-muted);font-size:10px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
-.rail-time.live{color:#FF8A9A;font-weight:600;text-transform:uppercase}
-.rail-time.final{color:var(--panel-muted);text-transform:uppercase}
-.rail-empty{display:block;color:var(--panel-muted);font-size:13.5px;line-height:1.55;padding:12px 0}
+.rail-matchup{grid-column:1/-1;display:flex;align-items:baseline;gap:5px;min-width:0;font-size:12.5px;font-weight:700;line-height:1.25}
+.rail-matchup span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-matchup .rail-v{flex:none;font-family:var(--mono);font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase}
+.rail-event{grid-column:1/-1;font-size:12.5px;font-weight:700;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-sport{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rail-time{justify-self:end;color:var(--muted);font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rail-live{display:inline-flex;align-items:center;border-radius:999px;padding:2px 6px;background:var(--live);color:#fff;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.rail-time.final{text-transform:uppercase}
+.rail-empty{display:block;min-width:0;color:var(--muted);font-size:13.5px;line-height:1.55;padding:10px 0 14px;overflow-wrap:anywhere}
 .rail-empty .countdown{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
 .rail-empty b{white-space:normal}
-.rail-empty b{color:var(--panel-ink);font-weight:700}
+.rail-empty b{color:var(--ink);font-weight:700}
 
 /* ---------- live dot ---------- */
 .dot-live{width:6px;height:6px;border-radius:50%;background:var(--live);display:inline-block;flex:none;animation:pulse 1.8s infinite}
@@ -233,7 +237,7 @@ main{padding:22px 0 80px}
 .day-games{border:1px solid var(--line);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden;background:var(--surface)}
 .game:last-child{border-bottom:none}
 .game:hover{background:var(--surface-2)}
-.game.is-live{border-left-color:var(--live);background:linear-gradient(90deg,var(--live-soft),var(--surface) 55%)}
+.game.is-live{border-left-color:transparent;background:color-mix(in srgb,var(--live-soft) 34%,var(--surface))}
 .game.rail-jump{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
 .g-time{font-family:var(--mono);font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.25}
 .g-time .ap{font-size:10px;color:var(--muted);margin-left:2px}
@@ -313,7 +317,7 @@ main{padding:22px 0 80px}
 .cal-ev.starred .mu{color:var(--accent);font-weight:700}
 .star-pip{font-size:10px;line-height:1;color:var(--accent);flex:none}
 .game.has-star{border-left-color:var(--accent)}
-.game.is-live.has-star{border-left-color:var(--live)}
+.game.is-live.has-star{border-left-color:var(--accent)}
 /* The venue's own day, where it differs from the reader's. A Saturday
    in Auckland is a Friday in Vancouver and the fixture is correctly
    grouped under Friday; this says so instead of looking like a mistake. */
@@ -355,8 +359,12 @@ main{padding:22px 0 80px}
    to understand why most of the draw is missing, not a chrome label like
    COMPETITIONS beside it. On the page ground, --muted lands at 4.28:1
    and this at 8.4. */
-.tennis-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 0 8px;
-  font-size:12px;color:var(--ink-2)}
+.tennis-note{margin:-2px 0 10px;border:1px dashed var(--line-strong);border-radius:9px;background:var(--surface)}
+.tennis-note summary{display:flex;align-items:center;gap:8px;min-height:38px;padding:7px 10px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+.tennis-note summary::-webkit-details-marker{display:none}
+.tennis-note summary::after{content:"\25BE";margin-left:auto;color:var(--muted);font-size:10px}
+.tennis-note[open] summary::after{content:"\25B4"}
+.tennis-note-in{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 10px 10px;font-size:11.5px;color:var(--ink-2)}
 .ru-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:2px 0 8px}
 
 /* ---------- empty ---------- */
@@ -402,13 +410,14 @@ main{padding:22px 0 80px}
     padding-left:max(14px, env(safe-area-inset-left));
     padding-right:max(14px, env(safe-area-inset-right));
   }
-  .brand-sub{display:none}
   /* Vertical padding only: a padding shorthand here used to erase the
      horizontal safe-area gutter inherited from .wrap and clip both ends
      of the header on an iPhone. */
-  .topbar-in{height:auto;padding-top:6px;padding-bottom:6px;flex-wrap:wrap;gap:8px}
-  .brand{flex:1 1 180px;margin-right:0}
-  .seg{margin-left:auto}
+  .topbar-in{height:54px;padding-top:5px;padding-bottom:5px;flex-wrap:nowrap;gap:6px}
+  .brand{flex:1 1 auto;margin-right:0;overflow:visible}
+  .top-actions{gap:5px}
+  .icon-btn{padding:5px 7px;gap:5px;font-size:11.5px}
+  .view-toggle{min-width:64px}
   .game{grid-template-columns:64px 1fr auto;gap:10px;padding:12px 8px 12px 10px}
   .g-watch{grid-column:2/3;align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:10px}
   .g-score{grid-column:3;grid-row:1;min-width:0}
@@ -418,8 +427,9 @@ main{padding:22px 0 80px}
   .bell svg{width:18px;height:18px}
   .cal-cell{min-height:70px}
   .cal-ev .tm{display:none}
-  .rail-head{padding-top:6px;padding-bottom:4px}
-  .rail-card{padding-top:10px;padding-bottom:10px}
+  .rail-head{padding-top:7px;padding-bottom:5px}
+  .rail-in{min-height:0}
+  .rail-card{flex-basis:min(248px,76vw)}
 }
 
 /* ---------- v2: coverage, confidence, competitions ---------- */
@@ -445,17 +455,15 @@ main{padding:22px 0 80px}
    unlikely. Reclaiming a few pixels of gap gives the name more room
    without narrowing the score column, which has to stay legible. */
 @media (max-width:360px){
-  /* Four controls and a wordmark do not fit one row at 320, and they are
-     not meant to: the bar wraps. What these do is keep the wrap to two
-     rows rather than three, by spending less on padding and on the word
-     "My", which the count beside the label makes redundant anyway. */
-  .topbar-in{gap:6px}
-  .icon-btn{padding:5px;gap:4px;font-size:11.5px}
-  .lbl-full{display:none}
-  .lbl-short{display:inline}
-  .seg{gap:1px;margin-left:0}
-  .seg button{padding:5px 7px;font-size:11.5px}
-  .brand-name{font-size:15px}
+  .topbar-in{gap:4px}
+  .brand-name{font-size:14.5px}
+  .app-menu-toggle{gap:6px;padding-left:0;padding-right:1px}
+  .top-actions{gap:4px}
+  .icon-btn{padding:5px 7px;gap:4px;font-size:11.5px}
+  .view-toggle{min-width:64px}
+  .tool-btn{padding-left:5px;padding-right:5px}
+  .tool-label{gap:3px;font-size:9.5px;white-space:nowrap}
+  .tool-state{font-size:7.5px}
   /* The open and closed eyes already differ, and the button keeps an
      aria-label saying which it is, so the word is the one thing here
      that can go without taking meaning with it. */
@@ -506,6 +514,34 @@ main{padding:22px 0 80px}
    in the pressed/unpressed language the chips beside it use. */
 .fchip-all{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border-style:dashed}
 .fchip[aria-pressed="true"] i{opacity:1}
+
+/* One small control surface replaces three stacked disclosures. The
+   strip adapts to what is useful: if no race exists, sport and history
+   split the width instead of leaving a dead third. */
+.home-tools{margin:14px 0 20px}
+.tool-strip{display:grid;grid-template-columns:repeat(var(--tool-count),minmax(0,1fr));border:1px solid var(--line);border-radius:11px;background:var(--surface);overflow:hidden}
+.tool-btn{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;min-height:54px;padding:8px 12px;text-align:left;border-right:1px solid var(--line)}
+.tool-btn:last-child{border-right:none}
+.tool-btn:hover,.tool-btn[aria-expanded="true"]{background:var(--surface-2)}
+.tool-label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;min-width:0}
+.tool-label .picker-chevron{margin-left:auto}
+.tool-btn[aria-expanded="true"] .picker-chevron{transform:rotate(225deg);margin-top:4px;margin-bottom:0}
+.tool-state{font-family:var(--mono);font-size:9px;letter-spacing:.055em;text-transform:uppercase;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tool-panel{border:1px solid var(--line);border-top:0;border-radius:0 0 11px 11px;background:var(--surface);overflow:hidden}
+.tool-panel .filter-options{border-top:0}
+.tool-panel .results-in{padding:14px 12px 2px}
+.tool-panel .races-in{padding:12px}
+.tool-empty{padding:15px;font-size:12.5px;color:var(--muted)}
+.home-race-select{display:flex;gap:6px;overflow-x:auto;padding:10px 12px 0;scrollbar-width:none}
+.home-race-select::-webkit-scrollbar{display:none}
+.home-race-option{flex:none;max-width:230px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-race-option[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+@media (max-width:519px){
+  .home-tools{margin-top:10px;margin-bottom:16px}
+  .tool-btn{min-height:50px;padding:7px 6px}
+  .tool-label{font-size:10.5px}
+  .tool-state{font-size:8px}
+}
 
 /* Coverage lives in the My services drawer, not in the page body. These
    are the pieces it is built from; the panel's own <details> chrome went
@@ -676,22 +712,22 @@ main{padding:22px 0 80px}
 <header class="topbar">
   <div class="wrap topbar-in">
     <div class="brand">
-      <div class="brand-mark">GD</div>
-      <div>
-        <h1 class="brand-name">Game Day North</h1>
-        <div class="brand-sub">Where to watch, coast to coast</div>
+      <button class="app-menu-toggle" id="appMenuToggle" aria-expanded="false" aria-controls="appMenu">
+        <span class="brand-name">Game Day North</span>
+        <span class="picker-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="app-menu" id="appMenu" role="menu" hidden>
+        <button class="menu-item" id="teamsToggle" role="menuitem" aria-pressed="false">My teams <span class="menu-count" id="teamCount"></span></button>
+        <button class="menu-item" id="servicesToggle" role="menuitem" aria-pressed="false">My services <span class="menu-count" id="serviceCount"></span></button>
       </div>
     </div>
-    <div class="seg" role="group" aria-label="View">
-      <button id="v-list" aria-pressed="true">List</button>
-      <button id="v-cal" aria-pressed="false">Calendar</button>
+    <div class="top-actions">
+      <button class="icon-btn" id="scoreToggle" aria-pressed="true" title="Show or hide scores everywhere">
+        <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span id="scoreToggleLabel">Scores on</span>
+      </button>
+      <button class="icon-btn view-toggle" id="viewToggle" aria-label="Switch to calendar view">Calendar</button>
     </div>
-    <button class="icon-btn" id="scoreToggle" aria-pressed="true" title="Show or hide scores everywhere">
-      <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-      <span id="scoreToggleLabel">Scores on</span>
-    </button>
-    <button class="icon-btn" id="teamsToggle" aria-pressed="false"><span class="lbl-full">My teams</span><span class="lbl-short">Teams</span> <span id="teamCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
-    <button class="icon-btn" id="servicesToggle" aria-pressed="false"><span class="lbl-full">My services</span><span class="lbl-short">Services</span> <span id="serviceCount" style="font-family:var(--mono);font-size:11px;opacity:.7"></span></button>
   </div>
 </header>
 
@@ -699,6 +735,7 @@ main{padding:22px 0 80px}
   <div class="wrap rail-head">
     <h2 id="railHeading">What&rsquo;s on</h2>
     <span class="rail-count" id="railCount"></span>
+    <button class="rail-see" id="railSeeAll" hidden>See all</button>
   </div>
   <div class="rail"><div class="wrap rail-in" id="rail"></div></div>
 </section>
@@ -3372,6 +3409,7 @@ let racePrefs = (function(){
   return (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
 })();
 let raceFull = new Set();
+let raceSelected = null;
 let firstRun = !LS.get("gdn.seen", false);   // a brand-new viewer starts on the sample set   // panels keep their open/closed state across re-renders
 
 function persist(){
@@ -4344,16 +4382,13 @@ function welcomeBanner(){
    spend two permanent lines on a setting that is changed occasionally,
    but opening it still reveals the same multi-select choices. */
 function renderFilters(){
+  const compact=arguments[0];
   const comps = myComps();
   if(comps.length<2) return "";
   const allHidden = comps.every(c=>hiddenComps.has(c));
   const shown = comps.filter(c=>!hiddenComps.has(c)).length;
   const state = allHidden ? "None showing" : shown===comps.length ? "All "+comps.length+" showing" : shown+" of "+comps.length+" showing";
-  return '<details class="filters"'+(filtersOpen?' open':'')+'><summary>'
-    + '<span class="lbl">Competitions</span><span class="filter-state">'+state+'</span>'
-    + '<span class="filter-action" aria-hidden="true"><span class="when-closed">Change</span><span class="when-open">Done</span></span>'
-    + '</summary><div class="filter-options">'
-    + comps.map(c=>'<button class="fchip" data-comp="'+c+'" aria-pressed="'+(!hiddenComps.has(c))+'">'
+  const options = '<div class="filter-options">' + comps.map(c=>'<button class="fchip" data-comp="'+c+'" aria-pressed="'+(!hiddenComps.has(c))+'">'
         + '<i style="background:'+COMPS[c].color+'"></i>'+esc(COMPS[c].short)+'</button>').join("")
     /* A stable id, because the attribute below flips on every press and
        focus is restored by whatever identified the element before the
@@ -4361,7 +4396,12 @@ function renderFilters(){
        because its own label changed. */
     + '<button class="fchip fchip-all" id="compsAll" data-comps-all="'+(allHidden ? "show" : "clear")+'">'
     + (allHidden ? "Show all" : "Clear all") + '</button>'
-    + '</div></details>';
+    + '</div>';
+  if(compact) return options;
+  return '<details class="filters"'+(filtersOpen?' open':'')+'><summary>'
+    + '<span class="lbl">Competitions</span><span class="filter-state">'+state+'</span>'
+    + '<span class="filter-action" aria-hidden="true"><span class="when-closed">Change</span><span class="when-open">Done</span></span>'
+    + '</summary>' + options + '</details>';
 }
 /* What the top-of-the-draw filter is doing, in one line, next to the
    control that undoes it.
@@ -4383,10 +4423,11 @@ function tennisNote(){
     ? "Showing all " + (shown + hidden) + " tennis matches in the draw."
     : "Showing " + shown + " of " + (shown + hidden) + " tennis matches &mdash; the top "
       + TENNIS_TOP + ", the quarterfinals on, and players you have starred.";
-  return '<div class="tennis-note"><span>' + said + '</span>'
+  return '<details class="tennis-note"><summary>Top tennis shown <span class="conf-note">' + shown + ' of ' + (shown + hidden) + '</span></summary>'
+    + '<div class="tennis-note-in"><span>' + said + '</span>'
     + '<button class="fchip fchip-all" id="tennisAll" data-tennis-all="'
     + (tennisAll ? "top" : "all") + '">'
-    + (tennisAll ? "Show the top " + TENNIS_TOP : "Show every match") + '</button></div>';
+    + (tennisAll ? "Show the top " + TENNIS_TOP : "Show every match") + '</button></div></details>';
 }
 
 /* Clearing hides every competition currently offered; showing empties
@@ -4449,7 +4490,7 @@ function servicesHint(){
 }
 
 /* ---------- results that already happened ---------- */
-function renderResults(now, todayKey){
+function renderResults(now, todayKey, compact){
   // Nothing followed yet: an empty results panel would say nothing useful,
   // and the welcome banner already explains what to do.
   if(!selected.size
@@ -4466,6 +4507,7 @@ function renderResults(now, todayKey){
   const past = myGames().filter(g=>g.start>=from && g.start<midnight.getTime()
     && (g.listed || g.espn) && !g.event).sort((a,b)=>b.start-a.start);
   if(!past.length){
+    if(compact) return '<div class="tool-empty">No confirmed fixtures for your teams in the last three days. Real fixtures appear here as soon as the feed covers them.</div>';
     return '<details class="results"'+(resultsOpen?" open":"")+'>'
       + '<summary>Recent results<span class="conf-note">last 3 days &middot; nothing confirmed</span></summary>'
       + '<div class="results-in"><div class="note">No confirmed fixtures for your teams in the last three days. '
@@ -4488,6 +4530,7 @@ function renderResults(now, todayKey){
         ? (scored ? ' &middot; ' + scored + ' final score' + (scored===1?"":"s")
                   : ' &middot; no scores available')
         : '');
+  if(compact) return '<div class="results-in">'+inner+'</div>';
   return '<details class="results"'+(resultsOpen?" open":"")+'>'
     + '<summary>Recent results<span class="conf-note">'+counts+'</span></summary>'
     + '<div class="results-in">'+inner+'</div></details>';
@@ -4728,7 +4771,7 @@ function racePrefsHtml(now){
     + '</div></details>';
 }
 
-function renderRaces(now){
+function renderRaces(now, compact){
   if(!selected.size && !followedRaces.length) return "";
   /* Every figure in this section is a result. Someone who has turned
      scores off has said they do not want last night's outcome on screen,
@@ -4742,6 +4785,14 @@ function renderRaces(now){
   const held = cards.some(c => raceHeldAt(c.grp));
   const line = cards.slice(0, 2).map(raceShort).join(" \u00b7 ")
     + (cards.length > 2 ? " \u00b7 +" + (cards.length - 2) + " more" : "");
+  if(compact){
+    if(!cards.some(c=>c.id===raceSelected)) raceSelected=cards[0].id;
+    const chosen=cards.find(c=>c.id===raceSelected) || cards[0];
+    const picker=cards.length>1 ? '<div class="home-race-select" aria-label="Choose a race">'
+      + cards.map(c=>'<button class="home-race-option" data-race-select="'+esc(c.id)+'" aria-pressed="'+(c.id===chosen.id)+'">'
+          + esc(c.title)+'</button>').join("") + '</div>' : "";
+    return picker + '<div class="races-in">' + raceCardHtml(chosen, now) + racePrefsHtml(now) + '</div>';
+  }
   return '<details class="races"' + (racesOpen ? " open" : "") + '>'
     + '<summary><span class="races-head"><b>In the Race</b>'
     + '<span class="conf-note">' + cards.length + ' relevant'
@@ -4840,7 +4891,64 @@ function emptyState(){
     return '<div class="empty"><b>Loading fixtures&hellip;</b>Fetching real schedules for your teams and followed races.</div>';
   return '<div class="empty"><b>Nothing scheduled</b>'
     + 'No published fixtures for your teams or followed races in the window we look at. Leagues out of season have none yet &mdash; they appear as soon as the schedule is released.'
-    + '<div><button class="icon-btn" id="emptyPick">Change teams</button></div></div>';
+      + '<div><button class="icon-btn" id="emptyPick">Change teams</button></div></div>';
+}
+
+function homeFilterState(){
+  const comps=myComps();
+  if(comps.length<2) return null;
+  const shown=comps.filter(c=>!hiddenComps.has(c)).length;
+  return {shown, total:comps.length, text:shown===comps.length ? comps.length+" sports" : shown+" of "+comps.length+" sports"};
+}
+function homeResultsState(now){
+  if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn()) return null;
+  const midnight=new Date(now); midnight.setHours(0,0,0,0);
+  const from=midnight.getTime()-RESULTS_DAYS*DAY;
+  const past=myGames().filter(g=>g.start>=from && g.start<midnight.getTime()
+    && (g.listed || g.espn) && !g.event);
+  const scored=past.filter(g=>stateOf(g,now).score).length;
+  return {past, text:past.length ? past.length+" game"+(past.length===1?"":"s")
+      +(showScores&&scored ? " \u00b7 "+scored+" final"+(scored===1?"":"s") : "") : "Nothing confirmed"};
+}
+function homeRaceState(now){
+  if((!selected.size && !followedRaces.length) || !showScores) return null;
+  const cards=raceCards(now,selected);
+  if(!cards.length) return null;
+  return {cards, text:raceShort(cards[0])+(cards.length>1 ? " \u00b7 +"+(cards.length-1) : "")};
+}
+function toggleHomeTool(kind){
+  const was = kind==="filters" ? filtersOpen : kind==="races" ? racesOpen : resultsOpen;
+  filtersOpen=kind==="filters" && !was;
+  racesOpen=kind==="races" && !was;
+  resultsOpen=kind==="results" && !was;
+  LS.set(RACES_OPEN_KEY,racesOpen);
+  LS.set(RESULTS_OPEN_KEY,resultsOpen);
+}
+function renderHomeTools(now,todayKey){
+  const filter=homeFilterState(), race=homeRaceState(now), results=homeResultsState(now);
+  const tools=[];
+  if(filter) tools.push({kind:"filters",label:"All sports",state:filter.text,open:filtersOpen});
+  if(race) tools.push({kind:"races",label:"In the Race",state:race.text,open:racesOpen});
+  if(results) tools.push({kind:"results",label:"Recent results",state:results.text,open:resultsOpen});
+  if(!tools.length) return "";
+  /* Old builds allowed results and races to be remembered open together.
+     Pick one deterministically on the first render; every new press uses
+     toggleHomeTool and therefore keeps the surface single-panel. */
+  const open=tools.find(t=>t.kind==="filters"&&t.open)
+    || tools.find(t=>t.kind==="races"&&t.open)
+    || tools.find(t=>t.kind==="results"&&t.open);
+  const buttons=tools.map(t=>'<button class="tool-btn" data-home-tool="'+t.kind+'" aria-expanded="'+(!!open&&open.kind===t.kind)+'">'
+      + '<span class="tool-label">'+t.label+'<span class="picker-chevron" aria-hidden="true"></span></span>'
+      + '<span class="tool-state">'+esc(t.state)+'</span></button>').join("");
+  let panel="";
+  if(open){
+    const inside=open.kind==="filters" ? renderFilters(true)
+      : open.kind==="races" ? renderRaces(now,true)
+      : renderResults(now,todayKey,true);
+    panel='<div class="tool-panel" data-tool-panel="'+open.kind+'">'+inside+'</div>';
+  }
+  return '<section class="home-tools" aria-label="Schedule controls"><div class="tool-strip" style="--tool-count:'+tools.length+'">'
+    + buttons + '</div>' + panel + '</section>';
 }
 
 function renderList(now, todayKey){
@@ -4862,12 +4970,14 @@ function renderList(now, todayKey){
      rights table and the data note stay at the bottom: reference, not
      answer. */
   if(!games.length){
-    return welcomeBanner() + renderFilters() + tennisNote() + servicesHint()
-      + renderResults(now, todayKey) + renderRaces(now) + emptyState();
+    return welcomeBanner() + renderHomeTools(now,todayKey) + emptyState();
   }
-  let out = welcomeBanner() + renderFilters() + tennisNote() + servicesHint()
-    + renderResults(now, todayKey) + renderRaces(now);
-  groupByDay(games).forEach((gs,k)=>{ out += daySection(k, gs, now, todayKey); });
+  let out = welcomeBanner() + renderHomeTools(now,todayKey);
+  let tennisHelp=tennisNote();
+  groupByDay(games).forEach((gs,k)=>{
+    if(tennisHelp && gs.some(g=>g.tennis)){ out+=tennisHelp; tennisHelp=""; }
+    out += daySection(k, gs, now, todayKey);
+  });
   return out + renderRights() + noteBlock();
 }
 
@@ -4938,7 +5048,7 @@ function renderCalendar(now, todayKey){
     detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day">'+(gs.length?daySection(selDay,gs,now,todayKey)
       :'<section class="day"><div class="day-head"><h3>'+esc(fmtDayLong(selDay))+'</h3><span class="n">No games</span></div></section>')+'</div>';
   } else detail='<div class="cal-detail" id="calDetail" role="region" aria-live="polite" aria-label="Selected day"><div class="note">Pick a day to see start times, scores and where each game is carried.</div></div>';
-  return welcomeBanner()+renderFilters()+tennisNote()+head+grid+detail;
+  return welcomeBanner()+renderHomeTools(now,todayKey)+head+grid+detail;
 }
 
 /* Who is playing, whatever the sport. The rail and the "next up" line
@@ -4949,6 +5059,12 @@ function matchupLabel(g){
   if(g.event) return [g.race, g.stage].filter(Boolean).join(" \u00b7 ");
   const o = orderedTeams(g);
   return fullName(o.a) + " " + o.sep + " " + fullName(o.b);
+}
+function railMatchupParts(g){
+  if(g.event) return {event:[g.race,g.stage].filter(Boolean).join(" \u00b7 ")};
+  if(g.tennis) return {a:g.match.players[0].name,b:g.match.players[1].name,sep:"v"};
+  const o=orderedTeams(g);
+  return {a:fullName(o.a),b:fullName(o.b),sep:o.sep};
 }
 /* Only a source-confirmed finish puts a game in the finished group. An
    unresolved score after its nominal start is not silently called
@@ -5014,12 +5130,15 @@ function railStateLabel(g, now){
 function renderRail(now, todayKey){
   const el=document.getElementById("rail");
   const count=document.getElementById("railCount");
+  const see=document.getElementById("railSeeAll");
   /* Competition filters shape the full schedule below, not this personal
      agenda. A hidden league can still contain one of the teams, players
      or races the viewer explicitly follows. */
   const today=GAMES.filter(g=>isMine(g) && localKey(g.start)===todayKey);
   today.sort((a,b)=>railCompare(a,b,now));
   count.textContent=today.length+" today";
+  see.hidden=today.length<2;
+  see.setAttribute("data-first-game",today.length ? String(today[0].id) : "");
   if(!today.length){
     const next=myGames().find(g=>g.start>now);
     el.innerHTML=next
@@ -5036,10 +5155,15 @@ function renderRail(now, todayKey){
   el.innerHTML='<div class="rail-scroll">'+today.map(card).join("")+'</div>';
 }
 function railCard(g, now){
-  const label=matchupLabel(g), state=railState(g,now), meta=railStateLabel(g,now);
-  return '<button class="rail-card" data-rail-game="'+esc(String(g.id))+'" aria-label="Jump to '+esc(label)+' in the schedule'+(meta?', '+esc(meta):'')+'">'
-    + '<span>'+esc(label)+'</span>'
-    + (meta?'<span class="rail-time '+state+'"><span aria-hidden="true">&middot;</span> '+esc(meta)+'</span>':'')
+  const label=matchupLabel(g), parts=railMatchupParts(g), state=railState(g,now), meta=railStateLabel(g,now);
+  const comp=(COMPS[g.comp]||{short:g.comp||"Event"}).short;
+  const names=parts.event
+    ? '<span class="rail-event">'+esc(parts.event)+'</span>'
+    : '<span class="rail-matchup"><span>'+esc(parts.a)+'</span><span class="rail-v">'+esc(parts.sep)+'</span><span>'+esc(parts.b)+'</span></span>';
+  const status=state==="live" ? '<span class="rail-live">Live</span>'
+    : (meta ? '<span class="rail-time '+state+'">'+esc(meta)+'</span>' : '<span></span>');
+  return '<button class="rail-card '+state+'" data-rail-game="'+esc(String(g.id))+'" aria-label="Jump to '+esc(label)+' in the schedule'+(meta?', '+esc(meta):'')+'">'
+    + names + '<span class="rail-sport">'+esc(comp)+'</span>' + status
     + '</button>';
 }
 
@@ -5278,6 +5402,8 @@ function render(){
       : active.getAttribute("data-comp") ? "comp:" + active.getAttribute("data-comp")
       : active.getAttribute("data-reveal") ? "reveal:" + active.getAttribute("data-reveal")
       : active.getAttribute("data-race") ? "race:" + active.getAttribute("data-race")
+      : active.getAttribute("data-home-tool") ? "tool:" + active.getAttribute("data-home-tool")
+      : active.getAttribute("data-race-select") ? "raceSelect:" + active.getAttribute("data-race-select")
       : active.getAttribute("data-player") ? "player:" + active.getAttribute("data-player")
       : active.id ? "id:" + active.id : null)
     : null;
@@ -5289,7 +5415,8 @@ function render(){
   if(focusKey){
     const [kind, val] = [focusKey.slice(0, focusKey.indexOf(":")), focusKey.slice(focusKey.indexOf(":")+1)];
     const attr = {day:"data-day", alert:"data-alert", comp:"data-comp",
-                  reveal:"data-reveal", race:"data-race", player:"data-player"}[kind];
+                  reveal:"data-reveal", race:"data-race", tool:"data-home-tool",
+                  raceSelect:"data-race-select", player:"data-player"}[kind];
     let el = null;
     try{ el = kind==="id" ? main.querySelector("#"+CSS.escape(val))
                           : main.querySelector("["+attr+'="'+CSS.escape(val)+'"]'); }catch(e){}
@@ -5304,8 +5431,9 @@ function render(){
      counts move whenever the fixtures do, and a drawer left open through
      a refresh would otherwise sit on figures from half an hour ago. */
   if(!svcDrawer.hasAttribute("hidden")) renderServices();
-  document.getElementById("v-list").setAttribute("aria-pressed",view==="list");
-  document.getElementById("v-cal").setAttribute("aria-pressed",view==="calendar");
+  const viewButton=document.getElementById("viewToggle");
+  viewButton.textContent=view==="list" ? "Calendar" : "List";
+  viewButton.setAttribute("aria-label",view==="list" ? "Switch to calendar view" : "Switch to list view");
   const stg=document.getElementById("scoreToggle");
   stg.setAttribute("aria-pressed",showScores);
   const scoreLabel = showScores ? "Scores on" : "Scores hidden";
@@ -5333,6 +5461,12 @@ function render(){
 }
 const drawer=document.getElementById("drawer");
 const svcDrawer=document.getElementById("svcDrawer");
+const appMenu=document.getElementById("appMenu");
+const appMenuToggle=document.getElementById("appMenuToggle");
+function setAppMenu(open){
+  appMenu.hidden=!open;
+  appMenuToggle.setAttribute("aria-expanded",open);
+}
 /* Two full-width strips under a sticky header, open together, leave a
    phone with no schedule on screen at all. So they take turns: opening
    one closes the other, and the buttons say which is showing. */
@@ -5341,6 +5475,7 @@ const DRAWERS = [
   {panel: svcDrawer, toggle: "servicesToggle", draw: () => renderServices()}
 ];
 function showDrawer(which){
+  if(typeof setAppMenu==="function") setAppMenu(false);
   DRAWERS.forEach(d=>{
     const open = d === which;
     if(open){ d.panel.removeAttribute("hidden"); d.draw(); }
@@ -5361,18 +5496,24 @@ function toggleRaceFollow(id){
      the fallback when that file is unavailable. */
   refreshLive();
 }
-document.getElementById("v-list").addEventListener("click",()=>{view="list";render();});
-document.getElementById("v-cal").addEventListener("click",()=>{view="calendar"; if(!selDay) selDay=ymd(new Date()); calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1); render();});
+appMenuToggle.addEventListener("click",()=>setAppMenu(appMenu.hidden));
+document.addEventListener("click",e=>{ if(!appMenu.hidden && !e.target.closest(".brand")) setAppMenu(false); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !appMenu.hidden){ setAppMenu(false); appMenuToggle.focus(); } });
+document.getElementById("viewToggle").addEventListener("click",()=>{
+  if(view==="list"){
+    view="calendar";
+    if(!selDay) selDay=ymd(new Date());
+    calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  } else view="list";
+  render();
+});
 document.getElementById("scoreToggle").addEventListener("click",()=>{showScores=!showScores; if(showScores) revealed.clear(); persist(); render();});
 document.getElementById("teamsToggle").addEventListener("click",function(){
   if(firstRun){ firstRun=false; LS.set("gdn.seen",true); render(); }
   toggleDrawer(drawer);
 });
 document.getElementById("servicesToggle").addEventListener("click",()=>toggleDrawer(svcDrawer));
-document.getElementById("rail").addEventListener("click",function(e){
-  const item=e.target.closest("[data-rail-game]");
-  if(!item) return;
-  const id=item.getAttribute("data-rail-game");
+function jumpToGame(id){
   /* The rail is intentionally independent of the competition filter.
      If its destination is hidden, reveal that competition so the jump
      cannot land on nothing. */
@@ -5393,6 +5534,14 @@ document.getElementById("rail").addEventListener("click",function(e){
     target.classList.add("rail-jump");
     setTimeout(()=>target.classList.remove("rail-jump"),1600);
   }));
+}
+document.getElementById("rail").addEventListener("click",function(e){
+  const item=e.target.closest("[data-rail-game]");
+  if(item) jumpToGame(item.getAttribute("data-rail-game"));
+});
+document.getElementById("railSeeAll").addEventListener("click",function(){
+  const id=this.getAttribute("data-first-game");
+  if(id) jumpToGame(id);
 });
 /* The service cards used to be in #main and were handled by its listener.
    They are in the drawer now, which that listener never sees. */
@@ -5450,6 +5599,10 @@ document.getElementById("teamGroups").addEventListener("click",function(e){
   }
 });
 document.getElementById("main").addEventListener("click",function(e){
+  const home=e.target.closest("[data-home-tool]");
+  if(home){ toggleHomeTool(home.getAttribute("data-home-tool")); render(); return; }
+  const raceChoice=e.target.closest("[data-race-select]");
+  if(raceChoice){ raceSelected=raceChoice.getAttribute("data-race-select"); racesOpen=true; render(); return; }
   const rev=e.target.closest("[data-reveal]"); if(rev){ revealed.add(rev.getAttribute("data-reveal")); render(); return; }
   const star=e.target.closest("[data-race-star]");
   if(star){ toggleRaceFollow(star.getAttribute("data-race-star")); return; }
