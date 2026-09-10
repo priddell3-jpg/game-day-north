@@ -173,6 +173,15 @@ test("the drawer has room for the coverage line it now carries", () => {
   assert.ok(ruleFor(css, ".svc-hint"), "the first-run hint must be styled");
 });
 
+test("carrier ownership is shown on the service itself, without a second badge", () => {
+  const pip = ruleFor(css, ".svc .pip");
+  assert.match(pip, /border-radius\s*:\s*50%/);
+  assert.match(pip, /border[^;]*var\(--line-strong\)/);
+  assert.match(ruleFor(css, ".svc.owned .pip"), /background\s*:\s*var\(--ok\)/);
+  assert.equal(ruleFor(css, ".tag-cov"), null);
+  assert.doesNotMatch(SRC, />You have it<|>Needs [^<]*</);
+});
+
 /* --- the save control --- */
 
 test("the save control keeps a 44px target on mobile", () => {

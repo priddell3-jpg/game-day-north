@@ -308,9 +308,13 @@ main{padding:22px 0 80px}
 .lg-tag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 6px;border-radius:4px;color:#fff}
 .g-watch{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
 .svc{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
-.svc .pip{width:5px;height:5px;border-radius:1px;background:var(--muted);flex:none}
-.svc.tv .pip{background:var(--accent);border-radius:1px}
-.svc.stream .pip{background:var(--ink-2);border-radius:50%}
+/* The dot answers the personal question directly: green is one of the
+   viewer's services, while an outline is another available carrier.
+   The aria-label supplied by carrierHtml says the same thing without
+   relying on colour. */
+.svc .pip{width:8px;height:8px;border:1.5px solid var(--line-strong);border-radius:50%;background:transparent;flex:none}
+.svc.owned .pip{border-color:var(--ok);background:var(--ok)}
+.svc-expected{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .svc-note{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .g-score{min-width:88px;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .score-line{font-family:var(--mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.1}
@@ -621,12 +625,8 @@ main{padding:22px 0 80px}
 .svc-hint b{font-weight:700;color:var(--ink)}
 .svc-hint .icon-btn{margin-left:auto;flex:none}
 
-.tag-cov{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:4px;font-weight:600}
-.tag-cov.have{background:var(--ok-soft);color:var(--ok)}
-.tag-cov.need{background:var(--warn-soft);color:var(--warn)}
 .svc.unconfirmed{color:var(--warn)}
-.svc.unconfirmed .pip{background:var(--warn)}
-.svc.expected{border-bottom:1px dashed var(--line-strong)}
+.svc.unconfirmed .pip{border-color:var(--warn);background:var(--warn)}
 .conf-note{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .conf-note.warn{color:var(--warn)}
 .tbd{opacity:.75;font-style:normal}
@@ -3761,8 +3761,8 @@ const SRC = {
   atptv:   {label:"ATP Tour — Watch Live, broadcaster list", url:"https://www.atptour.com/en/video/watch-live"},
   usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"}
 };
-const tv = n => ({name:n, kind:"tv"});
-const st = n => ({name:n, kind:"stream"});
+const tv = (n, confidence) => ({name:n, kind:"tv", confidence});
+const st = (n, confidence) => ({name:n, kind:"stream", confidence});
 const CDN_MLS = ["van-mls","tfc","mtl-mls"];
 
 /* Tennis rights attach to a tournament, never to a player. Following
@@ -3780,7 +3780,7 @@ const CDN_MLS = ["van-mls","tfc","mtl-mls"];
 
    A Grand Slam is not an ATP tour event and its rights are sold
    separately, so the ATP listing says nothing about Melbourne, Paris or
-   Wimbledon — those resolve to Coverage TBD rather than being assumed to
+   Wimbledon — those resolve to Coverage not confirmed rather than being assumed to
    follow the tour. Neither source covers the WTA tour at all, so a WTA
    event outside a Slam is unknown too. Guessing here would put a service
    badge on a match nobody can confirm is carried. */
@@ -3862,7 +3862,7 @@ const RIGHTS = [
   {comp:"LIGUE1", carriers:[], confidence:"unknown", note:"Canadian carrier not confirmed", src:SRC.none, checked:CHECKED},
 
   /* ---------------- MLS ---------------- */
-  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)), carriers:[st("MLS Season Pass"), tv("TSN")], confidence:"expected",
+  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)), carriers:[st("MLS Season Pass", "confirmed"), tv("TSN", "expected")], confidence:"expected",
    note:"Apple carries every match; TSN/RDS simulcast at least one Canadian club match a week — that simulcast window runs to 2026", src:SRC.wikica, checked:CHECKED},
   {comp:"MLS", carriers:[st("MLS Season Pass")], confidence:"confirmed",
    note:"Apple is global rightsholder, every match, through 2032", src:SRC.wikica, checked:CHECKED},
@@ -6598,6 +6598,28 @@ function servicesFor(g){
   return ids;
 }
 const covered = g => { const ids = servicesFor(g); return ids.length ? ids.some(s=>services.has(s)) : false; };
+/* An inferred carrier is useful while a game is distant. Inside five
+   days it either has a fixture-level confirmation or it does not: stop
+   presenting the inference as somewhere the viewer can watch. A carrier
+   may override its rule's confidence where a mixed rule has one certain
+   home and one possible simulcast (MLS Season Pass vs TSN). */
+function visibleRights(g, now){
+  const rights = resolveRights(g);
+  const near = g.start <= now + 5*DAY;
+  const carriers = rights.carriers.filter(w=>!near || (w.confidence || rights.confidence) !== "expected");
+  return Object.assign({}, rights, {carriers});
+}
+function carrierHtml(w, rights){
+  const serviceId = CARRIER_SERVICE[w.name];
+  const owned = !!(serviceId && services.has(serviceId));
+  const expected = (w.confidence || rights.confidence) === "expected";
+  const ownership = serviceId ? (owned ? "In your services" : "Not in your services") : "";
+  const label = [w.name, ownership, expected ? "Expected" : "Confirmed"].filter(Boolean).join(" — ");
+  return '<span class="svc '+w.kind+(owned?' owned':'')+(expected?' expected':'')+'"'
+    + ' title="'+esc([rights.note, ownership].filter(Boolean).join(" · "))+'" aria-label="'+esc(label)+'">'
+    + '<span class="pip" aria-hidden="true"></span>'+esc(w.name)
+    + (expected?'<span class="svc-expected">Expected</span>':'')+'</span>';
+}
 function coverageReport(now){
   const window = myGames().filter(g=>g.start>=now && g.start<now+90*DAY);
   const need = {}, out = {total:window.length, have:0, unknown:0};
@@ -6665,7 +6687,7 @@ const leadNote = g => (g.leader && g.leaderStage)
 /* A race is an event, not a matchup: one name, a stage, a route, and no
    scoreline. It shares the row grid so the columns still line up. */
 function eventRow(g, now){
-  const c = COMPS[g.comp], rights = resolveRights(g);
+  const c = COMPS[g.comp], rights = visibleRights(g, now);
   const day = localKey(g.start), today = ymd(new Date(now));
   const state = day < today ? "done" : day > today ? "ahead" : "today";
   /* "Today" is a date group, not a live state. A stage is only racing
@@ -6688,15 +6710,10 @@ function eventRow(g, now){
 
   let watch;
   if(!rights.carriers.length){
-    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Carrier TBC</span></div>';
+    watch = '<div class="g-watch"><span class="svc unconfirmed" title="'+esc(rights.note)+'"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const ids = servicesFor(g);
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs '+esc(((SERVICES[ids[0]]||{}).label)||"a sub")+'</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc '+w.kind+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   const reveal = showScores || revealed.has(g.id);
@@ -6780,7 +6797,7 @@ const RUGBY_STATE_TEXT = {
 };
 
 function rugbyRow(g, now){
-  const c = COMPS[g.comp], rights = resolveRights(g);
+  const c = COMPS[g.comp], rights = visibleRights(g, now);
   const state = (g.ru && g.ru.state) || "unknown";
   const live = rugbyIsActive(state) && state !== "unknown";
   const reveal = showScores || revealed.has(g.id);
@@ -6812,20 +6829,14 @@ function rugbyRow(g, now){
     + '</div>';
 
   /* Rugby carriage is unverified far more often than it is verified, so
-     the unknown case says "Coverage TBD" rather than naming a carrier
+     the unknown case says "Coverage not confirmed" rather than naming a carrier
      nobody has confirmed. */
   let watch;
   if(!rights.carriers.length){
-    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Coverage TBD</span>'
-      + '<span class="conf-note warn" title="'+esc(rights.note)+'">Not confirmed in Canada</span></div>';
+    watch = '<div class="g-watch"><span class="svc unconfirmed" title="'+esc(rights.note)+'"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs '+esc(SERVICES[servicesFor(g)[0]]?SERVICES[servicesFor(g)[0]].label:"a sub")+'</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc '+w.kind+(rights.confidence==="expected"?" expected":"")+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
-      + (rights.confidence==="expected"?'<span class="conf-note">Expected</span>':"")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   const said = RUGBY_STATE_TEXT[state] || "";
@@ -6907,12 +6918,12 @@ function venueTag(g){
    so the columns still line up with everything else. */
 const TENNIS_STATE = {
   live:     {text:"Live",      live:true},
-  suspended:{text:"Suspended", live:true,  note:"Play stopped &mdash; not finished"},
+  suspended:{text:"Suspended", live:true},
   final:    {text:"Final"},
-  retired:  {text:"Retired",   note:"Ended early &mdash; opponent retired"},
-  walkover: {text:"Walkover",  note:"Not played &mdash; opponent withdrew"},
-  canceled: {text:"Canceled",  note:"Match called off"},
-  postponed:{text:"Postponed", note:"Moved &mdash; new time not published"},
+  retired:  {text:"Retired",   note:"Opponent retired"},
+  walkover: {text:"Walkover",  note:"Opponent withdrew"},
+  canceled: {text:"Canceled"},
+  postponed:{text:"Postponed", note:"New time not published"},
   unknown:  {text:"Status unavailable"}
 };
 /* One set as it is actually written: games, and the tiebreak in
@@ -6955,7 +6966,7 @@ function setText(m, i, flip){
   return (a === null ? "-" : a) + "-" + (b === null ? "-" : b) + pick;
 }
 function tennisRow(g, now){
-  const m = g.match, c = COMPS[g.comp], rights = resolveRights(g);
+  const m = g.match, c = COMPS[g.comp], rights = visibleRights(g, now);
   const state = TENNIS_STATE[m.status] || TENNIS_STATE.unknown;
   const started = now >= m.start;
   /* Everything that says how the match went — the score, which name is
@@ -7041,16 +7052,10 @@ function tennisRow(g, now){
   let watch;
   if(!rights.carriers.length){
     watch = '<div class="g-watch"><span class="svc unconfirmed" title="' + esc(rights.note)
-      + '"><span class="pip"></span>Coverage TBD</span></div>';
+      + '"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const ids = servicesFor(g);
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs ' + esc(((SERVICES[ids[0]] || {}).label) || "a sub") + '</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc ' + w.kind + '" title="' + esc(rights.note)
-          + '"><span class="pip"></span>' + esc(w.name) + '</span>').join("")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   const played = (m.sets || []).some((_, i) => setText(m, i));
@@ -7119,7 +7124,7 @@ function gameRow(g, now){
   const st = stateOf(g, now), ts = timeState(g, now), c = COMPS[g.comp];
   const o = orderedTeams(g);
   if(ts.state==="tbd"){ if(o.flip) o.a = null; else o.b = null; }
-  const rights = resolveRights(g);
+  const rights = visibleRights(g, now);
   const reveal = showScores || revealed.has(g.id);
   const mineA = o.a && (selected.has(o.a.id)
     || (typeof raceIncluded !== "undefined" && raceIncluded.has(o.a.id)));
@@ -7154,7 +7159,8 @@ function gameRow(g, now){
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
     + (typeof inFollowedRace !== "undefined" && inFollowedRace(g)
       ?'<span class="pill race-follow" title="Included because you follow this playoff race">In followed race</span>':"")
-    + (g.listed?'<span class="pill confirmed" title="Real fixture from a published TV listing">Listed</span>':"")
+    + (g.listed && g.start > now + 5*DAY
+      ?'<span class="pill confirmed" title="Published fixture more than five days away">Listed</span>':"")
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
     + venueTag(g)
     /* Said on the fixture itself, not only in a note at the foot of the
@@ -7168,16 +7174,10 @@ function gameRow(g, now){
 
   let watch;
   if(!rights.carriers.length){
-    watch = '<div class="g-watch"><span class="svc unconfirmed"><span class="pip"></span>Carrier TBC</span>'
-      + '<span class="conf-note warn" title="'+esc(rights.note)+'">Not confirmed in Canada</span></div>';
+    watch = '<div class="g-watch"><span class="svc unconfirmed" title="'+esc(rights.note)+'"><span class="pip"></span>Coverage not confirmed</span></div>';
   } else {
-    const cov = services.size ? (covered(g)
-      ? '<span class="tag-cov have">You have it</span>'
-      : '<span class="tag-cov need">Needs '+esc(SERVICES[servicesFor(g)[0]]?SERVICES[servicesFor(g)[0]].label:"a sub")+'</span>') : "";
     watch = '<div class="g-watch">'
-      + rights.carriers.map(w=>'<span class="svc '+w.kind+(rights.confidence==="expected"?" expected":"")+'" title="'+esc(rights.note)+'"><span class="pip"></span>'+esc(w.name)+'</span>').join("")
-      + (rights.confidence==="expected"?'<span class="conf-note">Expected</span>':"")
-      + cov + '</div>';
+      + rights.carriers.map(w=>carrierHtml(w, rights)).join("") + '</div>';
   }
 
   let scoreCell = '<div class="g-score">';
@@ -7705,7 +7705,6 @@ function renderRights(){
 
 function noteBlock(){
   const n = alerts.size;
-  const listed = myGames().filter(g=>g.listed||g.espn).length;
   const savedSchedule = staticSource==="cache" || staticSource==="bundle";
   const savedLabel = staticSource==="cache" ? "the last saved schedule" : "the schedule bundled with this app";
   const statePlace = (typeof window!=="undefined" && window.GDNNative && window.GDNNative.isNative)
@@ -7756,9 +7755,7 @@ function noteBlock(){
         + (liveErr?'<span class="conf-note warn">reason: '+esc(liveErr)+'</span> ':'')
       : '<b>Checking for live data&hellip;</b> ';
   return '<div class="note">' + liveLine
-    + 'Fixtures marked <span class="pill confirmed">Listed</span> are real'
-    + (listed?' &mdash; <b>'+listed+'</b> of your upcoming games right now':'')
-    + '. Everything else is projected from the rights table below, which is real and sourced. '
+    + 'Games inside five days show only confirmed carriers. Longer-range coverage may be marked <span class="pill expected">Expected</span> until a fixture-level listing appears. '
     + 'Your teams, services and score setting are stored '+statePlace+' only &mdash; anyone else opening the same link sets up their own. '
     + (n? '<b>'+n+'</b> game'+(n===1?"":"s")+' saved '+statePlace+'.'
         : 'Save a game to mark it here &mdash; a bookmark '+statePlace+', not a notification.')

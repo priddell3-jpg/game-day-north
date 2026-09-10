@@ -369,7 +369,7 @@ const ROW_PREAMBLE = `
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
-  "covered","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag",
+  "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag",
   "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope",
   "RESULTS_DAYS","spoiledTeams","gameRow"];
 
@@ -464,6 +464,17 @@ test("with scores switched on, a finished game shows records like any other", ()
   const p = rowHarness([FINISHED, UPCOMING], ROW_PREAMBLE.replace("showScores = false", "showScores = true"));
   assert.match(p.gameRow(FINISHED, NOW), /1st in the Atlantic/);
   assert.match(p.gameRow(UPCOMING, NOW), /1st in the Atlantic/);
+});
+
+test("a soccer result keeps the deciding reason supplied by the live source", () => {
+  const england = TEAM("eng", "", "England", "EPL");
+  const france = TEAM("fra", "", "France", "EPL");
+  const penalties = game({comp:"EPL", home:england, away:france,
+    result:{status:"final", label:"England won on penalties", score:[1,1]}});
+  const p = rowHarness([penalties], ROW_PREAMBLE.replace("showScores = false", "showScores = true"));
+  const html = p.gameRow(penalties, NOW);
+  assert.match(html, /England won on penalties/);
+  assert.doesNotMatch(html, /Ended early|Game ended/);
 });
 
 test("the suppressed set is worked out once, over the board, not per row", () => {

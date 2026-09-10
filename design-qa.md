@@ -267,6 +267,16 @@ Date: 2026-09-10
   from drifting away from the main schedule.
 - A cycling event is tinted as live only while it is actually underway. Merely
   occurring today no longer gives a completed stage live styling.
+- Near-term cards now omit the generic Listed badge and show only confirmed
+  carriers. Expected alternatives remain visible only more than five days out;
+  the mixed MLS rule keeps MLS Season Pass confirmed while treating TSN as the
+  possible simulcast it is.
+- Each displayed carrier now owns its availability signal: a green circular
+  dot means it is in the viewer's selected services and a neutral outlined dot
+  means it is not. The duplicate You have it/Needs badge has been removed, and
+  the same state is included in the carrier's accessible name.
+- Exceptional result notes state only the useful reason (`Opponent retired`,
+  `Opponent withdrew`) and sit below any next-opponent message.
 
 ## Visual and interaction result
 
@@ -276,8 +286,8 @@ Date: 2026-09-10
 - No horizontal overflow or browser console warnings/errors were found at
   390 x 844. Existing colours, typography, card borders and spacing tokens were
   retained so the change belongs to the current design system.
-- Save controls remain 44 x 44 px. Bookmark behaviour, score hiding, services,
-  records, links and card jump targets were not changed.
+- Save controls remain 44 x 44 px. Bookmark behaviour, score hiding, records,
+  links and card jump targets were not changed.
 
 ## Evidence limits
 
@@ -288,7 +298,7 @@ Date: 2026-09-10
 
 ## Build verification
 
-- Automated tests: 898 passed, 0 failed.
+- Automated tests: 901 passed, 0 failed.
 - Web build: passed; `index.html` regenerated from the shared source.
 - Capacitor web assets rebuilt and copied into `ios/App/App/public/`.
 

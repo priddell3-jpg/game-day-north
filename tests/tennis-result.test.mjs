@@ -40,7 +40,7 @@ const PREAMBLE = `
 const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "US_OPEN","resolveRights","SOCCER","esc","inkOn","pad","ymd","normName","fmtTime","fmtShortDate",
   "countdownText","BELL","saveButton","servicesFor","covered","RESULTS_DAYS","TENNIS_SETTLED",
-  "TENNIS_STATE","setText","setHtml","setTally","tourneyOf","spoiledPlayers","playerSpoiled",
+  "visibleRights","carrierHtml","TENNIS_STATE","setText","setHtml","setTally","tourneyOf","spoiledPlayers","playerSpoiled",
   "TBD_PLAYER","nextMatchFor","nextOpponentLine","RANK_STALE_DAYS","attachRankings",
   "rankOfPlayer","rankLine","tennisRow"];
 
@@ -188,6 +188,8 @@ test("a retirement is a result: winner first, def, and the sets that were played
   assert.match(html, /<b>6<\/b>-4/, "the completed set, turned round");
   assert.match(html, /2-1/, "and the one abandoned, unmarked");
   assert.match(html, /class="conf-note match-note"/, "the unusual ending gets its own message row");
+  assert.match(html, />Opponent retired<\/span>/);
+  assert.doesNotMatch(html, /Ended early/);
   assert.ok(html.indexOf('class="next-up"') < html.indexOf('class="conf-note match-note"'),
     "what comes next is read before the special notice explaining the result");
 });
@@ -209,6 +211,8 @@ test("a walkover has a winner and no sets, and can still be hidden and revealed"
   assert.match(html, /class="vs">def</);
   assert.ok(html.indexOf("Carlos Alcaraz") < html.indexOf("Tommy Paul"));
   assert.doesNotMatch(html, /class="set"/, "no sets were played and none are invented");
+  assert.match(html, />Opponent withdrew<\/span>/);
+  assert.doesNotMatch(html, /Not played/);
 });
 
 test("a finished match with no score published still reads as a result", () => {

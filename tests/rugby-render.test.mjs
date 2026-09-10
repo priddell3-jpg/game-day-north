@@ -47,7 +47,7 @@ const isStarredPlayer = () => false;
 const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","RUGBY_ACTIVE","RUGBY_TERMINAL","rugbyIsActive","rugbyIsTerminal",
   "esc","inkOn","pad","ymd","fmtTime","fmtShortDate","countdownText","BELL","saveButton",
-  "provenanceOf","servicesFor","covered","venueDayNote","RUGBY_STATE_TEXT","isStarred","rugbyRow"];
+  "provenanceOf","servicesFor","covered","visibleRights","carrierHtml","venueDayNote","RUGBY_STATE_TEXT","isStarred","rugbyRow"];
 
 function page(over = ""){ return loadFromPage(NAMES, PREAMBLE + over); }
 
@@ -212,18 +212,17 @@ test("the Autumn Nations Series names DAZN", () => {
   assert.match(page().rugbyRow(row({comp:"RUANS"}), NOW), /DAZN/);
 });
 
-test("an unverified competition says Coverage TBD and names no carrier", () => {
+test("an unverified competition says coverage is not confirmed and names no carrier", () => {
   for(const comp of ["RUTEST", "RUPNC", "RUWNC", "RUTRC", "RURWC", "RULIONS"]){
     const html = page().rugbyRow(row({comp}), NOW);
-    assert.match(html, /Coverage TBD/, comp);
-    assert.match(html, /Not confirmed in Canada/, comp);
+    assert.match(html, /Coverage not confirmed/, comp);
     assert.doesNotMatch(html, /You have it/, comp);
   }
 });
 
 test("a Lions tour does not inherit the 2025 carrier", () => {
   const html = page().rugbyRow(row({comp:"RULIONS"}), NOW);
-  assert.match(html, /Coverage TBD/);
+  assert.match(html, /Coverage not confirmed/);
   // the 2025 listing is recorded in the note, not asserted as current
   const rule = /\{comp:"RULIONS"[\s\S]*?\},\n/.exec(SRC)[0];
   assert.match(rule, /confidence:"unknown"/);
@@ -233,13 +232,16 @@ test("a Lions tour does not inherit the 2025 carrier", () => {
 test("an uncertain competition is never marked as covered", () => {
   const p = page(`services = new Set(["dazn","premier","sportsnet","tsn"]);`);
   const html = p.rugbyRow(row({comp:"RUTEST"}), NOW);
-  assert.doesNotMatch(html, /You have it/);
-  assert.match(html, /Coverage TBD/);
+  assert.doesNotMatch(html, /class="svc [^"]*owned/);
+  assert.match(html, /Coverage not confirmed/);
 });
 
 test("Premier Sports is a service someone can say they subscribe to", () => {
   const p = page(`services = new Set(["premier"]);`);
-  assert.match(p.rugbyRow(row({comp:"RU6N"}), NOW), /You have it/);
+  const html = p.rugbyRow(row({comp:"RU6N"}), NOW);
+  assert.match(html, /class="svc stream owned"/);
+  assert.match(html, /aria-label="Premier Sports[^\"]*In your services/);
+  assert.doesNotMatch(html, /You have it/);
   assert.equal(p.SERVICES.premier.label, "Premier Sports");
   assert.equal(p.CARRIER_SERVICE["Premier Sports"], "premier");
 });

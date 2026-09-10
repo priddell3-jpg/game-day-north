@@ -324,7 +324,7 @@ test("the row honours the scores toggle, with a per-match reveal", () => {
 test("uncertain Canadian coverage is stated, not guessed", () => {
   const at = SRC.indexOf("function tennisRow");
   const body = SRC.slice(at, SRC.indexOf("\nfunction gameRow", at));
-  assert.match(body, /Coverage TBD/);
+  assert.match(body, /Coverage not confirmed/);
 });
 
 test("every tennis lifecycle state has words of its own", () => {
