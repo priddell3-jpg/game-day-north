@@ -58,15 +58,14 @@ test("data.json is fetched with revalidation", () => {
 });
 
 test("only our own endpoints ask to revalidate", () => {
-  /* Revalidation is for what this repo publishes and rewrites, which is
-     now one thing: the committed file. Tennis used to be the second,
-     through an endpoint that normalised a live source; it rides in the
-     same file now, so there is nothing else of ours to revalidate.
-     ESPN's own calls are the expensive ones and cache normally. */
+  /* Revalidation is only for data published by this app: the committed
+     schedule and the small live-tennis result. ESPN's large direct calls
+     keep ordinary caching. */
   const withCache = SRC.match(/jget\([^;]*?cache\s*:[^;]*?\)/g) || [];
-  assert.equal(withCache.length, 1);
-  const targets = withCache.map(c => /data\.json/.test(c) ? "data.json" : "OTHER: " + c);
-  assert.deepEqual(targets, ["data.json"]);
+  assert.equal(withCache.length, 2);
+  const targets = withCache.map(c => /data\.json/.test(c) ? "data.json"
+    : /tennisLiveUrl/.test(c) ? "api/tennis" : "OTHER: " + c);
+  assert.deepEqual(targets.sort(), ["api/tennis", "data.json"]);
   for(const call of withCache) assert.doesNotMatch(call, /site\.api\.espn\.com|ESPN\s*\+/);
 });
 

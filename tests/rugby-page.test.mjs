@@ -147,6 +147,7 @@ function pollHarness(rugby = true, showScores = true){
      let showScores = ${showScores};
      const rugbyOn = () => ${rugby};
      const GAMES = globalThis.__ru.games;
+     const whatsOnGames = () => GAMES;
      let rugbyLiveErr = "";
      const jget = async (url) => { globalThis.__ru.asked.push(url); return {events:[], content:[]}; };
      const parseRugbyEspn = () => null;

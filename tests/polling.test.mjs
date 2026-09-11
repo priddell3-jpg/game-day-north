@@ -17,6 +17,7 @@ function pollHarness(){
      "stateOf", "POLL_WINDOW", "needsScore", "activeNow", "pollDue"],
     `let liveMode = true, showScores = true;
      const myGames = () => globalThis.__p.games;
+     const whatsOnGames = () => globalThis.__p.games;
      globalThis.__p.set = (m, s) => { liveMode = m; showScores = s; };`);
   return page;
 }
@@ -118,9 +119,8 @@ test("a failed refresh does not wedge the next one", async () => {
 
 /* --- the parts that live in an interval body, asserted where they ship --- */
 
-/* Two minute-polls ship now — the team sports' and tennis's — so each is
-   found by the call it makes rather than by being the first one in the
-   file. */
+/* The team-sport minute poll is found by the call it makes rather than by
+   being the first interval in the file. */
 const intervalCalling = (name) => (SRC.match(/setInterval\(\(\)=>\{([\s\S]*?)\}, 60000\);/g) || [])
   .find(b => b.includes(name + "()"));
 
@@ -131,12 +131,15 @@ test("the minute poll stands down while the tab is hidden", () => {
   assert.match(body, /refreshLive\(\)/);
 });
 
-test("tennis has no poll of its own to stand down", () => {
-  /* It had one: sixty seconds, its own lock, its own endpoint. The
-     matches come in the committed file now, so tennis refreshes when the
-     fixtures do and there is one cadence for the whole page. */
-  assert.ok(!/tennisPollDue|refreshTennis/.test(SRC));
-  assert.doesNotMatch(SRC, /setInterval\([^)]*60000\s*\)\s*;?\s*$/m);
+test("tennis's ten-minute poll also stands down while hidden and when nothing is due", () => {
+  const body = (SRC.match(/setInterval\(\(\)=>\{[\s\S]*?\}, 10\*60000\);/g) || [])
+    .find(x=>x.includes("tennisPollDue"));
+  assert.ok(body, "could not find the tennis refresh interval");
+  assert.match(body, /document\.hidden/);
+  assert.match(body, /if\(tennisPollDue\(Date\.now\(\)\)\) refreshTennis\(\)/);
+  const refresh = /function refreshTennis\([\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(refresh, /now-tennisLastAskedAt < TENNIS_REFRESH_INTERVAL/,
+    "other refresh paths must not turn the ten-minute poll into a minute poll");
 });
 
 test("coming back to the tab refreshes straight away", () => {
@@ -145,8 +148,7 @@ test("coming back to the tab refreshes straight away", () => {
   const body = SRC.slice(at, at + 500);
   assert.match(body, /document\.hidden/);
   assert.match(body, /refreshLive\(\)/);
-  /* One refresh brings the fixtures, and tennis with them. */
-  assert.doesNotMatch(body, /refreshTennis/);
+  assert.match(body, /refreshTennis\(true\)/);
 });
 
 test("the slow schedule refresh is still there for post-final corrections", () => {

@@ -527,19 +527,23 @@ test("the picker is redrawn when the tournament list changes", () => {
   assert.match(body, /!== before\) renderDrawer\(\)/);
 });
 
-/* ---------------- tennis arrives with the fixtures ---------------- */
+/* ---------------- durable file plus a narrow live refresh ---------- */
 
-/* The endpoint is gone. These replace the ten tests that described it —
-   what tours were requested, what the filter did not send, how a refusal
-   was survived, and when the minute poll fired. None of that exists any
-   more: the matches come in data.json and tennis refreshes when the
-   fixtures do. What replaces them is the contract that took over. */
+test("tennis keeps the committed file and adds a narrow live endpoint", () => {
+  assert.match(SRC, /new URL\("api\/tennis"/);
+  assert.match(SRC, /function tennisPollDue/);
+  assert.match(SRC, /function refreshTennis/);
+  assert.match(SRC, /function attachTennis/, "the durable file remains the fallback");
+});
 
-test("the page asks for no tennis of its own, ever", () => {
-  assert.doesNotMatch(SRC, /api\/tennis/, "the endpoint is retired");
-  assert.doesNotMatch(SRC, /function loadTennis/, "and so is the loader that called it");
-  assert.doesNotMatch(SRC, /tennisPollDue|refreshTennis/, "and the poll it drove");
-  assert.match(SRC, /function attachTennis/, "what is left reads the committed file");
+test("a live tennis answer redraws the full score table", () => {
+  const start = SRC.indexOf("function refreshTennis");
+  const end = SRC.indexOf("/* Stage podiums", start);
+  const body = SRC.slice(start, end);
+  assert.match(body, /attachTennis\(best\.block, best\.at\)/,
+    "the answer must replace the tennis rows held by the main board");
+  assert.match(body, /render\(\)/,
+    "the complete list must redraw so the returned sets and status are visible");
 });
 
 test("with no tour on there are no rows, whatever the file carries", () => {

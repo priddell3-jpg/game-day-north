@@ -375,8 +375,8 @@ page's `RACES` table. Nothing else changes.
 Sources, in precedence order:
 
 1. **`data.json`, built by a scheduled GitHub Action.** One machine talks to the sports API every three hours and commits the result, so an ordinary visit is a single request to this repo's own domain. One ranged request covers a whole competition's window — 25 requests for the entire file, where per-team season schedules took 125 — and a competition that vanishes between runs stops the build rather than publishing a file with a league missing. See `scripts/fetch-data.mjs`.
-2. **Live top-up.** Anything in progress is read straight from ESPN, because a file rebuilt every thirty minutes cannot follow a game.
-3. **Direct fetch**, if `data.json` is missing or more than 90 minutes old — a stalled job degrades to the old behaviour rather than an empty page.
+2. **Live top-up.** Only a matchup in today's personal **What's On** agenda that is live—or has reached kickoff without a resolved source status—is checked for a moving score. Team sports update once a minute in the open app; tennis uses a small cached endpoint at most once every ten minutes. Returned scores redraw the full main-table row, while the What's On strip remains matchup-only.
+3. **Direct fetch**, if `data.json` is missing or more than 12 hours old — a stalled job degrades to the old behaviour rather than an empty page.
 4. **`LIVE_FIXTURES`** — a small hand-checked set with Canadian listings, for when nothing can be reached.
 5. **Remembered results** — a final score, once seen, is kept in that browser for a week, so a game you missed still shows its score when the feed is down. Each stored row carries the source's event id (store `v3`), so a recalled result meets the fed copy of the same fixture on the same primary key as everything else. A `v2` store is migrated rather than discarded — a row without an id reads correctly as a row that has none — and a store is deduplicated on load, which clears out the pairs written before the club comparison was fixed.
 
@@ -417,11 +417,11 @@ A live score is a number that changes, so following one means asking again. Aski
 - **One refresh at a time.** The minute poll, the quarter-hour poll, the team picker and a returning tab can all ask at once; a caller that asks while a pass is running joins it rather than starting a second.
 - **Paused while the tab is hidden**, with one immediate refresh when it comes back.
 - **Cycling is never polled.** A stage podium is a result, not a live feed, and there is no live cycling source to poll; it arrives with the committed file.
-- **Tennis is not polled by each viewer.** The scheduled fixture build reads ATP and WTA, normalises the supported singles matches, and includes them in `data.json`. That keeps the large upstream response and its duplicate Grand Slam data out of browsers and phones. Tennis therefore has the same freshness as the committed schedule rather than a separate live-score loop.
+- **Tennis has a narrow live path.** The scheduled fixture build still reads ATP and WTA every three hours and includes a normalised copy in `data.json` for first load and offline use. While a followed tennis matchup in today's What's On is live or unresolved after its start, the open app asks `/api/tennis` at most once every ten minutes. Vercel shares each normalised answer from its edge cache for five minutes, so viewers never download the two multi-megabyte ESPN scoreboards themselves and do not each create duplicate upstream work.
 
 A fixture that has already been given a score is still polled while it is under way. Not doing that is what once froze a match at its halftime score for the rest of the night.
 
-Each poll spends **at most eight summary requests and twelve scoreboard requests**. The two are not comparable — a summary buys one game and a scoreboard buys a whole day — so they are budgeted separately. Fixtures that have kicked off are asked about first, since a game that has not started cannot have a score; neither cap binds on an ordinary evening, and what reaches one is a backlog of finished games, which can wait a minute.
+Each team-sport poll spends **at most eight summary requests and twelve scoreboard requests**, bounded again by the games in today's What's On. The two caps are separate because a summary buys one game while a scoreboard buys a whole day. Yesterday's results, tomorrow's fixtures and unrelated leagues are left to the normal three-hour build.
 
 ### What the list puts first
 
@@ -517,7 +517,7 @@ Four things about that feed are load-bearing:
 - **Most matches have no usable time.** ESPN says so itself with `timeValid: false`, and an unplayed third round carries a placeholder of midnight Eastern. The day is shown and the clock is not invented.
 - **An unfilled slot in a draw is still published as a competitor**, with a negative athlete id and the name `TBD`. It is a placeholder, never a person, and a line with two of them is not a match at all.
 
-Because of the size, the browser never reads that feed. The scheduled build does, keeps the singles, and writes a normalised block into `data.json` beside the fixtures — about **440 bytes a match**, so a Grand Slam day costs roughly 67 KB before compression. Tournament facts are described once in a `tournaments` list rather than repeated on every one of a Slam's hundreds of matches, and that same list is what the picker offers as a filter, so a filter can only ever offer something with matches behind it.
+Because of the size, the browser never reads that feed. The scheduled build and the fixed-purpose `/api/tennis` function do, keep the singles, and return the same normalised block — about **440 bytes a match**, so a Grand Slam day costs roughly 67 KB before compression. Tournament facts are described once in a `tournaments` list rather than repeated on every one of a Slam's hundreds of matches, and that same list is what the picker offers as a filter, so a filter can only ever offer something with matches behind it.
 
 **Tennis keeps its own retention window**, deliberately narrower than the fixture window's eight days back and seventy-five forward. ESPN publishes singles draws about two days either side of today, so seventy-five days forward would be seventy-three days of nothing — false precision that makes the contract look richer than the data. Three days back is a payload decision of its own: a Slam day is 153 matches, and a longer tail buys mostly qualifying rounds nobody asked for. The two numbers are named constants in `scripts/lib/tennis.mjs` so they read as a decision rather than an oversight.
 
@@ -544,7 +544,7 @@ node build.js        # wraps src/page.html into a standalone index.html
 python3 -m http.server 8000
 ```
 
-`src/page.html` is the source of truth: a fragment with no `<!doctype>`, `<head>` or `<body>` of its own. `build.js` wraps it into the standalone `index.html` that GitHub Pages and Vercel serve. The deployed application is static: there are no Vercel Functions, databases, accounts, or server-side secrets. Tennis is already normalised into `data.json` by the scheduled fixture build.
+`src/page.html` is the source of truth: a fragment with no `<!doctype>`, `<head>` or `<body>` of its own. `build.js` wraps it into the standalone `index.html` that GitHub Pages and Vercel serve. The deployed application is static except for one fixed-purpose, read-only Vercel Function at `/api/tennis`; there is no database, account system or server-side secret. The function accepts no upstream URL or mutable input and only normalises the two hardcoded ESPN tennis scoreboards. `data.json` remains the durable fallback built by the scheduled job.
 
 ### iOS
 
