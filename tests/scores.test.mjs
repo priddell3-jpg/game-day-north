@@ -186,6 +186,7 @@ const PREAMBLE = `
   const TEAMS = globalThis.__gdn.TEAMS;
   const allTeams = globalThis.__gdn.allTeams;
   const myGames = () => GAMES;
+  const whatsOnGames = () => GAMES;
   const jget = globalThis.__gdn.jget;
 `;
 
@@ -496,40 +497,26 @@ test("a live fixture is polled until ESPN says it is over, then stops", async ()
    these use a row with no event id. One with an id is asked about
    directly and never touches scoredDays at all. */
 
-test("a fixture still going is asked about even once its ESPN date is not today", async () => {
+test("a fixture outside the live window is left to the normal data build", async () => {
   const h = harness();
-  /* 26 hours is the only offset that lands on a different Eastern date
-     whatever time of day the suite runs — the point a game that kicked
-     off before midnight reaches once the clock has rolled over. */
   const start = Date.now() - 26*3600000;
-  assert.notEqual(h.page.espnDate(start), h.page.espnDate(Date.now()),
-    "the fixture must sit on a different ESPN day for this to test anything");
   const game = asBaked(h, start);
   game.result = {status:"live", label:"HT", score:[1, 2]};
   h.GAMES.push(game);
-  h.stub("EPL", [LATER_EVENT(start)], start);
 
-  assert.equal(await h.page.fillScores(), 1);
-  assert.equal(h.asked.length, 1);
-  assert.deepEqual(game.result.score, [2, 3]);
-
-  // scoredDays now holds that day. It must not silence a match still on.
-  assert.equal(await h.page.fillScores(), 1);
-  assert.equal(h.asked.length, 2, "the day was asked about again");
+  assert.equal(await h.page.fillScores(), 0);
+  assert.equal(h.asked.length, 0);
+  assert.deepEqual(game.result.score, [1, 2]);
 });
 
-test("a settled fixture on an old day is left to the throttle", async () => {
+test("an unresolved fixture outside the live window is not searched", async () => {
   const h = harness();
   const start = Date.now() - 26*3600000;
   const game = asBaked(h, start);                         // status unknown, no score
   h.GAMES.push(game);
-  h.stub("EPL", [], start);                               // ESPN lists nothing that day
 
-  await h.page.fillScores();
-  assert.equal(h.asked.length, 1);
-  game.result = {status:"final", label:"FT", score:[2, 3]};
-  await h.page.fillScores();
-  assert.equal(h.asked.length, 1, "a final on a past day is not re-requested");
+  assert.equal(await h.page.fillScores(), 0);
+  assert.equal(h.asked.length, 0);
 });
 
 /* --- the lifecycle comes from ESPN's own fields --- */

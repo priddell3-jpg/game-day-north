@@ -2319,9 +2319,10 @@ function parseSummary(sum, comp){
    A scheduled job commits data.json next to this page, so the ordinary
    visit is one request to our own domain instead of a dozen to an
    undocumented API. Live scores still come straight from the source,
-   because a file refreshed every half hour cannot follow a game.
+   because a file refreshed every three hours cannot follow a game.
    ------------------------------------------------------------------ */
 let staticAt = 0, staticCount = 0, staticTennis = null;
+let liveTennis = null, liveTennisAt = 0, tennisRefreshing = null, tennisLastAskedAt = 0;
 let staticSource = "none", staticFetchError = "";
 
 /* A bad remote document never becomes the saved good copy. The limits
@@ -2401,6 +2402,7 @@ async function loadStatic(){
   try{ loaded = await readStaticPayload(); r = loaded.data; staticSource = loaded.source; }
   catch(e){ return 0; }
   if(!validStaticPayload(r)) return 0;
+  staticAt = Date.parse(r.generated) || 0;
   /* A followed race is another route into the board. Read its standings
      before filtering fixtures so the race teams are known on the same
      pass; otherwise they would not appear until a later refresh. */
@@ -2421,7 +2423,8 @@ async function loadStatic(){
   /* Held whether or not a tour is on, so switching one on shows its
      matches without waiting for the next refresh. */
   staticTennis = r.tennis || null;
-  attachTennis(staticTennis);
+  const tennis = bestTennisBlock();
+  attachTennis(tennis.block, tennis.at);
   /* Read whether or not a tour is on, for the same reason the matches
      are: switching a tour on should show the top of the draw straight
      away rather than the whole of it until the next refresh. */
@@ -2436,7 +2439,6 @@ async function loadStatic(){
      rugby is switched on, not because it involves a followed club, so
      it is not subject to the selected-team filter that built `built`. */
   const ru = (rugbyOn() && Array.isArray(r.rugby)) ? attachRugby(r.rugby) : 0;
-  staticAt = Date.parse(r.generated) || 0;
   /* Rugby counts towards "we have data". Someone following rugby and no
      clubs at all has a full page, and returning 0 here sent them down
      the direct-fetch fallback as though the file were missing. */
@@ -2641,13 +2643,11 @@ function toursOf(only){
   }
   return out.sort();
 }
-/* Tennis arrives with the fixtures, in the file the page already reads.
-
-   There is no separate request and no cadence of its own: whatever
-   loadStatic pulled is what tennis has, refreshed on the same schedule
-   as everything else. Switching a tour off empties the rows rather than
-   leaving a match on screen for a sport nobody asked for. */
-function attachTennis(block){
+/* Tennis arrives with the fixtures in the durable file the page already
+   reads. A narrow live response can replace those tennis rows while a
+   match is on; switching a tour off still empties them rather than leaving
+   a match on screen for a sport nobody asked for. */
+function attachTennis(block, at){
   if(!tennisTours.size){
     if(GAMES.some(g=>g.tennis)) mergeTennis([]);
     TOURNEYS = new Map(); tennisAt = 0;
@@ -2667,8 +2667,66 @@ function attachTennis(block){
      drawer while the page was still loading. */
   if([...TOURNEYS.keys()].sort().join(",") !== before) renderDrawer();
   mergeTennis(matches.filter(m=>tennisTours.has(m.tour)));
-  tennisAt = staticAt;
+  tennisAt = at || staticAt;
   return matches.length;
+}
+
+/* The three-hour file remains the durable, offline-safe copy. While a
+   tennis match in today's personal agenda is actually due, a small Vercel
+   function reduces the two current scoreboards to this same contract and
+   can replace only the tennis rows. A failed request changes nothing on
+   screen except the freshness note. */
+function bestTennisBlock(){
+  return liveTennis && liveTennisAt >= staticAt
+    ? {block:liveTennis, at:liveTennisAt}
+    : {block:staticTennis, at:staticAt};
+}
+function validLiveTennis(r){
+  try{
+    if(!r || typeof r!=="object" || Array.isArray(r)) return false;
+    const at = Date.parse(r.generated);
+    if(!Number.isFinite(at) || at > Date.now()+24*60*60*1000) return false;
+    if(!Array.isArray(r.matches) || r.matches.length>5000) return false;
+    if(!Array.isArray(r.tournaments) || r.tournaments.length>1000) return false;
+    return new TextEncoder().encode(JSON.stringify(r)).byteLength <= 2*1024*1024;
+  }catch(e){ return false; }
+}
+function tennisLiveUrl(){
+  const native = typeof window!=="undefined" && window.GDNNative && window.GDNNative.isNative;
+  const base = native ? window.GDNNative.webUrl : location.origin + "/";
+  return new URL("api/tennis", base).href;
+}
+function tennisPollDue(now){
+  if(!showScores || !tennisTours.size) return false;
+  return whatsOnGames(now).some(g=>g.tennis && tennisActive(g.match, now));
+}
+const TENNIS_REFRESH_INTERVAL = 10*60000;
+function refreshTennis(force){
+  const now = Date.now();
+  if(!tennisPollDue(now)) return Promise.resolve(0);
+  if(tennisRefreshing) return tennisRefreshing;
+  if(!force && now-tennisLastAskedAt < TENNIS_REFRESH_INTERVAL) return Promise.resolve(0);
+  tennisLastAskedAt = now;
+  tennisRefreshing = (async()=>{
+    try{
+      const r = await jget(tennisLiveUrl(), 12000, {cache:"no-store"});
+      if(!validLiveTennis(r)) throw new Error("Invalid tennis response");
+      const at = Date.parse(r.generated);
+      if(at >= liveTennisAt){
+        liveTennis = r; liveTennisAt = at;
+        const best = bestTennisBlock();
+        attachTennis(best.block, best.at);
+      }
+      tennisErr = "";
+      render();
+      return r.matches.length;
+    }catch(e){
+      tennisErr = (e && e.message || String(e)).slice(0,80);
+      render();
+      return 0;
+    }
+  })().finally(()=>{ tennisRefreshing = null; });
+  return tennisRefreshing;
 }
 
 /* Stage podiums and the race lead are results: they arrive from the
@@ -3011,7 +3069,7 @@ let rugbyLiveErr = "";
 async function fillRugbyScores(){
   if(!rugbyOn()) return 0;                 // nothing rugby is requested when rugby is off
   const now = Date.now();
-  const due = GAMES.filter(g=>rugbyActiveNow(g, now));
+  const due = whatsOnGames(now).filter(g=>rugbyActiveNow(g, now));
   if(!due.length) return 0;
   let changed = 0;
   const errs = [];
@@ -3078,11 +3136,12 @@ const SUMMARY_CAP = 8;          // summary requests — one game each
 const DAY_CAP = 12;             // scoreboard requests — one whole day each
 async function fillScores(){
   const now = Date.now();
-  // newest first: if the request budget runs out it must be the oldest
-  // results that wait, never tonight's game
-  const need = myGames().filter(g=>
-    g.start > now - 4*DAY && g.start < now + 2*3600000 && needsScore(g, now)
-  ).sort((a,b)=>b.start-a.start);
+  /* The matchup-only What's On rail is the request boundary. Do not scan
+     yesterday's results or tomorrow's fixtures just because one game is
+     live. A source that still says scheduled at its stated start becomes
+     unknown in stateOf(), which earns the one request needed to discover
+     that play has begun. */
+  const need = whatsOnGames(now).filter(g=>activeNow(g, now)).sort((a,b)=>b.start-a.start);
   if(!need.length) return 0;
   let filled = 0;
   const takeInto = (parsed) => {
@@ -3091,11 +3150,9 @@ async function fillScores(){
     if(match && applyScored(match, parsed)) filled++;
   };
 
-  /* Games that have kicked off come first. `need` is newest-first, which
-     puts tonight's not-yet-started fixtures above a game currently being
-     played — fine when one request covered a whole day, wasteful when it
-     buys a single game that cannot have a score yet. The sort is stable,
-     so newest-first still decides within each group. */
+  /* Everything in `need` is live or unresolved after kickoff. Event-id
+     summaries are one game each, so cap them independently of the shared
+     day scoreboards used by the rare id-less fixture. */
   const byId = need.filter(g => g.eid)
     .sort((a,b) => (b.start <= now) - (a.start <= now))
     .slice(0, SUMMARY_CAP);
@@ -3620,6 +3677,13 @@ const isMine = g => g.rugby ? rugbyOn()
 const isStarred = t => !!(t && t.nation && rugbyStars.has(t.nation));
 const isStarredPlayer = p => !!(p && p.id && tennisStars.has(String(p.id)));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
+/* The matchup-only rail is also the boundary for fast score traffic.
+   Filters can hide a league in the full list, but they do not make a game
+   the viewer follows stop being part of today's agenda. */
+function whatsOnGames(now, todayKey){
+  const key = todayKey || ymd(new Date(now));
+  return GAMES.filter(g=>isMine(g) && localKey(g.start)===key);
+}
 const myComps = () => { const s=new Set(); GAMES.forEach(g=>{ if(isMine(g)) s.add(g.comp); }); return Object.keys(COMPS).filter(c=>s.has(c)); };
 
 /* ---- whose record would give the game away ----
@@ -3810,7 +3874,12 @@ function coverageReport(now){
     ids.forEach(s=>{ need[s]=(need[s]||0)+1; });
     if(ids.some(s=>services.has(s))) out.have++;
   });
-  out.services = Object.keys(need).sort((a,b)=>need[b]-need[a]).map(id=>({id, label:SERVICES[id]?SERVICES[id].label:id, n:need[id], owned:services.has(id)}));
+  /* Subscription choices are account-level preferences, not a projection
+     of today's team list. Keep the complete catalogue available even when
+     nothing selected currently uses a service; the game count remains a
+     useful annotation without deciding whether the option exists. */
+  out.services = Object.keys(SERVICES).map(id=>({id, label:SERVICES[id].label,
+    kind:SERVICES[id].kind, n:need[id]||0, owned:services.has(id)}));
   out.missing = out.total - out.have - out.unknown;
   return out;
 }
@@ -4538,7 +4607,7 @@ function renderServices(){
     + '<div class="svc-grid">'
     + rep.services.map(s=>'<button class="svc-card" data-service="'+s.id+'" aria-pressed="'+s.owned+'">'
         + '<span class="svc-box">&#10003;</span><span><span class="svc-name">'+esc(s.label)+'</span><br>'
-        + '<span class="svc-games">'+s.n+' game'+(s.n===1?"":"s")+'</span></span></button>').join("")
+        + '<span class="svc-games">'+(s.n ? s.n+' game'+(s.n===1?"":"s") : (s.kind==="tv" ? "TV service" : "Streaming service"))+'</span></span></button>').join("")
     + '</div>'
     + (rep.unknown ? '<div class="cov-note"><span class="pill unknown">Unconfirmed</span><span>'+rep.unknown+' fixture'+(rep.unknown===1?" has":"s have")+' no confirmed Canadian rights holder. They stay listed rather than hidden, so you know to check.</span></div>' : "");
 }
@@ -5196,7 +5265,7 @@ function renderRail(now, todayKey){
   /* Competition filters shape the full schedule below, not this personal
      agenda. A hidden league can still contain one of the teams, players
      or races the viewer explicitly follows. */
-  const today=GAMES.filter(g=>isMine(g) && localKey(g.start)===todayKey);
+  const today=whatsOnGames(now,todayKey);
   today.sort((a,b)=>railCompare(a,b,now));
   count.textContent=today.length+" today";
   see.hidden=today.length<2;
@@ -5846,6 +5915,10 @@ async function runRefresh(){
   const rugbyBefore = rugbyCount;
   const raceBefore = racePickerKey(Date.now());
   try{ held = await loadStatic(); }catch(e){ held = 0; }
+  /* Tennis is independent of the full refresh: this starts only when a
+     tennis matchup in today's What's On has reached a live/unknown state,
+     and its own mutex prevents the shared refresh and timer racing. */
+  if(tennisPollDue(Date.now())) refreshTennis();
   const racesChanged = racePickerKey(Date.now()) !== raceBefore;
   if((rugbyCount !== rugbyBefore || racesChanged) && !drawer.hasAttribute("hidden")) renderDrawer();
   const fresh = held > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
@@ -5904,13 +5977,10 @@ function agoText(ms){
   const h = Math.round(m/60);
   return h + (h===1?" hour ago":" hours ago");
 }
-/* Tennis has no loop of its own any more.
-
-   It used to poll a serverless endpoint every sixty seconds behind its
-   own lock. The matches arrive in data.json now, so tennis refreshes
-   exactly when the fixtures do, on the shared fifteen-minute cycle. One
-   cadence for the whole page is worth more than a bespoke one for a
-   sport that ships switched off, and it is what let the endpoint go. */
+/* Tennis uses a slower live loop than team sports because one refresh
+   reads two whole tournament scoreboards upstream. Vercel reduces and
+   caches that answer for five minutes; a viewer asks at most every ten,
+   only while today's What's On contains tennis that can still be live. */
 
 /* Picking a team should fill its fixtures in straight away rather than
    leaving a blank until the next cycle. Debounced so working through
@@ -5919,11 +5989,12 @@ let pickTimer = null;
 function refreshAfterPicks(){
   clearTimeout(pickTimer);
   pickTimer = setTimeout(()=>{
-    if(selected.size || raceIncluded.size) refreshLive();
+    if(selected.size || raceIncluded.size || tennisTours.size || rugbyOn()) refreshLive();
     /* Switching a tour on or off changes which of the matches already
        held are mine, which is a re-read of what is in hand rather than a
        request. */
-    attachTennis(staticTennis);
+    const best = bestTennisBlock();
+    attachTennis(best.block, best.at);
     render();
   }, 700);
 }
@@ -5953,7 +6024,7 @@ function pollDue(){
      rugbyActiveNow rather than through the team-shaped one. With rugby
      off, rugbyActiveNow is false for everything and no rugby request is
      ever made. */
-  return myGames().some(g => g.rugby ? rugbyActiveNow(g, now) : activeNow(g, now));
+  return whatsOnGames(now).some(g => g.rugby ? rugbyActiveNow(g, now) : activeNow(g, now));
 }
 setInterval(()=>{
   if(document.hidden) return;        // paused with the tab, not merely quiet
@@ -5965,8 +6036,13 @@ document.addEventListener("visibilitychange", ()=>{
      the time spent away. This is one request on return, not a poll. */
   if(document.hidden) return;
   if(liveMode !== false) refreshLive();
+  if(tennisPollDue(Date.now())) refreshTennis(true);
 });
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
+setInterval(()=>{
+  if(document.hidden) return;
+  if(tennisPollDue(Date.now())) refreshTennis();
+}, 10*60000);
 syncRaceTeams(Date.now());
 if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn()) openDrawer(drawer);
 persist(); renderDrawer(); render();

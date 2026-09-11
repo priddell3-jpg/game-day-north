@@ -25,8 +25,26 @@ test("finished games remain in What's on and are sorted instead of filtered", ()
 test("the rail is personal but independent of the competition filter", () => {
   const at = SRC.indexOf("function renderRail");
   const body = SRC.slice(at, SRC.indexOf("function railCard", at));
-  assert.match(body, /GAMES\.filter\(g=>isMine\(g\)/);
+  assert.match(body, /whatsOnGames\(now,todayKey\)/);
   assert.doesNotMatch(body, /today=myGames\(\)/);
+  const boundary = /function whatsOnGames\([\s\S]*?\n\}/.exec(SRC)[0];
+  assert.match(boundary, /GAMES\.filter\(g=>isMine\(g\)/);
+  assert.doesNotMatch(boundary, /hiddenComps/);
+});
+
+test("the fast-score boundary is exactly the personal What's On day", () => {
+  globalThis.__wo = [
+    {id:"today-mine", start:"today", mine:true},
+    {id:"today-other", start:"today", mine:false},
+    {id:"tomorrow-mine", start:"tomorrow", mine:true}
+  ];
+  const {whatsOnGames} = loadFromPage(["whatsOnGames"], `
+    const GAMES = globalThis.__wo;
+    const isMine = g => g.mine;
+    const localKey = value => value;
+    const ymd = () => "today";
+  `);
+  assert.deepEqual(whatsOnGames(0, "today").map(g=>g.id), ["today-mine"]);
 });
 
 test("a followed-race team qualifies without becoming a selected team", () => {
