@@ -274,7 +274,7 @@ test("the tab-hidden pause and the visibility refresh are untouched", () => {
 test("a rugby failure cannot set the page's liveOK claim", () => {
   // liveOK is the page's statement about whether the sports API answered.
   // A rugby outage is not evidence about that.
-  const run = /async function runRefresh\(\)\{[\s\S]*?\n\}/.exec(SRC)[0];
+  const run = /async function runRefresh\(scope\)\{[\s\S]*?\n\}/.exec(SRC)[0];
   const ruCatch = /try\{ ruFilled = await fillRugbyScores\(\); \}\s*\n?\s*catch\(e\)\{([^}]*)\}/.exec(run);
   assert.ok(ruCatch, "fillRugbyScores must have a catch of its own");
   assert.doesNotMatch(ruCatch[1], /liveOK/);
@@ -329,7 +329,7 @@ test("the nation picker is redrawn when rugby fixtures actually arrive", () => {
      no nations in it — the schedule was right, the star list was empty.
      Guarded on a change so an open drawer is not redrawn every minute,
      which would throw away focus. */
-  const run = /async function runRefresh\(\)\{[\s\S]*?\n\}/.exec(SRC)[0];
+  const run = /async function runRefresh\(scope\)\{[\s\S]*?\n\}/.exec(SRC)[0];
   assert.match(run, /const rugbyBefore = rugbyCount;/);
   assert.match(run, /rugbyCount !== rugbyBefore/);
   assert.match(run, /renderDrawer\(\)/);

@@ -2322,6 +2322,9 @@ function parseSummary(sum, comp){
    because a file refreshed every three hours cannot follow a game.
    ------------------------------------------------------------------ */
 let staticAt = 0, staticCount = 0, staticTennis = null;
+/* The last schedule the server sent, kept so that a "not modified"
+   answer can be honoured without reading the saved file back. */
+let lastRemoteSchedule = null;
 let liveTennis = null, liveTennisAt = 0, tennisRefreshing = null, tennisLastAskedAt = 0;
 let staticSource = "none", staticFetchError = "";
 
@@ -2361,10 +2364,30 @@ async function readStaticPayload(){
   if(!native) return {data:await bundled(), source:"site"};
 
   try{
-    const data = await jget(window.GDNNative.dataUrl, 12000);
+    /* The bridge sends the saved copy's ETag, so an unchanged file costs
+       a 304 and no body — the same revalidation the browser does for the
+       web build on its own. Only a changed file is parsed and saved. */
+    const got = await window.GDNNative.getSchedule(12000);
+    if(got && got.unchanged){
+      if(lastRemoteSchedule){ staticFetchError = ""; return {data:lastRemoteSchedule, source:"remote"}; }
+      /* First pass of this launch: the server's copy is the saved one. */
+      const saved = await window.GDNNative.readCachedSchedule();
+      if(!validStaticPayload(saved)){
+        /* A tag with no good file behind it would keep answering 304 for
+           a copy that cannot be shown; drop it so the next pass asks
+           for the whole file. */
+        try{ await window.GDNNative.forgetScheduleTag(); }catch(e){}
+        throw new Error("Invalid saved schedule");
+      }
+      lastRemoteSchedule = saved;
+      staticFetchError = "";
+      return {data:saved, source:"remote"};
+    }
+    const data = got && got.data;
     if(!validStaticPayload(data)) throw new Error("Invalid remote schedule");
-    try{ await window.GDNNative.writeCachedSchedule(data); }
+    try{ await window.GDNNative.writeCachedSchedule(data, got.etag || null); }
     catch(e){ console.warn("Could not save the offline schedule", e); }
+    lastRemoteSchedule = data;
     staticFetchError = "";
     return {data, source:"remote"};
   }catch(e){
@@ -3134,8 +3157,22 @@ const scoredDays = new Set();   // competition|date pairs already asked about
    settled, and a backlog can wait another minute. */
 const SUMMARY_CAP = 8;          // summary requests — one game each
 const DAY_CAP = 12;             // scoreboard requests — one whole day each
+/* What the last pass asked and how much of it never answered, so the
+   minute poll can back off from a source that is down or rate-limiting
+   without any of this deciding what is on screen. */
+const scoreReqs = {asked:0, failed:0};
+/* A request that never got through, was refused for asking too often,
+   or found the source broken. A 404 is an answer — the source has
+   nothing under that id — and is not a reason to ask less. */
+function countsAsOutage(e){
+  const m = /^HTTP (\d+)/.exec(e && e.message || "");
+  if(!m) return true;
+  const code = Number(m[1]);
+  return code === 429 || code >= 500;
+}
 async function fillScores(){
   const now = Date.now();
+  scoreReqs.asked = 0; scoreReqs.failed = 0;
   /* The matchup-only What's On rail is the request boundary. Do not scan
      yesterday's results or tomorrow's fixtures just because one game is
      live. A source that still says scheduled at its stated start becomes
@@ -3159,8 +3196,9 @@ async function fillScores(){
   await Promise.all(byId.map(async g=>{
     let r;
     // one unreachable game must not cost the others their scores
+    scoreReqs.asked++;
     try{ r = await jget(ESPN+ESPN_PATH[g.comp]+"/summary?event="+encodeURIComponent(g.eid), 12000); }
-    catch(e){ return; }
+    catch(e){ if(countsAsOutage(e)) scoreReqs.failed++; return; }
     takeInto(parseSummary(r, g.comp));
   }));
 
@@ -3185,7 +3223,9 @@ async function fillScores(){
     let r;
     // a request that never got through stays eligible for the next cycle;
     // one that answered — even with nothing — is settled
-    try{ r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+d, 9000); }catch(e){ return; }
+    scoreReqs.asked++;
+    try{ r = await jget(ESPN+ESPN_PATH[comp]+"/scoreboard?dates="+d, 9000); }
+    catch(e){ if(countsAsOutage(e)) scoreReqs.failed++; return; }
     answered.push(k);
     (r.events||[]).forEach(ev=>takeInto(parseEvent(ev, comp)));
   }));
@@ -5891,6 +5931,30 @@ let dataAge = null;     // when the data we are showing was built, or null
 let dataStale = false;  // we are showing it, but it is older than we trust silently
 let liveOK = null;      // did the live source answer this cycle
 
+/* ---- backing off a failing source ----------------------------------
+   The interval the minute poll actually honours. It doubles after a
+   pass in which a score request failed, to at most the quarter-hour
+   the slow refresh already keeps, and returns to a minute after a pass
+   in which every request answered. A pass that asked nothing changes
+   nothing. */
+const LIVE_POLL_MIN = 60000;
+const LIVE_POLL_MAX = 15*60000;
+let livePollEvery = LIVE_POLL_MIN, livePollAt = 0;
+function nextLivePoll(every, reqs){
+  if(reqs.failed) return Math.min(every*2, LIVE_POLL_MAX);
+  if(reqs.asked) return LIVE_POLL_MIN;
+  return every;
+}
+function liveTick(){
+  if(document.hidden) return;        // paused with the tab, not merely quiet
+  if(!pollDue()) return;
+  const now = Date.now();
+  /* Half a tick of slack: timers drift, and a tick landing a few
+     milliseconds early must not turn one minute into two. */
+  if(now - livePollAt < livePollEvery - LIVE_POLL_MIN/2) return;
+  livePollAt = now;
+  refreshLive("scores");
+}
 /* One refresh at a time. The minute poll, the quarter-hour poll, the
    picker and a tab coming back into view can all ask at once; letting
    them interleave means two passes writing the same fixtures from
@@ -5898,12 +5962,32 @@ let liveOK = null;      // did the live source answer this cycle
    back. A caller that asks while one is running joins it rather than
    starting a second. */
 let refreshing = null;
-function refreshLive(){
-  if(refreshing) return refreshing;
-  refreshing = runRefresh().finally(()=>{ refreshing = null; });
+/* Two kinds of pass share the guard. A full pass re-reads data.json and
+   then tops up; the minute poll asks for "scores", which tops up the
+   schedule already in hand and reads no file. A full pass requested
+   while a scores pass is running is not lost to the join: it runs the
+   moment the scores pass finishes, still one at a time. */
+let refreshingFull = false, fullWanted = false;
+function refreshLive(scope){
+  const full = scope !== "scores";
+  if(refreshing){
+    if(full && !refreshingFull) fullWanted = true;
+    return refreshing;
+  }
+  refreshingFull = full;
+  refreshing = runRefresh(scope).finally(()=>{
+    refreshing = null;
+    if(fullWanted){ fullWanted = false; refreshLive().catch(()=>{}); }
+  });
   return refreshing;
 }
-async function runRefresh(){
+async function runRefresh(scope){
+  /* "scores" is the minute cycle: the top-ups only, on whatever the last
+     full pass loaded. data.json is read again by a full pass — startup,
+     the quarter-hour timer, a returning tab, a changed pick — not every
+     minute: it changes every three hours and, on a phone, a re-read
+     was a whole download and a rewrite of the offline copy. */
+  const scoresOnly = scope === "scores";
   let held = 0;
   /* The nation picker is built from the rugby fixtures currently loaded,
      and switching rugby on renders the drawer BEFORE the fetch that
@@ -5914,7 +5998,8 @@ async function runRefresh(){
      refresh, which would throw away focus in the open drawer. */
   const rugbyBefore = rugbyCount;
   const raceBefore = racePickerKey(Date.now());
-  try{ held = await loadStatic(); }catch(e){ held = 0; }
+  if(scoresOnly) held = staticCount;
+  else { try{ held = await loadStatic(); }catch(e){ held = 0; } }
   /* Tennis is independent of the full refresh: this starts only when a
      tennis matchup in today's What's On has reached a live/unknown state,
      and its own mutex prevents the shared refresh and timer racing. */
@@ -5922,16 +6007,20 @@ async function runRefresh(){
   const racesChanged = racePickerKey(Date.now()) !== raceBefore;
   if((rugbyCount !== rugbyBefore || racesChanged) && !drawer.hasAttribute("hidden")) renderDrawer();
   const fresh = held > 0 && staticAt && (Date.now() - staticAt) < STALE_AFTER;
-  if(held > 0){
+  if(held > 0 && !scoresOnly){
     liveMode = true; liveErr = "";
     dataAge = staticAt || null;
     dataStale = !fresh;
     rememberResults(); render();
   }
-  if(fresh){
+  /* The scores pass tops up whatever is on the board, however it got
+     there; only a full pass decides between the file and the direct
+     fetch below. */
+  if(fresh || scoresOnly){
     // one cheap top-up for anything in progress, then done
     let filled = 0;
     try{ filled = await fillScores(); liveOK = true; }catch(e){ liveOK = false; }
+    livePollEvery = nextLivePoll(livePollEvery, scoreReqs);
     /* Rugby is a separate source behind a separate try. A rugby endpoint
        being down must cost rugby its live scores and nothing else — it
        may not take the hockey down with it, and it may not set liveOK,
@@ -5940,12 +6029,14 @@ async function runRefresh(){
     try{ ruFilled = await fillRugbyScores(); }
     catch(e){ rugbyLiveErr = (e && e.message || String(e)).slice(0,80); }
     if(filled || ruFilled){ rememberResults(); }
-    const scheduleLabel = staticSource==="cache" ? "the last saved schedule"
-      : staticSource==="bundle" ? "the schedule bundled with this app" : "the schedule file";
-    liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from " + scheduleLabel
-      + (filled + ruFilled ? ", " + (filled+ruFilled) + " score" + (filled+ruFilled===1?"":"s") + " live" : "")
-      + " &middot; updated " + agoText(staticAt)
-      + ((staticSource==="cache" || staticSource==="bundle") ? " &middot; online refresh unavailable" : "");
+    if(fresh){
+      const scheduleLabel = staticSource==="cache" ? "the last saved schedule"
+        : staticSource==="bundle" ? "the schedule bundled with this app" : "the schedule file";
+      liveNote = staticCount + " fixture" + (staticCount===1?"":"s") + " from " + scheduleLabel
+        + (filled + ruFilled ? ", " + (filled+ruFilled) + " score" + (filled+ruFilled===1?"":"s") + " live" : "")
+        + " &middot; updated " + agoText(staticAt)
+        + ((staticSource==="cache" || staticSource==="bundle") ? " &middot; online refresh unavailable" : "");
+    }
     render();
     return;
   }
@@ -6008,6 +6099,12 @@ refreshLive();
      · every 60s while something is active or its status is unknown, which
        covers halftime, a delay, extra time, overtime and a shootout,
        because ESPN reports every one of those as state "in"
+     · the minute pass asks the score source only; data.json is re-read
+       by the quarter-hour pass, on return to the tab and at startup
+     · a source that fails — unreachable, 429, 5xx — is asked half as
+       often each time, to a floor of once a quarter-hour, and once a
+       minute again from the next answer; a failure never changes what
+       is on screen
      · nothing once ESPN has said completed or "post"; the scheduled
        rebuild of data.json carries the rare post-final correction
      · nothing while the tab is hidden, and one refresh the moment it
@@ -6026,10 +6123,7 @@ function pollDue(){
      ever made. */
   return whatsOnGames(now).some(g => g.rugby ? rugbyActiveNow(g, now) : activeNow(g, now));
 }
-setInterval(()=>{
-  if(document.hidden) return;        // paused with the tab, not merely quiet
-  if(pollDue()) refreshLive();
-}, 60000);
+setInterval(()=>{ liveTick(); }, 60000);
 document.addEventListener("visibilitychange", ()=>{
   /* Coming back deserves a refresh whether or not scores are on: the
      fixtures, the live badges and the carrier notes are all as old as
