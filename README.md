@@ -558,6 +558,10 @@ npm run ios:open
 
 `npm run ios:sync` rebuilds the ordinary root `index.html`, stages that page, the current `data.json`, the local fonts and the native bridge in `dist/`, then copies them into the Xcode project. The project is `ios/App/App.xcodeproj`.
 
+Install the iOS project's dependencies with `npm ci` only, never pnpm or yarn. `cap sync` writes the resolved path of each plugin into `ios/App/CapApp-SPM/Package.swift`, and a pnpm install resolves to a `node_modules/.pnpm/...` store path that exists only on the machine that ran it; `tests/ios-shell.test.mjs` fails if such a path is ever committed.
+
+At cold launch the Xcode console prints one `JS Eval error A JavaScript exception occurred` line before `WebView loaded`. That is Capacitor firing its `resume` document event on scene foregrounding before the WebView has loaded any page, so `window.Capacitor` does not exist yet. It comes from the framework, predates this project's iOS changes, and has no effect on the app: every native call after it succeeds. It does not need re-investigating.
+
 On iOS, `data.json` refreshes from `https://game-day-north.vercel.app/data.json`. A validated response replaces the last-known-good copy in the app's Library directory. If that request fails, the app opens the saved copy; if there is no saved copy yet, it opens the snapshot bundled with the app. The page always displays the source and the payload's own `generated` freshness. ESPN and World Rugby JSON requests use Capacitor's native HTTP API, so the `capacitor://localhost` WebView does not depend on cross-origin browser permissions. External web links open through the system browser.
 
 Preferences keep their existing `gdn.*` localStorage keys under Capacitor's stable local origin. Share links retain the same hash format and use the public Game Day North URL rather than a local `capacitor://` address.
