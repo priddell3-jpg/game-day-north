@@ -6,6 +6,10 @@ const WEB_APP_URL = "https://game-day-north.vercel.app/";
 const DATA_URL = new URL("data.json", WEB_APP_URL).href;
 const CACHE_DIRECTORY = "GameDayNorth";
 const CACHE_PATH = CACHE_DIRECTORY + "/data.json";
+/* The ETag of the saved schedule, kept beside it. Sent back as
+   If-None-Match so an unchanged file costs a 304 and no body instead of
+   a whole download, a parse and a rewrite of the saved copy. */
+const CACHE_TAG_PATH = CACHE_DIRECTORY + "/data.etag";
 const MAX_JSON_BYTES = 8 * 1024 * 1024;
 const JSON_HOSTS = new Set([
   "game-day-north.vercel.app",
@@ -50,7 +54,55 @@ async function getJson(rawUrl, timeout) {
   return asJson(response.data);
 }
 
-async function writeCachedSchedule(data) {
+async function readScheduleTag() {
+  try {
+    const file = await Filesystem.readFile({
+      path: CACHE_TAG_PATH,
+      directory: Directory.Library,
+      encoding: Encoding.UTF8
+    });
+    const tag = typeof file.data === "string" ? file.data.trim() : "";
+    return /^(W\/)?"[^"\r\n]{1,200}"$/.test(tag) ? tag : "";
+  } catch (error) {
+    return "";
+  }
+}
+
+async function forgetScheduleTag() {
+  try {
+    await Filesystem.deleteFile({ path: CACHE_TAG_PATH, directory: Directory.Library });
+  } catch (error) {
+    // No tag saved yet is the normal case.
+  }
+}
+
+/* data.json, conditionally. Resolves to { unchanged: true } on a 304 for
+   the tag it sent, or to { data, etag } for a changed file. Any other
+   status is an error, as it is for every other JSON request. */
+async function getSchedule(timeout) {
+  const url = checkedJsonUrl(DATA_URL);
+  const tag = await readScheduleTag();
+  const headers = { accept: "application/json" };
+  if (tag) headers["if-none-match"] = tag;
+  const response = await CapacitorHttp.get({
+    url,
+    headers,
+    connectTimeout: timeout || 12000,
+    readTimeout: timeout || 12000,
+    responseType: "json"
+  });
+  if (response.status === 304) {
+    if (!tag) throw new Error("HTTP 304");
+    return { unchanged: true };
+  }
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error("HTTP " + response.status);
+  }
+  const etag = response.headers && response.headers.etag;
+  return { data: asJson(response.data), etag: typeof etag === "string" ? etag : null };
+}
+
+async function writeCachedSchedule(data, etag) {
   const encoded = JSON.stringify(data);
   if (new TextEncoder().encode(encoded).byteLength > MAX_JSON_BYTES) {
     throw new Error("Schedule is too large to cache");
@@ -70,6 +122,18 @@ async function writeCachedSchedule(data) {
     directory: Directory.Library,
     encoding: Encoding.UTF8
   });
+  /* The tag is written after the file, never before: a copy without a
+     tag is fetched whole next time, which is the safe direction. */
+  if (typeof etag === "string" && etag) {
+    await Filesystem.writeFile({
+      path: CACHE_TAG_PATH,
+      data: etag,
+      directory: Directory.Library,
+      encoding: Encoding.UTF8
+    });
+  } else {
+    await forgetScheduleTag();
+  }
 }
 
 async function readCachedSchedule() {
@@ -97,8 +161,10 @@ window.GDNNative = Object.freeze({
   webUrl: WEB_APP_URL,
   dataUrl: DATA_URL,
   getJson,
+  getSchedule,
   writeCachedSchedule,
   readCachedSchedule,
+  forgetScheduleTag,
   openExternal
 });
 

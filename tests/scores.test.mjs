@@ -195,10 +195,11 @@ const PREAMBLE = `
    second request quietly skipped. */
 function harness(){
   const GAMES = [], TEAMS = {}, allTeams = [], asked = [];
-  const responses = new Map();
+  const responses = new Map(), failures = new Map();
   globalThis.__gdn = {GAMES, TEAMS, allTeams,
     jget: async url => {
       asked.push(url);
+      if(failures.has(url)) throw failures.get(url);
       if(!responses.has(url)) throw new Error("no stub for " + url);
       return responses.get(url);
     }};
@@ -206,7 +207,7 @@ function harness(){
     ["TEAM_MANIFEST", "DAY", "ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate",
      "normName", "idKey", "SAME_WINDOW", "sameGame", "ESPN", "ESPN_PATH", "norm", "espnTeamObj", "venueOf", "parseEvent", "parseSummary", "clubKeys", "sameClub",
      "orientation", "findScored", "applyScored", "stateOf", "POLL_WINDOW", "needsScore",
-     "activeNow", "scoredDays", "SUMMARY_CAP", "DAY_CAP", "fillScores"], PREAMBLE);
+     "activeNow", "scoredDays", "SUMMARY_CAP", "DAY_CAP", "scoreReqs", "countsAsOutage", "fillScores"], PREAMBLE);
   // the shipped roster, built the way the page builds it
   page.TEAM_MANIFEST.teams.concat(page.TEAM_MANIFEST.events).forEach(e=>{
     TEAMS[e.id] = {id:e.id, home:e.comp, city:e.city || "", name:e.name, abbr:e.abbr,
@@ -230,6 +231,8 @@ function harness(){
        answer is about a different game than the one asked for. */
     stubSummary: (comp, ev, atEid) => responses.set(summaryUrl(comp, atEid == null ? ev.id : atEid),
       {header: {id: ev.id, competitions: ev.competitions}}),
+    // the request for this URL fails with exactly this error, as jget would throw it
+    fail: (u, err) => err === undefined ? failures.delete(u) : failures.set(u, err),
     url, summaryUrl};
 }
 
@@ -653,4 +656,52 @@ test("a live copy from the source itself is not held back", () => {
   GAMES.push(onPage({status:"live", label:"HT", score:[1, 2]}));
   page.mergeReal([onPage({status:"live", label:"70'", score:[2, 3]})]);
   assert.deepEqual(GAMES[0].result.score, [2, 3]);
+});
+
+/* --- a failed request is counted, and changes nothing on screen --- */
+
+const liveCommitted = h => asCommitted(h, Date.now() - 45*60000);
+const SUMMARY = h => h.summaryUrl("EPL", "401879318");
+
+test("a summary refused with 429 is counted as an outage and the row is left exactly as it was", async () => {
+  const h = harness();
+  const g = liveCommitted(h);
+  h.GAMES.push(g);
+  const before = JSON.stringify(g.result);
+  h.fail(SUMMARY(h), new Error("HTTP 429"));
+  assert.equal(await h.page.fillScores(), 0);
+  assert.equal(JSON.stringify(g.result), before, "no score invented, none removed, status untouched");
+  assert.deepEqual({asked:h.page.scoreReqs.asked, failed:h.page.scoreReqs.failed}, {asked:1, failed:1});
+});
+
+test("a request that never got through or met a 5xx is an outage; a 404 is an answer", async () => {
+  const h = harness();
+  const g = liveCommitted(h);
+  h.GAMES.push(g);
+  h.fail(SUMMARY(h), new TypeError("Failed to fetch"));
+  await h.page.fillScores();
+  assert.equal(h.page.scoreReqs.failed, 1, "a network error is an outage");
+  h.fail(SUMMARY(h), new Error("HTTP 503"));
+  await h.page.fillScores();
+  assert.equal(h.page.scoreReqs.failed, 1, "a 5xx is an outage");
+  h.fail(SUMMARY(h), new Error("HTTP 404"));
+  await h.page.fillScores();
+  assert.deepEqual({asked:h.page.scoreReqs.asked, failed:h.page.scoreReqs.failed}, {asked:1, failed:0},
+    "a 404 is the source saying it has nothing under that id, not the source being down");
+  assert.equal(g.result.status, "scheduled", "and still nothing was decided about the game");
+  assert.equal(h.page.countsAsOutage(new Error("HTTP 400")), false);
+  assert.equal(h.page.countsAsOutage(new Error("timeout")), true);
+});
+
+test("the counters describe the latest pass only", async () => {
+  const h = harness();
+  const g = liveCommitted(h);
+  h.GAMES.push(g);
+  h.fail(SUMMARY(h), new Error("HTTP 500"));
+  await h.page.fillScores();
+  assert.equal(h.page.scoreReqs.failed, 1);
+  h.fail(SUMMARY(h)); // the outage is over
+  h.stubSummary("EPL", LIVE_EVENT(g.start));
+  assert.equal(await h.page.fillScores(), 1, "the next pass answers and the score lands");
+  assert.deepEqual({asked:h.page.scoreReqs.asked, failed:h.page.scoreReqs.failed}, {asked:1, failed:0});
 });

@@ -56,22 +56,31 @@ const fixture = () => ({
   rugby: [], cycling: [], tennis: {matches:[], tournaments:[]}
 });
 
+/* The bridge as the page sees it. getSchedule stands in for the native
+   conditional request: the test decides whether the server answers with
+   a changed file, "not modified", or a failure. */
 const native = {
   isNative: true,
   dataUrl: "https://game-day-north.vercel.app/data.json",
-  writeCachedSchedule: async data => globalThis.__gdnSaved = data,
-  readCachedSchedule: async () => globalThis.__gdnCached()
+  getSchedule: async () => globalThis.__gdnRemote(),
+  writeCachedSchedule: async (data, etag) => { globalThis.__gdnSaved = data; globalThis.__gdnSavedTag = etag; },
+  readCachedSchedule: async () => globalThis.__gdnCached(),
+  forgetScheduleTag: async () => { globalThis.__gdnForgot = (globalThis.__gdnForgot || 0) + 1; }
 };
 globalThis.__gdnWindow = {GDNNative:native};
 globalThis.__gdnFetch = async () => { throw new Error("not configured"); };
+globalThis.__gdnRemote = async () => { throw new Error("not configured"); };
 globalThis.__gdnCached = async () => { throw new Error("no cache"); };
-const { validStaticPayload, readStaticPayload } = loadFromPage(
-  ["validStaticPayload", "readStaticPayload"],
-  `const window=globalThis.__gdnWindow;
-   const location={href:"capacitor://localhost/index.html"};
-   const jget=(...args)=>globalThis.__gdnFetch(...args);
-   let staticFetchError="";`
-);
+function nativePage(){
+  return loadFromPage(
+    ["validStaticPayload", "readStaticPayload"],
+    `const window=globalThis.__gdnWindow;
+     const location={href:"capacitor://localhost/index.html"};
+     const jget=(...args)=>globalThis.__gdnFetch(...args);
+     let staticFetchError="", lastRemoteSchedule=null;`
+  );
+}
+const { validStaticPayload, readStaticPayload } = nativePage();
 
 test("the committed schedule satisfies the native cache validator", () => {
   const data = JSON.parse(readFileSync(new URL("../data.json", import.meta.url), "utf8"));
@@ -80,10 +89,8 @@ test("the committed schedule satisfies the native cache validator", () => {
 
 test("an invalid remote schedule never replaces the last good cache", async () => {
   globalThis.__gdnSaved = null;
-  globalThis.__gdnFetch = async url => {
-    if(url.startsWith("https://")) return {generated:"not-a-date", fixtures:[]};
-    throw new Error("bundled copy should not be needed");
-  };
+  globalThis.__gdnRemote = async () => ({data:{generated:"not-a-date", fixtures:[]}, etag:'"bad"'});
+  globalThis.__gdnFetch = async () => { throw new Error("bundled copy should not be needed"); };
   const cached = fixture();
   globalThis.__gdnCached = async () => cached;
   const loaded = await readStaticPayload();
@@ -94,8 +101,9 @@ test("an invalid remote schedule never replaces the last good cache", async () =
 
 test("first-launch offline falls back to the bundled schedule", async () => {
   const bundled = fixture();
+  globalThis.__gdnRemote = async () => { throw new Error("offline"); };
   globalThis.__gdnFetch = async url => {
-    if(url.startsWith("https://")) throw new Error("offline");
+    if(url.startsWith("https://")) throw new Error("the page must not fetch data.json itself on iOS");
     return bundled;
   };
   globalThis.__gdnCached = async () => { throw new Error("no cache yet"); };
@@ -104,14 +112,70 @@ test("first-launch offline falls back to the bundled schedule", async () => {
   assert.equal(loaded.data, bundled);
 });
 
-test("a successful remote schedule becomes the last-known-good copy", async () => {
+test("a successful remote schedule becomes the last-known-good copy, tag and all", async () => {
   const remote = fixture();
-  globalThis.__gdnSaved = null;
-  globalThis.__gdnFetch = async url => {
-    assert.match(url, /^https:\/\//);
-    return remote;
-  };
+  globalThis.__gdnSaved = null; globalThis.__gdnSavedTag = null;
+  globalThis.__gdnRemote = async () => ({data:remote, etag:'"abc123"'});
+  globalThis.__gdnFetch = async () => { throw new Error("bundled copy should not be needed"); };
   const loaded = await readStaticPayload();
   assert.equal(loaded.source, "remote");
   assert.equal(globalThis.__gdnSaved, remote);
+  assert.equal(globalThis.__gdnSavedTag, '"abc123"', "the validator is saved beside the file it validates");
+});
+
+/* --- 304: the file the server has is the one already held --- */
+
+test("not-modified after a successful pass reuses the copy in memory, with no parse and no write", async () => {
+  const page = nativePage();
+  const remote = fixture();
+  globalThis.__gdnRemote = async () => ({data:remote, etag:'"v1"'});
+  const first = await page.readStaticPayload();
+  assert.equal(first.source, "remote");
+  globalThis.__gdnSaved = null;
+  let readBack = 0;
+  globalThis.__gdnCached = async () => { readBack++; return fixture(); };
+  globalThis.__gdnRemote = async () => ({unchanged:true});
+  const again = await page.readStaticPayload();
+  assert.equal(again.source, "remote", "unchanged on the server is still the server's copy");
+  assert.equal(again.data, remote, "the very object from the last pass");
+  assert.equal(readBack, 0, "the saved file was not read back");
+  assert.equal(globalThis.__gdnSaved, null, "and not rewritten");
+});
+
+test("not-modified on the first pass of a launch is answered from the saved copy", async () => {
+  const page = nativePage();
+  const saved = fixture();
+  globalThis.__gdnSaved = null;
+  globalThis.__gdnRemote = async () => ({unchanged:true});
+  globalThis.__gdnCached = async () => saved;
+  const loaded = await page.readStaticPayload();
+  assert.equal(loaded.source, "remote");
+  assert.equal(loaded.data, saved);
+  assert.equal(globalThis.__gdnSaved, null);
+});
+
+test("a tag with no good file behind it is forgotten, so the next pass asks for the whole file", async () => {
+  const page = nativePage();
+  const bundled = fixture();
+  globalThis.__gdnForgot = 0;
+  globalThis.__gdnRemote = async () => ({unchanged:true});
+  globalThis.__gdnCached = async () => ({generated:"not-a-date", fixtures:[]});
+  globalThis.__gdnFetch = async () => bundled;
+  const loaded = await page.readStaticPayload();
+  assert.equal(loaded.source, "bundle", "shown from the bundle rather than a broken save");
+  assert.equal(globalThis.__gdnForgot, 1);
+});
+
+test("the bridge sends the saved tag and treats 304 as unchanged, never as an error", () => {
+  assert.match(BRIDGE, /headers\["if-none-match"\] = tag/);
+  assert.match(BRIDGE, /response\.status === 304/);
+  assert.match(BRIDGE, /return \{ unchanged: true \}/);
+  assert.match(BRIDGE, /data\.etag/, "the tag lives beside the saved file");
+  const write = /async function writeCachedSchedule\(data, etag\) \{[\s\S]*?\n\}/.exec(BRIDGE)[0];
+  assert.ok(write.indexOf("path: CACHE_PATH") < write.indexOf("path: CACHE_TAG_PATH"),
+    "the file is written before the tag that vouches for it");
+  assert.match(write, /else \{\s*await forgetScheduleTag\(\);/, "no tag on the answer means no tag on disk");
+  const get = /async function getSchedule\(timeout\) \{[\s\S]*?\n\}/.exec(BRIDGE)[0];
+  assert.match(get, /if \(!tag\) throw new Error\("HTTP 304"\)/, "a 304 nobody asked for is not an answer");
+  assert.match(get, /checkedJsonUrl\(DATA_URL\)/, "the same host check as every other request");
 });
