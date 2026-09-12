@@ -7,6 +7,7 @@ const PAGE = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
 const CONFIG = readFileSync(new URL("../capacitor.config.json", import.meta.url), "utf8");
 const BRIDGE = readFileSync(new URL("../src/native-bridge.js", import.meta.url), "utf8");
 const IOS_BUILD = readFileSync(new URL("../scripts/build-ios.mjs", import.meta.url), "utf8");
+const SPM = readFileSync(new URL("../ios/App/CapApp-SPM/Package.swift", import.meta.url), "utf8");
 
 test("the native shell bundles dist and never points its WebView at a server", () => {
   assert.match(CONFIG, /"webDir":\s*"dist"/);
@@ -14,6 +15,16 @@ test("the native shell bundles dist and never points its WebView at a server", (
   assert.doesNotMatch(CONFIG, /\burl\s*:/);
   assert.match(IOS_BUILD, /copyFile\(join\(root, "data\.json"\)/);
   assert.match(IOS_BUILD, /cp\(join\(root, "fonts"\)/);
+});
+
+test("the Swift package points at plain node_modules paths, never a pnpm store", () => {
+  /* `cap sync` writes the real path of each plugin into Package.swift. A
+     pnpm install resolves to node_modules/.pnpm/<hashed name>/..., which
+     only exists on the machine that ran pnpm. `npm ci` keeps the paths
+     portable. */
+  assert.doesNotMatch(SPM, /\.pnpm/);
+  assert.match(SPM, /path: "\.\.\/\.\.\/\.\.\/node_modules\/@capacitor\/browser"/);
+  assert.match(SPM, /path: "\.\.\/\.\.\/\.\.\/node_modules\/@capacitor\/filesystem"/);
 });
 
 test("fonts are local assets, not requests to Google", () => {
