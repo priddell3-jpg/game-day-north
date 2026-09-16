@@ -6,13 +6,14 @@ name: Range still covers its span
 # once returned the first day only, on 9 Sep 2026 it returned the whole
 # span, and on 15 Sep 2026 it began answering HTTP 400 on every league.
 #
-# If the range truncates again, a league silently loses everything past
-# its first day; if it errors, the build is on the expensive per-day
-# plan. The per-competition floor in the build would catch the first on
-# the next run, but it would report a collapsed league rather than the
-# reason, and nothing in the build reports the second beyond a log line.
-# This says the reason, directly, the night it happens — and an HTTP
-# error on the ranged request is a failure here, not a skipped check.
+# Only one of those is dangerous. A range that answers but truncates
+# means a league silently loses everything past its first day, and the
+# per-competition floor in the build would catch that on the next run
+# while reporting a collapsed league rather than the reason. This says
+# the reason, directly, the night it happens, and is the one thing that
+# fails the check. A range that is refused is handled — the build falls
+# back to one request per day on its own — so it is logged as the plan
+# the build is on and passes; the cost is requests, not fixtures.
 #
 # Eight small requests. Deliberately not part of the fixture build, so a
 # check failing never stops fixtures being published.

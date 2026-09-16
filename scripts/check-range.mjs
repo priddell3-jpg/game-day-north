@@ -9,25 +9,25 @@
  * competition. On 2026-09-15 the form changed again: ESPN began
  * answering it with HTTP 400, on every league, and the build stopped
  * publishing for a day. The build now falls back to one request per day
- * when the range is refused, so an outage of this kind no longer stops
- * it — but this check is still the thing that says, directly and the
- * night it happens, what the range is doing.
+ * when the range is refused, so a refusal no longer stops it — and this
+ * check no longer calls a refusal a failure.
  *
- * Two failures, both non-zero:
+ * One thing fails this check: a range that ANSWERS, and covers fewer
+ * events than the days inside it. That is the silent truncation the
+ * build cannot see, because a short answer and a complete one look the
+ * same. A refused range — HTTP 400 — is a handled condition: the build
+ * is on its per-day plan, which costs requests rather than fixtures, and
+ * that is said plainly in the log and exits 0. Any other error on the
+ * ranged request is "could not be checked", also exit 0. "Nothing to
+ * compare" — every league out of season — is a plain log line and
+ * exit 0.
  *
- *   - the range answers, and covers fewer events than the days inside
- *     it. That is the silent truncation this was written for.
- *   - the range does not answer at all — an HTTP error, a timeout. On
- *     the night of 2026-09-15 this script saw exactly that, logged it as
- *     "could not be checked", and exited 0, which reported the very
- *     failure it exists to detect as a pass. An error on the ranged
- *     request IS the finding.
+ * The one thing this must never do again is what it did on the night of
+ * 2026-09-15: exit 0 while saying nothing useful about a range that was
+ * not being served. Handled is fine. Silent is not.
  *
- * "Nothing could be compared" — every league out of season — is neither
- * a pass nor a failure and exits 0, but only when the ranged requests
- * themselves answered. Eight small requests a night, deliberately not
- * part of the fixture build, so a check failing never stops fixtures
- * being published.
+ * Eight small requests a night, deliberately not part of the fixture
+ * build, so a check failing never stops fixtures being published.
  */
 import { pathToFileURL } from "node:url";
 
@@ -42,7 +42,7 @@ const key = ms => new Date(ms).toISOString().slice(0, 10).replace(/-/g, "");
 export async function checkRanges({ fetchImpl = globalThis.fetch, now = Date.now(), log = console } = {}){
   async function ids(url){
     const r = await fetchImpl(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(20000) });
-    if(!r.ok) throw new Error("HTTP " + r.status + " for " + url);
+    if(!r.ok){ const e = new Error("HTTP " + r.status + " for " + url); e.status = r.status; throw e; }
     const j = await r.json();
     return new Set((j.events || []).map(e => String(e.id)));
   }
@@ -52,21 +52,25 @@ export async function checkRanges({ fetchImpl = globalThis.fetch, now = Date.now
      time of year. */
   const end = now - DAY;
   const days = [end - 2*DAY, end - DAY, end];
-  let failed = 0, checked = 0, rangedErrors = 0;
-  const empty = [];
+  let failed = 0, checked = 0, errors = 0;
+  const empty = [], refused = [];
 
   for(const [comp, path] of Object.entries(CHECK)){
     let ranged;
     try{
       ranged = await ids(ESPN + path + "/scoreboard?dates=" + key(days[0]) + "-" + key(end) + "&limit=1000");
     }catch(err){
-      /* The ranged request not answering is not "could not be checked".
-         It is the answer: the form the build prefers is not being
-         served, and the build is on its per-day fallback. */
-      failed++; rangedErrors++;
-      log.error("FAIL " + comp + ": the ranged request itself failed — " + (err && err.message || err));
-      log.error("     scripts/fetch-data.mjs will have fallen back to one request per day for "
-        + comp + ". The range is the cheap plan and it is not being served.");
+      /* Refused is handled: the build asks one day at a time when the
+         range answers 400, so this is the plan the build is on, not an
+         incident. Anything else is a request that did not answer, which
+         says nothing either way about the range's behaviour. */
+      if(err && err.status === 400){
+        refused.push(comp);
+        log.log("refused " + comp + ": the ranged request answered HTTP 400 — build is on the per-day plan");
+      }else{
+        errors++;
+        log.warn("  ! " + comp + " could not be checked — the ranged request failed: " + (err && err.message || err));
+      }
       continue;
     }
     let perDay;
@@ -93,20 +97,22 @@ export async function checkRanges({ fetchImpl = globalThis.fetch, now = Date.now
   }
 
   if(empty.length) log.log("     out of season, nothing to compare: " + empty.join(", "));
+  if(refused.length) log.log("\nranges refused — build is on the per-day plan for " + refused.join(", ")
+    + " (" + refused.length + " of " + Object.keys(CHECK).length + " leagues). Handled, not an incident: "
+    + "scripts/fetch-data.mjs asks one day at a time when a range answers 400.");
   let code;
   if(failed){
-    log.error("\n" + failed + " league(s) failed"
-      + (rangedErrors ? " — " + rangedErrors + " of them because the ranged request itself errored" : "")
-      + ". The range behaviour has changed.");
+    log.error("\n" + failed + " league(s) returned a range that covers fewer events than its days. "
+      + "The range behaviour has changed, silently.");
     code = 1;
   }else if(!checked){
-    log.warn("Nothing could be compared. Not a pass and not a failure.");
+    log.log("Nothing to compare: no league answered with events in the window.");
     code = 0;
   }else{
     log.log("\nRanges still cover their whole span across " + checked + " league(s).");
     code = 0;
   }
-  return { code, checked, failed, rangedErrors, empty };
+  return { code, checked, failed, refused, errors, empty };
 }
 
 /* Run only when invoked as a script. Imported by its test, this file

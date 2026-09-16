@@ -390,7 +390,7 @@ Each of these cost real debugging time and is handled in both the client and the
 
 - A game is filed under its **US Eastern date**. A 7:05pm EDT game is the 21st to ESPN and the 22nd in UTC; ask for the wrong one and the day comes back empty.
 - The **season schedule carries no live score**, and omits games entirely. A finished game can read `STATUS_SCHEDULED` 0-0 there, so it is queried for fixtures and never trusted for a result; the scoreboard supplies both, and the copy carrying a score wins.
-- **A `YYYYMMDD-YYYYMMDD` range has behaved three ways.** It once returned only the first day. Re-measured on 9 Sep 2026 against one request per day, by event id, it returned the whole span — baseball 273 against 273, the Premier League 30 against 30, the NFL 32 against 32 — and the build moved onto one such request per competition. On 15 Sep 2026 ESPN began answering the form with HTTP 400 (`Failed to get events endpoint.`) on every league, while a single day (`dates=YYYYMMDD`) carried on answering. The build therefore tries the range first and, when it is refused, asks one day at a time; `scripts/check-range.mjs` re-checks the range nightly and fails, saying why, whether it truncates or errors. The refused response is saved in `tests/fixtures/espn-scoreboard-range-400.json`.
+- **A `YYYYMMDD-YYYYMMDD` range has behaved three ways.** It once returned only the first day. Re-measured on 9 Sep 2026 against one request per day, by event id, it returned the whole span — baseball 273 against 273, the Premier League 30 against 30, the NFL 32 against 32 — and the build moved onto one such request per competition. On 15 Sep 2026 ESPN began answering the form with HTTP 400 (`Failed to get events endpoint.`) on every league, while a single day (`dates=YYYYMMDD`) carried on answering. The build therefore tries the range first and, when it is refused, asks one day at a time; `scripts/check-range.mjs` re-checks the range nightly, and fails only if a range that *answers* covers fewer events than the days inside it — the silent truncation the build cannot see. A refused range is logged as the handled condition it now is, with the build on its per-day plan, and passes. The refused response is saved in `tests/fixtures/espn-scoreboard-range-400.json`.
 - **`limit` is honoured to exactly 1000 and silently collapses to 25 above it**, so the most generous-looking value returns almost nothing. A response that comes back exactly full is indistinguishable from a truncated one, so it is never believed: the range is halved and asked again, and a single day still at the ceiling stops the build. Baseball needs this — 13 events a day league-wide is about 1,090 across the window.
 - **A result is asked for by its own event id, not by the day it falls on.** The date scoreboard is one page for a whole day, so every score on that date depends on that page being complete, and a fixture missing from it is one nothing can settle — Royals at Blue Jays on 26 Aug 2026 sat at `scheduled` for hours after the final out while `summary?event=401816683` had the full result. Status and scores live under `header.competitions[0]`; the rest of the response — boxscore, play-by-play, odds, standings, 892 KB of it for one baseball game — is parsed and dropped. A summary states no venue there, filing one under `gameInfo`, so a top-up patches the fixture rather than replacing it and the venue already known survives. The date scoreboard is still queried: it discovers games the season schedule omits, and it is the only thing a fixture carrying no event id can be asked about.
 - Sources fail independently. Out-of-season cup competitions 404 as a matter of course, and one of those must never be able to blank the rest of the page.
@@ -476,16 +476,21 @@ Roughly eight runs were missed before anyone looked.
 `.github/workflows/freshness-sentinel.yml` runs hourly and asks **the deployed
 site** — not the repository — for `data.json`. A build that commits but never
 deploys is the same outage seen from outside, and reading the committed file
-would miss it. If `generated` is more than **seven hours** old, or the file is
+would miss it. If `generated` is more than **eleven hours** old, or the file is
 unreachable or unreadable, it opens a single pinned issue labelled
 `stale-data` and rewrites that issue's body on every subsequent check rather
 than commenting again. It closes the issue once the served file is current.
 
-Seven hours is two missed runs plus slack. It has to clear the build's own
-`MAX_AGE`, which rewrites the stamp at six hours even when no fixture moved,
-or the sentinel would be reporting the build working as designed; the tests
-assert those numbers still agree with each other rather than that any one of
-them is seven.
+Eleven hours is where the threshold settled after seven proved too tight. The
+refresh is scheduled every three hours, but GitHub's scheduler lands the runs
+anywhere from 2.3 to 7.9 hours apart, and at seven the sentinel opened four
+issues on a refresh that was working (#12, #13, #15, #16), each closed by the
+next healthy check. Eleven is three hours over the worst gap seen. It has to
+clear the build's own `MAX_AGE`, which rewrites the stamp at six hours even
+when no fixture moved, or the sentinel would be reporting the build working
+as designed, and it has to stay under four refresh intervals so a dead cron
+is still named the same day; the tests assert those relationships rather
+than that any one number is eleven.
 
 An alert nobody has watched fire is a hope rather than a safety net, and this
 one cannot be exercised by waiting — it only opens an issue when the site is
@@ -503,6 +508,33 @@ sentinel is itself a scheduled workflow. It catches a refresh that has stopped
 while Actions is otherwise working, which is the failure that happened. It
 cannot catch GitHub's scheduler stopping altogether, because then it stops
 too.
+
+### Ops notes
+
+Outages, in order, with what held and what did not.
+
+- **15–16 September 2026 — ESPN began refusing ranged scoreboard requests.**
+  From 11:53 UTC on the 15th every `dates=YYYYMMDD-YYYYMMDD` request answered
+  HTTP 400 (`Failed to get events endpoint.`) on all thirteen competitions,
+  while single days went on answering. The build treated the refusal as the
+  fatal failure it was — a request that is a competition's entire window —
+  so four scheduled runs (#226–#229) died in the "Build data.json" step and
+  nothing was published for about 27 hours. **The publish guard held:** no
+  file with a league missing was ever committed or served; visitors read the
+  last good `data.json` and the page's direct-fetch fallback. **The sentinel
+  caught it,** opening #41 at 19:11 UTC once the served file passed the
+  threshold, and closed and unpinned it on the first hourly check after the
+  fix (#42) published. **GitHub's cron drift delayed the all-clear:** the
+  refresh was landing five to seven hours apart rather than three, so the
+  merged fix waited on the next slot and the sentinel on the one after that.
+  **The gap was the range check's blind spot:** `scripts/check-range.mjs`
+  had read an HTTP error on the ranged request as "could not be checked" and
+  exited 0, so the nightly run on the morning of the 16th reported the very
+  failure it existed to see as a pass. The build now falls back to one
+  request per day when a range is refused, the check treats a refused range
+  as the handled condition it has become and fails only on silent
+  truncation, and the sentinel threshold moved from seven hours to eleven
+  because the same scheduler drift had already false-alarmed four times.
 
 ### Tennis is a sport, not a list of people
 
