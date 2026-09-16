@@ -205,6 +205,21 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   font:inherit;font-size:13px;color:var(--ink);min-width:180px;
 }
 .search::placeholder{color:var(--muted)}
+/* iOS zooms the page in when a focused text input's computed font size is
+   under 16px, and does not zoom back out on blur. In Safari that leaves
+   the drawer clipped on the right; in the app a pinch cannot undo it and
+   only a relaunch does. So on a touch screen every text input is 16px —
+   this class is every input the page has — with the padding brought in
+   and the width pinned so the box keeps the same 180×33 it had at 13px,
+   and the drawer header wraps exactly as before at 320px. The desktop
+   keeps the smaller size, where no browser zooms on focus. The viewport
+   tag is deliberately not the fix: user-scalable=no or maximum-scale
+   would stop the zoom by taking pinch-zoom away from everyone, which is
+   an accessibility cost paid to hide a one-line stylesheet problem.
+   tests/touch-inputs.test.mjs holds every control to this. */
+@media (pointer: coarse){
+  .search{font-size:16px;padding:4px 10px;width:180px}
+}
 .lg-group{margin-bottom:14px}
 .lg-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .lg-count{font-family:var(--mono);font-size:10px;color:var(--muted);padding:1px 6px;
