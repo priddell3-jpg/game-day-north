@@ -41,12 +41,16 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # The refresh runs every three hours and rewrites the stamp once the
-  # file is six hours old even when no fixture moved, so a healthy site
-  # is never much past six. Seven is two missed runs plus slack: late
-  # enough not to cry about one skipped slot, early enough that a dead
-  # cron is named the same morning rather than the next day.
-  MAX_AGE_HOURS: "7"
+  # The refresh is scheduled every three hours and rewrites the stamp
+  # once the file is six hours old even when no fixture moved, so a
+  # healthy site is never much past six — on paper. In practice GitHub's
+  # scheduler lands the runs 2.3 to 7.9 hours apart (measured 13-16 Sep
+  # 2026), and at seven hours this fired four times on a working refresh
+  # (#12, #13, #15, #16), each closing itself within two hours. Eleven
+  # is three hours over the worst gap seen, and the most the freshness
+  # test permits: under four refresh intervals, so a dead cron is still
+  # named the same day rather than the next one.
+  MAX_AGE_HOURS: "11"
   # An alert nobody has ever seen fire is a hope, not a safety net, and
   # this one cannot be exercised by waiting: it only opens an issue when
   # the site is genuinely stale, which is the thing being prevented. A
