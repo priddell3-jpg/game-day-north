@@ -15,11 +15,17 @@
  *     nothing. A response that comes back exactly full is indistinguishable
  *     from a truncated one and is never trusted.
  *
- * A fourth quirk used to be here and is no longer true: a
- * YYYYMMDD-YYYYMMDD range once returned the first day only. Measured
- * again on 2026-09-09 it returns the whole span, and the same event ids
- * as one request per day. That is what lets one request cover a league's
- * entire window; see scripts/lib/fetch-plan.mjs and tests/fetch-plan.test.mjs.
+ * A fourth quirk has now changed twice. A YYYYMMDD-YYYYMMDD range once
+ * returned the first day only; measured on 2026-09-09 it returned the
+ * whole span, the same event ids as one request per day, and the build
+ * moved onto one such request per competition. On 2026-09-15 ESPN began
+ * answering that form with HTTP 400 on every league, and nothing was
+ * published for a day. So the build no longer bets on one behaviour: it
+ * tries the range first, because it is cheap, and when the range is
+ * refused it asks one day at a time, which is the form the scoreboard
+ * has accepted throughout. Which plan each competition used is logged
+ * and written into counts.planByComp. See scripts/lib/fetch-plan.mjs and
+ * tests/fetch-plan.test.mjs, tests/fetch-fallback.test.mjs.
  *
  * No dependencies. Node 20+ for built-in fetch.
  */
@@ -31,7 +37,7 @@ import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
 import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
          STANDINGS_HOLD } from "./lib/race.mjs";
 import { TABLE_SOURCES, tableProblem } from "./lib/records.mjs";
-import { MAX_LIMIT, planRanges, splitRange, dateKey, compFloorProblems, describeFloor,
+import { MAX_LIMIT, planRanges, planDays, splitRange, dateKey, compFloorProblems, describeFloor,
          nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
 import { normalizeTennis, normalizeRankings, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
          HORIZON_DAYS as TENNIS_FORWARD_DAYS } from "./lib/tennis.mjs";
@@ -92,9 +98,20 @@ function idFor(displayName){
    and a hard failure answers FAILED, meaning "never got an answer". The
    distinction is a fact the build already had and was throwing away. */
 const FAILED = Symbol("fetch failed");
+/* A third answer, for one caller only: the request's FORM was refused.
 
-let calls = 0, failures = 0, consecutive = 0, ok = 0;
-async function get(url){
+   On 2026-09-15 ESPN began answering every ranged scoreboard request
+   with HTTP 400 — "Failed to get events endpoint." — while the same
+   endpoint asked for a single day carried on answering. That is not an
+   outage and retrying it asks the same rejected question again; it is
+   the API saying this form no longer exists, and the right response is
+   a different form. Only a caller that has one asks for the distinction
+   (`rejectable`); every other call site sees a 400 as the failure it
+   otherwise is, exactly as before. */
+const REJECTED = Symbol("request rejected");
+
+let calls = 0, failures = 0, consecutive = 0, ok = 0, rejected = 0;
+async function get(url, opts = {}){
   calls++;
   // If the very first requests all fail there is no route to the API at
   // all. Bail immediately rather than spending twenty minutes proving it.
@@ -105,6 +122,7 @@ async function get(url){
     try{
       const res = await fetch(url, {headers:{"accept":"application/json"}, signal:AbortSignal.timeout(15000)});
       if(res.status === 404){ ok++; consecutive = 0; return null; }   // routine: out of season
+      if(res.status === 400 && opts.rejectable){ rejected++; return REJECTED; }
       if(!res.ok) throw new Error("HTTP "+res.status);
       const j = await res.json();
       ok++; consecutive = 0;
@@ -128,13 +146,25 @@ async function get(url){
    thing this file could do. A single day that still comes back full is
    the end of the road and throws.
 
-   This replaces two things at once. The per-team season schedules, which
-   cost one request per followed team and were the only source of the
-   forward window for the North American leagues; and the per-date
-   scoreboards, which covered eight days back and three forward. The
-   range covers both spans and carries scores exactly as the per-date
-   scoreboard did. */
+   The ranged request replaced two things at once. The per-team season
+   schedules, which cost one request per followed team and were the only
+   source of the forward window for the North American leagues; and the
+   per-date scoreboards, which covered eight days back and three forward.
+   The range covers both spans and carries scores exactly as the per-date
+   scoreboard did.
+
+   And when the range is refused — HTTP 400, which ESPN began answering
+   on 2026-09-15 for every league — the same span is asked for one day
+   at a time instead. Not the per-team schedules: those never published
+   the basketball regular season, so going back to them would drop a
+   league the file already carries. A day is the form that has always
+   worked, it carries scores, and it cannot be silently truncated below
+   the ceiling. It costs about eighty-four requests per competition
+   rather than one, which is the price of not depending on a behaviour
+   that has now changed twice. The plan each competition ended up on is
+   recorded in planByComp, logged, and written into the file. */
 let preseasonSkipped = 0;
+const planByComp = {};
 /* Which season each competition is actually playing, as its own fixtures
    state it. Read here because this is the only place the raw events are
    in hand, and used far below to tell a current table from last
@@ -148,13 +178,48 @@ const noteSeason = (comp, ev) => {
   if(!seasonYears.has(comp)) seasonYears.set(comp, new Set());
   seasonYears.get(comp).add(y);
 };
-async function scoreboardRange(comp, path, fromMs, toMs, out){
+/* The same span, one request per day. The fallback, not the default:
+   it is reached only when the ranged form is refused, and it is held
+   to the same rule — a day that cannot be fetched is fatal, because
+   every day is part of the window and a file missing part of a league
+   is a file with a league missing. */
+async function scoreboardDays(comp, path, fromMs, toMs, consume){
   let asked = 0;
+  for(const [key] of planDays(fromMs, toMs)){
+    const r = await get(ESPN + path + "/scoreboard?dates=" + key + "&limit=" + MAX_LIMIT);
+    asked++;
+    if(r === FAILED){
+      throw new Error(comp + " " + key + " could not be fetched. That day is part of the "
+        + "competition's window, so continuing would publish a file with part of "
+        + comp + " missing.");
+    }
+    const events = ((r || {}).events) || [];
+    if(events.length >= MAX_LIMIT){
+      throw new Error(comp + " returned " + events.length + " events for the single day "
+        + key + " — at the request ceiling, so the answer may be truncated and "
+        + "cannot be trusted");
+    }
+    consume(events);
+  }
+  return asked;
+}
+async function scoreboardRange(comp, path, fromMs, toMs, out){
+  let asked = 0, dayRequests = 0, refused = 0;
+  const consume = events => {
+    for(const ev of events){
+      noteSeason(comp, ev);
+      /* Preseason is dropped deliberately, and the reasoning lives with
+         the filter in scripts/lib/fetch-plan.mjs rather than here, so it
+         is one line to revisit rather than archaeology. */
+      if(!isCarriedSeason(ev)){ preseasonSkipped++; continue; }
+      out(parseEvent(ev, comp));
+    }
+  };
   const queue = planRanges(comp, fromMs, toMs);
   while(queue.length){
     const [fromKey, toKey, a, b] = queue.shift();
     const url = ESPN + path + "/scoreboard?dates=" + fromKey + "-" + toKey + "&limit=" + MAX_LIMIT;
-    const r = await get(url);
+    const r = await get(url, { rejectable: true });
     asked++;
     /* Fatal, and deliberately so. This request is the competition's
        whole window; carrying on would publish a file with a league
@@ -164,6 +229,17 @@ async function scoreboardRange(comp, path, fromMs, toMs, out){
       throw new Error(comp + " " + fromKey + "-" + toKey + " could not be fetched. That request "
         + "is the competition's entire window, so continuing would publish a file with "
         + comp + " missing.");
+    }
+    /* Refused, not failed: the API answered, and said this form is not
+       one it takes. The same span is asked for a day at a time, under
+       the same fatal-on-failure rule, and the run log says so. */
+    if(r === REJECTED){
+      refused++;
+      console.warn("  ! " + comp + " " + fromKey + "-" + toKey + " refused as a range (HTTP 400)"
+        + " — asking one day at a time instead");
+      const n = await scoreboardDays(comp, path, a, b, consume);
+      asked += n; dayRequests += n;
+      continue;
     }
     const events = ((r || {}).events) || [];
     if(events.length >= MAX_LIMIT){
@@ -179,15 +255,14 @@ async function scoreboardRange(comp, path, fromMs, toMs, out){
                     [dateKey(halves[1][0]), dateKey(halves[1][1]), halves[1][0], halves[1][1]]);
       continue;
     }
-    for(const ev of events){
-      noteSeason(comp, ev);
-      /* Preseason is dropped deliberately, and the reasoning lives with
-         the filter in scripts/lib/fetch-plan.mjs rather than here, so it
-         is one line to revisit rather than archaeology. */
-      if(!isCarriedSeason(ev)){ preseasonSkipped++; continue; }
-      out(parseEvent(ev, comp));
-    }
+    consume(events);
   }
+  /* "ranged" when every chunk was accepted, "per-day" when every chunk
+     was refused, "mixed" when a competition with more than one chunk
+     had one accepted and one refused — baseball is two chunks. */
+  planByComp[comp] = !dayRequests ? "ranged" : refused === asked - dayRequests ? "per-day" : "mixed";
+  console.log("    " + comp.padEnd(7) + planByComp[comp].padEnd(8) + String(asked).padStart(4)
+    + " request(s)" + (refused ? " — " + refused + " range(s) refused, " + dayRequests + " day(s) asked" : ""));
   return asked;
 }
 
@@ -380,14 +455,17 @@ for(const t of TEAMS.teams){
 
 console.log("Building fixtures for " + TEAMS.teams.length + " teams across " + comps.size + " competitions");
 
-/* One ranged request per competition, covering the whole window.
+/* One ranged request per competition, covering the whole window — or,
+   where ESPN refuses the range, one request per day of it.
 
    This used to be three loops. The North American leagues were built
    from one season-schedule request per followed team, which is the cost
    that would have multiplied by five as the roster grows, plus per-date
    scoreboards over a narrow near window; soccer was fetched a month at a
    time. All three are the same question asked three ways, and the ranged
-   scoreboard answers it once.
+   scoreboard answers it once — when it answers. Since 2026-09-15 it has
+   not, and the per-day plan in scoreboardRange answers it eighty-four
+   times instead, which is still one question.
 
    Verified before the swap, over this exact window and against every
    team in each league: every event id the per-team schedules returned is
@@ -402,8 +480,10 @@ for(const comp of comps){
   scoreboardCalls += await scoreboardRange(comp, PATHS[comp],
     scoreboardWindow.from, scoreboardWindow.to, add);
 }
-console.log("Fixtures: " + scoreboardCalls + " ranged request(s) across " + comps.size
+const planTally = Object.values(planByComp).reduce((a, p) => { a[p] = (a[p] || 0) + 1; return a; }, {});
+console.log("Fixtures: " + scoreboardCalls + " scoreboard request(s) across " + comps.size
   + " competition(s), " + dateKey(scoreboardWindow.from) + "-" + dateKey(scoreboardWindow.to)
+  + " — plans: " + Object.entries(planTally).map(([p, n]) => n + " " + p).join(", ")
   + (preseasonSkipped ? ", " + preseasonSkipped + " preseason event(s) skipped" : ""));
 
 /* Score top-up, one event at a time.
@@ -1172,6 +1252,11 @@ const out = {
   window: { from: new Date(now - BACK*DAY).toISOString(), to: new Date(now + FORWARD*DAY).toISOString() },
   source: "ESPN public scoreboard API",
   counts: { fixtures: fixtures.length, withScore, byComp, requests: calls, failed: failures,
+            /* Which form each competition's window was fetched by. "ranged"
+               is one request; "per-day" is one per day, the fallback the
+               build takes when ESPN refuses the range. Written so the file
+               says which, rather than a log nobody reads. */
+            planByComp, rangedRefused: rejected,
             /* Fixtures the summary top-up could not reach because the cap
                bit. Any number here means some older games are showing a
                score the scoreboard happened to have rather than the one
@@ -1216,5 +1301,5 @@ writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +
   rugbyOut.length + " rugby, " + standings.length + " standings groups, " +
   tableRows + " table rows, " +
-  calls + " requests, " + failures + " failed");
+  calls + " requests, " + failures + " failed, " + rejected + " refused");
 console.log("  " + Object.entries(byComp).map(([k,v])=>k+":"+v).join("  "));

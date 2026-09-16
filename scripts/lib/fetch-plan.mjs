@@ -59,6 +59,21 @@ export function planRanges(comp, fromMs, toMs, opts = {}){
   return out;
 }
 
+/* The same window, one day at a time: the plan the build falls back to
+   when ESPN refuses the ranged form outright.
+
+   Since 2026-09-15 a YYYYMMDD-YYYYMMDD request answers HTTP 400 on every
+   league, where a week earlier it answered the whole span. A single day
+   is the form the scoreboard has always accepted, so it is the floor
+   the build stands on when the cheaper form gives way. Inclusive of
+   both ends and keyed exactly as planRanges keys its chunks, so the two
+   plans cover the same days. */
+export function planDays(fromMs, toMs){
+  const out = [];
+  for(let d = fromMs; d <= toMs; d += DAY) out.push([dateKey(d), d]);
+  return out;
+}
+
 /* Halve a range that came back full. Returns null when there is nothing
    left to halve, which is the point at which a full response can only
    mean a genuinely truncated answer. */

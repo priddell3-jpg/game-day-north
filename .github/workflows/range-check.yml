@@ -1,14 +1,18 @@
 name: Range still covers its span
 
 # scripts/fetch-data.mjs asks for a competition's whole window in one
-# ranged request. That works today, and this repository documented — at
-# the time correctly — that it did not: a YYYYMMDD-YYYYMMDD range once
-# returned the first day only.
+# ranged request, and falls back to one request per day when ESPN refuses
+# the range. The range has behaved three ways: a YYYYMMDD-YYYYMMDD request
+# once returned the first day only, on 9 Sep 2026 it returned the whole
+# span, and on 15 Sep 2026 it began answering HTTP 400 on every league.
 #
-# If that behaviour reverts, every league silently loses everything past
-# its first day. The per-competition floor in the build would catch the
-# damage on the next run, but it would report a collapsed league rather
-# than the reason. This says the reason, directly, the night it happens.
+# If the range truncates again, a league silently loses everything past
+# its first day; if it errors, the build is on the expensive per-day
+# plan. The per-competition floor in the build would catch the first on
+# the next run, but it would report a collapsed league rather than the
+# reason, and nothing in the build reports the second beyond a log line.
+# This says the reason, directly, the night it happens — and an HTTP
+# error on the ranged request is a failure here, not a skipped check.
 #
 # Eight small requests. Deliberately not part of the fixture build, so a
 # check failing never stops fixtures being published.

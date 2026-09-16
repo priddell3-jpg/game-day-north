@@ -1,0 +1,26 @@
+{
+  "note": "A ranged scoreboard request, saved the day ESPN began refusing the form. Captured 2026-09-16 14:31 UTC with curl --compressed; the same body came back for all thirteen competition paths. A single day (dates=YYYYMMDD) answered 200 at the same moment.",
+  "request": {
+    "method": "GET",
+    "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20260908-20261130&limit=1000",
+    "headers": {
+      "accept": "application/json"
+    }
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json;charset=UTF-8",
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET,PUT,POST,DELETE,OPTIONS,HEAD",
+    "access-control-expose-headers": "content-length,location",
+    "link": "<scoreboard.json#>; rel=\"describedby\"",
+    "content-encoding": "gzip",
+    "cache-control": "max-age=461",
+    "vary": "Accept-Encoding",
+    "content-length": "80"
+  },
+  "body": {
+    "code": 400,
+    "message": "Failed to get events endpoint."
+  }
+}
