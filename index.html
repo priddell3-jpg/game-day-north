@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-VH5aMnaJsvOh4wfBjl4/I1Onic7xnQnkO6VVWBdf+Ls='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KY5oe2quMaoWw/1KovEFzznmQ/Eub+PoGTYe6RJFTk0='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -291,6 +291,7 @@ main{padding:22px 0 80px}
 .g-time .ap{font-size:10px;color:var(--muted);margin-left:2px}
 .g-time .moved{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--live);margin-top:2px}
 .g-time .was{display:block;font-size:10px;color:var(--muted);text-decoration:line-through}
+.g-time .alt-time{display:block;font-size:10px;color:var(--muted)}
 .g-match{min-width:0;display:flex;flex-direction:column;gap:4px}
 .g-team{min-width:0}
 .g-teams{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -3659,6 +3660,1300 @@ const TEAM_MANIFEST = {
    "tz": "CT",
    "color": "#EC1458",
    "feedName": "St. Louis CITY SC"
+  },
+  {
+   "id": "nt-can",
+   "comp": "INTF",
+   "espn": "206",
+   "name": "Canada",
+   "abbr": "CAN",
+   "tz": "ET",
+   "color": "#ED2224",
+   "feedName": "Canada",
+   "extraComps": [
+    "CNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-usa",
+   "comp": "INTF",
+   "espn": "660",
+   "name": "United States",
+   "abbr": "USA",
+   "tz": "ET",
+   "color": "#213065",
+   "feedName": "United States",
+   "aliases": [
+    "USA",
+    "United States of America"
+   ],
+   "extraComps": [
+    "CNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-mex",
+   "comp": "INTF",
+   "espn": "203",
+   "name": "Mexico",
+   "abbr": "MEX",
+   "tz": "CT",
+   "color": "#006847",
+   "feedName": "Mexico",
+   "extraComps": [
+    "CNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-eng",
+   "comp": "INTF",
+   "espn": "448",
+   "name": "England",
+   "abbr": "ENG",
+   "tz": "UK",
+   "color": "#EA1F29",
+   "feedName": "England",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-fra",
+   "comp": "INTF",
+   "espn": "478",
+   "name": "France",
+   "abbr": "FRA",
+   "tz": "CET",
+   "color": "#000080",
+   "feedName": "France",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-ger",
+   "comp": "INTF",
+   "espn": "481",
+   "name": "Germany",
+   "abbr": "GER",
+   "tz": "CET",
+   "color": "#00CED1",
+   "feedName": "Germany",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-esp",
+   "comp": "INTF",
+   "espn": "164",
+   "name": "Spain",
+   "abbr": "ESP",
+   "tz": "CET",
+   "color": "#C60B1E",
+   "feedName": "Spain",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-ita",
+   "comp": "INTF",
+   "espn": "162",
+   "name": "Italy",
+   "abbr": "ITA",
+   "tz": "CET",
+   "color": "#103CD6",
+   "feedName": "Italy",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-por",
+   "comp": "INTF",
+   "espn": "482",
+   "name": "Portugal",
+   "abbr": "POR",
+   "tz": "CET",
+   "color": "#DA291C",
+   "feedName": "Portugal",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-ned",
+   "comp": "INTF",
+   "espn": "449",
+   "name": "Netherlands",
+   "abbr": "NED",
+   "tz": "CET",
+   "color": "#FB5D00",
+   "feedName": "Netherlands",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-arg",
+   "comp": "INTF",
+   "espn": "202",
+   "name": "Argentina",
+   "abbr": "ARG",
+   "tz": "ET",
+   "color": "#74ACDF",
+   "feedName": "Argentina",
+   "featured": true
+  },
+  {
+   "id": "nt-bra",
+   "comp": "INTF",
+   "espn": "205",
+   "name": "Brazil",
+   "abbr": "BRA",
+   "tz": "ET",
+   "color": "#FEE000",
+   "feedName": "Brazil",
+   "featured": true
+  },
+  {
+   "id": "nt-alb",
+   "comp": "INTF",
+   "espn": "585",
+   "name": "Albania",
+   "abbr": "ALB",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Albania",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-and",
+   "comp": "INTF",
+   "espn": "587",
+   "name": "Andorra",
+   "abbr": "AND",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Andorra",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-arm",
+   "comp": "INTF",
+   "espn": "579",
+   "name": "Armenia",
+   "abbr": "ARM",
+   "tz": "CET",
+   "color": "#DE2400",
+   "feedName": "Armenia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-aut",
+   "comp": "INTF",
+   "espn": "474",
+   "name": "Austria",
+   "abbr": "AUT",
+   "tz": "CET",
+   "color": "#D72B2C",
+   "feedName": "Austria",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-aze",
+   "comp": "INTF",
+   "espn": "581",
+   "name": "Azerbaijan",
+   "abbr": "AZE",
+   "tz": "CET",
+   "color": "#2D4AB0",
+   "feedName": "Azerbaijan",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-blr",
+   "comp": "INTF",
+   "espn": "583",
+   "name": "Belarus",
+   "abbr": "BLR",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Belarus",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-bel",
+   "comp": "INTF",
+   "espn": "459",
+   "name": "Belgium",
+   "abbr": "BEL",
+   "tz": "CET",
+   "color": "#E30613",
+   "feedName": "Belgium",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-bih",
+   "comp": "INTF",
+   "espn": "452",
+   "name": "Bosnia-Herzegovina",
+   "abbr": "BIH",
+   "tz": "CET",
+   "color": "#112855",
+   "feedName": "Bosnia-Herzegovina",
+   "aliases": [
+    "Bosnia and Herzegovina"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-bul",
+   "comp": "INTF",
+   "espn": "462",
+   "name": "Bulgaria",
+   "abbr": "BUL",
+   "tz": "CET",
+   "color": "#D62612",
+   "feedName": "Bulgaria",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-cro",
+   "comp": "INTF",
+   "espn": "477",
+   "name": "Croatia",
+   "abbr": "CRO",
+   "tz": "CET",
+   "color": "#FF0000",
+   "feedName": "Croatia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-cyp",
+   "comp": "INTF",
+   "espn": "445",
+   "name": "Cyprus",
+   "abbr": "CYP",
+   "tz": "CET",
+   "color": "#195CCD",
+   "feedName": "Cyprus",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-cze",
+   "comp": "INTF",
+   "espn": "450",
+   "name": "Czechia",
+   "abbr": "CZE",
+   "tz": "CET",
+   "color": "#D7141A",
+   "feedName": "Czechia",
+   "aliases": [
+    "Czech Republic"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-den",
+   "comp": "INTF",
+   "espn": "479",
+   "name": "Denmark",
+   "abbr": "DEN",
+   "tz": "CET",
+   "color": "#D02A3E",
+   "feedName": "Denmark",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-est",
+   "comp": "INTF",
+   "espn": "444",
+   "name": "Estonia",
+   "abbr": "EST",
+   "tz": "CET",
+   "color": "#195CCD",
+   "feedName": "Estonia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-fro",
+   "comp": "INTF",
+   "espn": "447",
+   "name": "Faroe Islands",
+   "abbr": "FRO",
+   "tz": "CET",
+   "color": "#195CCD",
+   "feedName": "Faroe Islands",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-fin",
+   "comp": "INTF",
+   "espn": "458",
+   "name": "Finland",
+   "abbr": "FIN",
+   "tz": "CET",
+   "color": "#003580",
+   "feedName": "Finland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-geo",
+   "comp": "INTF",
+   "espn": "584",
+   "name": "Georgia",
+   "abbr": "GEO",
+   "tz": "CET",
+   "color": "#4A2942",
+   "feedName": "Georgia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-gib",
+   "comp": "INTF",
+   "espn": "16721",
+   "name": "Gibraltar",
+   "abbr": "GIB",
+   "tz": "CET",
+   "color": "#DE2918",
+   "feedName": "Gibraltar",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-gre",
+   "comp": "INTF",
+   "espn": "455",
+   "name": "Greece",
+   "abbr": "GRE",
+   "tz": "CET",
+   "color": "#295DA8",
+   "feedName": "Greece",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-hun",
+   "comp": "INTF",
+   "espn": "480",
+   "name": "Hungary",
+   "abbr": "HUN",
+   "tz": "CET",
+   "color": "#CE2029",
+   "feedName": "Hungary",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-isl",
+   "comp": "INTF",
+   "espn": "470",
+   "name": "Iceland",
+   "abbr": "ISL",
+   "tz": "CET",
+   "color": "#0C2FFF",
+   "feedName": "Iceland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-isr",
+   "comp": "INTF",
+   "espn": "461",
+   "name": "Israel",
+   "abbr": "ISR",
+   "tz": "CET",
+   "color": "#2F4FA2",
+   "feedName": "Israel",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-kaz",
+   "comp": "INTF",
+   "espn": "2619",
+   "name": "Kazakhstan",
+   "abbr": "KAZ",
+   "tz": "CET",
+   "color": "#00ABC2",
+   "feedName": "Kazakhstan",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-kos",
+   "comp": "INTF",
+   "espn": "18272",
+   "name": "Kosovo",
+   "abbr": "KOS",
+   "tz": "CET",
+   "color": "#0000CD",
+   "feedName": "Kosovo",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-lva",
+   "comp": "INTF",
+   "espn": "456",
+   "name": "Latvia",
+   "abbr": "LVA",
+   "tz": "CET",
+   "color": "#992242",
+   "feedName": "Latvia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-lie",
+   "comp": "INTF",
+   "espn": "589",
+   "name": "Liechtenstein",
+   "abbr": "LIE",
+   "tz": "CET",
+   "color": "#0000CD",
+   "feedName": "Liechtenstein",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-ltu",
+   "comp": "INTF",
+   "espn": "460",
+   "name": "Lithuania",
+   "abbr": "LTU",
+   "tz": "CET",
+   "color": "#FFE400",
+   "feedName": "Lithuania",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-lux",
+   "comp": "INTF",
+   "espn": "582",
+   "name": "Luxembourg",
+   "abbr": "LUX",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Luxembourg",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mlt",
+   "comp": "INTF",
+   "espn": "453",
+   "name": "Malta",
+   "abbr": "MLT",
+   "tz": "CET",
+   "color": "#DE2400",
+   "feedName": "Malta",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mda",
+   "comp": "INTF",
+   "espn": "483",
+   "name": "Moldova",
+   "abbr": "MDA",
+   "tz": "CET",
+   "color": "#0046AE",
+   "feedName": "Moldova",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mne",
+   "comp": "INTF",
+   "espn": "6775",
+   "name": "Montenegro",
+   "abbr": "MNE",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Montenegro",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mkd",
+   "comp": "INTF",
+   "espn": "463",
+   "name": "North Macedonia",
+   "abbr": "MKD",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "North Macedonia",
+   "aliases": [
+    "Macedonia"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-nir",
+   "comp": "INTF",
+   "espn": "586",
+   "name": "Northern Ireland",
+   "abbr": "NIR",
+   "tz": "UK",
+   "color": "#CC0000",
+   "feedName": "Northern Ireland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-nor",
+   "comp": "INTF",
+   "espn": "464",
+   "name": "Norway",
+   "abbr": "NOR",
+   "tz": "CET",
+   "color": "#C8102E",
+   "feedName": "Norway",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-pol",
+   "comp": "INTF",
+   "espn": "471",
+   "name": "Poland",
+   "abbr": "POL",
+   "tz": "CET",
+   "color": "#DC143C",
+   "feedName": "Poland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-irl",
+   "comp": "INTF",
+   "espn": "476",
+   "name": "Republic of Ireland",
+   "abbr": "IRL",
+   "tz": "UK",
+   "color": "#049A64",
+   "feedName": "Republic of Ireland",
+   "aliases": [
+    "Ireland"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-rou",
+   "comp": "INTF",
+   "espn": "473",
+   "name": "Romania",
+   "abbr": "ROU",
+   "tz": "CET",
+   "color": "#FCD116",
+   "feedName": "Romania",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-smr",
+   "comp": "INTF",
+   "espn": "588",
+   "name": "San Marino",
+   "abbr": "SMR",
+   "tz": "CET",
+   "color": "#00BFFF",
+   "feedName": "San Marino",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-sco",
+   "comp": "INTF",
+   "espn": "580",
+   "name": "Scotland",
+   "abbr": "SCO",
+   "tz": "UK",
+   "color": "#1A2D69",
+   "feedName": "Scotland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-srb",
+   "comp": "INTF",
+   "espn": "6757",
+   "name": "Serbia",
+   "abbr": "SRB",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Serbia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-svk",
+   "comp": "INTF",
+   "espn": "468",
+   "name": "Slovakia",
+   "abbr": "SVK",
+   "tz": "CET",
+   "color": "#0C2FFF",
+   "feedName": "Slovakia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-svn",
+   "comp": "INTF",
+   "espn": "472",
+   "name": "Slovenia",
+   "abbr": "SVN",
+   "tz": "CET",
+   "color": "#0C2FFF",
+   "feedName": "Slovenia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-swe",
+   "comp": "INTF",
+   "espn": "466",
+   "name": "Sweden",
+   "abbr": "SWE",
+   "tz": "CET",
+   "color": "#FECB00",
+   "feedName": "Sweden",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-sui",
+   "comp": "INTF",
+   "espn": "475",
+   "name": "Switzerland",
+   "abbr": "SUI",
+   "tz": "CET",
+   "color": "#FF0000",
+   "feedName": "Switzerland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-tur",
+   "comp": "INTF",
+   "espn": "465",
+   "name": "Türkiye",
+   "abbr": "TUR",
+   "tz": "CET",
+   "color": "#EF3340",
+   "feedName": "Türkiye",
+   "aliases": [
+    "Turkey"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-ukr",
+   "comp": "INTF",
+   "espn": "457",
+   "name": "Ukraine",
+   "abbr": "UKR",
+   "tz": "CET",
+   "color": "#FEDE00",
+   "feedName": "Ukraine",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-wal",
+   "comp": "INTF",
+   "espn": "578",
+   "name": "Wales",
+   "abbr": "WAL",
+   "tz": "UK",
+   "color": "#E70000",
+   "feedName": "Wales",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-aia",
+   "comp": "INTF",
+   "espn": "8942",
+   "name": "Anguilla",
+   "abbr": "AIA",
+   "tz": "ET",
+   "color": "#012169",
+   "feedName": "Anguilla",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-atg",
+   "comp": "INTF",
+   "espn": "2638",
+   "name": "Antigua and Barbuda",
+   "abbr": "ATG",
+   "tz": "ET",
+   "color": "#C8102E",
+   "feedName": "Antigua and Barbuda",
+   "aliases": [
+    "Antigua & Barbuda"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-aru",
+   "comp": "INTF",
+   "espn": "2642",
+   "name": "Aruba",
+   "abbr": "ARU",
+   "tz": "ET",
+   "color": "#418FDE",
+   "feedName": "Aruba",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-bah",
+   "comp": "INTF",
+   "espn": "2640",
+   "name": "Bahamas",
+   "abbr": "BAH",
+   "tz": "ET",
+   "color": "#00A9CE",
+   "feedName": "Bahamas",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-brb",
+   "comp": "INTF",
+   "espn": "2637",
+   "name": "Barbados",
+   "abbr": "BRB",
+   "tz": "ET",
+   "color": "#00267F",
+   "feedName": "Barbados",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-blz",
+   "comp": "INTF",
+   "espn": "2641",
+   "name": "Belize",
+   "abbr": "BLZ",
+   "tz": "ET",
+   "color": "#D90F19",
+   "feedName": "Belize",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-ber",
+   "comp": "INTF",
+   "espn": "2643",
+   "name": "Bermuda",
+   "abbr": "BER",
+   "tz": "ET",
+   "color": "#C8102E",
+   "feedName": "Bermuda",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-boe",
+   "comp": "INTF",
+   "espn": "19314",
+   "name": "Bonaire",
+   "abbr": "BOE",
+   "tz": "ET",
+   "color": "#C60000",
+   "feedName": "Bonaire",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-bvi",
+   "comp": "INTF",
+   "espn": "2644",
+   "name": "British Virgin Islands",
+   "abbr": "BVI",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "British Virgin Islands",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-cay",
+   "comp": "INTF",
+   "espn": "2646",
+   "name": "Cayman Islands",
+   "abbr": "CAY",
+   "tz": "ET",
+   "color": "#FF0000",
+   "feedName": "Cayman Islands",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-crc",
+   "comp": "INTF",
+   "espn": "214",
+   "name": "Costa Rica",
+   "abbr": "CRC",
+   "tz": "ET",
+   "color": "#CE1126",
+   "feedName": "Costa Rica",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-cub",
+   "comp": "INTF",
+   "espn": "2647",
+   "name": "Cuba",
+   "abbr": "CUB",
+   "tz": "ET",
+   "color": "#CB1515",
+   "feedName": "Cuba",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-cuw",
+   "comp": "INTF",
+   "espn": "11678",
+   "name": "Curaçao",
+   "abbr": "CUW",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "Curaçao",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-dma",
+   "comp": "INTF",
+   "espn": "13582",
+   "name": "Dominica",
+   "abbr": "DMA",
+   "tz": "ET",
+   "color": "#32AD42",
+   "feedName": "Dominica",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-dom",
+   "comp": "INTF",
+   "espn": "2649",
+   "name": "Dominican Republic",
+   "abbr": "DOM",
+   "tz": "ET",
+   "color": "#002D62",
+   "feedName": "Dominican Republic",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-slv",
+   "comp": "INTF",
+   "espn": "2650",
+   "name": "El Salvador",
+   "abbr": "SLV",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "El Salvador",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-guf",
+   "comp": "INTF",
+   "espn": "10532",
+   "name": "French Guiana",
+   "abbr": "GUF",
+   "tz": "ET",
+   "color": "#D20300",
+   "feedName": "French Guiana",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-grn",
+   "comp": "INTF",
+   "espn": "2651",
+   "name": "Grenada",
+   "abbr": "GRN",
+   "tz": "ET",
+   "color": "#EF3340",
+   "feedName": "Grenada",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-gdl",
+   "comp": "INTF",
+   "espn": "7657",
+   "name": "Guadeloupe",
+   "abbr": "GDL",
+   "tz": "ET",
+   "color": "#509E2F",
+   "feedName": "Guadeloupe",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-gua",
+   "comp": "INTF",
+   "espn": "2652",
+   "name": "Guatemala",
+   "abbr": "GUA",
+   "tz": "ET",
+   "color": "#4997D0",
+   "feedName": "Guatemala",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-guy",
+   "comp": "INTF",
+   "espn": "2653",
+   "name": "Guyana",
+   "abbr": "GUY",
+   "tz": "ET",
+   "color": "#FFF200",
+   "feedName": "Guyana",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-hai",
+   "comp": "INTF",
+   "espn": "2654",
+   "name": "Haiti",
+   "abbr": "HAI",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "Haiti",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-hon",
+   "comp": "INTF",
+   "espn": "215",
+   "name": "Honduras",
+   "abbr": "HON",
+   "tz": "ET",
+   "color": "#333EBD",
+   "feedName": "Honduras",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-jam",
+   "comp": "INTF",
+   "espn": "1038",
+   "name": "Jamaica",
+   "abbr": "JAM",
+   "tz": "ET",
+   "color": "#348B42",
+   "feedName": "Jamaica",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-mtq",
+   "comp": "INTF",
+   "espn": "2728",
+   "name": "Martinique",
+   "abbr": "MTQ",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "Martinique",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-msr",
+   "comp": "INTF",
+   "espn": "2655",
+   "name": "Montserrat",
+   "abbr": "MSR",
+   "tz": "ET",
+   "color": "#012169",
+   "feedName": "Montserrat",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-nca",
+   "comp": "INTF",
+   "espn": "2658",
+   "name": "Nicaragua",
+   "abbr": "NCA",
+   "tz": "ET",
+   "color": "#333EBD",
+   "feedName": "Nicaragua",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-pur",
+   "comp": "INTF",
+   "espn": "11766",
+   "name": "Puerto Rico",
+   "abbr": "PUR",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "Puerto Rico",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-sma",
+   "comp": "INTF",
+   "espn": "18243",
+   "name": "Sint Maarten",
+   "abbr": "SMA",
+   "tz": "ET",
+   "color": "#C60000",
+   "feedName": "Sint Maarten",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-skn",
+   "comp": "INTF",
+   "espn": "2662",
+   "name": "St. Kitts and Nevis",
+   "abbr": "SKN",
+   "tz": "ET",
+   "color": "#228B22",
+   "feedName": "St. Kitts and Nevis",
+   "aliases": [
+    "Saint Kitts and Nevis"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-lca",
+   "comp": "INTF",
+   "espn": "2661",
+   "name": "St. Lucia",
+   "abbr": "LCA",
+   "tz": "ET",
+   "color": "#0077C8",
+   "feedName": "St. Lucia",
+   "aliases": [
+    "Saint Lucia"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-smn",
+   "comp": "INTF",
+   "espn": "10596",
+   "name": "St. Martin",
+   "abbr": "SMN",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "St. Martin",
+   "aliases": [
+    "Saint Martin"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-vin",
+   "comp": "INTF",
+   "espn": "13584",
+   "name": "St. Vincent and the Grenadines",
+   "abbr": "VIN",
+   "tz": "ET",
+   "color": "#32AD42",
+   "feedName": "St. Vincent and the Grenadines",
+   "aliases": [
+    "Saint Vincent and the Grenadines"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-sur",
+   "comp": "INTF",
+   "espn": "2664",
+   "name": "Suriname",
+   "abbr": "SUR",
+   "tz": "ET",
+   "color": "#007A33",
+   "feedName": "Suriname",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-tri",
+   "comp": "INTF",
+   "espn": "2627",
+   "name": "Trinidad and Tobago",
+   "abbr": "TRI",
+   "tz": "ET",
+   "color": "#C8102E",
+   "feedName": "Trinidad and Tobago",
+   "aliases": [
+    "Trinidad & Tobago"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-tca",
+   "comp": "INTF",
+   "espn": "2665",
+   "name": "Turks and Caicos Islands",
+   "abbr": "TCA",
+   "tz": "ET",
+   "color": "#000080",
+   "feedName": "Turks and Caicos Islands",
+   "aliases": [
+    "Turks and Caicos"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-usvi",
+   "comp": "INTF",
+   "espn": "2645",
+   "name": "US Virgin Islands",
+   "abbr": "USVI",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "US Virgin Islands",
+   "extraComps": [
+    "CNL"
+   ]
   }
  ],
  "events": [
@@ -3702,6 +4997,21 @@ const COMPS = {
   SERIEA:{name:"Serie A",           short:"Serie A",    color:"#2E7D8F"},
   BUNDES:{name:"Bundesliga",        short:"Bundesliga", color:"#9E2A2B"},
   LIGUE1:{name:"Ligue 1",           short:"Ligue 1",    color:"#1B6E8C"},
+  /* Men's national teams. A nation is a team in the same sense a club
+     is: it plays in several competitions and lands on a different
+     Canadian service in each, so each competition is its own entry and
+     the nation is followed across all of them. The friendlies feed is
+     every nation's home because it is the one they all appear in, which
+     is why the picker names that section after the teams rather than
+     after the competition.
+
+     World Cup qualifying (ESPN's fifa.worldq.* feeds) starts in 2027 and
+     is deliberately not here yet: a competition with no fixtures is a
+     request a day for nothing. It is a row here, a path in ESPN_PATH
+     and in scripts/fetch-data.mjs, and a rights rule when it begins. */
+  INTF:  {name:"International Friendly",  short:"Friendly",    color:"#4A6B8A", picker:"Men's national teams"},
+  UNL:   {name:"UEFA Nations League",     short:"UEFA NL",     color:"#1F4E9C"},
+  CNL:   {name:"Concacaf Nations League", short:"Concacaf NL", color:"#7A3E9C"},
   UCI:   {name:"UCI WorldTour",     short:"WorldTour",  color:"#8A6D1F"},
   /* Men's senior international rugby union. Each competition is its own
      entry because that is the level Canadian rights attach at: the Six
@@ -3751,7 +5061,7 @@ const SERVICES = {
 const CARRIER_SERVICE = {
   "Sportsnet":"sportsnet","Sportsnet One":"sportsnet","Sportsnet Pacific":"sportsnet",
   "Sportsnet West":"sportsnet","Sportsnet Ontario":"sportsnet","Sportsnet+":"sportsnet",
-  "TSN":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
+  "TSN":"tsn","TSN1":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
   "RDS":"rds","TVA Sports":"tva","CTV":"ctv","CTV2":"ctv",
   "Prime Video":"prime","Fubo Canada":"fubo","DAZN Canada":"dazn",
   "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp","FloBikes":"flobikes",
@@ -3784,7 +5094,9 @@ const SRC = {
   ans:     {label:"Autumn Nations Series — where to watch", url:"https://www.sixnationsrugby.com/en/autumn-nations-series/where-to-watch-ans"},
   lions25: {label:"British & Irish Lions 2025 — where to watch", url:"https://www.lionsrugby.com/en/news/where-to-watch-the-british-and-irish-lions-this-summer"},
   atptv:   {label:"ATP Tour — Watch Live, broadcaster list", url:"https://www.atptour.com/en/video/watch-live"},
-  usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"}
+  usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"},
+  tsnfall: {label:"TSN — Canada's national teams, fall 2026 lineup", url:"https://www.tsn.ca/soccer/article/canadas-national-teams-back-in-action-in-loaded-fall-soccer-lineup-on-tsn/"},
+  uefanl:  {label:"UEFA — where to watch the Nations League", url:"https://www.uefa.com/uefanationsleague/news/02a9-219ae5c877f5-740390ccb3e5-1000--where-to-watch-the-nations-league-tv-broadcast-partners-li/"}
 };
 const tv = (n, confidence) => ({name:n, kind:"tv", confidence});
 const st = (n, confidence) => ({name:n, kind:"stream", confidence});
@@ -3872,6 +5184,37 @@ const RIGHTS = [
    note:"Test-match carriage in Canada is sold per series and none is confirmed for these fixtures",
    src:SRC.none, checked:CHECKED},
 
+  /* ---------------- men's national teams ----------------
+     A friendly is sold match by match, usually by the home federation,
+     so there is no competition-wide deal to read a carrier from. What
+     can be known is what a broadcaster has published, and TSN has
+     published Canada's fall lineup match by match, with channels.
+
+     So the rule keys on Canada being in the match, and then on what TSN
+     actually listed. The three matches it names are confirmed, on the
+     channels it names. A Canada match it does not name is expected on
+     TSN and no more than that: the article is a lineup, not a rights
+     announcement, and says nothing about a match after 6 October. Every
+     other nation's friendly is unknown, because nothing primary names a
+     Canadian carrier for it.
+
+     These rows carry their own date: they were sourced on 2026-09-29,
+     later than the rest of the table, and do not borrow CHECKED. */
+  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-09-26", carriers:[tv("TSN4")], confidence:"confirmed",
+   note:"TSN's published fall lineup: Canada v Chile, Sat Sept 26, 7 p.m. ET, TSN4", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-10-03", carriers:[tv("TSN4"), tv("TSN5")], confidence:"confirmed",
+   note:"TSN's published fall lineup: Canada v Peru, Sat Oct 3, 2 p.m. ET, TSN4/5", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-10-06", carriers:[tv("TSN1")], confidence:"confirmed",
+   note:"TSN's published fall lineup: USA v Canada, Tue Oct 6, 8 p.m. ET, TSN1", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", when:g=>g.has("nt-can"), carriers:[tv("TSN")], confidence:"expected",
+   note:"TSN carries Canada's men's matches in its published fall lineup, which runs to Oct 6. This match is not in that lineup, so TSN is expected rather than confirmed", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", carriers:[], confidence:"unknown",
+   note:"Friendlies are sold match by match and no primary source names a Canadian carrier for this one", src:SRC.none, checked:"2026-09-29"},
+  {comp:"UNL", carriers:[st("DAZN Canada")], confidence:"confirmed",
+   note:"UEFA's own where-to-watch listing for the 2026/27 Nations League names DAZN for Canada", src:SRC.uefanl, checked:"2026-09-29"},
+  {comp:"CNL", carriers:[], confidence:"unknown",
+   note:"No Canadian rights holder verified for the 2026-27 Concacaf Nations League", src:SRC.none, checked:"2026-09-29"},
+
   /* ---------------- soccer ---------------- */
   {comp:"EPL", carriers:[st("Fubo Canada")], confidence:"confirmed",
    note:"Exclusive — every match, through 2027-28. Note: LiveSoccerTV also lists DAZN Canada for EPL fixtures; Fubo's own release says exclusive, so Fubo is used here", src:SRC.fubo, checked:CHECKED},
@@ -3930,9 +5273,18 @@ const RIGHTS = [
    note:"CTV is the free-to-air home of Sunday afternoon games; DAZN carries every game via Game Pass", src:SRC.nflca, checked:CHECKED}
 ];
 
+function listingDay(ms){
+  const p = zoneParts("ET", ms);
+  return p.year + "-" + p.month + "-" + p.day;
+}
 function resolveRights(g){
   const ids = [g.home&&g.home.id, g.away&&g.away.id];
   const ctx = {stage:g.stage||"", has:id=>ids.indexOf(id)>=0, comp:g.comp, hour:g.slotHour||0,
+    /* The match's date as a published listing states it, which is the
+       Eastern one: Canada at the United States kicks off at 00:00 UTC on
+       the 7th and TSN lists it for the 6th. Asked for only by the rules
+       that key on a listing, so nothing else pays for it. */
+    day:()=>listingDay(g.start),
     // tennis rules key on the tournament; every other sport ignores these
     tournament:(tourneyOf(g)||{}).name || "", major:!!((tourneyOf(g)||{}).major)};
   // day-of-week must be the HOME team's local day, not UTC
@@ -4632,10 +5984,15 @@ TEAM_MANIFEST.teams.concat(TEAM_MANIFEST.events).forEach(e=>{
     tz:e.tz, color:e.color,
     comps: [e.comp].concat(e.extraComps || []),
     ...(e.feedName ? {feed:e.feedName} : {}),
-    ...(e.displayName ? {display:e.displayName} : {})};
+    ...(e.displayName ? {display:e.displayName} : {}),
+    /* Other names the picker's search should answer to — "Turkey" for
+       Türkiye — and whether a team is offered before anyone searches. */
+    ...(e.aliases && e.aliases.length ? {aliases:e.aliases} : {}),
+    ...(e.featured ? {featured:true} : {})};
 });
 const teamList = Object.values(TEAMS);
-const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1};
+const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1,
+  INTF:1,UNL:1,CNL:1};
 const fullName = t => !t ? "TBD"
   : t.full ? t.name                       // came from the feed already complete
   : (t.display || (SOCCER[t.home] ? t.name : t.city+" "+t.name));
@@ -4807,6 +6164,14 @@ function mergeReal(built){
          and a refresh that let them win blanked the location on a row
          that had it a second earlier. */
       if(!g.venue && prev.venue) g.venue = prev.venue;
+      /* Nor may a copy that knows of no dispute erase one: only the
+         committed file compares a kickoff with a published listing, and
+         a live read of the same fixture at the same time is not news
+         that the two now agree. If the clock has moved, the dispute was
+         about a time that is no longer the feed's, and it goes. */
+      if(g.altStart == null && prev.altStart != null && prev.start === g.start){
+        g.altStart = prev.altStart; g.altSource = prev.altSource;
+      }
       GAMES.splice(i,1);
     }
   });
@@ -5027,7 +6392,8 @@ const ESPN_PATH = {
   NHL:"hockey/nhl", NBA:"basketball/nba", NFL:"football/nfl", MLB:"baseball/mlb",
   MLS:"soccer/usa.1", EPL:"soccer/eng.1", UCL:"soccer/uefa.champions",
   EFL:"soccer/eng.league_cup", FAC:"soccer/eng.fa",
-  LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1"
+  LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1",
+  INTF:"soccer/fifa.friendly", UNL:"soccer/uefa.nations", CNL:"soccer/concacaf.nations.league"
 };
 // The feed name lives on the club itself, set where TEAMS is built.
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
@@ -5282,6 +6648,9 @@ async function loadStatic(){
     if(!followsTeam(home) && !followsTeam(away)) return;
     built.push({eid:f.eid || null, comp:f.comp, home, away, start:f.start, moved:null,
       real:true, espn:true, listed:true, fromFeed:true, venue:f.venue || null,
+      /* A kickoff a published listing states differently. The build
+         names the source; the row says both. */
+      ...(f.altStart != null ? {altStart:f.altStart, altSource:f.altSource || null} : {}),
       localDow:new Date(f.start).getUTCDay(), slotHour:new Date(f.start).getUTCHours(), stage:"",
       result:{status:f.status || "scheduled", label:f.label || "", score:f.score || null}});
   });
@@ -7269,6 +8638,16 @@ function gameRow(g, now){
   if(g.moved) timeCell += '<span class="was">'+esc(fmtTime(g.moved))+'</span><span class="moved">Time moved</span>';
   if(ts.state==="tbc") timeCell += '<span class="tbc">Time TBC</span>';
   if(ts.state==="flex") timeCell += '<span class="tbc">Flex window</span>';
+  /* Two sources, two kickoffs. ESPN's is the one shown because it is
+     the live source and the one that moves if the match does; the other
+     is printed under it with both named, so nobody plans around a time
+     this page chose for them without saying it had a choice. */
+  if(g.altStart != null && g.altStart !== g.start){
+    const other = g.altSource || "another source";
+    timeCell += '<span class="tbc" title="'+esc("ESPN's feed says "+fmtTime(g.start)+"; "+other+"'s published listing says "
+        + fmtTime(g.altStart)+". ESPN's time is the one shown.")+'">Kick-off disputed</span>'
+      + '<span class="alt-time">ESPN '+esc(fmtTime(g.start))+' &middot; '+esc(other)+' '+esc(fmtTime(g.altStart))+'</span>';
+  }
   timeCell += '</div>';
 
   /* A record cannot move during a match, so a game in progress is not a
@@ -8282,7 +9661,12 @@ function racePickerHtml(q, now){
 const PICKER_CAP = 12;
 let pickerOpenSections = new Set();
 function pickerLeagueTeams(lg){
-  return pickable.filter(t=>t.home===lg);
+  /* Featured teams lead, in manifest order, so the chips shown before
+     anyone searches are the ones chosen to be shown rather than whichever
+     come first alphabetically. No club is featured, so a league's order
+     is exactly what it was. */
+  const all = pickable.filter(t=>t.home===lg);
+  return all.filter(t=>t.featured).concat(all.filter(t=>!t.featured));
 }
 function toggleLeagueTeams(lg){
   const teams = pickerLeagueTeams(lg);
@@ -8318,8 +9702,8 @@ function renderDrawer(){
   const inFullLeague=new Set(fullLeagues.flatMap(x=>x.teams.map(t=>t.id)));
   const pickedSingles=picked.filter(t=>!inFullLeague.has(t.id));
   const leagueFollowing=fullLeagues.map(x=>
-    '<button class="chip follow-chip" data-league-all="'+esc(x.lg)+'" aria-pressed="true" title="Stop following every '+esc(COMPS[x.lg].name)+' team">'
-      + esc(COMPS[x.lg].short)+' <span class="chip-meta">'+x.teams.length+' teams</span>'
+    '<button class="chip follow-chip" data-league-all="'+esc(x.lg)+'" aria-pressed="true" title="Stop following every '+esc(COMPS[x.lg].picker || COMPS[x.lg].name)+' team">'
+      + esc(COMPS[x.lg].picker || COMPS[x.lg].short)+' <span class="chip-meta">'+x.teams.length+' teams</span>'
       + '<span class="chip-remove" aria-hidden="true">&times;</span></button>'
   ).join("");
   /* Tennis is followed as a sport, not as a team. It still belongs in
@@ -8344,7 +9728,7 @@ function renderDrawer(){
     : "";
   const groups=Object.keys(COMPS).map(lg=>{
     const leagueAll=pickerLeagueTeams(lg);
-    const all=leagueAll.filter(t=>!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q));
+    const all=leagueAll.filter(t=>!q||(t.city+" "+t.name+" "+t.abbr+" "+(t.aliases||[]).join(" ")).toLowerCase().includes(q));
     if(!all.length) return "";
     /* A club you follow is never hidden behind a cap: the picker is also
        how you un-follow one. */
@@ -8356,7 +9740,7 @@ function renderDrawer(){
     const hidden = all.length - ts.length;
     const open = !!q || (typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("league-"+lg));
     return '<details class="lg-group picker-section" data-picker-section="league-'+esc(lg)+'"'+(open?' open':'')+'>'
-      + '<summary class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
+      + '<summary class="lg-title"><b>'+esc(COMPS[lg].picker || COMPS[lg].name)+'</b>'
       + (all.length > PICKER_CAP ? '<span class="lg-count">'+all.length+'</span>' : "")
       + '<span class="picker-summary">'+(leaguePicked ? leaguePicked+' picked' : 'Choose teams')+'</span>'
       + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'

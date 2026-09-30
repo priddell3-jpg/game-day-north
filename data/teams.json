@@ -2793,6 +2793,1300 @@
    "tz": "CT",
    "color": "#EC1458",
    "feedName": "St. Louis CITY SC"
+  },
+  {
+   "id": "nt-can",
+   "comp": "INTF",
+   "espn": "206",
+   "name": "Canada",
+   "abbr": "CAN",
+   "tz": "ET",
+   "color": "#ED2224",
+   "feedName": "Canada",
+   "extraComps": [
+    "CNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-usa",
+   "comp": "INTF",
+   "espn": "660",
+   "name": "United States",
+   "abbr": "USA",
+   "tz": "ET",
+   "color": "#213065",
+   "feedName": "United States",
+   "aliases": [
+    "USA",
+    "United States of America"
+   ],
+   "extraComps": [
+    "CNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-mex",
+   "comp": "INTF",
+   "espn": "203",
+   "name": "Mexico",
+   "abbr": "MEX",
+   "tz": "CT",
+   "color": "#006847",
+   "feedName": "Mexico",
+   "extraComps": [
+    "CNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-eng",
+   "comp": "INTF",
+   "espn": "448",
+   "name": "England",
+   "abbr": "ENG",
+   "tz": "UK",
+   "color": "#EA1F29",
+   "feedName": "England",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-fra",
+   "comp": "INTF",
+   "espn": "478",
+   "name": "France",
+   "abbr": "FRA",
+   "tz": "CET",
+   "color": "#000080",
+   "feedName": "France",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-ger",
+   "comp": "INTF",
+   "espn": "481",
+   "name": "Germany",
+   "abbr": "GER",
+   "tz": "CET",
+   "color": "#00CED1",
+   "feedName": "Germany",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-esp",
+   "comp": "INTF",
+   "espn": "164",
+   "name": "Spain",
+   "abbr": "ESP",
+   "tz": "CET",
+   "color": "#C60B1E",
+   "feedName": "Spain",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-ita",
+   "comp": "INTF",
+   "espn": "162",
+   "name": "Italy",
+   "abbr": "ITA",
+   "tz": "CET",
+   "color": "#103CD6",
+   "feedName": "Italy",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-por",
+   "comp": "INTF",
+   "espn": "482",
+   "name": "Portugal",
+   "abbr": "POR",
+   "tz": "CET",
+   "color": "#DA291C",
+   "feedName": "Portugal",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-ned",
+   "comp": "INTF",
+   "espn": "449",
+   "name": "Netherlands",
+   "abbr": "NED",
+   "tz": "CET",
+   "color": "#FB5D00",
+   "feedName": "Netherlands",
+   "extraComps": [
+    "UNL"
+   ],
+   "featured": true
+  },
+  {
+   "id": "nt-arg",
+   "comp": "INTF",
+   "espn": "202",
+   "name": "Argentina",
+   "abbr": "ARG",
+   "tz": "ET",
+   "color": "#74ACDF",
+   "feedName": "Argentina",
+   "featured": true
+  },
+  {
+   "id": "nt-bra",
+   "comp": "INTF",
+   "espn": "205",
+   "name": "Brazil",
+   "abbr": "BRA",
+   "tz": "ET",
+   "color": "#FEE000",
+   "feedName": "Brazil",
+   "featured": true
+  },
+  {
+   "id": "nt-alb",
+   "comp": "INTF",
+   "espn": "585",
+   "name": "Albania",
+   "abbr": "ALB",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Albania",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-and",
+   "comp": "INTF",
+   "espn": "587",
+   "name": "Andorra",
+   "abbr": "AND",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Andorra",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-arm",
+   "comp": "INTF",
+   "espn": "579",
+   "name": "Armenia",
+   "abbr": "ARM",
+   "tz": "CET",
+   "color": "#DE2400",
+   "feedName": "Armenia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-aut",
+   "comp": "INTF",
+   "espn": "474",
+   "name": "Austria",
+   "abbr": "AUT",
+   "tz": "CET",
+   "color": "#D72B2C",
+   "feedName": "Austria",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-aze",
+   "comp": "INTF",
+   "espn": "581",
+   "name": "Azerbaijan",
+   "abbr": "AZE",
+   "tz": "CET",
+   "color": "#2D4AB0",
+   "feedName": "Azerbaijan",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-blr",
+   "comp": "INTF",
+   "espn": "583",
+   "name": "Belarus",
+   "abbr": "BLR",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Belarus",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-bel",
+   "comp": "INTF",
+   "espn": "459",
+   "name": "Belgium",
+   "abbr": "BEL",
+   "tz": "CET",
+   "color": "#E30613",
+   "feedName": "Belgium",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-bih",
+   "comp": "INTF",
+   "espn": "452",
+   "name": "Bosnia-Herzegovina",
+   "abbr": "BIH",
+   "tz": "CET",
+   "color": "#112855",
+   "feedName": "Bosnia-Herzegovina",
+   "aliases": [
+    "Bosnia and Herzegovina"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-bul",
+   "comp": "INTF",
+   "espn": "462",
+   "name": "Bulgaria",
+   "abbr": "BUL",
+   "tz": "CET",
+   "color": "#D62612",
+   "feedName": "Bulgaria",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-cro",
+   "comp": "INTF",
+   "espn": "477",
+   "name": "Croatia",
+   "abbr": "CRO",
+   "tz": "CET",
+   "color": "#FF0000",
+   "feedName": "Croatia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-cyp",
+   "comp": "INTF",
+   "espn": "445",
+   "name": "Cyprus",
+   "abbr": "CYP",
+   "tz": "CET",
+   "color": "#195CCD",
+   "feedName": "Cyprus",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-cze",
+   "comp": "INTF",
+   "espn": "450",
+   "name": "Czechia",
+   "abbr": "CZE",
+   "tz": "CET",
+   "color": "#D7141A",
+   "feedName": "Czechia",
+   "aliases": [
+    "Czech Republic"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-den",
+   "comp": "INTF",
+   "espn": "479",
+   "name": "Denmark",
+   "abbr": "DEN",
+   "tz": "CET",
+   "color": "#D02A3E",
+   "feedName": "Denmark",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-est",
+   "comp": "INTF",
+   "espn": "444",
+   "name": "Estonia",
+   "abbr": "EST",
+   "tz": "CET",
+   "color": "#195CCD",
+   "feedName": "Estonia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-fro",
+   "comp": "INTF",
+   "espn": "447",
+   "name": "Faroe Islands",
+   "abbr": "FRO",
+   "tz": "CET",
+   "color": "#195CCD",
+   "feedName": "Faroe Islands",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-fin",
+   "comp": "INTF",
+   "espn": "458",
+   "name": "Finland",
+   "abbr": "FIN",
+   "tz": "CET",
+   "color": "#003580",
+   "feedName": "Finland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-geo",
+   "comp": "INTF",
+   "espn": "584",
+   "name": "Georgia",
+   "abbr": "GEO",
+   "tz": "CET",
+   "color": "#4A2942",
+   "feedName": "Georgia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-gib",
+   "comp": "INTF",
+   "espn": "16721",
+   "name": "Gibraltar",
+   "abbr": "GIB",
+   "tz": "CET",
+   "color": "#DE2918",
+   "feedName": "Gibraltar",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-gre",
+   "comp": "INTF",
+   "espn": "455",
+   "name": "Greece",
+   "abbr": "GRE",
+   "tz": "CET",
+   "color": "#295DA8",
+   "feedName": "Greece",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-hun",
+   "comp": "INTF",
+   "espn": "480",
+   "name": "Hungary",
+   "abbr": "HUN",
+   "tz": "CET",
+   "color": "#CE2029",
+   "feedName": "Hungary",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-isl",
+   "comp": "INTF",
+   "espn": "470",
+   "name": "Iceland",
+   "abbr": "ISL",
+   "tz": "CET",
+   "color": "#0C2FFF",
+   "feedName": "Iceland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-isr",
+   "comp": "INTF",
+   "espn": "461",
+   "name": "Israel",
+   "abbr": "ISR",
+   "tz": "CET",
+   "color": "#2F4FA2",
+   "feedName": "Israel",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-kaz",
+   "comp": "INTF",
+   "espn": "2619",
+   "name": "Kazakhstan",
+   "abbr": "KAZ",
+   "tz": "CET",
+   "color": "#00ABC2",
+   "feedName": "Kazakhstan",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-kos",
+   "comp": "INTF",
+   "espn": "18272",
+   "name": "Kosovo",
+   "abbr": "KOS",
+   "tz": "CET",
+   "color": "#0000CD",
+   "feedName": "Kosovo",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-lva",
+   "comp": "INTF",
+   "espn": "456",
+   "name": "Latvia",
+   "abbr": "LVA",
+   "tz": "CET",
+   "color": "#992242",
+   "feedName": "Latvia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-lie",
+   "comp": "INTF",
+   "espn": "589",
+   "name": "Liechtenstein",
+   "abbr": "LIE",
+   "tz": "CET",
+   "color": "#0000CD",
+   "feedName": "Liechtenstein",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-ltu",
+   "comp": "INTF",
+   "espn": "460",
+   "name": "Lithuania",
+   "abbr": "LTU",
+   "tz": "CET",
+   "color": "#FFE400",
+   "feedName": "Lithuania",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-lux",
+   "comp": "INTF",
+   "espn": "582",
+   "name": "Luxembourg",
+   "abbr": "LUX",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Luxembourg",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mlt",
+   "comp": "INTF",
+   "espn": "453",
+   "name": "Malta",
+   "abbr": "MLT",
+   "tz": "CET",
+   "color": "#DE2400",
+   "feedName": "Malta",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mda",
+   "comp": "INTF",
+   "espn": "483",
+   "name": "Moldova",
+   "abbr": "MDA",
+   "tz": "CET",
+   "color": "#0046AE",
+   "feedName": "Moldova",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mne",
+   "comp": "INTF",
+   "espn": "6775",
+   "name": "Montenegro",
+   "abbr": "MNE",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Montenegro",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-mkd",
+   "comp": "INTF",
+   "espn": "463",
+   "name": "North Macedonia",
+   "abbr": "MKD",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "North Macedonia",
+   "aliases": [
+    "Macedonia"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-nir",
+   "comp": "INTF",
+   "espn": "586",
+   "name": "Northern Ireland",
+   "abbr": "NIR",
+   "tz": "UK",
+   "color": "#CC0000",
+   "feedName": "Northern Ireland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-nor",
+   "comp": "INTF",
+   "espn": "464",
+   "name": "Norway",
+   "abbr": "NOR",
+   "tz": "CET",
+   "color": "#C8102E",
+   "feedName": "Norway",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-pol",
+   "comp": "INTF",
+   "espn": "471",
+   "name": "Poland",
+   "abbr": "POL",
+   "tz": "CET",
+   "color": "#DC143C",
+   "feedName": "Poland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-irl",
+   "comp": "INTF",
+   "espn": "476",
+   "name": "Republic of Ireland",
+   "abbr": "IRL",
+   "tz": "UK",
+   "color": "#049A64",
+   "feedName": "Republic of Ireland",
+   "aliases": [
+    "Ireland"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-rou",
+   "comp": "INTF",
+   "espn": "473",
+   "name": "Romania",
+   "abbr": "ROU",
+   "tz": "CET",
+   "color": "#FCD116",
+   "feedName": "Romania",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-smr",
+   "comp": "INTF",
+   "espn": "588",
+   "name": "San Marino",
+   "abbr": "SMR",
+   "tz": "CET",
+   "color": "#00BFFF",
+   "feedName": "San Marino",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-sco",
+   "comp": "INTF",
+   "espn": "580",
+   "name": "Scotland",
+   "abbr": "SCO",
+   "tz": "UK",
+   "color": "#1A2D69",
+   "feedName": "Scotland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-srb",
+   "comp": "INTF",
+   "espn": "6757",
+   "name": "Serbia",
+   "abbr": "SRB",
+   "tz": "CET",
+   "color": "#E70000",
+   "feedName": "Serbia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-svk",
+   "comp": "INTF",
+   "espn": "468",
+   "name": "Slovakia",
+   "abbr": "SVK",
+   "tz": "CET",
+   "color": "#0C2FFF",
+   "feedName": "Slovakia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-svn",
+   "comp": "INTF",
+   "espn": "472",
+   "name": "Slovenia",
+   "abbr": "SVN",
+   "tz": "CET",
+   "color": "#0C2FFF",
+   "feedName": "Slovenia",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-swe",
+   "comp": "INTF",
+   "espn": "466",
+   "name": "Sweden",
+   "abbr": "SWE",
+   "tz": "CET",
+   "color": "#FECB00",
+   "feedName": "Sweden",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-sui",
+   "comp": "INTF",
+   "espn": "475",
+   "name": "Switzerland",
+   "abbr": "SUI",
+   "tz": "CET",
+   "color": "#FF0000",
+   "feedName": "Switzerland",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-tur",
+   "comp": "INTF",
+   "espn": "465",
+   "name": "Türkiye",
+   "abbr": "TUR",
+   "tz": "CET",
+   "color": "#EF3340",
+   "feedName": "Türkiye",
+   "aliases": [
+    "Turkey"
+   ],
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-ukr",
+   "comp": "INTF",
+   "espn": "457",
+   "name": "Ukraine",
+   "abbr": "UKR",
+   "tz": "CET",
+   "color": "#FEDE00",
+   "feedName": "Ukraine",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-wal",
+   "comp": "INTF",
+   "espn": "578",
+   "name": "Wales",
+   "abbr": "WAL",
+   "tz": "UK",
+   "color": "#E70000",
+   "feedName": "Wales",
+   "extraComps": [
+    "UNL"
+   ]
+  },
+  {
+   "id": "nt-aia",
+   "comp": "INTF",
+   "espn": "8942",
+   "name": "Anguilla",
+   "abbr": "AIA",
+   "tz": "ET",
+   "color": "#012169",
+   "feedName": "Anguilla",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-atg",
+   "comp": "INTF",
+   "espn": "2638",
+   "name": "Antigua and Barbuda",
+   "abbr": "ATG",
+   "tz": "ET",
+   "color": "#C8102E",
+   "feedName": "Antigua and Barbuda",
+   "aliases": [
+    "Antigua & Barbuda"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-aru",
+   "comp": "INTF",
+   "espn": "2642",
+   "name": "Aruba",
+   "abbr": "ARU",
+   "tz": "ET",
+   "color": "#418FDE",
+   "feedName": "Aruba",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-bah",
+   "comp": "INTF",
+   "espn": "2640",
+   "name": "Bahamas",
+   "abbr": "BAH",
+   "tz": "ET",
+   "color": "#00A9CE",
+   "feedName": "Bahamas",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-brb",
+   "comp": "INTF",
+   "espn": "2637",
+   "name": "Barbados",
+   "abbr": "BRB",
+   "tz": "ET",
+   "color": "#00267F",
+   "feedName": "Barbados",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-blz",
+   "comp": "INTF",
+   "espn": "2641",
+   "name": "Belize",
+   "abbr": "BLZ",
+   "tz": "ET",
+   "color": "#D90F19",
+   "feedName": "Belize",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-ber",
+   "comp": "INTF",
+   "espn": "2643",
+   "name": "Bermuda",
+   "abbr": "BER",
+   "tz": "ET",
+   "color": "#C8102E",
+   "feedName": "Bermuda",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-boe",
+   "comp": "INTF",
+   "espn": "19314",
+   "name": "Bonaire",
+   "abbr": "BOE",
+   "tz": "ET",
+   "color": "#C60000",
+   "feedName": "Bonaire",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-bvi",
+   "comp": "INTF",
+   "espn": "2644",
+   "name": "British Virgin Islands",
+   "abbr": "BVI",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "British Virgin Islands",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-cay",
+   "comp": "INTF",
+   "espn": "2646",
+   "name": "Cayman Islands",
+   "abbr": "CAY",
+   "tz": "ET",
+   "color": "#FF0000",
+   "feedName": "Cayman Islands",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-crc",
+   "comp": "INTF",
+   "espn": "214",
+   "name": "Costa Rica",
+   "abbr": "CRC",
+   "tz": "ET",
+   "color": "#CE1126",
+   "feedName": "Costa Rica",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-cub",
+   "comp": "INTF",
+   "espn": "2647",
+   "name": "Cuba",
+   "abbr": "CUB",
+   "tz": "ET",
+   "color": "#CB1515",
+   "feedName": "Cuba",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-cuw",
+   "comp": "INTF",
+   "espn": "11678",
+   "name": "Curaçao",
+   "abbr": "CUW",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "Curaçao",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-dma",
+   "comp": "INTF",
+   "espn": "13582",
+   "name": "Dominica",
+   "abbr": "DMA",
+   "tz": "ET",
+   "color": "#32AD42",
+   "feedName": "Dominica",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-dom",
+   "comp": "INTF",
+   "espn": "2649",
+   "name": "Dominican Republic",
+   "abbr": "DOM",
+   "tz": "ET",
+   "color": "#002D62",
+   "feedName": "Dominican Republic",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-slv",
+   "comp": "INTF",
+   "espn": "2650",
+   "name": "El Salvador",
+   "abbr": "SLV",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "El Salvador",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-guf",
+   "comp": "INTF",
+   "espn": "10532",
+   "name": "French Guiana",
+   "abbr": "GUF",
+   "tz": "ET",
+   "color": "#D20300",
+   "feedName": "French Guiana",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-grn",
+   "comp": "INTF",
+   "espn": "2651",
+   "name": "Grenada",
+   "abbr": "GRN",
+   "tz": "ET",
+   "color": "#EF3340",
+   "feedName": "Grenada",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-gdl",
+   "comp": "INTF",
+   "espn": "7657",
+   "name": "Guadeloupe",
+   "abbr": "GDL",
+   "tz": "ET",
+   "color": "#509E2F",
+   "feedName": "Guadeloupe",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-gua",
+   "comp": "INTF",
+   "espn": "2652",
+   "name": "Guatemala",
+   "abbr": "GUA",
+   "tz": "ET",
+   "color": "#4997D0",
+   "feedName": "Guatemala",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-guy",
+   "comp": "INTF",
+   "espn": "2653",
+   "name": "Guyana",
+   "abbr": "GUY",
+   "tz": "ET",
+   "color": "#FFF200",
+   "feedName": "Guyana",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-hai",
+   "comp": "INTF",
+   "espn": "2654",
+   "name": "Haiti",
+   "abbr": "HAI",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "Haiti",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-hon",
+   "comp": "INTF",
+   "espn": "215",
+   "name": "Honduras",
+   "abbr": "HON",
+   "tz": "ET",
+   "color": "#333EBD",
+   "feedName": "Honduras",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-jam",
+   "comp": "INTF",
+   "espn": "1038",
+   "name": "Jamaica",
+   "abbr": "JAM",
+   "tz": "ET",
+   "color": "#348B42",
+   "feedName": "Jamaica",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-mtq",
+   "comp": "INTF",
+   "espn": "2728",
+   "name": "Martinique",
+   "abbr": "MTQ",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "Martinique",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-msr",
+   "comp": "INTF",
+   "espn": "2655",
+   "name": "Montserrat",
+   "abbr": "MSR",
+   "tz": "ET",
+   "color": "#012169",
+   "feedName": "Montserrat",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-nca",
+   "comp": "INTF",
+   "espn": "2658",
+   "name": "Nicaragua",
+   "abbr": "NCA",
+   "tz": "ET",
+   "color": "#333EBD",
+   "feedName": "Nicaragua",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-pur",
+   "comp": "INTF",
+   "espn": "11766",
+   "name": "Puerto Rico",
+   "abbr": "PUR",
+   "tz": "ET",
+   "color": "#0537E4",
+   "feedName": "Puerto Rico",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-sma",
+   "comp": "INTF",
+   "espn": "18243",
+   "name": "Sint Maarten",
+   "abbr": "SMA",
+   "tz": "ET",
+   "color": "#C60000",
+   "feedName": "Sint Maarten",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-skn",
+   "comp": "INTF",
+   "espn": "2662",
+   "name": "St. Kitts and Nevis",
+   "abbr": "SKN",
+   "tz": "ET",
+   "color": "#228B22",
+   "feedName": "St. Kitts and Nevis",
+   "aliases": [
+    "Saint Kitts and Nevis"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-lca",
+   "comp": "INTF",
+   "espn": "2661",
+   "name": "St. Lucia",
+   "abbr": "LCA",
+   "tz": "ET",
+   "color": "#0077C8",
+   "feedName": "St. Lucia",
+   "aliases": [
+    "Saint Lucia"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-smn",
+   "comp": "INTF",
+   "espn": "10596",
+   "name": "St. Martin",
+   "abbr": "SMN",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "St. Martin",
+   "aliases": [
+    "Saint Martin"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-vin",
+   "comp": "INTF",
+   "espn": "13584",
+   "name": "St. Vincent and the Grenadines",
+   "abbr": "VIN",
+   "tz": "ET",
+   "color": "#32AD42",
+   "feedName": "St. Vincent and the Grenadines",
+   "aliases": [
+    "Saint Vincent and the Grenadines"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-sur",
+   "comp": "INTF",
+   "espn": "2664",
+   "name": "Suriname",
+   "abbr": "SUR",
+   "tz": "ET",
+   "color": "#007A33",
+   "feedName": "Suriname",
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-tri",
+   "comp": "INTF",
+   "espn": "2627",
+   "name": "Trinidad and Tobago",
+   "abbr": "TRI",
+   "tz": "ET",
+   "color": "#C8102E",
+   "feedName": "Trinidad and Tobago",
+   "aliases": [
+    "Trinidad & Tobago"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-tca",
+   "comp": "INTF",
+   "espn": "2665",
+   "name": "Turks and Caicos Islands",
+   "abbr": "TCA",
+   "tz": "ET",
+   "color": "#000080",
+   "feedName": "Turks and Caicos Islands",
+   "aliases": [
+    "Turks and Caicos"
+   ],
+   "extraComps": [
+    "CNL"
+   ]
+  },
+  {
+   "id": "nt-usvi",
+   "comp": "INTF",
+   "espn": "2645",
+   "name": "US Virgin Islands",
+   "abbr": "USVI",
+   "tz": "ET",
+   "color": "#0033A0",
+   "feedName": "US Virgin Islands",
+   "extraComps": [
+    "CNL"
+   ]
   }
  ],
  "events": [
