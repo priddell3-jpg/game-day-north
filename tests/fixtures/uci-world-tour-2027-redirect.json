@@ -1,0 +1,13 @@
+{
+ "_note": "The MediaWiki API's answer to page=2027 UCI World Tour on 2026-09-29, without the article text. The 2027 season article had not been written; the title redirects to the article about the competition.",
+ "requested": "2027 UCI World Tour",
+ "title": "UCI World Tour",
+ "redirects": [
+  {
+   "from": "2027 UCI World Tour",
+   "to": "UCI World Tour"
+  }
+ ],
+ "revid": 1376137797,
+ "wikitextLength": 100199
+}

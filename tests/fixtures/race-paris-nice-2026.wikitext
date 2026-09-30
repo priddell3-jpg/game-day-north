@@ -1,0 +1,814 @@
+{{Short description|Road cycling race in France}}
+{{Use dmy dates|date=February 2026}}
+{{Infobox cycling race report
+| name            = 2026 Paris–Nice
+| series          = [[2026 UCI World Tour]]
+| race_no         = 6
+| season_no       = 36
+| image           = 
+| image_caption   = 
+| image_size      = 
+| date            = 8–15 March 2026
+| stages          = 8
+| distance        = 1153.4
+| unit            = km
+| time            = 25h 25' 11"
+| first           = [[Jonas Vingegaard]]
+| first_nat       = DEN
+| first_team      = {{UCI team code|TVL men|2026}}
+| first_color     = yellow-whitebar
+| second          = [[Daniel Martínez (cyclist)|Daniel Martínez]]
+| second_nat      = COL
+| second_team     = {{UCI team code|RBH|2026}}
+| third           = [[Georg Steinhauser]]
+| third_nat       = GER
+| third_team      = {{UCI team code|EFE|2026}}
+| points          = [[Jonas Vingegaard]]
+| points_nat      = DEN
+| points_team     = {{UCI team code|TVL men|2026}}
+| points_color    = dark green
+| mountains       = [[Jonas Vingegaard]]
+| mountains_nat   = DEN
+| mountains_team  = {{UCI team code|TVL men|2026}}
+| mountains_color = polkadot
+| youth           = [[Georg Steinhauser]]
+| youth_nat       = GER
+| youth_team      = {{UCI team code|EFE|2026}}
+| youth_color     = white
+| team_nat        = GBR
+| team            = {{UCI team code|IGD|2026a}}
+| previous        = [[2025 Paris–Nice|2025]]
+| next            = [[2027 Paris–Nice|2027]]
+}}
+
+The '''2026 Paris–Nice''' was a [[road bicycle racing|road cycling]] [[cycling stage race|stage race]] which started on 8 March and finished on 15 March in [[France]]. It was the 84th edition of [[Paris–Nice]] and the sixth race of the [[2026 UCI World Tour]].
+
+==Teams==
+All eighteen [[UCI WorldTeam]]s and four [[UCI ProSeries|UCI ProTeams]] made up the 22 teams that participated in the race.<ref>{{cite web |url=https://www.procyclingstats.com/race/paris-nice/2026/startlist |title=Startlist for Paris-Nice 2026 |website=ProCyclingStats.com |access-date=10 March 2026}}</ref>
+
+'''UCI WorldTeams'''
+{{div col|colwidth=20em|style=margin-right:20%;}}
+* {{UCI team code|APT|2026}}
+* {{UCI team code|DCT|2026}}
+* {{UCI team code|EFE|2026}}
+* {{UCI team code|GFC|2026}}
+* {{UCI team code|IGD|2026a}}
+* {{UCI team code|LTK men|2026}}
+* {{UCI team code|LOI|2026}}
+* {{UCI team code|MOV men|2026}}
+* {{UCI team code|NSN|2026}}
+* {{UCI team code|RBH|2026}}
+* {{UCI team code|SOQ|2026}}
+* {{UCI team code|TBV|2026}}
+* {{UCI team code|JAY men|2026}}
+* {{UCI team code|TPP men|2026}}
+* {{UCI team code|TVL men|2026}}
+* {{UCI team code|UAD men|2026}}
+* {{UCI team code|UXM men|2026}}
+* {{UCI team code|XAT|2026}}
+{{div col end}}
+
+'''UCI ProTeams'''
+{{div col|colwidth=20em|style=margin-right:20%;}}
+* {{UCI team code|COF men|2026}}
+* {{UCI team code|PQT|2026}}
+* {{UCI team code|TEN|2026}}
+* {{UCI team code|TUD|2026}}
+{{div col end}}
+
+==Route==
+{| class="wikitable"
+|+ Stage characteristics and winners<ref name="Route">{{cite web|url=https://www.paris-nice.fr/en/overall-route|title=2026 Paris-Nice Route|accessdate=22 February 2026}}</ref>
+|-
+! scope="col" | Stage
+! scope="col" | Date
+! scope="col" | Course
+! scope="col" | Distance
+! scope="col" colspan="2" | Type
+! scope="col" | Stage winner
+|-
+! scope="row" | [[#Stage 1|1]]
+| style="text-align:center;" | 8 March
+| [[Achères, Yvelines|Achères]] to [[Carrières-sous-Poissy]]
+| style="text-align:center;" | {{convert|171.2|km|abbr=on}}
+| [[File:Plainstage.svg|20px|link=|alt=]]
+| Flat stage
+| {{Flagathlete|[[Luke Lamperti]]|USA}}
+|-
+! scope="row" | [[#Stage 2|2]]
+| style="text-align:center;" | 9 March
+| [[Épône]] to [[Montargis]]
+| style="text-align:center;" | {{convert|187|km|abbr=on}}
+| [[File:Plainstage.svg|20px|link=|alt=]]
+| Flat stage
+| {{Flagathlete|[[Max Kanter]]|GER}}
+|-
+! scope="row" | [[#Stage 3|3]]
+| style="text-align:center;" | 10 March
+| [[Cosne-Cours-sur-Loire]] to [[Pouilly-sur-Loire]]
+| style="text-align:center;" | {{convert|23.5|km|abbr=on}}
+| [[File:Team Time Trial Stage.svg|20px|link=|alt=]]
+| [[Team time trial]]
+| {{Flagathlete|{{UCI team code|IGD|2026a}}|GBR}}
+|-
+! scope="row" | [[#Stage 4|4]]
+| style="text-align:center;" | 11 March
+| [[Bourges]] to [[Uchon]]
+| style="text-align:center;" | {{convert|195|km|abbr=on}}
+| [[File:Mediummountainstage.svg|20px|link=|alt=]]
+| Medium mountain stage
+| {{Flagathlete|[[Jonas Vingegaard]]|DEN}}
+|-
+! scope="row" | [[#Stage 5|5]]
+| style="text-align:center;" | 12 March
+| [[Cormoranche-sur-Saône]] to [[Colombier-le-Vieux]]
+| style="text-align:center;" | {{convert|205.4|km|abbr=on}}
+| [[File:Hillystage.svg|20px|link=|alt=]]
+| Hilly stage
+| {{Flagathlete|[[Jonas Vingegaard]]|DEN}}
+|-
+! scope="row" | [[#Stage 6|6]]
+| style="text-align:center;" | 13 March
+| [[Barbentane]] to [[Apt, Vaucluse|Apt]]
+| style="text-align:center;" | {{convert|179.3|km|abbr=on}}
+| [[File:Hillystage.svg|20px|link=|alt=]]
+| Hilly stage
+| {{Flagathlete|[[Harold Tejada]]|COL}}
+|-
+! scope="row" | [[#Stage 7|7]]
+| style="text-align:center;" | 14 March
+| [[Nice]] to <s>[[Auron (ski resort)|Auron]]</s> [[Isola 2000|Isola-Village]]
+| style="text-align:center;" | <s>{{convert|138.7|km|abbr=on}}</s> {{convert|47|km|abbr=on}}
+| [[File:Mountainstage.svg|20px|link=|alt=]]
+| Mountain stage
+| {{Flagathlete|[[Dorian Godon]]|FRA}}
+|-
+! scope="row" | [[#Stage 8|8]]
+| style="text-align:center;" | 15 March
+| Nice to Nice
+| style="text-align:center;" | {{convert|145|km|abbr=on}}
+| [[File:Mediummountainstage.svg|20px|link=|alt=]]
+| Medium mountain stage
+| {{Flagathlete|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA}}
+|-
+! colspan="3" | Total
+| style="text-align:center;"; |  {{convert|1153.4|km|abbr=on}}
+|}
+
+== Stages ==
+=== Stage 1 ===
+;8 March 2026 — [[Achères, Yvelines|Achères]] to [[Carrières-sous-Poissy]], {{convert|171.2|km|abbr=on}}<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|title=Stage 1 Result (1–10)<ref name="CN-1">{{cite web|title=Paris-Nice: Luke Lamperti surges at front of bunch sprint to secure signature win on opening stage|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-luke-lamperti-surges-at-front-of-bunch-sprint-to-secure-signature-win-on-opening-stage/|website=Cyclingnews|first=Patrick|last=Fletcher|date=8 March 2026|access-date=9 March 2026}}</ref>}}
+{{cyclingresult|1|[[Luke Lamperti]]|USA|{{UCI team code|EFE|2026}}|3h 45' 17"}}
+{{cyclingresult|2|[[Vito Braet]]|BEL|{{UCI team code|LOI|2026}}|+ 0"}}
+{{cyclingresult|3|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2026}}|+ 0"}}
+{{cyclingresult|4|[[Milan Fretin]]|BEL|{{UCI team code|COF men|2026}}|+ 0"}}
+{{cyclingresult|5|[[Biniam Girmay]]|ERI|{{UCI team code|NSN|2026}}|+ 0"}}
+{{cyclingresult|6|[[Jensen Plowright]]|AUS|{{UCI team code|APT|2026}}|+ 0"}}
+{{cyclingresult|7|[[Mike Teunissen]]|NED|{{UCI team code|XAT|2026}}|+ 0"}}
+{{cyclingresult|8|[[Sakarias Koller Løland]]|NOR|{{UCI team code|UXM men|2026}}|+ 0"}}
+{{cyclingresult|9|[[Axel Zingle]]|FRA|{{UCI team code|TVL men|2026}}|+ 0"}}
+{{cyclingresult|10|[[Bob Donaldson (cyclist)|Robert Donaldson]]|GBR|{{UCI team code|JAY men|2026}}|+ 0"}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 1 (1–10)<ref name="CN-1" />}}
+{{cyclingresult|1|[[Luke Lamperti]]|USA|{{UCI team code|EFE|2026}}|3h 45' 07"|{{cjersey|Paris–Nice}}{{cjersey|dark green}}{{cjersey|white}}}}
+{{cyclingresult|2|[[Vito Braet]]|BEL|{{UCI team code|LOI|2026}}|+ 4"}}
+{{cyclingresult|3|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2026}}|+ 6"}}
+{{cyclingresult|4|[[Casper Pedersen]]|DEN|{{UCI team code|SOQ|2026}}|+ 6"|{{cjersey|polkadot}}}}
+{{cyclingresult|5|[[Milan Fretin]]|BEL|{{UCI team code|COF men|2026}}|+ 10"}}
+{{cyclingresult|6|[[Biniam Girmay]]|ERI|{{UCI team code|NSN|2026}}|+ 10"|{{cjersey|yellow number}}}}
+{{cyclingresult|7|[[Jensen Plowright]]|AUS|{{UCI team code|APT|2026}}|+ 10"}}
+{{cyclingresult|8|[[Mike Teunissen]]|NED|{{UCI team code|XAT|2026}}|+ 10"}}
+{{cyclingresult|9|[[Sakarias Koller Løland]]|NOR|{{UCI team code|UXM men|2026}}|+ 10"}}
+{{cyclingresult|10|[[Axel Zingle]]|FRA|{{UCI team code|TVL men|2026}}|+ 10"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 2 ===
+;9 March 2026 – [[Épône]] to [[Montargis]], {{convert|187|km|abbr=on}}<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|title=Stage 2 Result (1–10)<ref name="CN-2">{{cite web|title=Paris-Nice: Max Kanter speeds to stage 2 victory in messy sprint finish|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-max-kanter-speeds-to-stage-2-victory-in-messy-sprint-finish/|website=Cyclingnews|first=James|last=Moultrie|date=9 March 2026|access-date=9 March 2026}}</ref>}}
+{{cyclingresult|1|[[Max Kanter]]|GER|{{UCI team code|XAT|2026}}|4h 25' 07"}}
+{{cyclingresult|2|[[Laurence Pithie]]|NZL|{{UCI team code|RBH|2026}}|+ 0"}}
+{{cyclingresult|3|[[Jasper Stuyven]]|BEL|{{UCI team code|SOQ|2026}}|+ 0"}}
+{{cyclingresult|4|[[Dorian Godon]]|FRA|{{UCI team code|IGD|2026a}}|+ 0"}}
+{{cyclingresult|5|[[Luke Lamperti]]|USA|{{UCI team code|EFE|2026}}|+ 0"|{{cjersey|Paris–Nice}}{{cjersey|dark green}}{{cjersey|white}}}}
+{{cyclingresult|6|[[Rick Pluimers]]|NED|{{UCI team code|TUD|2026}}|+ 0"}}
+{{cyclingresult|7|[[Lewis Askey]]|GBR|{{UCI team code|NSN|2026}}|+ 0"|{{cjersey|yellow number}}}}
+{{cyclingresult|8|[[Tom Van Asbroeck]]|BEL|{{UCI team code|NSN|2026}}|+ 0"|{{cjersey|yellow number}}}}
+{{cyclingresult|9|[[Clément Russo]]|FRA|{{UCI team code|GFC|2026}}|+ 0"}}
+{{cyclingresult|10|[[Anthony Turgis]]|FRA|{{UCI team code|TEN|2026}}|+ 0"}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 2 (1–10)<ref name="CN-2" />}}
+{{cyclingresult|1|[[Luke Lamperti]]|USA|{{UCI team code|EFE|2026}}|8h 10' 12"|{{cjersey|Paris–Nice}}{{cjersey|dark green}}{{cjersey|white}}}}
+{{cyclingresult|2|[[Vito Braet]]|BEL|{{UCI team code|LOI|2026}}|+ 0"}}
+{{cyclingresult|3|[[Laurence Pithie]]|NZL|{{UCI team code|RBH|2026}}|+ 6"}}
+{{cyclingresult|4|[[Jasper Stuyven]]|BEL|{{UCI team code|SOQ|2026}}|+ 8"}}
+{{cyclingresult|5|[[Orluis Aular]]|VEN|{{UCI team code|MOV men|2026}}|+ 8"}}
+{{cyclingresult|6|[[Juan Ayuso]]|ESP|{{UCI team code|LTK men|2026}}|+ 8"}}
+{{cyclingresult|7|[[Casper Pedersen]]|DEN|{{UCI team code|SOQ|2026}}|+ 8"|{{cjersey|polkadot}}}}
+{{cyclingresult|8|[[Dorian Godon]]|FRA|{{UCI team code|IGD|2026a}}|+ 12"}}
+{{cyclingresult|9|[[Anthony Turgis]]|FRA|{{UCI team code|TEN|2026}}|+ 12"}}
+{{cyclingresult|10|[[Mike Teunissen]]|NED|{{UCI team code|XAT|2026}}|+ 12"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 3 ===
+;10 March 2026 – [[Cosne-Cours-sur-Loire]] to [[Pouilly-sur-Loire]], {{convert|23.5|km|abbr=on}} ([[Team time trial|TTT]])<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|rider=no|title=Stage 3 Result (1–10)<ref name="CN-3">{{cite web|title=Paris-Nice: Ineos Grenadiers win stage 3 team time trial while Juan Ayuso takes GC lead with second-placed Lidl-Trek finish|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-ineos-grenadiers-win-stage-3-team-time-trial-while-juan-ayuso-takes-gc-lead-with-second-placed-lidl-trek-finish/|website=Cyclingnews|first=James|last=Moultrie|date=10 March 2026|access-date=10 March 2026}}</ref>}}
+{{cyclingresult|1|||{{flagicon|GBR}} {{UCI team code|IGD|2026a}}|26' 40"}}
+{{cyclingresult|2|||{{flagicon|GER}} {{UCI team code|LTK men|2026}}|+ 2"}}
+{{cyclingresult|3|||{{flagicon|FRA}} {{UCI team code|DCT|2026}}|+ 11"}}
+{{cyclingresult|4|||{{flagicon|NED}} {{UCI team code|TVL men|2026}}|+ 15"}}
+{{cyclingresult|5|||{{flagicon|GER}} {{UCI team code|RBH|2026}}|+ 20"}}
+{{cyclingresult|6|||{{flagicon|USA}} {{UCI team code|EFE|2026}}|+ 23"}}
+{{cyclingresult|7|||{{flagicon|ESP}} {{UCI team code|MOV men|2026}}|+ 28"}}
+{{cyclingresult|8|||{{flagicon|UAE}} {{UCI team code|UAD men|2026}}|+ 37"}}
+{{cyclingresult|9|||{{flagicon|FRA}} {{UCI team code|GFC|2026}}|+ 41"}}
+{{cyclingresult|10|||{{flagicon|FRA}} {{UCI team code|COF men|2026}}|+ 42"}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 3 (1–10)<ref name="CN-3" />}}
+{{cyclingresult|1|[[Juan Ayuso]]|ESP|{{UCI team code|LTK men|2026}}|8h 37' 02"|{{cjersey|Paris–Nice}}{{cjersey|white}}}}
+{{cyclingresult|2|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 2"|{{cjersey|yellow number}}}}
+{{cyclingresult|3|[[Oscar Onley]]|GBR|{{UCI team code|IGD|2026a}}|+ 3"|{{cjersey|yellow number}}}}
+{{cyclingresult|4|[[Daan Hoole]]|NED|{{UCI team code|DCT|2026}}|+ 13"}}
+{{cyclingresult|5|[[Bruno Armirail]]|FRA|{{UCI team code|TVL men|2026}}|+ 17"}}
+{{cyclingresult|6|[[Davide Piganzoli]]|ITA|{{UCI team code|TVL men|2026}}|+ 17"}}
+{{cyclingresult|7|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|+ 17"}}
+{{cyclingresult|8|{{flagg|uxx|blank}} [[Aleksandr Vlasov (cyclist)|Aleksandr Vlasov]]||{{UCI team code|RBH|2026}}|+ 22"}}
+{{cyclingresult|9|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 22"}}
+{{cyclingresult|10|[[Laurence Pithie]]|NZL|{{UCI team code|RBH|2026}}|+ 24"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 4 ===
+;11 March 2026 – [[Bourges]] to [[Uchon]], {{convert|195|km|abbr=on}}<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|title=Stage 4 Result (1–10)<ref name="CN-4">{{cite web|title=Paris-Nice: Jonas Vingegaard climbs into race lead with massive effort on stage 4 marked by high-speed turmoil and grueling weather conditions|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-jonas-vingegaard-climbs-into-race-lead-with-massive-effort-on-stage-4-marked-by-high-speed-chaos-and-grueling-weather-conditions/|website=Cyclingnews|first=Alasdair|last=Fotheringham|date=11 March 2026|access-date=11 March 2026}}</ref>}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|4h 16' 12"}}
+{{cyclingresult|2|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 41"}}
+{{cyclingresult|3|[[Tim van Dijke]]|NED|{{UCI team code|RBH|2026}}|+ 45"}}
+{{cyclingresult|4|[[Mick van Dijke]]|NED|{{UCI team code|RBH|2026}}|+ 1' 42"}}
+{{cyclingresult|5|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 2' 54"}}
+{{cyclingresult|6|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 3' 38"|{{cjersey|yellow number}}}}
+{{cyclingresult|7|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 4' 02"}}
+{{cyclingresult|8|[[David Gaudu]]|FRA|{{UCI team code|GFC|2026}}|+ 4' 20"}}
+{{cyclingresult|9|[[Jensen Plowright]]|AUS|{{UCI team code|APT|2026}}|+ 4' 55"}}
+{{cyclingresult|10|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 5' 07"}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 4 (1–10)<ref name="CN-4" />}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|12h 53' 15"|{{cjersey|Paris–Nice}}}}
+{{cyclingresult|2|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 52"|{{cjersey|yellow number}}}}
+{{cyclingresult|3|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 3' 20"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 3' 39"}}
+{{cyclingresult|5|[[David Gaudu]]|FRA|{{UCI team code|GFC|2026}}|+ 5' 02"}}
+{{cyclingresult|6|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 5' 07"}}
+{{cyclingresult|7|[[Tim van Dijke]]|NED|{{UCI team code|RBH|2026}}|+ 5' 33"|{{cjersey|yellow number}}[[File:Jersey beige number.svg|20px]]}}
+{{cyclingresult|8|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 5' 45"}}
+{{cyclingresult|9|[[Jensen Plowright]]|AUS|{{UCI team code|APT|2026}}|+ 6' 27"}}
+{{cyclingresult|10|[[Ion Izagirre]]|ESP|{{UCI team code|COF men|2026}}|+ 6' 32"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 5 ===
+;12 March 2026 – [[Cormoranche-sur-Saône]] to [[Colombier-le-Vieux]], {{convert|205.4|km|abbr=on}}<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|title=Stage 5 Result (1–10)<ref name="CN-5">{{cite web|title=Paris-Nice: Jonas Vingegaard launches 20km solo attack for impressive stage 5 victory, extends already massive GC lead|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-jonas-vingegaard-launches-20km-solo-attack-for-impressive-stage-5-victory-extends-already-massive-gc-lead/|website=Cyclingnews|first=Alasdair|last=Fotheringham|date=12 March 2026|access-date=12 March 2026}}</ref>}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|4h 29' 01"|{{cjersey|Paris–Nice}}}}
+{{cyclingresult|2|[[Valentin Paret-Peintre]]|FRA|{{UCI team code|SOQ|2026}}|+ 2' 02"}}
+{{cyclingresult|3|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 2' 20"}}
+{{cyclingresult|4|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 2' 20"}}
+{{cyclingresult|5|[[Ion Izagirre]]|ESP|{{UCI team code|COF men|2026}}|+ 2' 20"}}
+{{cyclingresult|6|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 2' 20"|{{cjersey|yellow number}}}}
+{{cyclingresult|7|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 2' 20"}}
+{{cyclingresult|8|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 2' 20"|{{cjersey|white}}}}
+{{cyclingresult|9|[[Mathys Rondel]]|FRA|{{UCI team code|TUD|2026}}|+ 2' 20"}}
+{{cyclingresult|10|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 2' 20"}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 5 (1–10)<ref name="CN-5" />}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|17h 22' 06"|{{cjersey|Paris–Nice}}{{cjersey|polkadot}}[[File:Jersey beige number.svg|20px]]}}
+{{cyclingresult|2|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 3' 22"}}
+{{cyclingresult|3|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 5' 50"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 6' 09"|{{cjersey|yellow number}}}}
+{{cyclingresult|5|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 7' 37"}}
+{{cyclingresult|6|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 8' 15"}}
+{{cyclingresult|7|[[Ion Izagirre]]|ESP|{{UCI team code|COF men|2026}}|+ 9' 02"}}
+{{cyclingresult|8|[[Mathys Rondel]]|FRA|{{UCI team code|TUD|2026}}|+ 10' 06"}}
+{{cyclingresult|9|[[Alex Baudin]]|FRA|{{UCI team code|EFE|2026}}|+ 10' 16"}}
+{{cyclingresult|10|[[Oscar Onley]]|GBR|{{UCI team code|IGD|2026a}}|+ 11' 23"|{{cjersey|yellow number}}}}
+{{cyclingresult end}}
+|}
+
+=== Stage 6 ===
+;13 March 2026 – [[Barbentane]] to [[Apt, Vaucluse|Apt]], {{convert|179.3|km|abbr=on}}<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|title=Stage 6 Result (1–10)<ref name="CN-6">{{cite web|title=Paris-Nice: Harold Tejada survives late issue and launches daring attack to win stage 6 solo|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-harold-tejada-caps-off-stellar-teamwork-to-grab-stage-6-victory-with-late-attack-in-aggressive-finale/|website=Cyclingnews|first=Alasdair|last=Fotheringham|date=13 March 2026|access-date=13 March 2026}}</ref>}}
+{{cyclingresult|1|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|3h 54' 38"}}
+{{cyclingresult|2|[[Dorian Godon]]|FRA|{{UCI team code|IGD|2026a}}|+ 6"|{{cjersey|yellow number}}}}
+{{cyclingresult|3|[[Lewis Askey]]|GBR|{{UCI team code|NSN|2026}}|+ 6"}}
+{{cyclingresult|4|[[Bryan Coquard]]|FRA|{{UCI team code|COF men|2026}}|+ 6"}}
+{{cyclingresult|5|[[Matteo Trentin]]|ITA|{{UCI team code|TUD|2026}}|+ 6"}}
+{{cyclingresult|6|[[Laurence Pithie]]|NZL|{{UCI team code|RBH|2026}}|+ 6"}}
+{{cyclingresult|7|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 6"|{{cjersey|yellow number}}}}
+{{cyclingresult|8|[[Valentin Paret-Peintre]]|FRA|{{UCI team code|SOQ|2026}}|+ 6"}}
+{{cyclingresult|9|{{flagg|uxx|blank}} [[Aleksandr Vlasov (cyclist)|Aleksandr Vlasov]]||{{UCI team code|RBH|2026}}|+ 6"}}
+{{cyclingresult|10|[[Alex Baudin]]|FRA|{{UCI team code|EFE|2026}}|+ 6"}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 6 (1–10)<ref name="CN-6" />}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|21h 16' 50"|{{cjersey|Paris–Nice}}{{cjersey|polkadot}}}}
+{{cyclingresult|2|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 3' 22"}}
+{{cyclingresult|3|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 5' 50"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 6' 09"|{{cjersey|yellow number}}}}
+{{cyclingresult|5|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 7' 37"}}
+{{cyclingresult|6|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 8' 15"}}
+{{cyclingresult|7|[[Ion Izagirre]]|ESP|{{UCI team code|COF men|2026}}|+ 9' 02"}}
+{{cyclingresult|8|[[Mathys Rondel]]|FRA|{{UCI team code|TUD|2026}}|+ 10' 06"}}
+{{cyclingresult|9|[[Alex Baudin]]|FRA|{{UCI team code|EFE|2026}}|+ 10' 16"}}
+{{cyclingresult|10|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 11' 27"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 7 ===
+;14 March 2026 – [[Nice]] to [[Isola 2000|Isola-Village]], {{convert|47|km|abbr=on}}<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|title=Stage 7 Result (1–10)<ref name="CN-7">{{cite web|title=Paris-Nice: Dorian Godon holds off Biniam Girmay to win heavily shortened stage 7|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-dorian-godon-holds-off-biniam-girmay-to-win-heavily-shortened-stage-7/|website=Cyclingnews|first=James|last=Moultrie|date=14 March 2026|access-date=14 March 2026}}</ref>}}
+{{cyclingresult|1|[[Dorian Godon]]|FRA|{{UCI team code|IGD|2026a}}|1h 01' 48"|{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Biniam Girmay]]|ERI|{{UCI team code|NSN|2026}}|+ 0"}}
+{{cyclingresult|3|[[Cees Bol]]|NED|{{UCI team code|DCT|2026}}|+ 0"}}
+{{cyclingresult|4|[[Laurence Pithie]]|NZL|{{UCI team code|RBH|2026}}|+ 0"}}
+{{cyclingresult|5|[[Luke Lamperti]]|USA|{{UCI team code|EFE|2026}}|+ 0"|{{cjersey|dark green}}}}
+{{cyclingresult|6|[[Mike Teunissen]]|NED|{{UCI team code|XAT|2026}}|+ 0"}}
+{{cyclingresult|7|[[Jensen Plowright]]|AUS|{{UCI team code|APT|2026}}|+ 0"}}
+{{cyclingresult|8|[[Jasper Stuyven]]|BEL|{{UCI team code|SOQ|2026}}|+ 0"}}
+{{cyclingresult|9|[[Matteo Trentin]]|ITA|{{UCI team code|TUD|2026}}|+ 0"}}
+{{cyclingresult|10|[[Samuel Watson (cyclist)|Samuel Watson]]|GBR|{{UCI team code|IGD|2026a}}|+ 0"|{{cjersey|yellow number}}}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 7 (1–10)<ref name="CN-7" />}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|22h 18' 38"|{{cjersey|Paris–Nice}}{{cjersey|polkadot}}}}
+{{cyclingresult|2|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 3' 22"}}
+{{cyclingresult|3|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 5' 50"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 6' 09"|{{cjersey|yellow number}}}}
+{{cyclingresult|5|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 7' 37"}}
+{{cyclingresult|6|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 8' 15"}}
+{{cyclingresult|7|[[Ion Izagirre]]|ESP|{{UCI team code|COF men|2026}}|+ 9' 02"}}
+{{cyclingresult|8|[[Mathys Rondel]]|FRA|{{UCI team code|TUD|2026}}|+ 10' 06"}}
+{{cyclingresult|9|[[Alex Baudin]]|FRA|{{UCI team code|EFE|2026}}|+ 10' 16"}}
+{{cyclingresult|10|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 11' 27"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 8 ===
+;15 March 2026 – Nice to Nice, {{convert|145|km|abbr=on}}<ref name="Route" />
+{|
+|-
+|valign=top|
+{{cyclingresult start|title=Stage 8 Result (1–10)<ref name="CN-8">{{cite web|title=Paris-Nice: Jonas Vingegaard secures GC title but gets pipped to stage 8 victory by Lenny Martinez in narrow two-up sprint|url=https://www.cyclingnews.com/pro-cycling/racing/paris-nice-jonas-vingegaard-secures-gc-title-as-lenny-martinez-wins-stage-8/|website=Cyclingnews|first=James|last=Moultrie|date=15 March 2026|access-date=15 March 2026}}</ref>}}
+{{cyclingresult|1|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|3h 06' 43"}}
+{{cyclingresult|2|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|+ 0"|{{cjersey|Paris–Nice}}{{cjersey|polkadot}}}}
+{{cyclingresult|3|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 7"}}
+{{cyclingresult|4|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 7"|{{cjersey|yellow number}}}}
+{{cyclingresult|5|[[Alex Baudin]]|FRA|{{UCI team code|EFE|2026}}|+ 7"}}
+{{cyclingresult|6|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 7"|{{cjersey|white}}}}
+{{cyclingresult|7|[[Ion Izagirre]]|ESP|{{UCI team code|COF men|2026}}|+ 7"}}
+{{cyclingresult|8|[[Mathys Rondel]]|FRA|{{UCI team code|TUD|2026}}|+ 7"}}
+{{cyclingresult|9|[[Nicolas Vinokurov]]|KAZ|{{UCI team code|XAT|2026}}|+ 44"}}
+{{cyclingresult|10|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 44"}}
+{{cyclingresult end}}
+|valign=top|
+{{cyclingresult start|title=General classification after Stage 8 (1–10)<ref name="CN-8" />}}
+{{cyclingresult|1|[[Jonas Vingegaard]]|DEN|{{UCI team code|TVL men|2026}}|25h 25' 11"|{{cjersey|Paris–Nice}}{{cjersey|dark green}}{{cjersey|polkadot}}}}
+{{cyclingresult|2|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL|{{UCI team code|RBH|2026}}|+ 4' 23"}}
+{{cyclingresult|3|[[Georg Steinhauser]]|GER|{{UCI team code|EFE|2026}}|+ 6' 07"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Kévin Vauquelin]]|FRA|{{UCI team code|IGD|2026a}}|+ 6' 24"|{{cjersey|yellow number}}}}
+{{cyclingresult|5|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 7' 31"}}
+{{cyclingresult|6|[[Marc Soler]]|ESP|{{UCI team code|UAD men|2026}}|+ 9' 09"}}
+{{cyclingresult|7|[[Ion Izagirre]]|ESP|{{UCI team code|COF men|2026}}|+ 9' 19"}}
+{{cyclingresult|8|[[Mathys Rondel]]|FRA|{{UCI team code|TUD|2026}}|+ 10' 23"}}
+{{cyclingresult|9|[[Alex Baudin]]|FRA|{{UCI team code|EFE|2026}}|+ 10' 33"}}
+{{cyclingresult|10|[[Harold Tejada]]|COL|{{UCI team code|XAT|2026}}|+ 11' 40"}}
+{{cyclingresult end}}
+|}
+
+==Classification leadership table==
+{| class=wikitable style="text-align: center; font-size:smaller;"
+|+ Classification leadership by stage
+|-
+! style="width:1%;" | Stage
+! style="width:14%;" | Stage Winner
+! style="width:14%;" | General classification<br />{{cjersey|Paris–Nice}}
+! style="width:14%;" | Points classification<br />{{cjersey|dark green}}
+! style="width:14%;" | Mountains classification<br />{{cjersey|polkadot}}
+! style="width:14%;" | Young rider classification<br />{{cjersey|white}}
+! style="width:14%;" | Team classification<br />{{cjersey|yellow number}}
+! style="width:14%;" | Combativity award<br />[[File:Jersey beige number.svg|20px]]
+|-
+! 1
+| [[Luke Lamperti]]
+| style="background:#ffff99;" rowspan="2"| [[Luke Lamperti]]
+| style="background:#008000;" rowspan="6"| {{font color|white|Luke Lamperti|link=Luke Lamperti}}
+| style="background:salmon;" rowspan="4"| [[Casper Pedersen]]
+| style="background:offwhite;" rowspan="2"| [[Luke Lamperti]]
+| style="background:skyblue;" rowspan="2"| {{UCI team code|NSN|2026}}
+| style="background:#F5F5DC;" | [[Mathis Le Berre]]
+|-
+! 2
+| [[Max Kanter]]
+| style="background:#F5F5DC;" | [[Daan Hoole]]
+|-
+! 3
+| {{UCI team code|IGD|2026a}}
+| style="background:#ffff99;" | [[Juan Ayuso]]
+| style="background:offwhite;" | [[Juan Ayuso]]
+| style="background:skyblue;" | {{UCI team code|IGD|2026a}}
+| ''Not awarded''
+|-
+! 4
+| [[Jonas Vingegaard]]
+| style="background:#ffff99;" rowspan="5"| [[Jonas Vingegaard]]
+| style="background:offwhite;" rowspan="5"| [[Georg Steinhauser]]
+| style="background:skyblue;" | {{UCI team code|RBH|2026}}
+| style="background:#F5F5DC;" | [[Tim van Dijke]] & [[Mick van Dijke]]
+|-
+! 5
+| [[Jonas Vingegaard]]
+| style="background:salmon;" rowspan="4"| [[Jonas Vingegaard]]
+| style="background:skyblue;" rowspan="4"| {{UCI team code|IGD|2026a}}
+| style="background:#F5F5DC;" | [[Jonas Vingegaard]]
+|-
+! 6
+| [[Harold Tejada]]
+| style="background:#F5F5DC;" | [[Joshua Tarling]]
+|-
+! 7
+| [[Dorian Godon]]
+| style="background:#008000;" | {{font color|white|Dorian Godon|link=Dorian Godon}}
+| style="background:#F5F5DC;" | [[Tim Marsman]]
+|-
+! 8
+| [[Lenny Martinez (cyclist)|Lenny Martinez]]
+| style="background:#008000;" | {{font color|white|Jonas Vingegaard|link=Jonas Vingegaard}}
+| style="background:#F5F5DC;" | [[Valentin Paret-Peintre]]
+|-
+! colspan="2" | Final
+! style="background:gold;" | [[Jonas Vingegaard]]
+! style="background:#008000;" | {{font color|white|Jonas Vingegaard|link=Jonas Vingegaard}}
+! style="background:#CC4E5C;" | {{font color|white|Jonas Vingegaard|link=Jonas Vingegaard}}
+! style="background:white;" | [[Georg Steinhauser]]
+! style="background:#a9e5ec;" | {{UCI team code|IGD|2026a}}
+! ''Not awarded''
+|}
+
+==Classification standings==
+{| class="wikitable"
+|-
+! colspan="4" | Legend
+|-
+| {{cjersey|Paris–Nice}}
+| Denotes the winner of the general classification
+| {{cjersey|polkadot}}
+| Denotes the winner of the mountains classification
+|-
+| {{cjersey|dark green}}
+| Denotes the winner of the points classification
+| {{cjersey|white}}
+| Denotes the winner of the young rider classification
+|-
+| {{cjersey|yellow number}}
+| Denotes the winner of the team classification
+| [[File:Jersey beige number.svg|20px]]
+| Denotes the winner of the combativity award
+|}
+
+=== General classification ===
+{| class="wikitable" margin-bottom:0;"
+|+ Final general classification (1–10)<ref name="CN-8" />
+|-
+! scope="col" | Rank
+! scope="col" | Rider
+! scope="col" | Team
+! scope="col" | Time
+|-
+! scope="row" | 1
+| {{Flagathlete|[[Jonas Vingegaard]]|DEN}} {{cjersey|Paris–Nice}}{{cjersey|dark green}}{{cjersey|polkadot}}
+| {{UCI team code|TVL men|2026}}
+| align="right" | 25h 25' 11"
+|-
+! scope="row" | 2
+| {{Flagathlete|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL}}
+| {{UCI team code|RBH|2026}}
+| align="right" | + 4' 23"
+|-
+! scope="row" | 3
+| {{Flagathlete|[[Georg Steinhauser]]|GER}} {{cjersey|white}}
+| {{UCI team code|EFE|2026}}
+| align="right" | + 6' 07"
+|-
+! scope="row" | 4
+| {{Flagathlete|[[Kévin Vauquelin]]|FRA}} {{cjersey|yellow number}}
+| {{UCI team code|IGD|2026a}}
+| align="right" | + 6' 24"
+|-
+! scope="row" | 5
+| {{Flagathlete|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA}}
+| {{UCI team code|TBV|2026}}
+| align="right" | + 7' 31"
+|-
+! scope="row" | 6
+| {{Flagathlete|[[Marc Soler]]|ESP}}
+| {{UCI team code|UAD men|2026}}
+| align="right" | + 9' 09"
+|-
+! scope="row" | 7
+| {{Flagathlete|[[Ion Izagirre]]|ESP}}
+| {{UCI team code|COF men|2026}}
+| align="right" | + 9' 19"
+|-
+! scope="row" | 8
+| {{Flagathlete|[[Mathys Rondel]]|FRA}}
+| {{UCI team code|TUD|2026}}
+| align="right" | + 10' 23"
+|-
+! scope="row" | 9
+| {{Flagathlete|[[Alex Baudin]]|FRA}}
+| {{UCI team code|EFE|2026}}
+| align="right" | + 10' 33"
+|-
+! scope="row" | 10
+| {{Flagathlete|[[Harold Tejada]]|COL}}
+| {{UCI team code|XAT|2026}}
+| align="right" | + 11' 40"
+|}
+{{columns-start}}
+
+=== Points classification ===
+{| class="wikitable" margin-bottom:0;"
+|+ Final points classification (1–10)<ref name="CN-8" />
+|-
+! scope="col" | Rank
+! scope="col" | Rider
+! scope="col" | Team
+! scope="col" | Points
+|-
+! scope="row" | 1
+| {{Flagathlete|[[Jonas Vingegaard]]|DEN}} {{cjersey|dark green}}{{cjersey|Paris–Nice}}{{cjersey|polkadot}}
+| {{UCI team code|TVL men|2026}}
+| align="right" | 58
+|-
+! scope="row" | 2
+| {{Flagathlete|[[Dorian Godon]]|FRA}} {{cjersey|yellow number}}
+| {{UCI team code|IGD|2026a}}
+| align="right" | 55
+|-
+! scope="row" | 3
+| {{Flagathlete|[[Harold Tejada]]|COL}}
+| {{UCI team code|XAT|2026}}
+| align="right" | 45
+|-
+! scope="row" | 4
+| {{Flagathlete|[[Laurence Pithie]]|NZL}}
+| {{UCI team code|RBH|2026}}
+| align="right" | 44
+|-
+! scope="row" | 5
+| {{Flagathlete|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA}}
+| {{UCI team code|TBV|2026}}
+| align="right" | 37
+|-
+! scope="row" | 6
+| {{Flagathlete|[[Kévin Vauquelin]]|FRA}} {{cjersey|yellow number}}
+| {{UCI team code|IGD|2026a}}
+| align="right" | 33
+|-
+! scope="row" | 7
+| {{Flagathlete|[[Vito Braet]]|BEL}}
+| {{UCI team code|LOI|2026}}
+| align="right" | 32
+|-
+! scope="row" | 8
+| {{Flagathlete|[[Lewis Askey]]|GBR}}
+| {{UCI team code|NSN|2026}}
+| align="right" | 32
+|-
+! scope="row" | 9
+| {{Flagathlete|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL}}
+| {{UCI team code|RBH|2026}}
+| align="right" | 23
+|-
+! scope="row" | 10
+| {{Flagathlete|[[Jasper Stuyven]]|BEL}}
+| {{UCI team code|SOQ|2026}}
+| align="right" | 23
+|}
+{{column}}
+
+=== Mountains classification ===
+{| class="wikitable" margin-bottom:0;"
+|+ Final mountains classification (1–10)<ref name="CN-8" />
+|-
+! scope="col" | Rank
+! scope="col" | Rider
+! scope="col" | Team
+! scope="col" | Points
+|-
+! scope="row" | 1
+| {{Flagathlete|[[Jonas Vingegaard]]|DEN}} {{cjersey|polkadot}}{{cjersey|Paris–Nice}}{{cjersey|dark green}}
+| {{UCI team code|TVL men|2026}}
+| align="right" | 44
+|-
+! scope="row" | 2
+| {{Flagathlete|[[Valentin Paret-Peintre]]|FRA}}
+| {{UCI team code|SOQ|2026}}
+| align="right" | 27
+|-
+! scope="row" | 3
+| {{Flagathlete|[[Casper Pedersen]]|DEN}}
+| {{UCI team code|SOQ|2026}}
+| align="right" | 18
+|-
+! scope="row" | 4
+| {{Flagathlete|[[Mathis Le Berre]]|FRA}}
+| {{UCI team code|TEN|2026}}
+| align="right" | 14
+|-
+! scope="row" | 5
+| {{Flagathlete|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA}}
+| {{UCI team code|TBV|2026}}
+| align="right" | 12
+|-
+! scope="row" | 6
+| {{Flagathlete|[[Harold Tejada]]|COL}}
+| {{UCI team code|XAT|2026}}
+| align="right" | 11
+|-
+! scope="row" | 7
+| {{Flagathlete|[[Mick van Dijke]]|NED}}
+| {{UCI team code|RBH|2026}}
+| align="right" | 10
+|-
+! scope="row" | 8
+| {{flagg|uxx|blank}} [[Aleksandr Vlasov (cyclist)|Aleksandr Vlasov]]
+| {{UCI team code|RBH|2026}}
+| align="right" | 9
+|-
+! scope="row" | 9
+| {{Flagathlete|[[Igor Arrieta]]|ESP}}
+| {{UCI team code|UAD men|2026}}
+| align="right" | 8
+|-
+! scope="row" | 10
+| {{Flagathlete|[[Daniel Martínez (cyclist)|Daniel Martínez]]|COL}}
+| {{UCI team code|RBH|2026}}
+| align="right" | 8
+|}
+{{columns-end}}
+{{columns-start}}
+
+=== Young rider classification ===
+{| class="wikitable" margin-bottom:0;"
+|+ Final young rider classification (1–10)<ref name="CN-8" />
+|-
+! scope="col" | Rank
+! scope="col" | Rider
+! scope="col" | Team
+! scope="col" | Time
+|-
+! scope="row" | 1
+| {{Flagathlete|[[Georg Steinhauser]]|GER}} {{cjersey|white}}
+| {{UCI team code|EFE|2026}}
+| align="right" | 25h 31' 18"
+|-
+! scope="row" | 2
+| {{Flagathlete|[[Kévin Vauquelin]]|FRA}} {{cjersey|yellow number}}
+| {{UCI team code|IGD|2026a}}
+| align="right" | + 17"
+|-
+! scope="row" | 3
+| {{Flagathlete|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA}}
+| {{UCI team code|TBV|2026}}
+| align="right" | + 1' 24"
+|-
+! scope="row" | 4
+| {{Flagathlete|[[Mathys Rondel]]|FRA}}
+| {{UCI team code|TUD|2026}}
+| align="right" | + 4' 16"
+|-
+! scope="row" | 5
+| {{Flagathlete|[[Alex Baudin]]|FRA}}
+| {{UCI team code|EFE|2026}}
+| align="right" | + 4' 26"
+|-
+! scope="row" | 6
+| {{Flagathlete|[[Mattéo Vercher]]|FRA}}
+| {{UCI team code|TEN|2026}}
+| align="right" | + 7' 02"
+|-
+! scope="row" | 7
+| {{Flagathlete|[[Valentin Paret-Peintre]]|FRA}}
+| {{UCI team code|SOQ|2026}}
+| align="right" | + 20' 07"
+|-
+! scope="row" | 8
+| {{Flagathlete|[[Nicolas Vinokurov]]|KAZ}}
+| {{UCI team code|XAT|2026}}
+| align="right" | + 35' 54"
+|-
+! scope="row" | 9
+| {{Flagathlete|[[Carlos Rodríguez (cyclist)|Carlos Rodríguez]]|ESP}} {{cjersey|yellow number}}
+| {{UCI team code|IGD|2026a}}
+| align="right" | + 37' 04"
+|-
+! scope="row" | 10
+| {{Flagathlete|[[Joshua Tarling]]|GBR}} {{cjersey|yellow number}}
+| {{UCI team code|IGD|2026a}}
+| align="right" | + 37' 50"
+|}
+{{column}}
+
+=== Teams classification ===
+{| class="wikitable"
+|+ Final team classification (1–10)<ref name="CN-8" />
+|-
+! scope="col" | Rank
+! scope="col" | Team
+! scope="col" | Time
+|-
+! scope="row" | 1
+| {{flagicon|GBR}} {{UCI team code|IGD|2026a}} {{cjersey|yellow number}}
+| align="right" | 77h 00' 14"
+|-
+! scope="row" | 2
+| {{flagicon|GER}} {{UCI team code|RBH|2026}}
+| align="right" | + 3' 25"
+|-
+! scope="row" | 3
+| {{flagicon|NED}} {{UCI team code|TVL men|2026}}
+| align="right" | + 4' 39"
+|-
+! scope="row" | 4
+| {{flagicon|USA}} {{UCI team code|EFE|2026}}
+| align="right" | + 23' 35"
+|-
+! scope="row" | 5
+| {{flagicon|FRA}} {{UCI team code|GFC|2026}}
+| align="right" | + 28' 29"
+|-
+! scope="row" | 6
+| {{flagicon|UAE}} {{UCI team code|UAD men|2026}}
+| align="right" | + 35' 41"
+|-
+! scope="row" | 7
+| {{flagicon|KAZ}} {{UCI team code|XAT|2026}}
+| align="right" | + 44' 30"
+|-
+! scope="row" | 8
+| {{flagicon|FRA}} {{UCI team code|TEN|2026}}
+| align="right" | + 55' 27"
+|-
+! scope="row" | 9
+| {{flagicon|SUI}} {{UCI team code|TUD|2026}}
+| align="right" | + 55' 42"
+|-
+! scope="row" | 10
+| {{flagicon|BEL}} {{UCI team code|SOQ|2026}}
+| align="right" | + 1h 16' 22"
+|}
+{{columns-end}}
+
+==References==
+{{Reflist}}
+
+==External links==
+* {{Official website|https://www.paris-nice.fr/en/}}
+
+{{2026 UCI World Tour}}
+{{Paris–Nice}}
+{{Paris–Nice winners}}
+
+{{DEFAULTSORT:Paris-Nice, 2026}}
+[[Category:Paris–Nice|2026]]
+[[Category:2026 UCI World Tour]]
+[[Category:March 2026 sports events in France]]
+[[Category:2026 in French sport]]

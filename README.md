@@ -569,6 +569,68 @@ Outages, in order, with what held and what did not.
   truncation, and the sentinel threshold moved from seven hours to eleven
   because the same scheduler drift had already false-alarmed four times.
 
+### Debt: the cycling calendar was typed by hand
+
+- **20–27 September 2026 — the Road World Championships were not on the page,
+  and nothing said so for a month.** They ran in Montreal. The race list in
+  `src/page.html` (`const CYCLING`) was typed by hand on 22 August from
+  ProCyclingStats' WorldTour calendar and held six races; the Worlds were
+  never one of them, and no part of the build compared the list with
+  anything. It was not a failed fetch or a parser that broke. There was no
+  check to fail.
+
+  **What now guards it**, all in `scripts/lib/cycling-calendar.mjs` and run by
+  the build on every refresh:
+
+  1. **The season is read and compared with the list.** The build fetches
+     Wikipedia's season article (`2026 UCI World Tour`), parses its calendar
+     table, and writes every race the hand list lacks that is still to come
+     or finished in the last eight days to `counts.missingRaces`, with a
+     loud line in the log. Earlier ones are counted in
+     `counts.missingRacesEarlier` rather than listed — thirty of them, today
+     — because a list of thirty is how the one that matters goes unread.
+  2. **The World Championships are watched by name.** This is the part that
+     matters for the miss itself. They are not a WorldTour race and appear in
+     no WorldTour calendar, so the season check alone would have passed every
+     day of that month. The build reads `<year> UCI Road World Championships`
+     as well and reports it the same way. Run against the saved articles with
+     the clock set to 24 August, the check names exactly one race: the
+     Worlds.
+  3. **A race the page types must have a source its results come from.**
+     `tests/cycling-calendar.test.mjs` fails if any `CYCLING` entry has no
+     `CYCLING_SOURCES` entry of the same name and the same dates. It is
+     enforced for every entry, not only those already past, so it fails when
+     the race is typed rather than on whatever later date the race happens
+     to start.
+  4. **The calendar is generated, and the page prefers it.** The season's
+     races go into `data.json` as `cyclingCalendar` and the page draws each
+     from there, keeping the hand list for any race the file does not name
+     and as the fallback when the file has no calendar. The 2027 season is
+     picked up with no change here once its article exists and the window
+     reaches it.
+
+  **What is still typed by hand, and what is not.** Stage lists are read from
+  each race's own article, not typed: the parser is held to a known answer —
+  the twenty-one stage dates of the 2026 Vuelta as Wikipedia states them are
+  exactly the twenty-one typed here from ProCyclingStats, rest days included
+  — and to the Tour de Suisse and Paris–Nice. A stage list is refused unless
+  it is numbered without a gap, moves only forward, and starts and ends on
+  the race's own dates. Where an article has none yet, a race the hand list
+  carries keeps its typed stages; a short stage race becomes its days,
+  labelled as days; and a Grand Tour becomes its first and last day only,
+  because spreading twenty-one stages over twenty-three days puts a stage on
+  a rest day. Those are named in `counts.missingStages`.
+
+  **What this does not do.** The Worlds are reported, not added. Putting them
+  on the page is a decision — which of thirteen events, and under which
+  rights rule, since the `UCI` row claims FloBikes for the WorldTour and the
+  Worlds are not the WorldTour — and until it is made `counts.missingRaces`
+  will name them every September. Nothing here checks the women's WorldTour,
+  the ProSeries, or any other championship. And the check is not fatal by
+  design: if Wikipedia cannot be read, `missingRaces` is `null`, meaning not
+  checked, and the page falls back to the previous calendar and then to the
+  hand list.
+
 ### Tennis is a sport, not a list of people
 
 The question this has to answer is *what tennis is on today, and where can I watch it* — which nobody should have to know a player's name to ask. So the top level is the tour: switch on ATP, WTA or both, and the default from there is every tournament in them. Narrow to a tournament only if you want to. Players are **starred**, never selected, exactly as rugby nations are: a star marks a row, it never decides what is on the board.

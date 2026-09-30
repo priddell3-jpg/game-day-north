@@ -1,0 +1,467 @@
+{{short description|Swiss cycling race}}
+{{Use dmy dates|date=June 2026}}
+{{Infobox cycling race report
+| name               = 2026 Tour de Suisse
+| series             = [[2026 UCI World Tour]]
+| race_no            = 25
+| season_no          = 36
+| image              = 
+| image_caption      = 
+| image_size         = 
+| date               = 17–21 June 2026
+| stages             = 5
+| distance           = 633.5
+| unit               = km
+| time               = 
+| speed              = 
+| first              = [[Tadej Pogačar]]
+| first_nat          = SLO
+| first_team         = {{UCI team code|UAD men|2026}}
+| first_color        = yellow
+| second             = [[Richard Carapaz]]
+| second_nat         = ECU
+| second_team        = {{UCI team code|EFE|2026}}
+| third              = [[Mathias Vacek]]
+| third_nat          = CZE
+| third_team         = {{UCI team code|LTK men|2026}}
+| points             = [[Tadej Pogačar]]
+| points_nat         = SLO
+| points_team        = {{UCI team code|UAD men|2026}}
+| points_color       = blue
+| mountains          = [[Louis Vervaeke]]
+| mountains_nat      = BEL
+| mountains_team     = {{UCI team code|SOQ|2026}}
+| mountains_color    = green
+| youth              = [[Mathias Vacek]]
+| youth_nat          = CZE
+| youth_team         = {{UCI team code|LTK men|2026}}
+| youth_color        = white
+| team_nat           = UAE
+| team               = {{UCI team code|UAD men|2026}}
+| previous           = [[2025 Tour de Suisse|2025]]
+| next               = [[2027 Tour de Suisse|2027]]
+}}
+
+The '''2026 Tour de Suisse''' was a [[road bicycle racing|road cycling]] [[cycling stage race|stage race]] that took place between 17 and 21 June in [[Switzerland]]. It was the 89th edition of the [[Tour de Suisse]] and the 25th event of the [[2026 UCI World Tour]]. It took place at the same time as the women's [[2026 Tour de Suisse Women|Tour de Suisse]], with both races using a similar route.<ref>{{Cite web |date=2026-06-17|title=Tour de Suisse Women - Peaks of Emotions|url=https://www.tourdesuisse.ch/women/|access-date=2026-06-17|website=Tour de Suisse|language=de-DE}}</ref>
+
+The race was dominated by Slovenian rider [[Tadej Pogačar]] of {{UCI team code|UAD men|2026}}, who took the lead on stage 1 after a surprise solo attack over {{Convert|72|km|mi}}, extended his lead on the stage 4 time trial and then took further time on the mountainous final stage to confirm his overall victory. Nearly six and a half minutes behind, Ecuadorian [[Richard Carapaz]] of {{UCI team code|EFE|2026}} finished second overall, with Czech rider [[Mathias Vacek]] of {{UCI team code|LTK men|2026}} third overall, nearly seven minutes behind Pogačar.<ref>{{Cite web |date=2026-06-21 |title=Tour de Suisse 2026: Tadej Pogacar and Marlen Reusser win final stages and overall titles |url=https://www.bbc.co.uk/sport/cycling/articles/c1lye46pq96o |access-date=2026-06-22 |website=BBC Sport |language=en-GB}}</ref><ref name=":0">{{Cite web |last=Price |first=Matilda |date=2026-06-21 |title=Tour de Suisse: Tadej Pogačar powers to stage 5 win and seals commanding overall victory |url=https://www.cyclingnews.com/pro-cycling/racing/tour-de-suisse-tadej-pogacar-conquers-stage-8-to-seal-commanding-overall-victory/ |access-date=2026-06-22 |website=Cyclingnews |language=en}}</ref> 
+
+In the other classifications, Pogačar won the points classification, Belgian rider [[Louis Vervaeke]] of {{UCI team code|SOQ|2026}} took the mountains classification, Vacek won the young rider classification and {{UCI team code|UAD men|2026|nolink=y}} won the teams classification.<ref name=":0" />
+
+== Teams ==
+All eighteen [[UCI WorldTeam]]s and two [[UCI ProSeries|UCI ProTeams]] made up the twenty teams that participated in the race.<ref>{{cite web |url=https://www.procyclingstats.com/race/tour-de-suisse/2026/startlist |title=Startlist for Tour de Suisse 2026 |website=ProCyclingStats.com |access-date=26 June 2026}}</ref>
+
+'''UCI WorldTeams'''
+{{div col|colwidth=20em|style=margin-right:20%;}}
+* {{UCI team code|APT|2026}}
+* {{UCI team code|DCT|2026}}
+* {{UCI team code|EFE|2026}}
+* {{UCI team code|GFC|2026}}
+* {{UCI team code|LTK men|2026}}
+* {{UCI team code|LOI|2026}}
+* {{UCI team code|MOV men|2026}}
+* {{UCI team code|NCI|2026b}}
+* {{UCI team code|NSN|2026}}
+* {{UCI team code|RBH|2026}}
+* {{UCI team code|SOQ|2026}}
+* {{UCI team code|TBV|2026}}
+* {{UCI team code|JAY men|2026}}
+* {{UCI team code|TPP men|2026}}
+* {{UCI team code|TVL men|2026}}
+* {{UCI team code|UEX|2026}}
+* {{UCI team code|UXM men|2026}}
+* {{UCI team code|XAT|2026}}
+{{div col end}}
+
+'''UCI ProTeams'''
+{{div col|colwidth=20em|style=margin-right:20%;}}
+* {{UCI team code|PQT|2026}}
+* {{UCI team code|TUD|2026}}
+{{div col end}}
+
+== Route ==
+Due to reduced budget and logistical issues, the route was shortened to 5 days, and stages were designed to start and finish in the same town.<ref>{{Cite web |title=Alles neu an der Tour de Suisse – die wichtigsten Fragen zur Ausgabe 2026 |url=https://www.watson.ch/!495237345 |access-date=2026-06-22 |website=[[Watson (newspaper)|Watson]] |language=de}}</ref> 
+{| class="wikitable"
+|+ Stage characteristics and winners<ref>{{cite web|url=https://www.tourdesuisse.ch/en/route/|title=The route of the Tour de Suisse 2026|work=[[Tour de Suisse]]|publisher=Cycling Unlimited|access-date=7 June 2026}}</ref>
+|-
+! scope="col" | Stage
+! scope="col" | Date
+! scope="col" | Route
+! scope="col" | Distance
+! scope="col" colspan="2" | Type
+! scope="col" | Winner
+|-
+! scope="col" | [[#Stage 1|1]]
+| style="text-align:right;" | 17 June
+| [[Sondrio]] (Italy) to Sondrio (Italy)
+| align="center" | {{convert|144|km|abbr=on}}
+| [[File:Hillystage.svg|20px|link=|alt=]]
+| Hilly stage
+| {{Flagathlete|[[Tadej Pogačar]]|SLO}}
+|-
+! scope="col" | [[#Stage 2|2]]
+| style="text-align:right;" | 18 June
+| [[Locarno]] to Locarno
+| align="center" | {{convert|157.7|km|abbr=on}}
+| [[File:Hillystage.svg|20px|link=|alt=]]
+| Hilly stage
+| {{Flagathlete|[[Romain Grégoire]]|FRA}}
+|-
+! scope="col" | [[#Stage 3|3]]
+| style="text-align:right;" | 19 June
+| [[Bad Ragaz]] to Bad Ragaz
+| align="center" | {{convert|157.4|km|abbr=on}}
+| [[File:Hillystage.svg|20px|link=|alt=]]
+| Hilly stage
+| {{Flagathlete|[[Jhonatan Narváez]]|ECU}}
+|-
+! scope="col" | [[#Stage 4|4]]
+| style="text-align:right;" | 20 June
+| [[Aarburg]] to Aarburg
+| align="center" | {{convert|23.7|km|abbr=on}}
+| [[File:Time Trial.svg|20px|link=]]
+| [[Individual time trial]]
+| {{Flagathlete|[[Tadej Pogačar]]|SLO}}
+|-
+! scope="col" | [[#Stage 5|5]]
+| style="text-align:right;" | 21 June
+| [[Villars-sur-Ollon]] to Villars-sur-Ollon
+| align="center" | {{convert|150.7|km|abbr=on}}
+| [[File:Mountainstage.svg|20px|link=|alt=]]
+| Mountain stage
+| {{Flagathlete|[[Tadej Pogačar]]|SLO}}
+|-
+! colspan="3" | Total
+| colspan="5" align="center" | {{convert|633.5|km|abbr=on}}
+|}
+
+== Stages ==
+=== Stage 1 ===
+;17 June 2026 — [[Sondrio]] (Italy) to Sondrio (Italy), {{convert|144|km|abbr=on}}<ref name="S1-info">{{cite web|url=https://www.tourdesuisse.ch/en/stage/01/|title=Stage 1 Tour de Suisse|work=[[Tour de Suisse]]|publisher=Cycling Unlimited|access-date=7 June 2026}}</ref>
+
+{|
+|-
+||
+{{cyclingresult start|title=Stage 1 Result<ref name="CN-1">{{cite web|url=https://www.cyclingnews.com/pro-cycling/tour-de-suisse-tadej-pogacar-goes-long-with-surprise-72-kilometre-raid-to-smash-opening-stage/|title=Tour de Suisse: Tadej Pogačar goes long with surprise 72-kilometre raid to smash opening stage|first=James|last=Moultrie|date=17 June 2026|access-date=17 June 2026|publisher=Cyclingnews}}</ref>}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|3h 28' 51"}}
+{{cyclingresult|2|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 2' 14"}}
+{{cyclingresult|3|[[Andrea Bagioli]]|ITA|{{UCI team code|LTK men|2026}}|+ 2' 29"}}
+{{cyclingresult|4|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 4' 02"}}
+{{cyclingresult|5|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 4' 02"}}
+{{cyclingresult|6|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 4' 02"}}
+{{cyclingresult|7|[[Wilco Kelderman]]|NED|{{UCI team code|TVL men|2026}}|+ 4' 02"}}
+{{cyclingresult|8|[[Felix Großschartner]]|AUT|{{UCI team code|UEX|2026}}|+ 4' 05"}}
+{{cyclingresult|9|[[AJ August|Andrew August]]|USA|{{UCI team code|NCI|2026b}}|+ 4' 30"}}
+{{cyclingresult|10|[[Jhonatan Narváez]]|ECU|{{UCI team code|UEX|2026}}|+ 4' 30"}}
+{{cyclingresult end}}
+||
+{{cyclingresult start|title=General classification after Stage 1<ref name="CN-1" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|3h 28' 37"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|green}}{{cjersey|yellow number}}[[File:Jersey beige number.svg|20px]]}}
+{{cyclingresult|2|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 2' 22"}}
+{{cyclingresult|3|[[Andrea Bagioli]]|ITA|{{UCI team code|LTK men|2026}}|+ 2' 39"}}
+{{cyclingresult|4|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 4' 16"}}
+{{cyclingresult|5|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 4' 16"|{{cjersey|white}}}}
+{{cyclingresult|6|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 4' 16"|{{cjersey|yellow number}}}}
+{{cyclingresult|7|[[Wilco Kelderman]]|NED|{{UCI team code|TVL men|2026}}|+ 4' 16"}}
+{{cyclingresult|8|[[Felix Großschartner]]|AUT|{{UCI team code|UEX|2026}}|+ 4' 18"|{{cjersey|yellow number}}}}
+{{cyclingresult|9|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 4' 43"}}
+{{cyclingresult|10|[[AJ August|Andrew August]]|USA|{{UCI team code|NCI|2026b}}|+ 4' 44"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 2 ===
+;18 June 2026 — [[Locarno]] to Locarno, {{convert|157.7|km|abbr=on}}<ref name="S2-info">{{cite web|url=https://www.tourdesuisse.ch/en/stage/02/|title=Stage 2 Tour de Suisse|work=[[Tour de Suisse]]|publisher=Cycling Unlimited|access-date=7 June 2026}}</ref>
+
+{|
+|-
+||
+{{cyclingresult start|title=Stage 2 Result<ref name="CN-2">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/tour-de-suisse-romain-gregoire-holds-off-a-chasing-tadej-pogacar-to-claim-hard-fought-breakaway-victory-on-stage-2/|title=Tour de Suisse: Romain Grégoire holds off a chasing Tadej Pogačar to claim hard-fought breakaway victory on stage 2|first=Dani|last=Ostanek|date=18 June 2026|access-date=18 June 2026|publisher=Cyclingnews}}</ref>}}
+{{cyclingresult|1|[[Romain Grégoire]]|FRA|{{UCI team code|GFC|2026}}|3h 26' 25"}}
+{{cyclingresult|2|[[Marcel Camprubí]]|ESP|{{UCI team code|PQT|2026}}|+ 0"}}
+{{cyclingresult|3|[[Bart Lemmen]]|NED|{{UCI team code|TVL men|2026}}|+ 0"}}
+{{cyclingresult|4|[[Filippo Zana]]|ITA|{{UCI team code|SOQ|2026}}|+ 0"}}
+{{cyclingresult|5|[[Finlay Pickering]]|GBR|{{UCI team code|JAY men|2026}}|+ 2"}}
+{{cyclingresult|6|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 4"|{{cjersey|white}}}}
+{{cyclingresult|7|[[Emiel Verstrynge]]|BEL|{{UCI team code|APT|2026}}|+ 4"}}
+{{cyclingresult|8|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|+ 4"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|green}}{{cjersey|yellow number}}[[File:Jersey beige number.svg|20px]]}}
+{{cyclingresult|9|[[Afonso Eulálio]]|POR|{{UCI team code|TBV|2026}}|+ 9"}}
+{{cyclingresult|10|[[Jhonatan Narváez]]|ECU|{{UCI team code|UEX|2026}}|+ 32"|{{cjersey|yellow number}}}}
+{{cyclingresult end}}
+||
+{{cyclingresult start|title=General classification after Stage 2<ref name="CN-2" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|6h 55' 06"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|green}}{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 2' 50"}}
+{{cyclingresult|3|[[Andrea Bagioli]]|ITA|{{UCI team code|LTK men|2026}}|+ 3' 07"}}
+{{cyclingresult|4|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 4' 16"|{{cjersey|white}}}}
+{{cyclingresult|5|[[Finlay Pickering]]|GBR|{{UCI team code|JAY men|2026}}|+ 4' 41"}}
+{{cyclingresult|6|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 4' 44"}}
+{{cyclingresult|7|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 4' 44"|{{cjersey|yellow number}}}}
+{{cyclingresult|8|[[Wilco Kelderman]]|NED|{{UCI team code|TVL men|2026}}|+ 4' 44"}}
+{{cyclingresult|9|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 5' 11"}}
+{{cyclingresult|10|[[Jhonatan Narváez]]|ECU|{{UCI team code|UEX|2026}}|+ 5' 12"|{{cjersey|yellow number}}}}
+{{cyclingresult end}}
+|}
+
+=== Stage 3 ===
+;19 June 2026 — [[Bad Ragaz]] to Bad Ragaz, {{convert|157.4|km|abbr=on}}<ref name="S3-info">{{cite web|url=https://www.tourdesuisse.ch/en/stage/03/|title=Stage 3 Tour de Suisse|work=[[Tour de Suisse]]|publisher=Cycling Unlimited|access-date=7 June 2026}}</ref>
+
+{|
+|-
+||
+{{cyclingresult start|title=Stage 3 Result<ref name="CN-3">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/tour-de-suisse-jhonatan-narvaez-beats-xandro-meurisse-to-win-stage-3-as-pair-narrowly-hold-off-the-chasing-peloton/|title=Tour de Suisse: Jhonatan Narváez beats Xandro Meurisse to win stage 3 as pair narrowly hold off the chasing peloton|first=James|last=Moultrie|date=19 June 2026|access-date=19 June 2026|publisher=Cyclingnews}}</ref>}}
+{{cyclingresult|1|[[Jhonatan Narváez]]|ECU|{{UCI team code|UEX|2026}}|3h 34' 46"|{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Xandro Meurisse]]|BEL|{{UCI team code|PQT|2026}}|+ 0"}}
+{{cyclingresult|3|[[Magnus Cort]]|DEN|{{UCI team code|UXM men|2026}}|+ 0"}}
+{{cyclingresult|4|[[Marijn van den Berg]]|NED|{{UCI team code|EFE|2026}}|+ 0"}}
+{{cyclingresult|5|[[Mathieu van der Poel]]|NED|{{UCI team code|APT|2026}}|+ 0"}}
+{{cyclingresult|6|[[Corbin Strong]]|NZL|{{UCI team code|NSN|2026}}|+ 0"}}
+{{cyclingresult|7|[[Axel Laurance]]|FRA|{{UCI team code|NCI|2026b}}|+ 0"}}
+{{cyclingresult|8|[[Michael Matthews (cyclist)|Michael Matthews]]|AUS|{{UCI team code|JAY men|2026}}|+ 0"}}
+{{cyclingresult|9|[[Pau Miquel]]|ESP|{{UCI team code|TBV|2026}}|+ 0"}}
+{{cyclingresult|10|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 0"}}
+{{cyclingresult end}}
+||
+{{cyclingresult start|title=General classification after Stage 3<ref name="CN-3" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|10h 29' 52"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 2' 50"}}
+{{cyclingresult|3|[[Andrea Bagioli]]|ITA|{{UCI team code|LTK men|2026}}|+ 3' 07"}}
+{{cyclingresult|4|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 4' 16"|{{cjersey|white}}}}
+{{cyclingresult|5|[[Finlay Pickering]]|GBR|{{UCI team code|JAY men|2026}}|+ 4' 41"}}
+{{cyclingresult|6|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 4' 44"}}
+{{cyclingresult|7|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 4' 44"|{{cjersey|yellow number}}}}
+{{cyclingresult|8|[[Wilco Kelderman]]|NED|{{UCI team code|TVL men|2026}}|+ 4' 44"}}
+{{cyclingresult|9|[[Jhonatan Narváez]]|ECU|{{UCI team code|UEX|2026}}|+ 4' 57"|{{cjersey|yellow number}}[[File:Jersey beige number.svg|20px]]}}
+{{cyclingresult|10|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 5' 11"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 4 ===
+;20 June 2026 — [[Aarburg]] to Aarburg, {{convert|23.7|km|abbr=on}} ([[Individual time trial|ITT]])<ref name="S4-info">{{cite web|url=https://www.tourdesuisse.ch/en/stage/04/|title=Stage 4 Tour de Suisse|work=[[Tour de Suisse]]|publisher=Cycling Unlimited|access-date=7 June 2026}}</ref>
+
+{|
+|-
+||
+{{cyclingresult start|title=Stage 4 Result<ref name="CN-4">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/tour-de-suisse-tadej-pogacar-denies-mathieu-van-der-poel-stage-4-victory-and-extends-overall-lead-with-53-4-kph-time-trial/|title=Tour de Suisse: Tadej Pogačar denies Mathieu van der Poel stage 4 victory and extends overall lead with 53.4 kph time trial|first=Matilda|last=Price|date=20 June 2026|access-date=20 June 2026|publisher=Cyclingnews}}</ref>}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|26' 37"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Mathieu van der Poel]]|NED|{{UCI team code|APT|2026}}|+ 1"}}
+{{cyclingresult|3|[[Tobias Foss]]|NOR|{{UCI team code|NCI|2026b}}|+ 7"}}
+{{cyclingresult|4|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 11"|{{cjersey|white}}}}
+{{cyclingresult|5|[[Tim Wellens]]|BEL|{{UCI team code|UEX|2026}}|+ 13"|{{cjersey|yellow number}}}}
+{{cyclingresult|6|[[Felix Großschartner]]|AUT|{{UCI team code|UEX|2026}}|+ 28"|{{cjersey|yellow number}}}}
+{{cyclingresult|7|[[Sander De Pestel]]|BEL|{{UCI team code|DCT|2026}}|+ 28"}}
+{{cyclingresult|8|[[Mauro Schmid]]|SUI|{{UCI team code|JAY men|2026}}|+ 30"}}
+{{cyclingresult|9|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 32"|{{cjersey|yellow number}}}}
+{{cyclingresult|10|[[Finn Fisher-Black]]|NZL|{{UCI team code|RBH|2026}}|+ 37"}}
+{{cyclingresult end}}
+||
+{{cyclingresult start|title=General classification after Stage 4<ref name="CN-4" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|10h 56' 29"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|yellow number}}[[File:Jersey beige number.svg|20px]]}}
+{{cyclingresult|2|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 4' 22"}}
+{{cyclingresult|3|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 4' 27"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Andrea Bagioli]]|ITA|{{UCI team code|LTK men|2026}}|+ 4' 46"}}
+{{cyclingresult|5|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 5' 16"|{{cjersey|yellow number}}}}
+{{cyclingresult|6|[[Tobias Foss]]|NOR|{{UCI team code|NCI|2026b}}|+ 5' 19"}}
+{{cyclingresult|7|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 5' 34"}}
+{{cyclingresult|8|[[Wilco Kelderman]]|NED|{{UCI team code|TVL men|2026}}|+ 5' 51"}}
+{{cyclingresult|9|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 6' 04"}}
+{{cyclingresult|10|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 6' 43"}}
+{{cyclingresult end}}
+|}
+
+=== Stage 5 ===
+;21 June 2026 — [[Villars-sur-Ollon]] to Villars-sur-Ollon, {{convert|150.7|km|abbr=on}}<ref name="S5-info">{{cite web|url=https://www.tourdesuisse.ch/en/stage/05/|title=Stage 5 Tour de Suisse|work=[[Tour de Suisse]]|publisher=Cycling Unlimited|access-date=7 June 2026}}</ref>
+
+{|
+|-
+||
+{{cyclingresult start|title=Stage 5 Result<ref name="CN-5">{{cite web|url=https://www.cyclingnews.com/pro-cycling/racing/tour-de-suisse-tadej-pogacar-conquers-stage-8-to-seal-commanding-overall-victory/|title=Tour de Suisse: Tadej Pogačar powers to stage 5 win and seals commanding overall victory|first=Matilda|last=Price|date=21 June 2026|access-date=21 June 2026|publisher=Cyclingnews}}</ref>}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|4h 12' 24"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 7"}}
+{{cyclingresult|3|[[Bart Lemmen]]|NED|{{UCI team code|TVL men|2026}}|+ 1' 33"}}
+{{cyclingresult|4|[[Jarno Widar]]|BEL|{{UCI team code|LOI|2026}}|+ 1' 53"}}
+{{cyclingresult|5|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 1' 55"}}
+{{cyclingresult|6|[[Enric Mas]]|ESP|{{UCI team code|MOV men|2026}}|+ 1' 55"}}
+{{cyclingresult|7|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 2' 00"}}
+{{cyclingresult|8|[[Tobias Foss]]|NOR|{{UCI team code|NCI|2026b}}|+ 2' 05"}}
+{{cyclingresult|9|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 2' 07"}}
+{{cyclingresult|10|[[Nairo Quintana]]|COL|{{UCI team code|MOV men|2026}}|+ 2' 12"}}
+{{cyclingresult end}}
+||
+{{cyclingresult start|title=Final general classification<ref name="CN-5" />}}
+{{cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|15h 08' 43"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|yellow number}}}}
+{{cyclingresult|2|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 6' 32"}}
+{{cyclingresult|3|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 6' 53"|{{cjersey|white}}}}
+{{cyclingresult|4|[[Tobias Foss]]|NOR|{{UCI team code|NCI|2026b}}|+ 7' 34"}}
+{{cyclingresult|5|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 7' 51"}}
+{{cyclingresult|6|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 7' 53"|{{cjersey|yellow number}}}}
+{{cyclingresult|7|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 8' 48"}}
+{{cyclingresult|8|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 9' 23"}}
+{{cyclingresult|9|[[Sergio Higuita]]|COL|{{UCI team code|XAT|2026}}|+ 9' 26"}}
+{{cyclingresult|10|[[Bart Lemmen]]|NED|{{UCI team code|TVL men|2026}}|+ 9' 44"}}
+{{cyclingresult end}}
+|}
+
+== Classification leadership table ==
+{| class="wikitable" style="text-align: center; font-size:smaller;"
+|+ Classification leadership by stage
+|- style="background:#efefef;"
+! scope="col" style="width:2%;" | Stage
+! scope="col" style="width:12%;" | Winner
+! scope="col" style="width:12%;" | [[General classification]]<br>{{cjersey|yellow|size=25px}}
+! scope="col" style="width:12%;" | [[Points classification|Points<br>classification]]<br>{{cjersey|blue|size=25px}}
+! scope="col" style="width:12%;" | [[King of the Mountains|Mountains classification]]<br>{{cjersey|green|size=25px}}
+! scope="col" style="width:12%;" | [[Young rider classification]]<br>{{cjersey|white|size=25px}}
+! scope="col" style="width:12%;" | [[Team classification|Team<br>classification]]<br>{{cjersey|yellow number|size=25px}}
+! scope="col" style="width:12%;" | [[Combativity award|Combativity<br>award]]<br>[[File:Jersey beige number.svg|25px]]
+|-
+! 1
+| [[Tadej Pogačar]]
+| style="background:#FFEB64;" rowspan="5" | [[Tadej Pogačar]]
+| style="background:lightblue;" rowspan="5"| [[Tadej Pogačar]]{{Efn|group=|name=a}}
+| style="background:#9CE97B;" rowspan="2" | [[Tadej Pogačar]]{{Efn|group=|name=b}}
+| style="background:white;" rowspan="5" | [[Mathias Vacek]]
+| style="background:#FFCD5F;" rowspan="5" | {{UCI team code|UEX|2026}}
+| style="background:#F5F5DC;" | [[Tadej Pogačar]]
+|-
+! 2
+| [[Romain Grégoire]]
+| style="background:#F5F5DC;" | [[Julian Alaphilippe]]
+|-
+! 3
+| [[Jhonatan Narváez]]
+| style="background:#9CE97B;" rowspan="3" | [[Louis Vervaeke]]
+| style="background:#F5F5DC;" | [[Jhonatan Narváez]]
+|-
+! 4
+| [[Tadej Pogačar]]
+| style="background:#F5F5DC;" | [[Tadej Pogačar]]
+|-
+! 5
+| [[Tadej Pogačar]]
+| style="background:#F5F5DC;" | [[Mauro Schmid]]
+|-
+! colspan="2" | Final
+! style="background:#FFDB00;" | [[Tadej Pogačar]]
+! style="background:#007FFF;" | {{fontcolour|white|Tadej Pogačar|link=Tadej Pogačar}}
+! style="background:#46E800;" | [[Louis Vervaeke]]
+! style="background:white;" | [[Mathias Vacek]]
+! style="background:#FFB927;" | {{UCI team code|UEX|2026}}
+! No winner
+|}
+{{notelist|refs=
+{{efn|name=a|On stage 2, [[Richard Carapaz]], who was second in the points classification, wore the blue jersey, because first placed [[Tadej Pogačar]] wore the yellow jersey as leader of the general classification. On stages 3–5, [[Romain Grégoire]] wore the jersey for the same reason.}}
+{{efn|name=b|On stage 2, [[Fredrik Dversnes]], who was second in the mountains classification, wore the green jersey, because first placed [[Tadej Pogačar]] wore the yellow jersey as leader of the general classification. On stage 3, [[Louis Vervaeke]] wore the jersey for the same reason.}}
+}}
+
+== Classification standings ==
+{| class="wikitable"
+|-
+! colspan="4" | Legend
+|-
+| {{cjersey|yellow}}
+| Denotes the winner of the general classification
+| {{cjersey|white}}
+| Denotes the winner of the young rider classification
+|-
+| {{cjersey|blue}}
+| Denotes the winner of the points classification
+| {{cjersey|yellow number}}
+| Denotes the winner of the team classification
+|-
+| {{cjersey|green}}
+| Denotes the winner of the mountains classification
+| [[File:Jersey beige number.svg|20px]]
+| Denotes the winner of the combativity award
+|}
+
+=== General classification ===
+{{Cyclingresult start}}
+{{Cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|15h 08' 43"|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|yellow number}}}}
+{{Cyclingresult|2|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|+ 6' 32"}}
+{{Cyclingresult|3|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|+ 6' 53"|{{cjersey|white}}}}
+{{Cyclingresult|4|[[Tobias Foss]]|NOR|{{UCI team code|NCI|2026b}}|+ 7' 34"}}
+{{Cyclingresult|5|[[Ilan Van Wilder]]|BEL|{{UCI team code|SOQ|2026}}|+ 7' 51"}}
+{{Cyclingresult|6|[[Brandon McNulty]]|USA|{{UCI team code|UEX|2026}}|+ 7' 53"|{{cjersey|yellow number}}}}
+{{Cyclingresult|7|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 8' 48"}}
+{{Cyclingresult|8|[[Primož Roglič]]|SLO|{{UCI team code|RBH|2026}}|+ 9' 23"}}
+{{Cyclingresult|9|[[Sergio Higuita]]|COL|{{UCI team code|XAT|2026}}|+ 9' 26"}}
+{{Cyclingresult|10|[[Bart Lemmen]]|NED|{{UCI team code|TVL men|2026}}|+ 9' 44"}}
+{{Cyclingresult end|source=<ref name="CN-5" />}}
+{{columns-start}}
+
+=== Points classification ===
+{{Cyclingresult start|points=yes}}
+{{Cyclingresult|1|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|42|{{cjersey|blue}}{{cjersey|yellow}}{{cjersey|yellow number}}}}
+{{Cyclingresult|2|[[Bart Lemmen]]|NED|{{UCI team code|TVL men|2026}}|20}}
+{{Cyclingresult|3|[[Romain Grégoire]]|FRA|{{UCI team code|GFC|2026}}|18}}
+{{Cyclingresult|4|[[Jhonatan Narváez]]|ECU|{{UCI team code|UEX|2026}}|16|{{cjersey|yellow number}}}}
+{{Cyclingresult|5|[[Xandro Meurisse]]|BEL|{{UCI team code|PQT|2026}}|14}}
+{{Cyclingresult|6|[[Richard Carapaz]]|ECU|{{UCI team code|EFE|2026}}|12}}
+{{Cyclingresult|7|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|12}}
+{{Cyclingresult|8|[[Marcel Camprubí]]|ESP|{{UCI team code|PQT|2026}}|12}}
+{{Cyclingresult|9|[[Mathieu van der Poel]]|NED|{{UCI team code|APT|2026}}|10}}
+{{Cyclingresult|10|[[Andrea Bagioli]]|ITA|{{UCI team code|LTK men|2026}}|8}}
+{{Cyclingresult end|source=<ref name="CN-5" />}}
+{{column}}
+
+=== Mountains classification ===
+{{Cyclingresult start|points=yes}}
+{{Cyclingresult|1|[[Louis Vervaeke]]|BEL|{{UCI team code|SOQ|2026}}|52|{{cjersey|green}}}}
+{{Cyclingresult|2|[[Bauke Mollema]]|NED|{{UCI team code|LTK men|2026}}|32}}
+{{Cyclingresult|3|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|23}}
+{{Cyclingresult|4|[[Paul Double]]|GBR|{{UCI team code|JAY men|2026}}|17}}
+{{Cyclingresult|5|[[Tadej Pogačar]]|SLO|{{UCI team code|UEX|2026}}|14|{{cjersey|yellow}}{{cjersey|blue}}{{cjersey|yellow number}}}}
+{{Cyclingresult|6|[[Xandro Meurisse]]|BEL|{{UCI team code|PQT|2026}}|13}}
+{{Cyclingresult|7|[[Jhonatan Narváez]]|ECU|{{UCI team code|UEX|2026}}|10|{{cjersey|yellow number}}}}
+{{Cyclingresult|8|[[Mauro Schmid]]|SUI|{{UCI team code|JAY men|2026}}|10}}
+{{Cyclingresult|9|[[Bart Lemmen]]|NED|{{UCI team code|TVL men|2026}}|6}}
+{{Cyclingresult|10|[[Andrea Bagioli]]|ITA|{{UCI team code|LTK men|2026}}|6}}
+{{Cyclingresult end|source=<ref name="CN-5" />}}
+{{columns-end}}
+{{columns-start}}
+
+=== Young rider classification ===
+{{Cyclingresult start}}
+{{Cyclingresult|1|[[Mathias Vacek]]|CZE|{{UCI team code|LTK men|2026}}|15h 15' 36"|{{cjersey|white}}}}
+{{Cyclingresult|2|[[Matthew Riccitello]]|USA|{{UCI team code|DCT|2026}}|+ 1' 55"}}
+{{Cyclingresult|3|[[Finlay Pickering]]|GBR|{{UCI team code|JAY men|2026}}|+ 5' 29"}}
+{{Cyclingresult|4|[[Simon Dalby (cyclist)|Simon Dalby]]|DEN|{{UCI team code|UXM men|2026}}|+ 7' 21"}}
+{{Cyclingresult|5|[[Lorenzo Germani]]|ITA|{{UCI team code|GFC|2026}}|+ 16' 47"}}
+{{Cyclingresult|6|[[Romain Grégoire]]|FRA|{{UCI team code|GFC|2026}}|+ 17' 35"}}
+{{Cyclingresult|7|[[Ewen Costiou]]|FRA|{{UCI team code|GFC|2026}}|+ 18' 31"|}}
+{{Cyclingresult|8|[[Lenny Martinez (cyclist)|Lenny Martinez]]|FRA|{{UCI team code|TBV|2026}}|+ 20' 39"}}
+{{Cyclingresult|9|[[AJ August|Andrew August]]|USA|{{UCI team code|NCI|2026b}}|+ 21' 08"}}
+{{Cyclingresult|10|[[Bjoern Koerdt]]|GBR|{{UCI team code|TPP men|2026}}|+ 21' 16"}}
+{{Cyclingresult end|source=<ref name="CN-5" />}}
+{{column}}
+
+=== Team classification ===
+{{Cyclingresult start|rider=no}}
+{{Cyclingresult|1|||{{flagicon|UAE}} {{UCI team code|UEX|2026}} {{cjersey|yellow number}}|45h 45' 00"}}
+{{Cyclingresult|2|||{{flagicon|FRA}} {{UCI team code|DCT|2026}}|+ 20' 37"}}
+{{Cyclingresult|3|||{{flagicon|BEL}} {{UCI team code|SOQ|2026}}|+ 21' 19"}}
+{{Cyclingresult|4|||{{flagicon|AUS}} {{UCI team code|JAY men|2026}}|+ 24' 35"}}
+{{Cyclingresult|5|||{{flagicon|GER}} {{UCI team code|LTK men|2026}}|+ 33' 01"}}
+{{Cyclingresult|6|||{{flagicon|ESP}} {{UCI team code|MOV men|2026}}|+ 35' 09"}}
+{{Cyclingresult|7|||{{flagicon|NED}} {{UCI team code|TVL men|2026}}|+ 38' 41"}}
+{{Cyclingresult|8|||{{flagicon|GBR}} {{UCI team code|NCI|2026b}}|+ 39' 41"}}
+{{Cyclingresult|9|||{{flagicon|FRA}} {{UCI team code|GFC|2026}}|+ 46' 35"}}
+{{Cyclingresult|10|||{{flagicon|GER}} {{UCI team code|RBH|2026}}|+ 48' 16"}}
+{{Cyclingresult end|source=<ref name="CN-5" />}}
+{{columns-end}}
+
+== References ==
+{{reflist|30em}}
+
+== External links==
+*{{official website|https://www.tourdesuisse.ch/en/}}
+
+{{2026 UCI World Tour}}
+{{Tour de Suisse}}
+{{Tour de Suisse winners}}
+
+{{DEFAULTSORT:Tour de Suisse, 2026}}
+[[Category:Tour de Suisse|2026]]
+[[Category:2026 UCI World Tour|Tour de Suisse]]
+[[Category:2026 in Swiss sport|Tour de Suisse]]
+[[Category:June 2026 sports events in Switzerland|Tour de Suisse]]
