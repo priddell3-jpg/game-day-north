@@ -32,6 +32,9 @@
 import { writeFileSync, readFileSync } from "node:fs";
 import { isGCBlock, resultBlocks, ridersInBlock, gcLeaderFrom, gcStageFrom, freshestLeader,
          stageSections, titleWords, titleMatches } from "./lib/cycling.mjs";
+import { seasonTitle, worldsTitle, sameTitle, parseSeasonCalendar, parseChampionship, parseStageTable,
+         statedStages, poolFromPage, inPool, missingRaces, calendarEntry, sourceFor,
+         sameRace, dueMissing } from "./lib/cycling-calendar.mjs";
 import { RUGBY_COMPS, fromEspnEvent, fromWrMatch, dedupe, isTerminal,
          FORWARD_DAYS as RUGBY_FORWARD } from "./lib/rugby.mjs";
 import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
@@ -628,9 +631,14 @@ const CYCLING_SOURCES = [
     "2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18"],
    pages:["2026 Tour of Guangxi"]}
 ];
-async function wikitextOf(title){
+/* An article and the title it actually answered under, which after a
+   redirect is not the one asked for. Callers decide what a different
+   title means; this only reports it. */
+let wikiCalls = 0;
+async function wikiArticle(title){
   const url = WIKI_API + "?action=parse&prop=wikitext&format=json&formatversion=2&redirects=1&page="
     + encodeURIComponent(title);
+  wikiCalls++;
   try{
     const res = await fetch(url, {headers:{"user-agent":WIKI_UA, "accept":"application/json"},
       signal:AbortSignal.timeout(20000)});
@@ -638,13 +646,21 @@ async function wikitextOf(title){
     const j = await res.json();
     const text = (j.parse && j.parse.wikitext) || null;
     if(!text) return null;
+    return { text, title: (j.parse && j.parse.title) || "" };
+  }catch(e){ return null; }
+}
+async function wikitextOf(title){
+  try{
+    const a = await wikiArticle(title);
+    if(!a) return null;
+    const text = a.text;
     /* A title that does not exist yet can still answer, by redirecting
        to a season overview — "2026 Il Lombardia" lands on "2026 UCI
        World Tour". Parsing that would attribute one page's contents to
        a race it says nothing about. Reject an answer whose title shares
        no significant word with the request, and name the mismatch so
        the title can be corrected rather than quietly returning nothing. */
-    const got = (j.parse && j.parse.title) || "";
+    const got = a.title;
     if(!titleMatches(title, got)){
       console.warn("  ! \"" + title + "\" resolved to \"" + got
         + "\" — no shared words, treating as missing; the title needs fixing");
@@ -656,13 +672,151 @@ async function wikitextOf(title){
 const todayISO = new Date(now).toISOString().slice(0,10);
 const prevCycling = (previous && Array.isArray(previous.cycling)) ? previous.cycling : [];
 const cyclingOut = [];
+
+/* ============================================================
+   THE SEASON — what is on, read rather than typed.
+
+   The race list in the page is typed by hand, and for a month nothing
+   noticed the 2026 Road World Championships were not in it, because
+   nothing compared it with anything. Three things happen here so that
+   cannot recur quietly, and scripts/lib/cycling-calendar.mjs is where
+   each is argued:
+
+     1. The season article is read and compared with the hand list.
+        What the list lacks is logged and written to counts.missingRaces.
+     2. The World Championships article is read too. They are not a
+        WorldTour race and appear in no WorldTour calendar, so the
+        season article alone would never have caught them.
+     3. The season's races are written to the file as cyclingCalendar,
+        and the page prefers that to its own list.
+
+   None of it is fatal. A calendar that cannot be read leaves the one
+   from the previous run in place and the hand list behind that, and
+   missingRaces is written as null — "not checked" — rather than as an
+   empty list, which would say the check had passed.
+   ============================================================ */
+const isoDay = ms => new Date(ms).toISOString().slice(0,10);
+const calendarCutoff = isoDay(now - BACK*DAY);
+const calendarHorizon = isoDay(now + FORWARD*DAY);
+const cyclingYears = [...new Set([new Date(now).getUTCFullYear(), new Date(now + FORWARD*DAY).getUTCFullYear()])];
+const prevCalendar = (previous && Array.isArray(previous.cyclingCalendar)) ? previous.cyclingCalendar : [];
+let cyclingCalendar = prevCalendar.filter(e => e && e.end >= calendarCutoff);
+let missingRacesOut = null, missingRacesEarlier = null;
+const calendarProblems = [];
+const generatedSources = [];
+try{
+  const handPool = poolFromPage(readFileSync(new URL("../src/page.html", import.meta.url), "utf8"));
+  const season = [], watched = [];
+  let seasonsRead = 0;
+  for(const year of cyclingYears){
+    const want = seasonTitle(year);
+    const a = await wikiArticle(want);
+    if(!a){ calendarProblems.push(want + " — unreachable"); }
+    else if(!sameTitle(want, a.title)){
+      /* Next season's article is written during this one. Until it is,
+         the title redirects to the article about the competition, which
+         has no calendar of any year in it. */
+      calendarProblems.push(want + " — not written yet (answers as \"" + a.title + "\")");
+    }else{
+      const races = parseSeasonCalendar(a.text, year);
+      if(races.length){ season.push(...races); seasonsRead++; }
+      else calendarProblems.push(want + " — its calendar table could not be read");
+    }
+    const wantW = worldsTitle(year);
+    const w = await wikiArticle(wantW);
+    const champ = w && sameTitle(wantW, w.title) ? parseChampionship(w.text, year, wantW) : null;
+    if(champ) watched.push(champ);
+    else calendarProblems.push(wantW + (w ? " — no dates could be read" : " — unreachable"));
+  }
+  if(seasonsRead){
+    const built = [];
+    for(const r of season){
+      if(r.end < calendarCutoff) continue;
+      const held = inPool(r, handPool);
+      let stages = null;
+      /* A stage list is asked for only once a race is near: an article
+         for a race months away seldom has one, and asking for every
+         stage race of a season on every run is a dozen requests to be
+         told so. */
+      if(!r.oneDay && r.article && r.start <= calendarHorizon){
+        const a = await wikiArticle(r.article);
+        if(a && sameTitle(r.article, a.title)){
+          stages = parseStageTable(a.text, Number(r.start.slice(0,4)),
+            { start: r.start, end: r.end, stages: statedStages(a.text) });
+        }
+      }
+      let entry = calendarEntry(r, held, stages);
+      /* A stage list read on an earlier run is kept over anything
+         lesser. The article did not un-publish its stages; this run
+         failed to read them. */
+      if(entry.from !== "article"){
+        const was = prevCalendar.find(x => x && x.from === "article" && x.race === entry.race
+          && x.year === entry.year && x.start === entry.start && x.end === entry.end);
+        if(was) entry = was;
+      }
+      built.push(entry);
+      const year = String(entry.year);
+      const typed = CYCLING_SOURCES.some(src => String(src.dates[0]).slice(0,4) === year
+        && (src.name === entry.race || sameRace(src.name, entry.race)));
+      if(!typed){
+        const src = sourceFor(entry, stages);
+        if(src) generatedSources.push(src);
+      }
+    }
+    cyclingCalendar = built;
+    const missing = missingRaces(season.concat(watched), handPool);
+    const due = dueMissing(missing, calendarCutoff);
+    missingRacesEarlier = missing.length - due.length;
+    /* `shown` is whether the page draws the race anyway, from the
+       calendar above. A race that is missing and not shown is the
+       failure this exists for. */
+    missingRacesOut = due.map(m => Object.assign({}, m, {
+      shown: built.some(e => String(e.year) === m.start.slice(0,4) && sameRace(e.race, m.race)) }));
+  }
+  console.log("Cycling calendar: " + cyclingCalendar.length + " race(s) from "
+    + (seasonsRead ? seasonsRead + " season article(s)" : "the previous run — no season article could be read")
+    + (generatedSources.length ? ", " + generatedSources.length + " with results read from their own article" : ""));
+  if(missingRacesOut && missingRacesOut.length){
+    const unshown = missingRacesOut.filter(m => !m.shown);
+    console.warn("\n  !! " + missingRacesOut.length + " race(s) of the season are not in the hand-typed list in "
+      + "src/page.html" + (unshown.length ? ", and " + unshown.length + " of them the page does not show at all:" : ":"));
+    missingRacesOut.forEach(m => console.warn("     " + m.race + "  " + m.start
+      + (m.end !== m.start ? " to " + m.end : "") + (m.shown ? "  (shown from the calendar)" : "  NOT SHOWN")));
+    console.warn("");
+  }
+  if(missingRacesEarlier){
+    console.log("  " + missingRacesEarlier + " earlier race(s) of the season are not in the hand-typed list either; "
+      + "they finished before " + calendarCutoff);
+  }
+}catch(e){
+  calendarProblems.push("season check failed — " + (e && e.message || e));
+}
+const missingStages = cyclingCalendar.filter(e => e && !e.oneDay && e.from === "range")
+  .map(e => e.race + " " + e.year + (e.partial ? " — first and last day only" : " — days, not stages"));
+if(missingStages.length){
+  console.warn("  ! no stage list for " + missingStages.length + " race(s) in the calendar:");
+  missingStages.forEach(x => console.warn("     " + x));
+}
+if(calendarProblems.length){
+  console.warn("  ! cycling calendar: " + calendarProblems.length + " source(s) not read:");
+  calendarProblems.forEach(x => console.warn("     " + x));
+}
+/* Results are fetched for the typed sources and for every calendar race
+   that has none typed, so a race the page shows is a race whose result
+   is looked for. */
+const cyclingSources = CYCLING_SOURCES.concat(generatedSources);
+
 /* A stage entry may exist only to carry a timetable, so a podium is a
    stage that actually has three riders, not merely a stage present. */
 const podiumCount = r => (r && r.stages || []).filter(x=>x && Array.isArray(x.top3) && x.top3.length===3).length;
 try{
-  for(const rc of CYCLING_SOURCES){
+  for(const rc of cyclingSources){
     if(rc.dates[0] > todayISO) continue;                       // hasn't started
-    const prev = prevCycling.find(x=>x.race===rc.name) || {};
+    /* By name and by edition: next year's Il Lombardia has the same
+       name as this year's, and must not inherit its podium. */
+    const prev = prevCycling.find(x=>x.race===rc.name
+        && (x.stages||[]).some(st=>st && rc.dates.indexOf(st.date) >= 0))
+      || prevCycling.find(x=>x.race===rc.name && !(x.stages||[]).length) || {};
     const prevStages = prev.stages || [];
     const settled = d => prevStages.find(x=>x.date===d && Array.isArray(x.top3) && x.top3.length===3);
     const due = rc.dates.filter(d=>d <= todayISO && !(settled(d) && d < todayISO));
@@ -1273,7 +1427,8 @@ const rugbySame = previous && JSON.stringify(previous.rugby || []) === JSON.stri
 const standingsSame = previous && JSON.stringify(previous.standings || []) === JSON.stringify(standings);
 const tablesSame = previous && JSON.stringify(previous.tables || []) === JSON.stringify(tables);
 const tennisSame = previous && JSON.stringify(previous.tennis || {matches:[],tournaments:[]}) === JSON.stringify(tennisOut);
-if(previous && cyclingSame && rugbySame && standingsSame && tablesSame && tennisSame &&
+const calendarSame = previous && JSON.stringify(previous.cyclingCalendar || []) === JSON.stringify(cyclingCalendar);
+if(previous && calendarSame && cyclingSame && rugbySame && standingsSame && tablesSame && tennisSame &&
    JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
@@ -1328,9 +1483,23 @@ const out = {
                for a while is still guarded. Lapses on its own, so a
                season that genuinely ended stops guarding. */
             peakByComp: peaks,
-            tennis: tennisOut.matches.length },
+            tennis: tennisOut.matches.length,
+            /* Races of the season that the hand-typed list in the page
+               does not hold, still to come or finished inside the last
+               eight days. `shown` says whether the page draws the race
+               anyway from cyclingCalendar. null means the season could
+               not be read and nothing was checked, which is not the
+               same as nothing being missing. */
+            missingRaces: missingRacesOut, missingRacesEarlier,
+            /* Stage races the calendar holds without a stage list, and
+               sources the season check could not read. */
+            missingStages, cyclingCalendar: cyclingCalendar.length, calendarProblems,
+            wikiRequests: wikiCalls },
   fixtures,
   cycling: cyclingOut,
+  /* The season's races, read from Wikipedia. The page prefers these to
+     its own hand-typed list, race by race. */
+  cyclingCalendar,
   rugby: rugbyOut,
   /* Standings live beside the fixtures, not inside them. Nothing in the
      Race model is keyed on a fixture and nothing in a fixture is keyed

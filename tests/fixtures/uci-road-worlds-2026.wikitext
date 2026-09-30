@@ -1,0 +1,348 @@
+{{short description|Cycling world championships}}
+{{Use dmy dates|date=April 2026}}
+{{Infobox cycling championship
+| image =File:2026 UCI Road World Championships logo.png
+| pushpin_map = Canada
+| pushpin_label = Montreal
+| venue = [[Montreal]], [[Quebec]], [[Canada]] {{flagicon|Canada}}
+| coordinates =  {{coord|45|30|32|N|73|33|15|W|}}
+| date = 20–27 September 2026
+| nations =
+| cyclists =
+| events = 13
+| previous = [[2025 UCI Road World Championships|Kigali 2025]]
+| next = [[2027 UCI Road World Championships|Haute-Savoie 2027]]
+|caption =
+}}
+
+The '''2026 UCI Road World Championships''' was the 99th edition of the [[UCI Road World Championships]], the annual world championships for [[road bicycle racing]]. It was held from 20 to 27 September 2026 in [[Montreal]], [[Quebec]], [[Canada]].<ref name="uci-announce">{{cite web |url=https://www.uci.org/competition-hub/2026-uci-road-world-championships/14QBdFX8GqbCHUPE234D0Q |title=2026 UCI Road World Championships |publisher=[[Union Cycliste Internationale]] |access-date=2026-04-11}}</ref><ref name="montreal2026">{{cite web |url=https://www.montreal2026.org/en/ |title=Home – Montréal 2026 |publisher=Montréal 2026 Organizing Committee |access-date=2026-04-11}}</ref>
+
+The championships marked the return of the UCI Road World Championships to Montreal 52 years after the city hosted the [[1974 UCI Road World Championships|1974 edition]], which was the first time the event was held outside [[Europe]].<ref name="montreal2026"/> It was the third time Canada hosted the event, after Montreal in 1974 and [[Hamilton, Ontario|Hamilton]] in [[2003 UCI Road World Championships|2003]].<ref name="cyclingnews-routes">{{cite web |url=https://www.cyclingnews.com/races/uci-road-world-championships-2026-2026/map/ |title=2026 UCI Road World Championships routes |publisher=Cyclingnews |date=27 September 2025 |access-date=2026-04-11}}</ref>
+
+A total of thirteen events were held, consisting of six road races, six [[individual time trial]]s and a [[team time trial]] mixed relay.<ref name="uci-200days">{{cite web |url=https://www.uci.org/pressrelease/200-days-to-go-a-look-at-the-courses-of-the-2026-uci-road-world/7MNCbBHZySudjNAoDW4R8x |title=200 days to go: a look at the courses of the 2026 UCI Road World Championships in Montreal |publisher=[[Union Cycliste Internationale]] |date=4 March 2026 |access-date=2026-04-11}}</ref> Approximately 1,000 athletes from around 75 countries were expected to compete.<ref name="montreal2026"/>
+
+== Background ==
+The event was awarded to [[Montreal]] at the [[Union Cycliste Internationale|UCI]] Congress held during the [[2022 UCI Road World Championships]] in [[Wollongong]], [[Australia]].<ref name="montreal2026"/> The event was organized by the promoter of the [[Grand Prix Cycliste de Québec]] et [[Grand Prix Cycliste de Montréal|de Montréal]], with support from [[Cycling Canada]].<ref name="montreal2026"/>
+
+The Canadian federal government announced a CA$13-million investment to support the hosting of the championships, with CA$9.8 million from Sport Canada through the Hosting Program and CA$3.2 million from Canada Economic Development for Quebec Regions.<ref name="gpcqm">{{cite web |url=https://gpcqm.ca/en/montreal-presentera-les-championnats-du-monde-route-uci-2026/ |title=Montréal to host 2026 UCI Road World Championships |publisher=Grands Prix Cyclistes de Québec et de Montréal |date=9 September 2023 |access-date=2026-04-11}}</ref>
+
+The event was expected to be the largest sporting event in Montreal since the [[1976 Summer Olympics]].<ref name="montreal2026"/> Admission to all events was free of charge.<ref name="faq">{{cite web |url=https://www.montreal2026.org/en/faq/ |title=FAQ – Montréal 2026 |publisher=Montréal 2026 Organizing Committee |access-date=2026-04-11}}</ref>
+
+== Course ==
+The routes were unveiled during the [[2025 UCI Road World Championships]] in [[Kigali]], [[Rwanda]].<ref name="cyclingnews-routes"/>
+
+=== Road races ===
+The road races featured a final circuit of {{convert|13.4|km|mi}} around [[Mount Royal]] in downtown Montreal, with {{convert|269|m|ft}} of elevation gain per lap.<ref name="uci-200days"/> The circuit included the Voie Camillien-Houde climb ({{convert|2.3|km|mi}} at 6.2% average gradient), the Chemin de la Polytechnique with sections exceeding 11% gradient, and a false flat rising along Avenue du Parc, which served as the finish line for all thirteen events.<ref name="uci-200days"/> The circuit was similar to that used by the [[Grand Prix Cycliste de Montréal]], as well as previous cycling events in Montréal such as the [[1974 UCI Road World Championships]] and [[Cycling at the 1976 Summer Olympics – Men's individual road race|1976 Summer Olympics]].
+
+The elite men's road race covered {{convert|273.4|km|mi}} with {{convert|3803|m|ft}} of total elevation gain,{{sfn|''Technical Guide''|2026|p=101}} while the elite women's road race spanned {{convert|180.1|km|mi}} with {{convert|2570|m|ft}} of elevation gain.{{sfn|''Technical Guide''|2026|p=91}} Both elite road races started in [[Brossard]], in the [[Montérégie]] region, before passing through several municipalities and crossing the [[Samuel-De Champlain Bridge|Samuel De Champlain Bridge]] to reach the Mount Royal circuit in downtown Montréal.<ref name="uci-200days"/><ref name="cyclingnews-routes"/>
+
+=== Time trials ===
+[[File:Amateur bikers — UCI Road World Championships Course.jpg|thumb|Amateur bikers ride the time trial course in Old Montreal on 19 September.]]
+For the first time since [[2022 UCI Road World Championships|2022]], the time trial courses for elite men and women was identical in length – a {{convert|39.2|km|mi|abbr=off|adj=on}} route through Montreal, racing along the [[Saint Lawrence River]], crossing the [[St. Lawrence River]], passing through the [[Circuit Gilles Villeneuve]], and returning via the [[Pont de la Concorde (Montreal)|Concorde Bridge]].<ref name="cyclingnews-routes2">{{cite web |url=https://www.cyclingnews.com/races/uci-road-world-championships-2026-2026/map/ |title=2026 UCI Road World Championships routes |publisher=Cyclingnews |date=27 September 2025 |access-date=2026-04-11}}</ref>
+
+=== Virtual route ===
+Online indoor exercise platform and host of the 2026 UCI Cycling Esports World Championships, [[MyWhoosh]], had a virtual route replicating the Mont Royal final circuit of the road races.<ref name="uci-200days"/>
+
+== Schedule ==
+All events started and finished in Montreal, with the exception of the elite road races, which started at [[Quartier DIX30]] in [[Brossard]]. [[Park Avenue (Montreal)|Avenue du Parc]] served as the finish line for all events.<ref name="uci-200days"/>
+
+All times listed below were for the local time – [[Time in Canada#Eastern Time Zone|Eastern Daylight Time]] or [[UTC−04:00]].
+
+=== Individual time trials ===
+{| class="wikitable" style="text-align: center"
+|-
+! Date
+!colspan=2| Timings<ref name="Timings">{{cite web|url=https://assets.ctfassets.net/761l7gh5x5an/wmgNMqwdpy020sBstc8f1/e544378b2e4b44ac188a7e6c84dd43ff/2026_RWC_SPORT_COMPETITION_SCHEDULE_UPDATE_ENG_28_APR_2026.pdf|title=Sport Competition Schedule|website=[[Union Cycliste Internationale]]|date=28 April 2026|accessdate=5 July 2026}}</ref>
+! Event
+! Location<br/ >(start)
+! Location<br/ >(finish)
+! Distance
+|-
+|rowspan=2| 20 September
+| 09:00
+| 11:20
+| [[2026 UCI Road World Championships – Women's time trial|Elite women]]
+|rowspan=6 colspan=2| [[Montreal]]
+|rowspan=2| {{convert|39.2|km|abbr=on}}{{sfn|''Information Bulletin''|2026|pp=8–9}}{{sfn|''Technical Guide''|2026|p=32}}
+|-
+| 12:45
+| 15:15
+| [[2026 UCI Road World Championships – Men's time trial|Elite men]]
+|-
+|rowspan=2| 21 September
+| 09:00
+| 10:40
+| [[2026 UCI Road World Championships – Women's under-23 time trial|Under-23 women]]
+| {{convert|20.3|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=38}}
+|-
+| 12:00
+| 14:25
+| [[2026 UCI Road World Championships – Men's under-23 time trial|Under-23 men]]
+| {{convert|31.3|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=38}}
+|-
+|rowspan=2| 22 September
+| 12:15
+| 14:25
+| [[2026 UCI Road World Championships – Men's junior time trial|Junior men]]
+| {{convert|20.3|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=48}}
+|-
+| 15:15
+| 16:45
+| [[2026 UCI Road World Championships – Women's junior time trial|Junior women]]
+| {{convert|10.7|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=48}}
+|}
+
+=== Mixed event ===
+{| class="wikitable" style="text-align: center"
+|-
+! Date
+!colspan=2| Timings<ref name="Timings"/>
+! Event
+! Location<br/>(start)
+! Location<br/>(finish)
+! Distance
+! Laps{{efn|This denotes the number of laps of the {{convert|20.3|km|abbr=off|adj=on}} circuit;{{sfn|''Technical Guide''|2026|p=52}} the first lap is completed by three male riders, with the second lap completed by three female riders.{{sfn|''Technical Guide''|2026|p=29}}}}
+|-
+| 22 September
+| 08:30
+| 11:15
+| [[2026 UCI Road World Championships – Mixed team relay|Mixed team relay]]
+|colspan=2| [[Montreal]]
+| {{convert|40.6|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=48}}
+| 2
+|}
+
+=== Road races ===
+{| class="wikitable" style="text-align: center"
+|-
+! Date
+!colspan=2| Timings<ref name="Timings"/>
+! Event
+! Location<br/>(start)
+! Location<br/>(finish)
+! Distance
+! Laps{{efn|This denotes the number of full laps completed of the {{convert|13.4|km|abbr=off|adj=on}} [[Mount Royal]] circuit.{{sfn|''Information Bulletin''|2026|p=15}}}}
+|-
+|rowspan=2| 24 September
+| 09:00
+| 12:45
+| [[2026 UCI Road World Championships – Women's under-23 road race|Under-23 women]]
+|rowspan=4| [[Montreal]]
+|rowspan=6| [[Montreal]]
+|rowspan=2| {{convert|134|km|abbr=on}}{{sfn|''Information Bulletin''|2026|pp=16–17}}{{sfn|''Technical Guide''|2026|p=72}}
+|rowspan=2| 10{{sfn|''Information Bulletin''|2026|pp=16–17}}{{sfn|''Technical Guide''|2026|p=72}}
+|-
+| 13:30
+| 17:00
+| [[2026 UCI Road World Championships – Men's junior road race|Junior men]]
+|-
+|rowspan=2| 25 September
+| 09:00
+| 13:20
+| [[2026 UCI Road World Championships – Men's under-23 road race|Under-23 men]]
+| {{convert|174.2|km|abbr=on}}{{sfn|''Information Bulletin''|2026|p=18}}{{sfn|''Technical Guide''|2026|p=80}}
+| 13{{sfn|''Information Bulletin''|2026|p=18}}{{sfn|''Technical Guide''|2026|p=80}}
+|-
+| 14:15
+| 16:35
+| [[2026 UCI Road World Championships – Women's junior road race|Junior women]]
+| {{convert|80.4|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=80}}
+| 6{{sfn|''Technical Guide''|2026|p=80}}
+|-
+| 26 September
+| 09:00
+| 14:10
+| [[2026 UCI Road World Championships – Women's road race|Elite women]]
+|rowspan=2| [[Brossard]]
+| {{convert|180.1|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=88}}
+| 8{{sfn|''Technical Guide''|2026|p=88}}
+|-
+| 27 September
+| 09:00
+| 15:40
+| [[2026 UCI Road World Championships – Men's road race|Elite men]]
+| {{convert|273.4|km|abbr=on}}{{sfn|''Technical Guide''|2026|p=98}}
+| 12{{sfn|''Technical Guide''|2026|p=98}}
+|}
+
+== Medal summary ==
+=== Elite events ===
+{| {{MedalistTable|type=Event|columns=2}}
+|- style="background:#ccc;"
+| colspan=7 | '''Men's Events'''
+|-
+|{{nowrap|[[UCI Road World Championships – Men's road race|Men's road race]]<br>{{DetailsLink|2026 UCI Road World Championships – Men's road race}}
+| {{flag medalist|[[Brandon McNulty]]|USA}}
+| 6h 17'04"
+| {{flag medalist|[[Michael Matthews (cyclist)|Michael Matthews]]|AUS}}
+| +13"
+| {{flag medalist|[[Mathieu van der Poel]]|NED}}
+| +13"
+|-
+|{{nowrap|[[UCI Road World Championships – Men's time trial|Men's time trial]]<br>{{DetailsLink|2026 UCI Road World Championships – Men's time trial}}
+| {{Flag medalist|[[Remco Evenepoel]]|BEL}}
+| 44'53.13"
+| {{Flag medalist|[[Filippo Ganna]]|ITA}}
+| +57.31"
+| {{Flag medalist|[[Paul Seixas]]|FRA}}
+| +1'13.04"
+|- style="background:#ccc;"
+| colspan=7 | '''Women's Events'''
+|-
+|{{nowrap|[[UCI Road World Championships – Women's road race|Women's road race]]<br>{{DetailsLink|2026 UCI Road World Championships – Women's road race}}
+| {{Flag medalist|[[Demi Vollering]]|NED}}
+| 4h 45'09"
+| {{Flag medalist|[[Katarzyna Niewiadoma]]|POL}}
+| + 0"
+| {{Flag medalist|[[Elisa Longo Borghini]]|ITA}}
+| + 4"
+|-
+|{{nowrap|[[UCI Road World Championships – Women's time trial|Women's time trial]]<br>{{DetailsLink|2026 UCI Road World Championships – Women's time trial}}
+| {{Flag medalist|[[Marlen Reusser]]|SUI}}
+| 50'24.44"
+| {{Flag medalist|[[Zoe Bäckstedt]]|GBR}}
+| +40.11"
+| {{Flag medalist|[[Franziska Koch (cyclist)|Franziska Koch]]|GER}}
+| +45.54"
+|- style="background:#ccc;"
+| colspan=7 | '''Mixed Event'''
+|-
+|rowspan=2| {{nowrap|[[UCI Road World Championships – Mixed team relay|Mixed relay]]}}<br>{{DetailsLink|2026 UCI Road World Championships – Mixed team relay}}
+| {{Flagcountry|ITA}}<br>[[Mattia Cattaneo]]<br>[[Filippo Ganna]]<br>[[Matteo Sobrero]]<br>[[Vittoria Guazzini]]<br>[[Elisa Longo Borghini]]<br>[[Monica Trinca Colonel]]
+| 51'{{nnbsp}}32.28"
+| {{Flagcountry|FRA}}<br>[[Bruno Armirail]]<br>[[Rémi Cavagna]]<br>[[Jordan Labrosse]]<br>[[Juliette Berthet]]<br>[[Cédrine Kerbaol]]<br>[[Marion Borras]]
+| +{{nnbsp}}8.63"
+| {{Flagcountry|SUI}}<br>[[Stefan Bissegger]]<br>[[Stefan Küng]]<br>[[Jasmin Liechti]]<br>[[Marlen Reusser]]<br>[[Noemi Rüegg]]<br>[[Mauro Schmid]]
+| +{{nnbsp}}19.90"
+|}
+
+=== Under-23 events ===
+{| {{MedalistTable|type=Event|columns=2}}
+|- style="background:#ccc;"
+| colspan=7 | '''Men's Under-23 Events'''
+|-
+| {{nowrap|[[UCI Road World Championships – Men's under-23 road race|Men's under-23 road race]]<br>{{DetailsLink|2026 UCI Road World Championships – Men's under-23 road race}}
+| {{Flag medalist|[[Ashlin Barry]]|USA}}
+| 4h 17'35"
+| {{Flag medalist|[[Héctor Álvarez (cyclist)|Héctor Álvarez]]|ESP}}
+| +53"
+| {{Flag medalist|[[Jesper Stiansen]]|NOR}}
+| +53"
+|-
+|{{nowrap|[[UCI Road World Championships – Men's under-23 time trial|Men's under-23 time trial]]<br>{{DetailsLink|2026 UCI Road World Championships – Men's under-23 time trial}}
+| {{Flag medalist|{{ill|Ryan Gal|nl}}|NED}}
+| 37'26.16"
+| {{Flag medalist|[[Nicolas Milesi (cyclist)|Nicolas Milesi]]|ITA}}
+| +07.01"
+| {{Flag medalist|[[Héctor Álvarez (cyclist)|Héctor Álvarez]]|ESP}}
+| +11.88"
+|- style="background:#ccc;"
+| colspan=7 | '''Women's Under-23 Events'''
+|-
+| {{nowrap|[[UCI Road World Championships – Women's under-23 road race|Women's under-23 road race]]<br>{{DetailsLink|2026 UCI Road World Championships – Women's under-23 road race}}
+| {{Flag medalist|[[Viktória Chladoňová]]|SVK}}
+| 3h 49'10"
+| {{Flag medalist|[[Isabella Holmgren]]|CAN}}
+| +0"
+| {{Flag medalist|[[Fleur Moors]]|BEL}}
+| +33"
+|-
+|{{nowrap|[[UCI Road World Championships – Women's under-23 time trial|Women's under-23 time trial]]<br>{{DetailsLink|2026 UCI Road World Championships – Women's under-23 time trial}}
+| {{Flag medalist|[[Felicity Wilson-Haffenden]]|AUS}}
+| 27'40.72"
+| {{Flag medalist|[[Nienke Vinke]]|NED}}
+| +28.47"
+| {{Flag medalist|{{ill|Luca Vierstraete|fr}}|BEL}}
+| +45.07"
+|}
+
+=== Junior events ===
+{| {{MedalistTable|type=Event|columns=2}}
+|- style="background:#ccc;"
+| colspan=7 | '''Men's Juniors Events'''
+|-
+|{{nowrap|[[UCI Road World Championships – Junior men's road race|Men's junior road race]]<br>{{DetailsLink|2026 UCI Road World Championships – Men's junior road race}}
+| {{Flag medalist|[[Benjamín Noval (cyclist, born 2008)|Benjamín Noval]]|ESP}}
+| 3h 23'35"
+| {{Flag medalist|[[Simon Defrance]]|FRA}}
+| +42"
+| {{Flag medalist|[[Elias Wändel]]|SWE}}
+| +2'12"
+|-
+|{{nowrap|[[UCI Road World Championships – Junior men's time trial|Men's junior time trial]]<br>{{DetailsLink|2026 UCI Road World Championships – Men's junior time trial}}
+| {{Flag medalist|[[Benjamín Noval (cyclist, born 2008)|Benjamín Noval]]|ESP}}
+| 25'17.35"
+| {{Flag medalist|[[Vic De Smet]]|BEL}}
+| +6.35"
+| {{Flag medalist|[[Malthe Risbjerg]]|DEN}}
+| +16.97"
+|- style="background:#ccc;"
+| colspan=7 | '''Women's Juniors Events'''
+|-
+|{{nowrap|[[UCI Road World Championships – Junior women's road race|Women's junior road race]]<br>{{DetailsLink|2026 UCI Road World Championships – Women's junior road race}}
+| {{Flag medalist|[[Alejandra Neira]]|ESP}}
+| 2h 21'00"
+| {{Flag medalist|[[Matilde Rossignoli]]|ITA}}
+| +0"
+| {{Flag medalist|[[Anja Grossman]]|SUI}}
+| +0"
+|-
+|{{nowrap|[[UCI Road World Championships – Junior women's time trial|Women's junior time trial]]<br>{{DetailsLink|2026 UCI Road World Championships – Women's junior time trial}}
+| {{Flag medalist|[[Maria Okrucińska]]|POL}}
+| 15'17.51"
+| {{Flag medalist|[[Yana Decruyenaere]]|BEL}}
+| +12.25"
+| {{Flag medalist|[[Aalia Clay]]|GBR}}
+| +24.51"
+|}
+
+== Medal table ==
+{{Medals table
+ | caption        = 
+ | host           = CAN
+ | host_CAN       = yes
+ | flag_template  = flagcountry
+ | event          = 
+ | team           = 
+ | gold_ESP = 3 | silver_ESP = 1 | bronze_ESP = 1
+ | gold_BEL = 1 | silver_BEL = 2 | bronze_BEL = 2
+ | gold_AUS = 1 | silver_AUS = 1 | bronze_AUS = 0
+ | gold_USA = 2 | silver_USA = 0 | bronze_USA = 0
+ | gold_CAN = 0 | silver_CAN = 1 | bronze_CAN = 0
+ | gold_DEN = 0 | silver_DEN = 0 | bronze_DEN = 1
+ | gold_FRA = 0 | silver_FRA = 2 | bronze_FRA = 1
+ | gold_GBR = 0 | silver_GBR = 1 | bronze_GBR = 1
+ | gold_GER = 0 | silver_GER = 0 | bronze_GER = 1
+ | gold_ITA = 1 | silver_ITA = 3 | bronze_ITA = 1
+ | gold_NED = 2 | silver_NED = 1 | bronze_NED = 1
+ | gold_POL = 1 | silver_POL = 1 | bronze_POL = 0
+ | gold_SUI = 1 | silver_SUI = 0 | bronze_SUI = 2
+ | gold_SVK = 1 | silver_SVK = 0 | bronze_SVK = 0
+ | gold_SWE = 0 | silver_SWE = 0 | bronze_SWE = 1
+ | gold_NOR = 0 | silver_NOR = 0 | bronze_NOR = 1
+ }}
+
+== Notes ==
+{{notelist}}
+
+== References ==
+{{reflist}}
+
+=== Sources ===
+{{Refbegin}}
+* {{cite web|title=2026 UCI Road World Championships - General Information Bulletin|url=https://downloads.ctfassets.net/761l7gh5x5an/5u7johFHbTgFMPP1GjYdGM/3f419cf21d4e780103537d9377f717e4/2026_UCI_ROAD_WCh_INFO-BULLETIN_EN.pdf|website=[[Union Cycliste Internationale]]|date=23 January 2026|accessdate=5 July 2026|ref={{harvid|''Information Bulletin''|2026}}}}
+* {{cite web|title=2026 UCI Road World Championships - Technical Guide|url=https://downloads.ctfassets.net/761l7gh5x5an/2AA4hc1scOqCD8lvSXW5A5/b62829bc1cb62f5a2750bd026bc9606c/UCI_Guide_Tech_CdMR_Montreal_2026_EN_web_pages.pdf|website=[[Union Cycliste Internationale]]|date=August 2026|accessdate=5 September 2026|ref={{harvid|''Technical Guide''|2026}}}}
+{{Refend}}
+
+== External links ==
+* {{Official website|https://www.montreal2026.org}}
+* [https://www.uci.org/competition-hub/2026-uci-road-world-championships/14QBdFX8GqbCHUPE234D0Q 2026 UCI Road World Championships] at the [[Union Cycliste Internationale|UCI]]
+
+{{UCI Road World Championships}}
+
+[[Category:UCI Road World Championships]]
+[[Category:2026 in road cycling]]
+[[Category:2026 in Canadian sports]]
+[[Category:Cycling in Montreal]]
+[[Category:Sports competitions in Montreal]]
+[[Category:September 2026 sports events in Canada]]

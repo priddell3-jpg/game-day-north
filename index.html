@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KY5oe2quMaoWw/1KovEFzznmQ/Eub+PoGTYe6RJFTk0='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GMygMZZ9Q01Om0b/JTOyYkF+MYgQ+FN41V/l0hIVP1s='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -6555,6 +6555,7 @@ function validStaticPayload(r){
       && Number.isFinite(Number(f.start)))) return false;
     if(r.rugby!=null && (!Array.isArray(r.rugby) || r.rugby.length>500)) return false;
     if(r.cycling!=null && (!Array.isArray(r.cycling) || r.cycling.length>50)) return false;
+    if(r.cyclingCalendar!=null && (!Array.isArray(r.cyclingCalendar) || r.cyclingCalendar.length>120)) return false;
     if(r.tennis!=null){
       if(typeof r.tennis!=="object" || Array.isArray(r.tennis)) return false;
       if(r.tennis.matches!=null && (!Array.isArray(r.tennis.matches) || r.tennis.matches.length>5000)) return false;
@@ -6655,6 +6656,9 @@ async function loadStatic(){
       result:{status:f.status || "scheduled", label:f.label || "", score:f.score || null}});
   });
   if(built.length) mergeReal(built);
+  /* The calendar before the results, so a podium lands on the row the
+     calendar settled on rather than one it is about to replace. */
+  if(Array.isArray(r.cyclingCalendar)) attachCalendar(r.cyclingCalendar);
   if(Array.isArray(r.cycling)) attachCycling(r.cycling);
   /* Held whether or not a tour is on, so switching one on shows its
      matches without waiting for the next refresh. */
@@ -6979,7 +6983,15 @@ function attachCycling(races){
   };
   races.forEach(rc=>{
     if(!rc.race) return;
-    const mine = GAMES.filter(g=>g.event && raceMatch(g.race, rc.race));
+    /* The name itself first. Every race the build names is drawn under
+       exactly that name, so an exact match is the race; the looser
+       comparison is kept for a name that arrives spelled another way,
+       and only when nothing matches exactly — "UAE Tour" and "Tour of
+       Guangxi" share their only long word, and with a whole season on
+       the page the loose rule alone would hand one race's leader to
+       the other. */
+    const exact = GAMES.filter(g=>g.event && g.race === rc.race);
+    const mine = exact.length ? exact : GAMES.filter(g=>g.event && raceMatch(g.race, rc.race));
     if(!mine.length) return;
     let moved = false;
     (rc.stages||[]).forEach(st=>{
@@ -7535,8 +7547,17 @@ async function loadLive(){
    because Grand Tours have rest days and guessing them would put a race
    on a day nobody is riding.
 
-   Hand-checked against ProCyclingStats on 22 Aug 2026. The build script
-   does not scrape this yet.
+   Hand-checked against ProCyclingStats on 22 Aug 2026. This list is the
+   fallback now rather than the calendar: the build reads the season
+   from Wikipedia into data.json (cyclingCalendar), attachCalendar below
+   prefers that race by race, and what is typed here is what the page
+   shows when the file has no calendar or has not arrived. The build
+   also compares this list with the season on every run and names what
+   it lacks in counts.missingRaces. See scripts/lib/cycling-calendar.mjs.
+
+   Every race here needs an entry of the same name in CYCLING_SOURCES in
+   scripts/fetch-data.mjs, or it is shown and its result never fetched;
+   tests/cycling-calendar.test.mjs fails on one that has none.
    ============================================================ */
 const CYCLING = [
   {race:"La Vuelta Ciclista a España", short:"Vuelta a España", stages:[
@@ -7575,22 +7596,76 @@ const CYCLING = [
     ["2026-10-18","Stage 6","Yizhou – NongLa",165.8]
   ]}
 ];
-(function buildCycling(){
+/* One day of one race. `day` is the date the race is filed under and
+   never moves, where `start` is upgraded to a real clock once a
+   timetable is published — so the calendar below compares days, not
+   starts. */
+function addStage(race, date, label, route, km){
   const wt = TEAMS["uci-wt"];
-  if(!wt) return;
+  const ms = Date.parse(date+"T12:00:00Z");   // date-only; noon is a neutral anchor
+  if(!wt || !ms) return null;
+  return addGame({comp:"UCI", home:wt, away:null, start:ms, moved:null, event:true, listed:true, real:true,
+    race, day:date, stage:label, route:route || "", km:km || 0,
+    localDow:new Date(ms).getUTCDay(), slotHour:12});
+}
+(function buildCycling(){
+  if(!TEAMS["uci-wt"]) return;
   CYCLING.forEach(r=>{
-    const add = (date, label, route, km) => {
-      const ms = Date.parse(date+"T12:00:00Z");   // date-only; noon is a neutral anchor
-      if(!ms) return;
-      addGame({comp:"UCI", home:wt, away:null, start:ms, moved:null, event:true, listed:true, real:true,
-        race:r.short || r.race, stage:label, route:route || "", km:km || 0,
-        localDow:new Date(ms).getUTCDay(), slotHour:12});
-    };
-    if(r.oneDay) add(r.oneDay, "One-day race", r.route, r.km);
-    (r.stages||[]).forEach(st=>add(st[0], st[1], st[2], st[3]));
+    const name = r.short || r.race;
+    if(r.oneDay) addStage(name, r.oneDay, "One-day race", r.route, r.km);
+    (r.stages||[]).forEach(st=>addStage(name, st[0], st[1], st[2], st[3]));
   });
   GAMES.sort((a,b)=>a.start-b.start);
 })();
+
+/* The season's calendar, as the build read it, preferred race by race
+   over the list typed above.
+
+   Race by race, not wholesale: the file carries the races still to come
+   and the week just gone, so replacing the whole list would take the
+   Vuelta off the calendar the moment it was eight days old. A race the
+   file names is drawn from the file; a race only the hand list names
+   stays exactly as typed.
+
+   A race is one name in one year. Its rows are compared with what is
+   already on the page and nothing is touched when they agree, which is
+   the ordinary case — so a refresh does not rebuild rows, and whatever
+   a row has collected since (a podium, a timetable, the race lead)
+   stays on it. Where they differ the file wins, and each new row keeps
+   what the old row for that day had learned.
+
+   Nothing is inferred here. The build decides what rows a race has and
+   says where they came from; a Grand Tour it could not read a stage
+   list for arrives as its first and last day only, because the days
+   between are not known to be days of racing. */
+function attachCalendar(list){
+  if(!TEAMS["uci-wt"] || !Array.isArray(list)) return 0;
+  const DATE = /^\d{4}-\d{2}-\d{2}$/;
+  let changed = 0;
+  list.forEach(e=>{
+    if(!e || typeof e.race !== "string" || !e.race || !Array.isArray(e.rows)) return;
+    const rows = e.rows.filter(r=>Array.isArray(r) && DATE.test(String(r[0])) && typeof r[1] === "string");
+    if(!rows.length || rows.length !== e.rows.length) return;      // a row that cannot be read spoils the race
+    const year = String(e.year || rows[0][0].slice(0,4));
+    const held = GAMES.filter(g=>g.event && g.race === e.race && String(g.day || "").slice(0,4) === year);
+    const sig = (day, label, route, km) => [day, label, route || "", Number(km) || 0].join("|");
+    const want = rows.map(r=>sig(r[0], r[1], r[2], r[3])).sort();
+    const have = held.map(g=>sig(g.day, g.stage, g.route, g.km)).sort();
+    if(want.length === have.length && want.every((w,i)=>w === have[i])) return;
+    const byDay = {};
+    held.forEach(g=>{ byDay[g.day] = g; const i = GAMES.indexOf(g); if(i >= 0) GAMES.splice(i,1); });
+    rows.forEach(r=>{
+      const g = addStage(e.race, r[0], r[1], r[2], r[3]);
+      const was = g && byDay[r[0]];
+      if(!was) return;
+      ["podium","finishUtc","timeKnown","leader","leaderStage"].forEach(k=>{ if(was[k] != null) g[k] = was[k]; });
+      if(was.timeKnown) g.start = was.start;
+    });
+    changed++;
+  });
+  if(changed) GAMES.sort((a,b)=>a.start-b.start);
+  return changed;
+}
 
 /* ---- what's actually known yet, and when it will be ---- */
 /* Kick-off times now come from the feed, so there is nothing to hedge
