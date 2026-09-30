@@ -279,6 +279,7 @@ main{padding:22px 0 80px}
 .g-time .ap{font-size:10px;color:var(--muted);margin-left:2px}
 .g-time .moved{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--live);margin-top:2px}
 .g-time .was{display:block;font-size:10px;color:var(--muted);text-decoration:line-through}
+.g-time .alt-time{display:block;font-size:10px;color:var(--muted)}
 .g-match{min-width:0;display:flex;flex-direction:column;gap:4px}
 .g-team{min-width:0}
 .g-teams{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -873,6 +874,21 @@ const COMPS = {
   SERIEA:{name:"Serie A",           short:"Serie A",    color:"#2E7D8F"},
   BUNDES:{name:"Bundesliga",        short:"Bundesliga", color:"#9E2A2B"},
   LIGUE1:{name:"Ligue 1",           short:"Ligue 1",    color:"#1B6E8C"},
+  /* Men's national teams. A nation is a team in the same sense a club
+     is: it plays in several competitions and lands on a different
+     Canadian service in each, so each competition is its own entry and
+     the nation is followed across all of them. The friendlies feed is
+     every nation's home because it is the one they all appear in, which
+     is why the picker names that section after the teams rather than
+     after the competition.
+
+     World Cup qualifying (ESPN's fifa.worldq.* feeds) starts in 2027 and
+     is deliberately not here yet: a competition with no fixtures is a
+     request a day for nothing. It is a row here, a path in ESPN_PATH
+     and in scripts/fetch-data.mjs, and a rights rule when it begins. */
+  INTF:  {name:"International Friendly",  short:"Friendly",    color:"#4A6B8A", picker:"Men's national teams"},
+  UNL:   {name:"UEFA Nations League",     short:"UEFA NL",     color:"#1F4E9C"},
+  CNL:   {name:"Concacaf Nations League", short:"Concacaf NL", color:"#7A3E9C"},
   UCI:   {name:"UCI WorldTour",     short:"WorldTour",  color:"#8A6D1F"},
   /* Men's senior international rugby union. Each competition is its own
      entry because that is the level Canadian rights attach at: the Six
@@ -922,7 +938,7 @@ const SERVICES = {
 const CARRIER_SERVICE = {
   "Sportsnet":"sportsnet","Sportsnet One":"sportsnet","Sportsnet Pacific":"sportsnet",
   "Sportsnet West":"sportsnet","Sportsnet Ontario":"sportsnet","Sportsnet+":"sportsnet",
-  "TSN":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
+  "TSN":"tsn","TSN1":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
   "RDS":"rds","TVA Sports":"tva","CTV":"ctv","CTV2":"ctv",
   "Prime Video":"prime","Fubo Canada":"fubo","DAZN Canada":"dazn",
   "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp","FloBikes":"flobikes",
@@ -955,7 +971,9 @@ const SRC = {
   ans:     {label:"Autumn Nations Series — where to watch", url:"https://www.sixnationsrugby.com/en/autumn-nations-series/where-to-watch-ans"},
   lions25: {label:"British & Irish Lions 2025 — where to watch", url:"https://www.lionsrugby.com/en/news/where-to-watch-the-british-and-irish-lions-this-summer"},
   atptv:   {label:"ATP Tour — Watch Live, broadcaster list", url:"https://www.atptour.com/en/video/watch-live"},
-  usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"}
+  usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"},
+  tsnfall: {label:"TSN — Canada's national teams, fall 2026 lineup", url:"https://www.tsn.ca/soccer/article/canadas-national-teams-back-in-action-in-loaded-fall-soccer-lineup-on-tsn/"},
+  uefanl:  {label:"UEFA — where to watch the Nations League", url:"https://www.uefa.com/uefanationsleague/news/02a9-219ae5c877f5-740390ccb3e5-1000--where-to-watch-the-nations-league-tv-broadcast-partners-li/"}
 };
 const tv = (n, confidence) => ({name:n, kind:"tv", confidence});
 const st = (n, confidence) => ({name:n, kind:"stream", confidence});
@@ -1043,6 +1061,37 @@ const RIGHTS = [
    note:"Test-match carriage in Canada is sold per series and none is confirmed for these fixtures",
    src:SRC.none, checked:CHECKED},
 
+  /* ---------------- men's national teams ----------------
+     A friendly is sold match by match, usually by the home federation,
+     so there is no competition-wide deal to read a carrier from. What
+     can be known is what a broadcaster has published, and TSN has
+     published Canada's fall lineup match by match, with channels.
+
+     So the rule keys on Canada being in the match, and then on what TSN
+     actually listed. The three matches it names are confirmed, on the
+     channels it names. A Canada match it does not name is expected on
+     TSN and no more than that: the article is a lineup, not a rights
+     announcement, and says nothing about a match after 6 October. Every
+     other nation's friendly is unknown, because nothing primary names a
+     Canadian carrier for it.
+
+     These rows carry their own date: they were sourced on 2026-09-29,
+     later than the rest of the table, and do not borrow CHECKED. */
+  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-09-26", carriers:[tv("TSN4")], confidence:"confirmed",
+   note:"TSN's published fall lineup: Canada v Chile, Sat Sept 26, 7 p.m. ET, TSN4", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-10-03", carriers:[tv("TSN4"), tv("TSN5")], confidence:"confirmed",
+   note:"TSN's published fall lineup: Canada v Peru, Sat Oct 3, 2 p.m. ET, TSN4/5", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-10-06", carriers:[tv("TSN1")], confidence:"confirmed",
+   note:"TSN's published fall lineup: USA v Canada, Tue Oct 6, 8 p.m. ET, TSN1", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", when:g=>g.has("nt-can"), carriers:[tv("TSN")], confidence:"expected",
+   note:"TSN carries Canada's men's matches in its published fall lineup, which runs to Oct 6. This match is not in that lineup, so TSN is expected rather than confirmed", src:SRC.tsnfall, checked:"2026-09-29"},
+  {comp:"INTF", carriers:[], confidence:"unknown",
+   note:"Friendlies are sold match by match and no primary source names a Canadian carrier for this one", src:SRC.none, checked:"2026-09-29"},
+  {comp:"UNL", carriers:[st("DAZN Canada")], confidence:"confirmed",
+   note:"UEFA's own where-to-watch listing for the 2026/27 Nations League names DAZN for Canada", src:SRC.uefanl, checked:"2026-09-29"},
+  {comp:"CNL", carriers:[], confidence:"unknown",
+   note:"No Canadian rights holder verified for the 2026-27 Concacaf Nations League", src:SRC.none, checked:"2026-09-29"},
+
   /* ---------------- soccer ---------------- */
   {comp:"EPL", carriers:[st("Fubo Canada")], confidence:"confirmed",
    note:"Exclusive — every match, through 2027-28. Note: LiveSoccerTV also lists DAZN Canada for EPL fixtures; Fubo's own release says exclusive, so Fubo is used here", src:SRC.fubo, checked:CHECKED},
@@ -1101,9 +1150,18 @@ const RIGHTS = [
    note:"CTV is the free-to-air home of Sunday afternoon games; DAZN carries every game via Game Pass", src:SRC.nflca, checked:CHECKED}
 ];
 
+function listingDay(ms){
+  const p = zoneParts("ET", ms);
+  return p.year + "-" + p.month + "-" + p.day;
+}
 function resolveRights(g){
   const ids = [g.home&&g.home.id, g.away&&g.away.id];
   const ctx = {stage:g.stage||"", has:id=>ids.indexOf(id)>=0, comp:g.comp, hour:g.slotHour||0,
+    /* The match's date as a published listing states it, which is the
+       Eastern one: Canada at the United States kicks off at 00:00 UTC on
+       the 7th and TSN lists it for the 6th. Asked for only by the rules
+       that key on a listing, so nothing else pays for it. */
+    day:()=>listingDay(g.start),
     // tennis rules key on the tournament; every other sport ignores these
     tournament:(tourneyOf(g)||{}).name || "", major:!!((tourneyOf(g)||{}).major)};
   // day-of-week must be the HOME team's local day, not UTC
@@ -1803,10 +1861,15 @@ TEAM_MANIFEST.teams.concat(TEAM_MANIFEST.events).forEach(e=>{
     tz:e.tz, color:e.color,
     comps: [e.comp].concat(e.extraComps || []),
     ...(e.feedName ? {feed:e.feedName} : {}),
-    ...(e.displayName ? {display:e.displayName} : {})};
+    ...(e.displayName ? {display:e.displayName} : {}),
+    /* Other names the picker's search should answer to — "Turkey" for
+       Türkiye — and whether a team is offered before anyone searches. */
+    ...(e.aliases && e.aliases.length ? {aliases:e.aliases} : {}),
+    ...(e.featured ? {featured:true} : {})};
 });
 const teamList = Object.values(TEAMS);
-const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1};
+const SOCCER = {EPL:1,UCL:1,EFL:1,FAC:1,MLS:1,LALIGA:1,SERIEA:1,BUNDES:1,LIGUE1:1,
+  INTF:1,UNL:1,CNL:1};
 const fullName = t => !t ? "TBD"
   : t.full ? t.name                       // came from the feed already complete
   : (t.display || (SOCCER[t.home] ? t.name : t.city+" "+t.name));
@@ -1978,6 +2041,14 @@ function mergeReal(built){
          and a refresh that let them win blanked the location on a row
          that had it a second earlier. */
       if(!g.venue && prev.venue) g.venue = prev.venue;
+      /* Nor may a copy that knows of no dispute erase one: only the
+         committed file compares a kickoff with a published listing, and
+         a live read of the same fixture at the same time is not news
+         that the two now agree. If the clock has moved, the dispute was
+         about a time that is no longer the feed's, and it goes. */
+      if(g.altStart == null && prev.altStart != null && prev.start === g.start){
+        g.altStart = prev.altStart; g.altSource = prev.altSource;
+      }
       GAMES.splice(i,1);
     }
   });
@@ -2198,7 +2269,8 @@ const ESPN_PATH = {
   NHL:"hockey/nhl", NBA:"basketball/nba", NFL:"football/nfl", MLB:"baseball/mlb",
   MLS:"soccer/usa.1", EPL:"soccer/eng.1", UCL:"soccer/uefa.champions",
   EFL:"soccer/eng.league_cup", FAC:"soccer/eng.fa",
-  LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1"
+  LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1",
+  INTF:"soccer/fifa.friendly", UNL:"soccer/uefa.nations", CNL:"soccer/concacaf.nations.league"
 };
 // The feed name lives on the club itself, set where TEAMS is built.
 const norm = x => (x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
@@ -2453,6 +2525,9 @@ async function loadStatic(){
     if(!followsTeam(home) && !followsTeam(away)) return;
     built.push({eid:f.eid || null, comp:f.comp, home, away, start:f.start, moved:null,
       real:true, espn:true, listed:true, fromFeed:true, venue:f.venue || null,
+      /* A kickoff a published listing states differently. The build
+         names the source; the row says both. */
+      ...(f.altStart != null ? {altStart:f.altStart, altSource:f.altSource || null} : {}),
       localDow:new Date(f.start).getUTCDay(), slotHour:new Date(f.start).getUTCHours(), stage:"",
       result:{status:f.status || "scheduled", label:f.label || "", score:f.score || null}});
   });
@@ -4440,6 +4515,16 @@ function gameRow(g, now){
   if(g.moved) timeCell += '<span class="was">'+esc(fmtTime(g.moved))+'</span><span class="moved">Time moved</span>';
   if(ts.state==="tbc") timeCell += '<span class="tbc">Time TBC</span>';
   if(ts.state==="flex") timeCell += '<span class="tbc">Flex window</span>';
+  /* Two sources, two kickoffs. ESPN's is the one shown because it is
+     the live source and the one that moves if the match does; the other
+     is printed under it with both named, so nobody plans around a time
+     this page chose for them without saying it had a choice. */
+  if(g.altStart != null && g.altStart !== g.start){
+    const other = g.altSource || "another source";
+    timeCell += '<span class="tbc" title="'+esc("ESPN's feed says "+fmtTime(g.start)+"; "+other+"'s published listing says "
+        + fmtTime(g.altStart)+". ESPN's time is the one shown.")+'">Kick-off disputed</span>'
+      + '<span class="alt-time">ESPN '+esc(fmtTime(g.start))+' &middot; '+esc(other)+' '+esc(fmtTime(g.altStart))+'</span>';
+  }
   timeCell += '</div>';
 
   /* A record cannot move during a match, so a game in progress is not a
@@ -5453,7 +5538,12 @@ function racePickerHtml(q, now){
 const PICKER_CAP = 12;
 let pickerOpenSections = new Set();
 function pickerLeagueTeams(lg){
-  return pickable.filter(t=>t.home===lg);
+  /* Featured teams lead, in manifest order, so the chips shown before
+     anyone searches are the ones chosen to be shown rather than whichever
+     come first alphabetically. No club is featured, so a league's order
+     is exactly what it was. */
+  const all = pickable.filter(t=>t.home===lg);
+  return all.filter(t=>t.featured).concat(all.filter(t=>!t.featured));
 }
 function toggleLeagueTeams(lg){
   const teams = pickerLeagueTeams(lg);
@@ -5489,8 +5579,8 @@ function renderDrawer(){
   const inFullLeague=new Set(fullLeagues.flatMap(x=>x.teams.map(t=>t.id)));
   const pickedSingles=picked.filter(t=>!inFullLeague.has(t.id));
   const leagueFollowing=fullLeagues.map(x=>
-    '<button class="chip follow-chip" data-league-all="'+esc(x.lg)+'" aria-pressed="true" title="Stop following every '+esc(COMPS[x.lg].name)+' team">'
-      + esc(COMPS[x.lg].short)+' <span class="chip-meta">'+x.teams.length+' teams</span>'
+    '<button class="chip follow-chip" data-league-all="'+esc(x.lg)+'" aria-pressed="true" title="Stop following every '+esc(COMPS[x.lg].picker || COMPS[x.lg].name)+' team">'
+      + esc(COMPS[x.lg].picker || COMPS[x.lg].short)+' <span class="chip-meta">'+x.teams.length+' teams</span>'
       + '<span class="chip-remove" aria-hidden="true">&times;</span></button>'
   ).join("");
   /* Tennis is followed as a sport, not as a team. It still belongs in
@@ -5515,7 +5605,7 @@ function renderDrawer(){
     : "";
   const groups=Object.keys(COMPS).map(lg=>{
     const leagueAll=pickerLeagueTeams(lg);
-    const all=leagueAll.filter(t=>!q||(t.city+" "+t.name+" "+t.abbr).toLowerCase().includes(q));
+    const all=leagueAll.filter(t=>!q||(t.city+" "+t.name+" "+t.abbr+" "+(t.aliases||[]).join(" ")).toLowerCase().includes(q));
     if(!all.length) return "";
     /* A club you follow is never hidden behind a cap: the picker is also
        how you un-follow one. */
@@ -5527,7 +5617,7 @@ function renderDrawer(){
     const hidden = all.length - ts.length;
     const open = !!q || (typeof pickerOpenSections !== "undefined" && pickerOpenSections.has("league-"+lg));
     return '<details class="lg-group picker-section" data-picker-section="league-'+esc(lg)+'"'+(open?' open':'')+'>'
-      + '<summary class="lg-title"><b>'+esc(COMPS[lg].name)+'</b>'
+      + '<summary class="lg-title"><b>'+esc(COMPS[lg].picker || COMPS[lg].name)+'</b>'
       + (all.length > PICKER_CAP ? '<span class="lg-count">'+all.length+'</span>' : "")
       + '<span class="picker-summary">'+(leaguePicked ? leaguePicked+' picked' : 'Choose teams')+'</span>'
       + '<span class="picker-chevron" aria-hidden="true"></span></summary><div class="picker-body">'

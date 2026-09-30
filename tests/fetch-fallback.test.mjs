@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { loadFromBuild } from "./helpers/build.mjs";
 import { MAX_LIMIT, planRanges, planDays, splitRange, dateKey, isCarriedSeason } from "../scripts/lib/fetch-plan.mjs";
+import { unknownSides } from "../scripts/lib/nations.mjs";
 
 /* Known answers for the plan the build takes when ESPN refuses a range.
 
@@ -56,7 +57,7 @@ function serve(overrides = {}){
 
 function build(){
   return loadFromBuild(["scoreboardRange", "get", "FAILED", "REJECTED", "planByComp", "PATHS"],
-    { MAX_LIMIT, planRanges, planDays, splitRange, dateKey, isCarriedSeason });
+    { MAX_LIMIT, planRanges, planDays, splitRange, dateKey, isCarriedSeason, unknownSides });
 }
 
 async function withFetch(impl, fn){

@@ -32,6 +32,39 @@ Every row carries a confidence level and a source:
 
 When sources disagree, the primary release wins and the disagreement goes in the row's note. There is a live example in the table: an aggregator lists DAZN Canada for Premier League fixtures while Fubo's own release says exclusive.
 
+## A national team is followed like a club
+
+Men's national teams are teams in the manifest, modelled exactly as clubs are. Canada plays friendlies and the Concacaf Nations League the way Liverpool plays the Premier League and the Champions League: follow the nation, and its matches arrive from every competition it enters, each resolving its own carrier.
+
+| Competition | ESPN feed | Canadian carriage |
+| --- | --- | --- |
+| International friendlies (`INTF`) | `soccer/fifa.friendly` | TSN for Canada's listed matches; unknown otherwise |
+| UEFA Nations League 2026-27 (`UNL`) | `soccer/uefa.nations` | DAZN, per UEFA's own where-to-watch listing |
+| Concacaf Nations League 2026-27 (`CNL`) | `soccer/concacaf.nations.league` | unknown — none verified |
+
+**Only a followed nation's matches reach the board.** The friendlies feed is the whole world's: eight matches on 3 October 2026, from Kolkata to Glendale, of which Canada's is one. The build keeps a fixture when either side is in the manifest and the page keeps it when either side is followed, which are the same two filters every club goes through. There is no "all internationals" switch and following a nation never widens to the day's slate.
+
+**Ninety-six nations are followable**, seeded by `scripts/seed-nations.mjs` from ESPN's team lists for the two Nations Leagues, plus Canada, the United States and Mexico — which ESPN's Concacaf list omits — and Argentina and Brazil. Twelve are flagged `featured` in `data/teams.json` and are the chips shown before anyone searches; the other eighty-four are behind the search box, as the clubs of a big league are. An id is `nt-` and the nation's code (`nt-can`), so no nation can collide with a club.
+
+**Name drift is caught from both sides.** The build's existing warning lists followable teams that matched no fixture, which for a nation between international windows is mostly noise. So the two Nations League feeds are also checked the other way round: the manifest holds each competition's whole entry list, so a side in either feed that resolves to no nation is a name that changed, and it is logged and written to `counts.unknownNations` the first time the feed says it. The fix is an alias on that nation in `data/teams.json`. The friendlies feed is not checked this way, because Peru not being followable is a fact about the roster rather than a failed match.
+
+**These competitions are exempt from the vanished-competition floor.** A league that had a hundred fixtures and now has none is a failed request. An international competition that had fifty and now has none is the week after a window: the UEFA Nations League league phase ends on 19 November 2026 and its next match is in March. Left in, the floor would have refused to write `data.json` at all on about 27 November, and every other sport would have stopped updating. A request that fails outright is still fatal for these competitions, as for any other.
+
+### Canada's matches, and what TSN actually listed
+
+Friendlies are sold match by match, so there is no competition-wide deal to read. What exists is TSN's published fall lineup, which names three Canada matches with channels. Those are `confirmed` on the channels named — 3 October against Peru on TSN4/5, 6 October at the United States on TSN1. A Canada match the lineup does not name resolves to TSN as `expected`, because the article is a lineup and not a rights announcement; inside five days an expectation is no longer offered as somewhere to watch, like any other. The rule keys on the **Eastern** date, since that is what a listing states: Canada at the United States kicks off at 00:00 UTC on the 7th.
+
+### Two statements of one kickoff
+
+ESPN's feed is the live source and its kickoff is the one shown. A broadcaster's listing is a second, independent statement of the same kickoff, held in `LISTED_KICKOFFS` in `scripts/lib/nations.mjs`. Where the two differ by more than two minutes the fixture carries the listing's reading as `altStart` with the source named in `altSource` — rugby's fields, for the same reason — the row prints both under "Kick-off disputed", and `counts.disputedKickoffs` counts them. Nothing is silently preferred.
+
+Checked against the raw feed on 29 Sep 2026, the two **agree**: ESPN says `2026-10-03T18:00Z` for Peru at Canada and TSN says 2 p.m. ET; ESPN says `2026-10-07T00:00Z` for Canada at the United States and TSN says 8 p.m. ET on the 6th. The table stays because agreement on the day it was checked is not agreement on the day of the match.
+
+### Not built yet
+
+- **World Cup qualifying** (`fifa.worldq.*`) starts in 2027. It is a row in `COMPS`, a path in both `PATHS` tables and a rights rule when it begins; until then each feed would cost a request a day to be told there is nothing.
+- **Women's national teams.** ESPN's `soccer/fifa.friendly.w` carries Canada v Denmark on 9 and 12 October, and TSN lists both (TSN5, TSN4/5). It is not a small addition: the build matches a feed name to a team **globally**, so "Canada" in the women's feed would resolve to the men's `nt-can` and put a women's match on a men's follower's board. It needs the matcher and the manifest's name-collision check scoped by competition first.
+
 ## Rugby is followed by competition, not by team
 
 Every other sport here starts from "which teams do you follow". International
@@ -374,7 +407,7 @@ page's `RACES` table. Nothing else changes.
 
 Sources, in precedence order:
 
-1. **`data.json`, built by a scheduled GitHub Action.** One machine talks to the sports API every three hours and commits the result, so an ordinary visit is a single request to this repo's own domain. A competition's whole window is asked for in one ranged request where ESPN accepts that form and one request per day where it does not — about 25 requests for the entire file on the ranged plan and about 1,100 on the per-day plan, which ESPN's refusal of the range since 15 Sep 2026 has made the plan in use; `counts.planByComp` in the file says which each competition got — and a competition that vanishes between runs stops the build rather than publishing a file with a league missing. See `scripts/fetch-data.mjs`.
+1. **`data.json`, built by a scheduled GitHub Action.** One machine talks to the sports API every three hours and commits the result, so an ordinary visit is a single request to this repo's own domain. A competition's whole window is asked for in one ranged request where ESPN accepts that form and one request per day where it does not — about 35 requests for the entire file on the ranged plan and about 1,400 on the per-day plan (1,397 measured on 29 Sep 2026, of which the three national-team feeds are 261), which ESPN's refusal of the range since 15 Sep 2026 has made the plan in use; `counts.planByComp` in the file says which each competition got — and a competition that vanishes between runs stops the build rather than publishing a file with a league missing. See `scripts/fetch-data.mjs`.
 2. **Live top-up.** Only a matchup in today's personal **What's On** agenda that is live—or has reached kickoff without a resolved source status—is checked for a moving score. Team sports update once a minute in the open app; tennis uses a small cached endpoint at most once every ten minutes. Returned scores redraw the full main-table row, while the What's On strip remains matchup-only.
 3. **Direct fetch**, if `data.json` is missing or more than 12 hours old — a stalled job degrades to the old behaviour rather than an empty page.
 4. **`LIVE_FIXTURES`** — a small hand-checked set with Canadian listings, for when nothing can be reached.
@@ -624,6 +657,10 @@ A scheduled task refreshes `LIVE_FIXTURES` daily and re-checks the rights table 
 - [ ] Web push for pre-game alerts and time changes (iOS 16.4+, home-screen installs only)
 - [ ] Cache API responses so a reload isn't a cold fetch
 - [ ] Resolve FA Cup Canadian carriage before the third round in January
+- [ ] Resolve Concacaf Nations League carriage in Canada; it is `unknown` today
+- [ ] World Cup qualifying when it starts in 2027, and women's national
+      teams once the team matcher is scoped by competition — see
+      "A national team is followed like a club"
 - [ ] Show the round, not the table position, once the Champions League
       reaches the knockout in February — see below
 - [ ] Six Nations table for the rugby rows, in January — see below

@@ -26,11 +26,20 @@ export const SAFE_PER_REQUEST = 900;
 
    Measured on 2026-09-09 over a 21-day window, league-wide:
    baseball 13/day, and 1312 hockey games across a 180-day season is
-   7.3/day. The rest are far below one a day. */
+   7.3/day. The rest are far below one a day.
+
+   The international feeds are bursty rather than steady: nothing for
+   six weeks, then a window in which the friendlies feed carries every
+   nation in the world. Measured on 2026-09-29 the October window held
+   34 friendlies, 52 UEFA Nations League matches and 37 Concacaf ones
+   across seven days, with 18 the busiest single day. The friendlies
+   figure is set well above that because a window before a major
+   tournament is busier than one after it. */
 export const EXPECTED_PER_DAY = {
   MLB: 16, NHL: 9, NBA: 9, NFL: 3,
   MLS: 4, EPL: 3, UCL: 3, EFL: 3, FAC: 3,
-  LALIGA: 3, SERIEA: 3, BUNDES: 3, LIGUE1: 3
+  LALIGA: 3, SERIEA: 3, BUNDES: 3, LIGUE1: 3,
+  INTF: 45, UNL: 20, CNL: 12
 };
 const DEFAULT_PER_DAY = 8;
 
@@ -151,6 +160,28 @@ export function vanishBaseline(previousByComp, peaks, nowMs, ttlDays = PEAK_TTL_
   return out;
 }
 
+/* Competitions played in international windows, which the floor must
+   not judge.
+
+   Everything above assumes a season: fixtures arrive steadily, and a
+   competition that had a real number of them and now has none did not
+   have a quiet week. A national team's calendar is the opposite. The
+   UEFA Nations League league phase ends on 19 November 2026 and its
+   next match is in March; eight days after that last matchday the
+   count falls from a full matchday to nothing between one run and the
+   next, exactly the cliff the floor reads as a failed request. It would
+   then refuse to write the file at all, and every other sport would
+   stop updating because international football had gone quiet on
+   schedule.
+
+   Exempting them gives up nothing the build relied on. A request that
+   fails outright is already fatal in scoreboardRange, whatever the
+   competition; the floor only ever added a second opinion for the case
+   where the source answers and says "nothing", and for these
+   competitions "nothing" is the ordinary answer most weeks of the
+   year. */
+export const WINDOWED_COMPS = ["INTF", "UNL", "CNL"];
+
 /* Two different questions, deliberately measured against two different
    things.
 
@@ -167,8 +198,10 @@ export function compFloorProblems(previousByComp, currentByComp, opts = {}){
   const now = currentByComp || {};
   const prev = previousByComp || {};
   const vanish = opts.vanishBaseline || prev;
+  const windowed = opts.windowed || WINDOWED_COMPS;
   const out = [];
   for(const comp of new Set(Object.keys(prev).concat(Object.keys(vanish)))){
+    if(windowed.indexOf(comp) >= 0) continue;
     const is = now[comp] || 0;
     const peak = vanish[comp] || 0;
     const was = prev[comp] || 0;

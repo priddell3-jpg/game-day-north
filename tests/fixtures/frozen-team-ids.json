@@ -8,7 +8,7 @@
   "The `teams` group is what localStorage and share links carry; the rest are recorded so they cannot be quietly reassigned."
  ],
  "checked": "2026-09-09",
- "count": 252,
+ "count": 348,
  "ids": {
   "tor-nhl": {
    "group": "teams",
@@ -1269,6 +1269,486 @@
    "group": "teams",
    "comp": "SERIEA",
    "feedName": "Venezia"
+  },
+  "nt-can": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Canada"
+  },
+  "nt-usa": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "United States"
+  },
+  "nt-mex": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Mexico"
+  },
+  "nt-eng": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "England"
+  },
+  "nt-fra": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "France"
+  },
+  "nt-ger": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Germany"
+  },
+  "nt-esp": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Spain"
+  },
+  "nt-ita": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Italy"
+  },
+  "nt-por": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Portugal"
+  },
+  "nt-ned": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Netherlands"
+  },
+  "nt-arg": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Argentina"
+  },
+  "nt-bra": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Brazil"
+  },
+  "nt-alb": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Albania"
+  },
+  "nt-and": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Andorra"
+  },
+  "nt-arm": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Armenia"
+  },
+  "nt-aut": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Austria"
+  },
+  "nt-aze": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Azerbaijan"
+  },
+  "nt-blr": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Belarus"
+  },
+  "nt-bel": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Belgium"
+  },
+  "nt-bih": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Bosnia-Herzegovina"
+  },
+  "nt-bul": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Bulgaria"
+  },
+  "nt-cro": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Croatia"
+  },
+  "nt-cyp": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Cyprus"
+  },
+  "nt-cze": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Czechia"
+  },
+  "nt-den": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Denmark"
+  },
+  "nt-est": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Estonia"
+  },
+  "nt-fro": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Faroe Islands"
+  },
+  "nt-fin": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Finland"
+  },
+  "nt-geo": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Georgia"
+  },
+  "nt-gib": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Gibraltar"
+  },
+  "nt-gre": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Greece"
+  },
+  "nt-hun": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Hungary"
+  },
+  "nt-isl": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Iceland"
+  },
+  "nt-isr": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Israel"
+  },
+  "nt-kaz": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Kazakhstan"
+  },
+  "nt-kos": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Kosovo"
+  },
+  "nt-lva": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Latvia"
+  },
+  "nt-lie": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Liechtenstein"
+  },
+  "nt-ltu": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Lithuania"
+  },
+  "nt-lux": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Luxembourg"
+  },
+  "nt-mlt": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Malta"
+  },
+  "nt-mda": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Moldova"
+  },
+  "nt-mne": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Montenegro"
+  },
+  "nt-mkd": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "North Macedonia"
+  },
+  "nt-nir": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Northern Ireland"
+  },
+  "nt-nor": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Norway"
+  },
+  "nt-pol": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Poland"
+  },
+  "nt-irl": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Republic of Ireland"
+  },
+  "nt-rou": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Romania"
+  },
+  "nt-smr": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "San Marino"
+  },
+  "nt-sco": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Scotland"
+  },
+  "nt-srb": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Serbia"
+  },
+  "nt-svk": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Slovakia"
+  },
+  "nt-svn": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Slovenia"
+  },
+  "nt-swe": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Sweden"
+  },
+  "nt-sui": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Switzerland"
+  },
+  "nt-tur": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Türkiye"
+  },
+  "nt-ukr": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Ukraine"
+  },
+  "nt-wal": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Wales"
+  },
+  "nt-aia": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Anguilla"
+  },
+  "nt-atg": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Antigua and Barbuda"
+  },
+  "nt-aru": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Aruba"
+  },
+  "nt-bah": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Bahamas"
+  },
+  "nt-brb": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Barbados"
+  },
+  "nt-blz": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Belize"
+  },
+  "nt-ber": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Bermuda"
+  },
+  "nt-boe": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Bonaire"
+  },
+  "nt-bvi": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "British Virgin Islands"
+  },
+  "nt-cay": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Cayman Islands"
+  },
+  "nt-crc": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Costa Rica"
+  },
+  "nt-cub": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Cuba"
+  },
+  "nt-cuw": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Curaçao"
+  },
+  "nt-dma": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Dominica"
+  },
+  "nt-dom": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Dominican Republic"
+  },
+  "nt-slv": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "El Salvador"
+  },
+  "nt-guf": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "French Guiana"
+  },
+  "nt-grn": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Grenada"
+  },
+  "nt-gdl": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Guadeloupe"
+  },
+  "nt-gua": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Guatemala"
+  },
+  "nt-guy": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Guyana"
+  },
+  "nt-hai": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Haiti"
+  },
+  "nt-hon": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Honduras"
+  },
+  "nt-jam": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Jamaica"
+  },
+  "nt-mtq": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Martinique"
+  },
+  "nt-msr": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Montserrat"
+  },
+  "nt-nca": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Nicaragua"
+  },
+  "nt-pur": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Puerto Rico"
+  },
+  "nt-sma": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Sint Maarten"
+  },
+  "nt-skn": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "St. Kitts and Nevis"
+  },
+  "nt-lca": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "St. Lucia"
+  },
+  "nt-smn": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "St. Martin"
+  },
+  "nt-vin": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "St. Vincent and the Grenadines"
+  },
+  "nt-sur": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Suriname"
+  },
+  "nt-tri": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Trinidad and Tobago"
+  },
+  "nt-tca": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "Turks and Caicos Islands"
+  },
+  "nt-usvi": {
+   "group": "teams",
+   "comp": "INTF",
+   "feedName": "US Virgin Islands"
   }
  }
 }

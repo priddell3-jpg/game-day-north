@@ -39,6 +39,7 @@ import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
 import { TABLE_SOURCES, tableProblem } from "./lib/records.mjs";
 import { MAX_LIMIT, planRanges, planDays, splitRange, dateKey, compFloorProblems, describeFloor,
          nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
+import { disputeKickoffs, unknownSides } from "./lib/nations.mjs";
 import { normalizeTennis, normalizeRankings, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
          HORIZON_DAYS as TENNIS_FORWARD_DAYS } from "./lib/tennis.mjs";
 
@@ -53,7 +54,14 @@ const PATHS = {
   NHL:"hockey/nhl", NBA:"basketball/nba", NFL:"football/nfl", MLB:"baseball/mlb",
   MLS:"soccer/usa.1", EPL:"soccer/eng.1", UCL:"soccer/uefa.champions",
   EFL:"soccer/eng.league_cup", FAC:"soccer/eng.fa",
-  LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1"
+  LALIGA:"soccer/esp.1", SERIEA:"soccer/ita.1", BUNDES:"soccer/ger.1", LIGUE1:"soccer/fra.1",
+  /* Men's national teams. Slugs read from the live feeds on 2026-09-29;
+     the Concacaf one is concacaf.nations.league — concacaf.nations
+     answers HTTP 400. World Cup qualifying (fifa.worldq.uefa,
+     fifa.worldq.concacaf and the rest) starts in 2027 and is left out
+     until it has fixtures: each feed would cost a request a day to be
+     told there is nothing. */
+  INTF:"soccer/fifa.friendly", UNL:"soccer/uefa.nations", CNL:"soccer/concacaf.nations.league"
 };
 const NA = new Set(["NHL","NBA","NFL","MLB"]);
 const DAY = 86400000;
@@ -172,6 +180,11 @@ const planByComp = {};
    Preseason counts: an exhibition is not carried onto the board, but it
    is still evidence of which season is under way. */
 const seasonYears = new Map();
+/* Sides in a Nations League feed that resolved to no nation, by
+   competition. The manifest holds each of those competitions' whole
+   entry list, so a name here is one that drifted. See
+   scripts/lib/nations.mjs. */
+const unknownNations = {};
 const noteSeason = (comp, ev) => {
   const y = Number(((ev && ev.season) || {}).year);
   if(!Number.isFinite(y)) return;
@@ -206,6 +219,10 @@ async function scoreboardDays(comp, path, fromMs, toMs, consume){
 async function scoreboardRange(comp, path, fromMs, toMs, out){
   let asked = 0, dayRequests = 0, refused = 0;
   const consume = events => {
+    for(const name of unknownSides(events, comp, idFor)){
+      if(!unknownNations[comp]) unknownNations[comp] = new Set();
+      unknownNations[comp].add(name);
+    }
     for(const ev of events){
       noteSeason(comp, ev);
       /* Preseason is dropped deliberately, and the reasoning lives with
@@ -535,6 +552,27 @@ if(stale.length){
 }
 
 fixtures.sort((a,b)=>a.start-b.start);
+
+/* A kickoff a broadcaster has published and the feed states differently.
+   The feed's time stays as the one shown; the listing's is kept beside
+   it and the source named, so the page can say the two disagree instead
+   of this build choosing between them in silence. */
+const disputedKickoffs = disputeKickoffs(fixtures);
+if(disputedKickoffs.length){
+  console.warn("  ! " + disputedKickoffs.length + " kickoff(s) stated differently by ESPN and a "
+    + "published listing; ESPN's reading is shown and the listing's is kept as altStart:");
+  disputedKickoffs.forEach(f => console.warn("     " + f.away.name + " at " + f.home.name
+    + "  ESPN " + new Date(f.start).toISOString() + " vs " + f.altSource + " "
+    + new Date(f.altStart).toISOString()));
+}
+const unknownNationNames = Object.entries(unknownNations)
+  .flatMap(([comp, names]) => [...names].sort().map(n => n + " (" + comp + ")"));
+if(unknownNationNames.length){
+  console.warn("\n  !! " + unknownNationNames.length + " side(s) in a Nations League feed matched no "
+    + "nation — a name has drifted; add it to that nation's aliases in data/teams.json:");
+  unknownNationNames.forEach(n => console.warn("     " + n));
+  console.warn("");
+}
 
 /* The previously committed file. Three things read it: the outage guard
    below, the no-change guard, and the cycling block, which keeps a
@@ -1262,7 +1300,15 @@ const out = {
                score the scoreboard happened to have rather than the one
                that settled them. */
             summaryCapped,
-            unmatchedTeams: unmatched, cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0),
+            unmatchedTeams: unmatched,
+            /* The other side of that question, for the competitions whose
+               whole entry list the manifest holds: names the feed used
+               that matched no nation. */
+            unknownNations: unknownNationNames,
+            /* Kickoffs where ESPN and a published listing disagree. The
+               fixture itself carries the other reading as altStart. */
+            disputedKickoffs: disputedKickoffs.length,
+            cyclingPodiums: cyclingOut.reduce((a,r)=>a+podiumCount(r),0),
             rugby: rugbyOut.length, rugbyByComp: rugbyOut.reduce((a,f)=>{a[f.comp]=(a[f.comp]||0)+1;return a;},{}),
             /* Named in the file so the page can say a competition is
                unavailable instead of implying the feed is complete. */
