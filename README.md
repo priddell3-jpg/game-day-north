@@ -677,7 +677,7 @@ python3 -m http.server 8000
 
 ### iOS
 
-The iOS app uses Capacitor 8 and requires Node 22 or newer plus Xcode 26 or newer. Its application shell is always the locally bundled `dist/` build; `capacitor.config.json` deliberately has no `server.url`.
+The iOS app uses Capacitor 8 and requires Node 22 or newer plus Xcode 26 or newer. Its application shell is always the locally bundled `dist/` build; `capacitor.config.json` deliberately has no `server.url`. It also sets `ios.zoomEnabled`, because Capacitor's default is to disable zoom by cutting a pinch off after it has begun, which left the page stuck slightly enlarged until a relaunch; with it on, the app pinch-zooms like the website, and pinching back out returns to 1:1.
 
 ```bash
 npm ci

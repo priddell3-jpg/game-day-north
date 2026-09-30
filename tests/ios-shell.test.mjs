@@ -17,6 +17,22 @@ test("the native shell bundles dist and never points its WebView at a server", (
   assert.match(IOS_BUILD, /cp\(join\(root, "fonts"\)/);
 });
 
+test("the native shell keeps pinch zoom working, and working all the way back to 1:1", () => {
+  /* Capacitor's default is zoomEnabled:false, which it implements by
+     disabling the scroll view's pinch recogniser in
+     scrollViewWillBeginZooming — after the pinch has begun. The gesture
+     is cut off at whatever scale its first update reached, the page
+     stays there, and the recogniser is never re-enabled, so no later
+     pinch can bring it back; only a relaunch does. With zoom enabled
+     the WebView clamps a pinch-out at 1:1 exactly as Safari does. The
+     viewport tag is shared with the website and is not where the app
+     turns zoom off — tests/touch-inputs.test.mjs holds that line. */
+  const config = JSON.parse(CONFIG);
+  assert.equal(config.ios && config.ios.zoomEnabled, true);
+  assert.doesNotMatch(IOS_BUILD, /viewport|user-scalable|maximum-scale/,
+    "the app build ships the same viewport tag as the website");
+});
+
 test("the Swift package points at plain node_modules paths, never a pnpm store", () => {
   /* `cap sync` writes the real path of each plugin into Package.swift. A
      pnpm install resolves to node_modules/.pnpm/<hashed name>/..., which
