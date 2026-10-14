@@ -369,7 +369,7 @@ const ROW_PREAMBLE = `
 const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
-  "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag",
+  "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag","seriesTag",
   "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope",
   "RESULTS_DAYS","spoiledTeams","gameRow"];
 

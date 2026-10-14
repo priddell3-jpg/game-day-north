@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-whHP9dTVzLxRdAADc8liF/4IhLnqcDZfFh+6wR5FvsA='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3XX1DhbnCBuVtfaJCsqWsyBJEG6K6X4vPGs+QOgBVPo='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -6168,6 +6168,9 @@ function mergeReal(built){
          and a refresh that let them win blanked the location on a row
          that had it a second earlier. */
       if(!g.venue && prev.venue) g.venue = prev.venue;
+      /* The same for a series standing: a copy that states none is not
+         saying there is no series. */
+      if(!g.series && prev.series) g.series = prev.series;
       /* Nor may a copy that knows of no dispute erase one: only the
          committed file compares a kickoff with a published listing, and
          a live read of the same fixture at the same time is not news
@@ -6462,6 +6465,28 @@ function venueOf(cp){
   return Object.keys(out).length ? out : null;
 }
 
+/* Where a game stands in a best-of series, as the source words it.
+   Mirrors seriesOf in scripts/fetch-data.mjs, for the reason venueOf is
+   mirrored: the committed file and the direct fetch must describe a
+   fixture the same way. Only an entry typed "playoff" counts — the
+   summary endpoint also states "current" and "season" entries on a
+   regular-season game, and those are not standings. MLS states the
+   wording in the event note rather than on the series itself. */
+function seriesOf(cp){
+  const raw = cp && cp.series;
+  const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  const s = list.find(x => x && (x.type === "playoff"
+    || (x.type == null && /playoff/i.test(String(x.title || "")))));
+  if(!s) return null;
+  let text = typeof s.summary === "string" ? s.summary.trim() : "";
+  if(!text){
+    const note = (Array.isArray(cp.notes) ? cp.notes : []).find(n =>
+      n && typeof n.headline === "string" && /series/i.test(n.headline));
+    text = note ? note.headline.trim() : "";
+  }
+  return text ? text.slice(0, 80) : null;
+}
+
 function parseEvent(ev, comp){
   const cp = (ev.competitions && ev.competitions[0]) || ev;
   const cs = cp.competitors || [];
@@ -6494,10 +6519,13 @@ function parseEvent(ev, comp){
   const sh = num(H.score && H.score.displayValue!=null ? H.score.displayValue : H.score);
   const sa = num(A.score && A.score.displayValue!=null ? A.score.displayValue : A.score);
   const label = ty.shortDetail || ty.description || (status==="final"?"Final":"");
+  const series = seriesOf(cp);
   return {
     eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, home, away, start, moved:null, real:true, espn:true, listed:true,
     venue: venueOf(cp),
+    /* Present only on a game in a best-of series; see seriesOf. */
+    ...(series ? {series} : {}),
     localDow:new Date(start).getUTCDay(), slotHour:new Date(start).getUTCHours(), stage:"",
     result: (status==="scheduled" || sh===null || sa===null)
       ? {status, label:label||"", score:null}
@@ -6653,6 +6681,8 @@ async function loadStatic(){
     if(!followsTeam(home) && !followsTeam(away)) return;
     built.push({eid:f.eid || null, comp:f.comp, home, away, start:f.start, moved:null,
       real:true, espn:true, listed:true, fromFeed:true, venue:f.venue || null,
+      /* Where the game stands in its series, on a playoff game only. */
+      ...(f.series ? {series:f.series} : {}),
       /* A kickoff a published listing states differently. The build
          names the source; the row says both. */
       ...(f.altStart != null ? {altStart:f.altStart, altSource:f.altSource || null} : {}),
@@ -7125,6 +7155,9 @@ function applyScored(match, parsed){
   /* Same rule on the scoreboard top-up: fill a venue the fixture lacks,
      never replace one it has with nothing. */
   if(parsed.venue && !match.venue) match.venue = parsed.venue;
+  /* A series standing is the one thing here that is newer for being
+     live — it moves when this game does — so a stated one replaces. */
+  if(parsed.series) match.series = parsed.series;
   match.listed = true;
   return true;
 }
@@ -8493,6 +8526,23 @@ function venueTag(g){
   return '<span title="'+esc(full)+'">in '+esc(v.city)+'</span>';
 }
 
+/* Where the game stands in its best-of series — "MIL leads series 2-0"
+   — printed as the source words it, on the meta line under the matchup
+   beside the location, and nothing at all when the fixture carries no
+   series: the whole regular season. The wording comes from an external
+   feed and is escaped here like everything else on the row.
+
+   It is held back on the same terms as a team's record: a standing
+   counts the games already played, so on a board hiding a finished
+   game it would announce that game's result. spoiledTeams decides which
+   teams those are, once per render. */
+function seriesTag(g){
+  const s = g && g.series;
+  if(typeof s !== "string" || !s.trim()) return "";
+  if(SPOILED.has(g.home && g.home.id) || SPOILED.has(g.away && g.away.id)) return "";
+  return '<span class="g-series">'+esc(s)+'</span>';
+}
+
 /* A tennis match is two people, not two clubs, and its score is a list
    of sets rather than a pair of numbers. Rendering it through the team
    row would have meant calling one player "home" and flattening 6-4 2-6
@@ -8755,6 +8805,7 @@ function gameRow(g, now){
       ?'<span class="pill confirmed" title="Published fixture more than five days away">Listed</span>':"")
     + (g.stage?'<span>'+esc(g.stage)+'</span>':'')
     + venueTag(g)
+    + seriesTag(g)
     /* Said on the fixture itself, not only in a note at the foot of the
        page: a start time from an old file is the thing most likely to
        have moved since. */

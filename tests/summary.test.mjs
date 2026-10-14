@@ -168,7 +168,7 @@ const TEAMS = {
 const allTeams = Object.values(TEAMS);`;
 
 const page = loadFromPage(
-  ["norm", "venueOf", "espnTeamObj", "parseEvent", "parseSummary"], PREAMBLE);
+  ["norm", "venueOf", "seriesOf", "espnTeamObj", "parseEvent", "parseSummary"], PREAMBLE);
 
 test("the page reads the same final out of the same response", () => {
   const g = page.parseSummary(FIX, "MLB");
