@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GMygMZZ9Q01Om0b/JTOyYkF+MYgQ+FN41V/l0hIVP1s='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-whHP9dTVzLxRdAADc8liF/4IhLnqcDZfFh+6wR5FvsA='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -5085,6 +5085,7 @@ const SRC = {
   tsnreg:  {label:"TSN/RDS regional extension", url:"https://www.tsn.ca/nhl/article/montreal-canadiens-tsn-and-rds-announce-landmark-long-term-rights-extension/"},
   nflca:   {label:"NFL.com — ways to watch in Canada", url:"https://www.nfl.com/international/ways-to-watch/canada"},
   wikica:  {label:"Sports broadcasting contracts in Canada", url:"https://en.wikipedia.org/wiki/Sports_broadcasting_contracts_in_Canada"},
+  mlslin:  {label:"MLS linear TV deals (TSN/RDS)", url:"https://www.mlssoccer.com/news/major-league-soccer-fox-sports-televisaunivision-tsn-rds-announce-multi-year-lin"},
   raptors: {label:"Rogers–MLSE: TSN/Sportsnet split holds", url:"https://www.si.com/nba/raptors/changes-for-toronto-raptors-fans-after-rogers-purchase-of-mlse"},
   jays:    {label:"Sportsnet+ carries the MLB postseason", url:"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},
   flo:     {label:"Escape Collective — how to watch 2026", url:"https://escapecollective.com/how-to-watch-pro-bike-racing-in-2026/"},
@@ -5220,7 +5221,7 @@ const RIGHTS = [
   {comp:"EPL", carriers:[st("Fubo Canada")], confidence:"confirmed",
    note:"Exclusive — every match, through 2027-28. Note: LiveSoccerTV also lists DAZN Canada for EPL fixtures; Fubo's own release says exclusive, so Fubo is used here", src:SRC.fubo, checked:CHECKED},
   {comp:"UCL", carriers:[st("DAZN Canada")], confidence:"confirmed",
-   note:"Exclusive UEFA club competitions", src:SRC.dazn, checked:CHECKED},
+   note:"Exclusive UEFA club competitions. DAZN's cycle is 2024-25 to 2026-27, so this is the final season — Paramount+ is expected to take over in Canada from 2027-28 (trade press, no UC3 or Paramount release for Canada found).", src:SRC.dazn, checked:"2026-10-14"},
   {comp:"EFL", carriers:[st("DAZN Canada")], confidence:"confirmed",
    note:"League Cup, 2024–2028", src:SRC.daznlist, checked:CHECKED},
   {comp:"FAC", carriers:[], confidence:"unknown",
@@ -5231,8 +5232,10 @@ const RIGHTS = [
   {comp:"LIGUE1", carriers:[], confidence:"unknown", note:"Canadian carrier not confirmed", src:SRC.none, checked:CHECKED},
 
   /* ---------------- MLS ---------------- */
-  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)), carriers:[st("MLS Season Pass", "confirmed"), tv("TSN", "expected")], confidence:"expected",
-   note:"Apple carries every match; TSN/RDS simulcast at least one Canadian club match a week — that simulcast window runs to 2026", src:SRC.wikica, checked:CHECKED},
+  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)),
+   carriers:[st("MLS Season Pass", "confirmed"), tv("TSN", "expected")],
+   confidence:"expected",
+   note:"Apple carries every match; TSN/RDS simulcast at least one Canadian club match a week — that 2023-2026 window has not been renewed as of 2026-10-14, so treat it as lapsing after this season.", src:SRC.mlslin, checked:"2026-10-14"},
   {comp:"MLS", carriers:[st("MLS Season Pass")], confidence:"confirmed",
    note:"Apple is global rightsholder, every match, through 2032", src:SRC.wikica, checked:CHECKED},
 
