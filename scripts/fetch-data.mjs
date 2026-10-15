@@ -313,6 +313,41 @@ function venueOf(cp){
   return Object.keys(out).length ? out : null;
 }
 
+/* Where a game stands in a best-of series, as the source words it:
+   "MIL leads series 2-0", "Series tied 1-1", "TB wins series 4-1".
+
+   Read off competitions[0].series, verified against the live feeds on
+   14 Oct 2026. The scoreboard states one object there, typed "playoff",
+   with a pre-formatted summary and per-side win counts; the summary
+   endpoint states an ARRAY, and for a regular-season game that array
+   holds entries typed "current" and "season" — the head-to-head set and
+   the season series, "TB wins series 3-0" — which is not a standing and
+   must not reach the board. So only an entry typed "playoff" counts,
+   and the regular season, which the scoreboard gives no series at all,
+   carries no field whatever.
+
+   MLS is the odd one out: its scoreboard series object has no type and
+   no summary, only the title "Playoff Series", and the wording lives in
+   the event note ("Series tied 1-1", "PHI win series 2-0"). That note is
+   taken only when the series itself says nothing and the note talks of
+   a series — on MLB the note is "NLCS - Game 3", which is not a
+   standing. The wording is kept verbatim and only trimmed; it is a
+   string from outside and the page escapes it on output. */
+function seriesOf(cp){
+  const raw = cp && cp.series;
+  const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  const s = list.find(x => x && (x.type === "playoff"
+    || (x.type == null && /playoff/i.test(String(x.title || "")))));
+  if(!s) return null;
+  let text = typeof s.summary === "string" ? s.summary.trim() : "";
+  if(!text){
+    const note = (Array.isArray(cp.notes) ? cp.notes : []).find(n =>
+      n && typeof n.headline === "string" && /series/i.test(n.headline));
+    text = note ? note.headline.trim() : "";
+  }
+  return text ? text.slice(0, 80) : null;
+}
+
 function parseEvent(ev, comp){
   const cp = (ev.competitions && ev.competitions[0]) || ev;
   const cs = cp.competitors || [];
@@ -343,6 +378,7 @@ function parseEvent(ev, comp){
   const sh = num(H.score && H.score.displayValue != null ? H.score.displayValue : H.score);
   const sa = num(A.score && A.score.displayValue != null ? A.score.displayValue : A.score);
   const venue = venueOf(cp);
+  const series = seriesOf(cp);
   return {
     /* The source's own event id. Team names drift, start times move, and
        a composite key built from them has to guess whether two records
@@ -351,6 +387,8 @@ function parseEvent(ev, comp){
     eid: (ev.id != null ? String(ev.id) : (cp.id != null ? String(cp.id) : null)),
     comp, start, home: side(H), away: side(A), status,
     ...(venue ? {venue} : {}),
+    /* Present only on a game in a best-of series; see seriesOf. */
+    ...(series ? {series} : {}),
     label: ty.shortDetail || ty.description || (status==="final" ? "Final" : ""),
     score: (status === "scheduled" || sh === null || sa === null) ? null : [sh, sa]
   };
@@ -403,11 +441,16 @@ function applySummary(f, s){
   if(!straight && !reversed) return false;
   if(f.status === "final" && f.score && !s.score) return false;
   const sc = s.score && reversed ? [s.score[1], s.score[0]] : s.score;
-  if(f.status === s.status && f.label === s.label &&
+  /* A series standing moves when the game it is on does, so the summary
+     is the fresher reading and is taken whenever it states one. A copy
+     stating none says nothing about the series, not that there is none. */
+  const seriesMoved = !!s.series && s.series !== f.series;
+  if(f.status === s.status && f.label === s.label && !seriesMoved &&
      JSON.stringify(f.score) === JSON.stringify(sc)) return false;
   f.status = s.status;
   f.label = s.label;
   f.score = sc;
+  if(s.series) f.series = s.series;
   return true;
 }
 
@@ -438,9 +481,11 @@ function merge(held, f){
     /* The copy with a score wins, but must not lose a venue it lacks:
        two readings of one fixture do not always both state one. */
     if(!f.venue && held.venue) f.venue = held.venue;
+    if(!f.series && held.series) f.series = held.series;
     return f;
   }
   if(!held.venue && f.venue) held.venue = f.venue;
+  if(!held.series && f.series) held.series = f.series;
   return held;
 }
 function add(f){

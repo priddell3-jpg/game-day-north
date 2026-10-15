@@ -282,7 +282,7 @@ const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf",
-  "venueTag","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope","gameRow"];
+  "venueTag","seriesTag","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope","gameRow"];
 const page = loadFromPage(ROW_NAMES, ROW_PREAMBLE);
 
 const NOW = Date.parse("2026-09-29T18:00:00Z");
