@@ -465,9 +465,6 @@ test("a competition played in windows may fall to nothing without stopping the b
     "nor is a matchday ageing out of the window");
   assert.deepEqual(compFloorProblems(before, { UNL: 54, INTF: 23, CNL: 74 }).map(p => p.comp), ["EPL"],
     "and a league that vanishes is still caught");
-  const peaks = { UNL: 156, EPL: 100 };
-  assert.deepEqual(compFloorProblems({}, {}, { vanishBaseline: peaks }).map(p => p.comp), ["EPL"],
-    "a remembered peak does not guard a windowed competition either");
 });
 
 /* ============================ the picker ============================ */

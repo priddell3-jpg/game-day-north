@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import {
   MAX_LIMIT, SAFE_PER_REQUEST, EXPECTED_PER_DAY, chunkDaysFor, planRanges, splitRange, dateKey,
   FLOOR_MIN, FLOOR_FRACTION, compFloorProblems, describeFloor,
-  PEAK_TTL_DAYS, nextPeaks, vanishBaseline,
   isCarriedSeason, CARRIED_SEASON_SLUGS, EXCLUDED_SEASON_SLUGS
 } from "../scripts/lib/fetch-plan.mjs";
 
@@ -174,74 +173,34 @@ test("the summary cap is sized for the roster it will meet", () => {
   assert.match(BUILD, /summaryCapped/, "and the shortfall is recorded in the file, not only warned");
 });
 
-/* ============ the season-wide hole in the floor ============ */
+/* ============ a season that ran out is not an outage ============ */
 
-const iso = ms => new Date(ms).toISOString();
-const NOW = Date.parse("2026-09-09T12:00:00Z");
-const daysAgo = n => NOW - n*DAY;
-
-test("a competition missing from the previous run is still guarded", () => {
-  /* The failure worked through: baseball decays to nothing over the
-     winter, so by March the previous run holds no MLB. Reading only the
-     previous run, a failed first request in March ships a whole season
-     opening with no baseball and nothing fires. */
-  const previous = { NHL: 600, NBA: 620 };                 // March: no MLB at all
-  const peaks = { MLB: { n: 400, at: iso(daysAgo(20)) }, NHL: { n: 613, at: iso(daysAgo(2)) } };
-  assert.deepEqual(compFloorProblems(previous, { NHL: 600, NBA: 620 }), [],
-    "reading only the previous run, nothing fires");
-
-  const withPeak = compFloorProblems(previous, { NHL: 600, NBA: 620 },
-    { vanishBaseline: vanishBaseline(previous, peaks, NOW) });
-  assert.equal(withPeak.length, 1);
-  assert.equal(withPeak[0].comp, "MLB");
-  assert.equal(withPeak[0].why, "vanished");
+test("a competition that ran down below the floor may then empty", () => {
+  /* 6 to 15 November 2026: the World Series ended on 28 October,
+     baseball held one fixture in the window on 5 November and none on
+     the 6th, and the build refused to write for ten days — with every
+     other sport's scores — because a 45-day high-water mark of 20 said
+     the competition had vanished (issue #60). The previous run is the
+     reference, and one fixture is below anything the floor judges. */
+  assert.deepEqual(compFloorProblems({ MLB: 1, NHL: 587 }, { NHL: 590 }), []);
+  const cliff = compFloorProblems({ MLB: 20, NHL: 587 }, { NHL: 590 });
+  assert.deepEqual(cliff.map(p => p.why), ["vanished"],
+    "twenty to nothing between two runs is still a cliff");
+  assert.match(describeFloor(cliff), /MLB: 20 fixtures last run, 0 now/);
 });
 
-test("a peak lapses, so a season that really ended stops guarding", () => {
-  const peaks = { MLB: { n: 400, at: iso(daysAgo(PEAK_TTL_DAYS + 5)) } };
-  assert.deepEqual(compFloorProblems({}, {}, { vanishBaseline: vanishBaseline({}, peaks, NOW) }), [],
-    "a peak older than its lifetime guards nothing");
-  const fresh = { MLB: { n: 400, at: iso(daysAgo(PEAK_TTL_DAYS - 5)) } };
-  assert.equal(compFloorProblems({}, {}, { vanishBaseline: vanishBaseline({}, fresh, NOW) }).length, 1);
-  /* An unreadable timestamp is not treated as fresh. */
-  assert.deepEqual(vanishBaseline({}, { MLB: { n: 400, at: "whenever" } }, NOW), {});
+test("a competition absent from the previous run is never a problem", () => {
+  /* Nothing there to lose: a wrong empty answer leaves the file as it
+     was, and the next good answer fills it back in. */
+  assert.deepEqual(compFloorProblems({ NHL: 600 }, { NHL: 600 }), []);
+  assert.deepEqual(compFloorProblems({ NHL: 600 }, { NHL: 600, MLB: 0 }), []);
+  assert.deepEqual(compFloorProblems({}, { MLB: 400 }), [], "a season opening is not a drop");
 });
 
-test("a season running down is judged against the previous run, not the peak", () => {
-  /* Collapsing is the one check that must not see the peak: a league
-     shedding fixtures as its season ends would otherwise be called an
-     outage every autumn. */
-  const peaks = { MLB: { n: 400, at: iso(daysAgo(3)) } };
-  const base = { vanishBaseline: vanishBaseline({ MLB: 120 }, peaks, NOW) };
-  assert.deepEqual(compFloorProblems({ MLB: 120 }, { MLB: 110 }, base), [],
-    "110 is nowhere near the peak of 400 and that is fine");
-  assert.equal(compFloorProblems({ MLB: 120 }, { MLB: 30 }, base).length, 1,
-    "a cliff between two runs is still a cliff");
-});
-
-test("the peak is set on a new high and otherwise keeps its date", () => {
-  const first = nextPeaks({}, { NHL: 400 }, daysAgo(10));
-  assert.equal(first.NHL.n, 400);
-  assert.equal(first.NHL.at, iso(daysAgo(10)));
-
-  const higher = nextPeaks(first, { NHL: 613 }, NOW);
-  assert.equal(higher.NHL.n, 613);
-  assert.equal(higher.NHL.at, iso(NOW), "a new high refreshes the date");
-
-  const lower = nextPeaks(higher, { NHL: 200 }, NOW + DAY);
-  assert.equal(lower.NHL.n, 613);
-  assert.equal(lower.NHL.at, iso(NOW), "a decline must NOT refresh it, or it never lapses");
-
-  const absent = nextPeaks(higher, { NBA: 10 }, NOW + DAY);
-  assert.equal(absent.NHL.n, 613, "a competition with no fixtures keeps the peak it had");
-  assert.equal(absent.NBA.n, 10);
-  assert.ok(!("n" in (nextPeaks({}, { FAC: 0 }, NOW).FAC || {})), "zero never sets a peak");
-});
-
-test("the build carries the peaks in the file it writes", () => {
-  assert.match(BUILD, /peakByComp: peaks/, "recorded, or the next run has nothing to read");
-  assert.match(BUILD, /nextPeaks\(prevCounts\.peakByComp, byComp, now\)/);
-  assert.match(BUILD, /vanishBaseline\(prevCounts\.byComp, prevCounts\.peakByComp, now\)/);
+test("the build judges against the previous run alone and records no peak", () => {
+  assert.match(BUILD, /compFloorProblems\(prevCounts\.byComp \|\| null, byComp\)/);
+  assert.doesNotMatch(BUILD, /peakByComp|vanishBaseline|nextPeaks/,
+    "a high-water mark is what refused the file for ten days in November 2026");
 });
 
 /* ============ a failed request is not an empty competition ============ */
