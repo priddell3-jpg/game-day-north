@@ -104,9 +104,10 @@ export function splitRange(fromMs, toMs){
 
    `counts.byComp` is already written on every run, so the previous file
    states what each competition looked like. A competition that had a
-   real number of fixtures and now has none did not have a quiet week —
-   its request failed, and `get()` answers null on failure rather than
-   throwing, so nothing else would notice. */
+   real number of fixtures and now has none did not have a quiet week.
+   A request that fails outright has been fatal in scoreboardRange since
+   2026-09-09; this floor is for the answer that arrives, says 200, and
+   carries nothing. */
 
 /* Below this a competition is too small to judge: a cup between rounds
    legitimately empties out. */
@@ -115,50 +116,27 @@ export const FLOOR_MIN = 12;
    season ending. Season ends are gradual; a failed request is a cliff. */
 export const FLOOR_FRACTION = 0.4;
 
-/* How long a competition's high-water mark keeps guarding it.
+/* The reference is the previous run, and nothing older.
 
-   Reading only the previous run leaves a hole a whole season wide.
-   Baseball decays to nothing over the winter, so by March the previous
-   run records no MLB at all — and a competition absent from the previous
-   run is never checked. If the first March request then failed, a whole
-   season's opening would ship missing and nothing would say so.
+   From 2026-09-09 to 2026-11-15 a competition was also measured against
+   its high-water mark of the last 45 days, so that one absent from the
+   previous run could still be judged. That reference had one reachable
+   effect, and it was the wrong one: a competition whose schedule simply
+   ran out was refused for as long as its peak stayed fresh. Baseball's
+   postseason held 20 fixtures in the window on 18 October 2026, one on
+   5 November and none on the 6th — the World Series had ended on 28
+   October — and the build refused to write for ten days, taking every
+   other sport's scores with it (issue #60). The 45-day lifetime assumed
+   a count that decays over the whole 83-day window, which a short,
+   sparse postseason does not do.
 
-   So the peak is remembered. Forty-five days works because the fixture
-   window itself is eighty-three: a season that genuinely ends decays to
-   zero over the length of that window, which is far longer than the
-   peak stays fresh, so a real ending lapses out of the guard while an
-   overnight disappearance does not. */
-export const PEAK_TTL_DAYS = 45;
-
-/* The high-water marks to carry into the next run. A competition sets a
-   new peak when it beats its old one; otherwise its previous peak and,
-   importantly, its previous timestamp are kept, so a season in decline
-   stops refreshing and eventually lapses. */
-export function nextPeaks(previousPeaks, currentByComp, nowMs){
-  const at = new Date(nowMs).toISOString();
-  const out = {};
-  for(const [comp, p] of Object.entries(previousPeaks || {}))
-    if(p && Number.isFinite(p.n)) out[comp] = { n: p.n, at: p.at };
-  for(const [comp, n] of Object.entries(currentByComp || {})){
-    if(!(n > 0)) continue;
-    if(!out[comp] || n >= out[comp].n) out[comp] = { n, at };
-  }
-  return out;
-}
-
-/* What a competition has to be measured against before it may read zero:
-   whatever the previous run held, or a peak still inside its lifetime,
-   whichever is larger. */
-export function vanishBaseline(previousByComp, peaks, nowMs, ttlDays = PEAK_TTL_DAYS){
-  const out = Object.assign({}, previousByComp || {});
-  for(const [comp, p] of Object.entries(peaks || {})){
-    if(!p || !Number.isFinite(p.n)) continue;
-    const age = nowMs - Date.parse(p.at);
-    if(!Number.isFinite(age) || age > ttlDays * 86400000) continue;   // lapsed: a season really ended
-    if(!(out[comp] >= p.n)) out[comp] = p.n;
-  }
-  return out;
-}
+   What the peak was meant to cover does not need it. A competition
+   absent from the previous run has nothing left to lose: a request that
+   wrongly answers "nothing" for it leaves the file exactly as it was,
+   and the next run that answers properly fills it back in. The only
+   loss left is a competition holding fewer than FLOOR_MIN fixtures and
+   answering nothing for one run, which the floor already accepts as too
+   small to judge. */
 
 /* Competitions played in international windows, which the floor must
    not judge.
@@ -182,31 +160,27 @@ export function vanishBaseline(previousByComp, peaks, nowMs, ttlDays = PEAK_TTL_
    year. */
 export const WINDOWED_COMPS = ["INTF", "UNL", "CNL"];
 
-/* Two different questions, deliberately measured against two different
-   things.
+/* Two readings of one drop, both against the previous run.
 
-   Vanishing is judged against the peak, because a competition that had
-   fixtures recently and has exactly none now is the failure this guard
-   exists for, whether or not the previous run happened to hold any.
-
-   Collapsing is judged only against the previous run, because a season
-   running down loses fixtures steadily and comparing that to a peak set
-   months earlier would call every autumn an outage. */
+   Vanishing is a competition that held at least FLOOR_MIN fixtures last
+   run and holds none now. Collapsing is one that lost more than the
+   fraction between two runs without emptying. Neither looks further
+   back than the last run: a season running down loses fixtures
+   steadily, and any older reference would call every autumn an outage. */
 export function compFloorProblems(previousByComp, currentByComp, opts = {}){
   const min = opts.min == null ? FLOOR_MIN : opts.min;
   const fraction = opts.fraction == null ? FLOOR_FRACTION : opts.fraction;
   const now = currentByComp || {};
   const prev = previousByComp || {};
-  const vanish = opts.vanishBaseline || prev;
   const windowed = opts.windowed || WINDOWED_COMPS;
   const out = [];
-  for(const comp of new Set(Object.keys(prev).concat(Object.keys(vanish)))){
+  for(const comp of Object.keys(prev)){
     if(windowed.indexOf(comp) >= 0) continue;
-    const is = now[comp] || 0;
-    const peak = vanish[comp] || 0;
     const was = prev[comp] || 0;
-    if(is === 0 && peak >= min) out.push({ comp, was: peak, is, why: "vanished" });
-    else if(is > 0 && was >= min && is < was * fraction) out.push({ comp, was, is, why: "collapsed" });
+    const is = now[comp] || 0;
+    if(was < min) continue;                 // too small to judge
+    if(is === 0) out.push({ comp, was, is, why: "vanished" });
+    else if(is < was * fraction) out.push({ comp, was, is, why: "collapsed" });
   }
   return out.sort((a, b) => b.was - a.was);
 }

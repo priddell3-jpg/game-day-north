@@ -41,7 +41,7 @@ import { RACE_SOURCES, groupsFrom, groupIdFor, seasonOf, heldGroups,
          STANDINGS_HOLD } from "./lib/race.mjs";
 import { TABLE_SOURCES, tableProblem } from "./lib/records.mjs";
 import { MAX_LIMIT, planRanges, planDays, splitRange, dateKey, compFloorProblems, describeFloor,
-         nextPeaks, vanishBaseline, isCarriedSeason } from "./lib/fetch-plan.mjs";
+         isCarriedSeason } from "./lib/fetch-plan.mjs";
 import { disputeKickoffs, unknownSides } from "./lib/nations.mjs";
 import { normalizeTennis, normalizeRankings, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
          HORIZON_DAYS as TENNIS_FORWARD_DAYS } from "./lib/tennis.mjs";
@@ -1438,20 +1438,17 @@ if(previous && previous.fixtures && previous.fixtures.length > 20 &&
    request covered one day of one league. It is not adequate now that one
    request covers one league's entire window: hockey alone is 35% of this
    file, so losing all of it leaves 65% behind and sails straight through
-   a 50% floor. `get()` answers null on failure rather than throwing, so
-   nothing else would notice either.
+   a 50% floor. A request that fails outright is fatal in scoreboardRange;
+   this is for the answer that arrives and says "nothing".
 
    `counts.byComp` is already written every run, which makes the previous
-   file the reference. A competition that had a real number of fixtures
-   and now has none did not have a quiet week. */
+   file the reference — the previous file alone. A high-water mark was
+   consulted as well from September to November 2026, and the one thing
+   it ever did was refuse this write for ten days after the World Series
+   because baseball had, correctly, run out (issue #60). The reasoning
+   is with compFloorProblems in scripts/lib/fetch-plan.mjs. */
 const prevCounts = (previous && previous.counts) || {};
-/* The peak each competition has reached, and when. Reading only the
-   previous run leaves a season-wide hole: baseball decays to nothing
-   over the winter, so by March there is no MLB in the previous run at
-   all, and a competition absent from it was never checked again. */
-const peaks = nextPeaks(prevCounts.peakByComp, byComp, now);
-const floorProblems = compFloorProblems(prevCounts.byComp || null, byComp,
-  { vanishBaseline: vanishBaseline(prevCounts.byComp, prevCounts.peakByComp, now) });
+const floorProblems = compFloorProblems(prevCounts.byComp || null, byComp);
 if(floorProblems.length){
   console.error("A competition collapsed between runs — keeping the existing file:");
   console.error(describeFloor(floorProblems));
@@ -1524,10 +1521,6 @@ const out = {
                reason. A record that is simply absent should be
                answerable from the file, not from a log. */
             tables: tables.length, tableRows, tablesSkipped,
-            /* Carried run to run so a competition that has been absent
-               for a while is still guarded. Lapses on its own, so a
-               season that genuinely ended stops guarding. */
-            peakByComp: peaks,
             tennis: tennisOut.matches.length,
             /* Races of the season that the hand-typed list in the page
                does not hold, still to come or finished inside the last
