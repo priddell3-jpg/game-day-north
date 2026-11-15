@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3XX1DhbnCBuVtfaJCsqWsyBJEG6K6X4vPGs+QOgBVPo='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-VC50FlSTRW5jE2SfQ6hqW5frnJ3enThdFV2x8xE+/EM='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -5086,7 +5086,9 @@ const SRC = {
   nflca:   {label:"NFL.com — ways to watch in Canada", url:"https://www.nfl.com/international/ways-to-watch/canada"},
   wikica:  {label:"Sports broadcasting contracts in Canada", url:"https://en.wikipedia.org/wiki/Sports_broadcasting_contracts_in_Canada"},
   mlslin:  {label:"MLS linear TV deals (TSN/RDS)", url:"https://www.mlssoccer.com/news/major-league-soccer-fox-sports-televisaunivision-tsn-rds-announce-multi-year-lin"},
-  raptors: {label:"Rogers–MLSE: TSN/Sportsnet split holds", url:"https://www.si.com/nba/raptors/changes-for-toronto-raptors-fans-after-rogers-purchase-of-mlse"},
+  nbatsn:  {label:"TSN — NBA rights extension to 2035-36", url:"https://www.tsn.ca/nba/video/2026/10/30/tsn-continues-to-be-home-to-live-coverage-of-the-nba/"},
+  nbasn:   {label:"Sportsnet — Rogers NBA renewal to 2035-36", url:"https://x.com/Sportsnet/status/2116317175497806296"},
+  nbaprime:{label:"Prime Video Canada — NBA package", url:"https://www.aboutamazon.ca/news/amazon-prime/prime-video-to-bring-nba-games-to-canadian-basketball-fans-starting-in-2026"},
   jays:    {label:"Sportsnet+ carries the MLB postseason", url:"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},
   flo:     {label:"Escape Collective — how to watch 2026", url:"https://escapecollective.com/how-to-watch-pro-bike-racing-in-2026/"},
   pcs:     {label:"ProCyclingStats — 2026 WorldTour calendar", url:"https://www.procyclingstats.com/races.php?year=2026&circuit=1"},
@@ -5103,6 +5105,16 @@ const SRC = {
 const tv = (n, confidence) => ({name:n, kind:"tv", confidence});
 const st = (n, confidence) => ({name:n, kind:"stream", confidence});
 const CDN_MLS = ["van-mls","tfc","mtl-mls"];
+/* Every Emirates NBA Cup night of 2026-27, by Eastern listing date, as
+   ESPN's scoreboard marks them ("NBA Cup - Group Play", "- Quarterfinals",
+   "- Semifinals", "NBA Cup Championship"). The feed carries no stage for
+   basketball, so a Cup game cannot be read off the fixture; it can be
+   read off the calendar, because on each of these nights every game
+   scheduled is a Cup game — checked day by day from 2026-10-20 to
+   2027-01-05 on 2026-11-15. Group play runs through November, the
+   knockout rounds in December. Rewritten each season. */
+const NBA_CUP_NIGHTS = ["2026-10-30","2026-11-06","2026-11-13","2026-11-20","2026-11-24","2026-11-25","2026-11-27",
+                        "2026-12-04","2026-12-05","2026-12-08","2026-12-11"];
 
 /* Tennis rights attach to a tournament, never to a player. Following
    Alcaraz tells you nothing about who shows his matches; the tournament
@@ -5262,11 +5274,21 @@ const RIGHTS = [
   {comp:"MLB", carriers:[st("MLB.TV")], confidence:"expected",
    note:"Out-of-market. Some national US games also appear on TSN or RDS", src:SRC.wikica, checked:CHECKED},
 
-  /* ---------------- NBA ---------------- */
+  /* ---------------- NBA: Bell and Rogers renewed to 2035-36; Prime Video from 2026-27 ---------------- */
+  /* Prime Video Canada's package began this season — exclusive regular-
+     season games, the Emirates NBA Cup, the SoFi Play-In and select
+     playoff and Conference Finals games — and none of it is on TSN or
+     Sportsnet. The Cup is the one window the schedule can place, by
+     night (NBA_CUP_NIGHTS above), so it gets a row of its own ahead of
+     the Raptors row. The Play-In (April 2027) and Prime's playoff games
+     are not in the feed yet, so the general row names Prime among the
+     carriers rather than pretending to know the night. */
+  {comp:"NBA", when:g=>NBA_CUP_NIGHTS.indexOf(g.day())>=0, carriers:[st("Prime Video")], confidence:"confirmed",
+   note:"Emirates NBA Cup night — every game scheduled is a Cup game, and the Cup is Prime Video's exclusively in Canada from 2026-27", src:SRC.nbaprime, checked:"2026-11-15"},
   {comp:"NBA", when:g=>g.has("tor-nba"), carriers:[tv("TSN"), tv("Sportsnet")], confidence:"confirmed",
-   note:"TSN and Sportsnet split Raptors games 50-50; unchanged by the Rogers–MLSE deal", src:SRC.raptors, checked:CHECKED},
-  {comp:"NBA", carriers:[tv("TSN"), st("NBA League Pass")], confidence:"expected",
-   note:"Coverage shared between TSN, Sportsnet and NBA TV Canada; rest on League Pass", src:SRC.wikica, checked:CHECKED},
+   note:"TSN and Sportsnet split the 82 regular-season Raptors games 41/41 under the ten-year renewals each announced on 2026-10-30, through 2035-36. Two Raptors games this season are Prime Video exclusives on no traditional carrier; the feed cannot tell which, so this row is wrong on those two nights", src:SRC.nbatsn, checked:"2026-11-15"},
+  {comp:"NBA", carriers:[tv("TSN"), tv("Sportsnet"), st("Prime Video"), st("NBA League Pass")], confidence:"expected",
+   note:"National games are shared between TSN, Sportsnet and Prime Video; Sportsnet carries the Playoffs and the Finals; Prime Video has the Play-In and select playoff and Conference Finals games exclusively; everything else is on League Pass", src:SRC.nbasn, checked:"2026-11-15"},
 
   /* ---------------- NFL ---------------- */
   {comp:"NFL", when:g=>g.dow===4||g.dow===1, carriers:[tv("TSN"), tv("RDS"), st("DAZN")], confidence:"confirmed",
