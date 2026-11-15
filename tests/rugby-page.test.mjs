@@ -136,14 +136,30 @@ test("a malformed row is not carried", () => {
 
 /* ---------------- polling ---------------- */
 
-function pollHarness(rugby = true, showScores = true){
+/* fillRugbyScores reads the clock itself, so a test that drives it with
+   a fixture at a fixed kickoff is only true until that date passes: one
+   that hard-coded 14 November 2026 as "live" went stale the day after.
+   Given `now`, the harness freezes the page's clock at that instant.
+   Date is shadowed with a subclass whose now() answers it; parse, the
+   constructor with arguments and Intl formatting of an instance are the
+   real thing, so espnDate still converts the kickoff properly. */
+function pollHarness(rugby = true, showScores = true, now = null){
   globalThis.__ru = {games: [], asked: []};
+  const clock = now == null ? "" : `
+     const Date = (() => {
+       const Real = globalThis.Date, NOW = ${now};
+       return class extends Real {
+         constructor(...a){ super(...(a.length ? a : [NOW])); }
+         static now(){ return NOW; }
+       };
+     })();`;
   return loadFromPage(
     ["ZONE_IANA", "_zoneFmt", "zoneParts", "espnDate", "POLL_WINDOW",
      "RUGBY_TERMINAL", "RUGBY_ACTIVE", "rugbyIsTerminal", "rugbyIsActive",
      "RUGBY_ESPN_LEAGUE", "RUGBY_ESPN", "RUGBY_WR",
      "rugbyActiveNow", "fillRugbyScores"],
-    `const DAY = 86400000;
+    clock + `
+     const DAY = 86400000;
      let showScores = ${showScores};
      const rugbyOn = () => ${rugby};
      const GAMES = globalThis.__ru.games;
@@ -217,42 +233,72 @@ test("with rugby switched off nothing rugby is ever active", () => {
   assert.equal(p.rugbyActiveNow(liveRu(), Date.now()), false);
 });
 
+/* ---------------- the requests, on a frozen clock ---------------- */
+
+/* The instant every request test believes it is: forty minutes into a
+   kickoff at 00:00 UTC on 14 November 2026. Midnight UTC is seven in the
+   evening of the 13th in New York, which is the date ESPN files the
+   event under — so a fixture at KICKOFF exercises the Eastern-date rule
+   rather than assuming it. Every other fixture below is placed relative
+   to NOW: live, yet to kick off, or finished. */
+const KICKOFF = Date.parse("2026-11-14T00:00:00Z");
+const NOW = KICKOFF + 40*60000;
+const HOUR = 3600000;
+const liveAtKickoff = (over = {}) => liveRu(Object.assign({start: KICKOFF}, over));
+const upcoming = (over = {}) => ruGame(Object.assign(
+  {start: NOW + 3*HOUR, ru:{state:"scheduled", label:"", timeTBD:false}}, over));
+const finished = (over = {}) => ruGame(Object.assign(
+  {start: NOW - 3*HOUR, ru:{state:"final", label:"FT", timeTBD:false},
+   result:{status:"final", label:"FT", score:[24, 17]}}, over));
+
 test("a rugby-disabled viewer makes no rugby request at all", async () => {
-  const p = pollHarness(false);
-  globalThis.__ru.games.push(liveRu());
+  const p = pollHarness(false, true, NOW);
+  globalThis.__ru.games.push(liveAtKickoff());
   const n = await p.fillRugbyScores();
   assert.equal(n, 0);
   assert.deepEqual(globalThis.__ru.asked, [], "not one request may be made");
 });
 
 test("a rugby-enabled viewer with nothing live makes no request either", async () => {
-  const p = pollHarness(true);
-  globalThis.__ru.games.push(ruGame({start: Date.now() + 5*DAY, ru:{state:"scheduled"}}));
-  await p.fillRugbyScores();
-  assert.deepEqual(globalThis.__ru.asked, []);
+  const p = pollHarness(true, true, NOW);
+  globalThis.__ru.games.push(upcoming(), upcoming({start: NOW + 5*DAY}), finished());
+  assert.equal(await p.fillRugbyScores(), 0);
+  assert.deepEqual(globalThis.__ru.asked, [], "a fixture yet to start and a final are both left alone");
 });
 
 test("a live fixture asks its own league, on the US Eastern date", async () => {
   // ESPN files a rugby event under its Eastern date, exactly as it does
   // the other sports: a 00:00 UTC kickoff answers to the previous day.
-  const p = pollHarness(true);
-  globalThis.__ru.games.push(liveRu({comp:"RUNC", start: Date.parse("2026-11-14T00:00:00Z")}));
+  // Without the frozen clock this kickoff is long past and nothing would
+  // be asked, which is how the test reads the clock it was given.
+  const p = pollHarness(true, true, NOW);
+  globalThis.__ru.games.push(liveAtKickoff({comp:"RUNC"}));
   await p.fillRugbyScores();
   assert.equal(globalThis.__ru.asked.length, 1);
   assert.match(globalThis.__ru.asked[0], /rugby\/17567\/scoreboard\?dates=20261113/);
 });
 
+test("only the live fixture is asked about when the others are not", async () => {
+  const p = pollHarness(true, true, NOW);
+  globalThis.__ru.games.push(upcoming({comp:"RUNC"}), finished({comp:"RUNC"}), liveAtKickoff({comp:"RUNC"}));
+  await p.fillRugbyScores();
+  assert.deepEqual(globalThis.__ru.asked.map(u => u.replace(/^.*dates=/, "")), ["20261113"],
+    "one request, for the live fixture's date alone");
+});
+
 test("a competition ESPN has no league for is followed through World Rugby", async () => {
-  const p = pollHarness(true);
-  globalThis.__ru.games.push(liveRu({comp:"RUPNC"}));
+  const p = pollHarness(true, true, NOW);
+  globalThis.__ru.games.push(liveAtKickoff({comp:"RUPNC"}));
   await p.fillRugbyScores();
   assert.equal(globalThis.__ru.asked.length, 1);
   assert.match(globalThis.__ru.asked[0], /wr-rims-prod\.pulselive\.com/);
+  assert.match(globalThis.__ru.asked[0], /startDate=2026-11-13&endDate=2026-11-15/,
+    "the day either side of the kickoff, derived from the frozen instant");
 });
 
 test("the two sources are asked separately, so one can fail alone", async () => {
-  const p = pollHarness(true);
-  globalThis.__ru.games.push(liveRu({comp:"RUNC"}), liveRu({comp:"RUPNC"}));
+  const p = pollHarness(true, true, NOW);
+  globalThis.__ru.games.push(liveAtKickoff({comp:"RUNC"}), liveAtKickoff({comp:"RUPNC"}));
   await p.fillRugbyScores();
   assert.equal(globalThis.__ru.asked.filter(u => /site\.api\.espn/.test(u)).length, 1);
   assert.equal(globalThis.__ru.asked.filter(u => /pulselive/.test(u)).length, 1);
