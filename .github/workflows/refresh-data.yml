@@ -17,6 +17,9 @@ on:
       # otherwise ship without a run proving it still builds.
       - "scripts/**"
       - ".github/workflows/refresh-data.yml"
+      # A merged rights edit is published straight away rather than at
+      # the next three-hour slot: data.json is how it reaches the app.
+      - "data/rights.json"
 
 concurrency:
   group: refresh-data

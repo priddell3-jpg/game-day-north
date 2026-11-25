@@ -45,6 +45,7 @@ import { MAX_LIMIT, planRanges, planDays, splitRange, dateKey, compFloorProblems
 import { disputeKickoffs, unknownSides } from "./lib/nations.mjs";
 import { normalizeTennis, normalizeRankings, KEEP_COMPLETED_DAYS as TENNIS_BACK_DAYS,
          HORIZON_DAYS as TENNIS_FORWARD_DAYS } from "./lib/tennis.mjs";
+import { readRights, rightsProblems } from "./lib/rights.cjs";
 
 /* Every club this build knows about, and every name each answers to.
    One committed file, shared with the page, so the two cannot drift —
@@ -1457,6 +1458,27 @@ if(floorProblems.length){
   process.exit(1);
 }
 
+/* The Canadian rights table travels in this file so a fix reaches
+   installed apps without a new build (see scripts/lib/rights.cjs). It is
+   never fatal: a scoreboard refresh must not stop because a rights edit
+   has a typo. A document that fails the check is not published; the last
+   good copy from the previous file is carried instead, and the problems
+   are named in the log and counted in the file. */
+let rightsOut = null;
+let rightsIssues = [];
+try{
+  const doc = readRights();
+  rightsIssues = rightsProblems(doc);
+  if(!rightsIssues.length) rightsOut = doc;
+}catch(e){
+  rightsIssues = ["data/rights.json could not be read: " + (e && e.message || e)];
+}
+if(rightsIssues.length){
+  console.error("data/rights.json was not published; carrying the previous copy. Problems:\n  "
+    + rightsIssues.join("\n  "));
+  rightsOut = (previous && previous.rights) || null;
+}
+
 /* Don't rewrite the file just to move a timestamp. The build stamps
    `generated`, which differs on every run, so writing unconditionally
    meant a commit and a site rebuild every time — including all through
@@ -1470,7 +1492,10 @@ const standingsSame = previous && JSON.stringify(previous.standings || []) === J
 const tablesSame = previous && JSON.stringify(previous.tables || []) === JSON.stringify(tables);
 const tennisSame = previous && JSON.stringify(previous.tennis || {matches:[],tournaments:[]}) === JSON.stringify(tennisOut);
 const calendarSame = previous && JSON.stringify(previous.cyclingCalendar || []) === JSON.stringify(cyclingCalendar);
-if(previous && calendarSame && cyclingSame && rugbySame && standingsSame && tablesSame && tennisSame &&
+/* A rights-only edit must still be written, or it would wait for the
+   next scoreboard change to reach anyone. */
+const rightsSame = previous && JSON.stringify(previous.rights || null) === JSON.stringify(rightsOut);
+if(previous && calendarSame && cyclingSame && rugbySame && standingsSame && tablesSame && tennisSame && rightsSame &&
    JSON.stringify(previous.fixtures) === JSON.stringify(fixtures)){
   const age = now - (Date.parse(previous.generated) || 0);
   if(age < MAX_AGE){
@@ -1532,7 +1557,10 @@ const out = {
             /* Stage races the calendar holds without a stage list, and
                sources the season check could not read. */
             missingStages, cyclingCalendar: cyclingCalendar.length, calendarProblems,
-            wikiRequests: wikiCalls },
+            wikiRequests: wikiCalls,
+            /* Problems that kept this run's data/rights.json out of the
+               file. Zero means `rights` below is the committed table. */
+            rightsProblems: rightsIssues.length },
   fixtures,
   cycling: cyclingOut,
   /* The season's races, read from Wikipedia. The page prefers these to
@@ -1548,7 +1576,12 @@ const out = {
      question and are read by different code. A Race card reads
      `standings`; the record under a team name reads this. */
   tables,
-  tennis: tennisOut
+  tennis: tennisOut,
+  /* Which Canadian service carries each game: data/rights.json, comments
+     stripped. The page prefers this copy to the one built into it unless
+     its own is newer, so a rights fix reaches the iOS app without a
+     review. */
+  rights: rightsOut
 };
 writeFileSync(new URL("../data.json", import.meta.url), JSON.stringify(out) + "\n");
 console.log("Wrote data.json — " + fixtures.length + " fixtures, " + withScore + " with scores, " +

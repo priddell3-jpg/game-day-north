@@ -121,6 +121,44 @@ Fails the build on:
 - ordering: priority beats array position; first match still wins
 - inlining: built `index.html` contains the rules and no runtime fetch
 
+### Status — done (November 2026), for a reason this plan did not foresee
+
+Change A shipped when the iOS app made it urgent. With the table in
+`src/page.html`, it was compiled into the signed app, so every rights fix
+waited for an App Store review. `data/rights.json` is now the only copy:
+`build.js` inlines it, and `scripts/fetch-data.mjs` also copies it into
+`data.json`, which the page adopts on load, so a fix reaches installed
+apps on the next data refresh.
+
+The migration followed the sequence above: before the in-page table was
+deleted, the JSON was resolved against it for every fixture in
+`data.json` and for a synthetic grid of about 3.5 million games (every
+competition × the teams, days, weekdays, hours, stages and tournaments the
+rules key on, with start times either side of Eastern midnight). Every
+decision was identical: carriers, kinds, per-carrier confidence,
+confidence, note, source and checked date. The switch and the deletion
+are one commit.
+
+Departures from the shape above, made with the real table in front of us:
+
+- **Conditions are flat named fields** (`teams`, `day`, `dow`, `hourFrom`,
+  `stage`, `tournamentIs`, `tournamentHas`, `major`), all of which must
+  hold, rather than `{predicate, args}` objects with `allOf`/`anyOf`.
+  Every one of the 53 rules fits; the eight fields are the registry.
+- **Array order stays**, first match wins, rather than `priority`. It is
+  what every editor of this table already reads. The strict check fails
+  a rule that comes after an unconditional rule for the same competition,
+  the ordering mistake order makes possible.
+- **An unknown condition fails the build but is skipped by the page.**
+  A downloaded document can be newer than the app reading it. Skipping
+  the rule (the game falls through to a later, broader one) is safe;
+  failing the whole table would freeze an old app's rights forever.
+- **No `id`, `validFrom`/`validTo` or source `quality` yet.** None is
+  needed for parity, and each needs facts gathered rather than invented.
+  `quality` would fail today's file (several `confirmed` rows cite a
+  listings site), which is the point of it, so it lands with the rights
+  corrections it forces rather than as part of a refactor.
+
 ---
 
 ## Change B — one team manifest

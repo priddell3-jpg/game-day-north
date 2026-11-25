@@ -44,7 +44,7 @@ const TOURNEYS = new Map();
 const tourneyOf = () => null;
 const isStarredPlayer = () => false;
 `;
-const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
+const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","RIGHTS",
   "resolveRights","RUGBY_ACTIVE","RUGBY_TERMINAL","rugbyIsActive","rugbyIsTerminal",
   "esc","inkOn","pad","ymd","fmtTime","fmtShortDate","countdownText","BELL","saveButton",
   "provenanceOf","servicesFor","covered","visibleRights","carrierHtml","venueDayNote","RUGBY_STATE_TEXT","isStarred","rugbyRow"];
@@ -224,9 +224,10 @@ test("a Lions tour does not inherit the 2025 carrier", () => {
   const html = page().rugbyRow(row({comp:"RULIONS"}), NOW);
   assert.match(html, /Coverage not confirmed/);
   // the 2025 listing is recorded in the note, not asserted as current
-  const rule = /\{comp:"RULIONS"[\s\S]*?\},\n/.exec(SRC)[0];
-  assert.match(rule, /confidence:"unknown"/);
-  assert.match(rule, /2025/);
+  const rule = page().RIGHTS.find(r => r.comp === "RULIONS");
+  assert.equal(rule.confidence, "unknown");
+  assert.deepEqual(rule.carriers, []);
+  assert.match(rule.note, /2025/);
 });
 
 test("an uncertain competition is never marked as covered", () => {

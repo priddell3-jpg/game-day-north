@@ -25,4 +25,21 @@ function inlineManifest(body, manifestJson){
   return body.slice(0, at) + manifestJson.trim() + body.slice(end);
 }
 
-module.exports = { MARKER, inlineManifest };
+/* The rights document goes in the same way, for the same two callers.
+ * Comments are stripped first, and every "<" is written as <: the
+ * notes are free text, and a note that happened to contain "</script>"
+ * must not be able to close the page's script element. */
+const RIGHTS_MARKER = "/*__RIGHTS__*/";
+
+function inlineRights(body, rightsJson){
+  const { stripComments } = require("./rights.cjs");
+  const at = body.indexOf(RIGHTS_MARKER);
+  if(at < 0) throw new Error("src/page.html has no " + RIGHTS_MARKER + " marker to inline the rights into");
+  const end = body.indexOf(";", at);
+  if(end < 0) throw new Error("the " + RIGHTS_MARKER + " placeholder has no terminating semicolon");
+  const literal = JSON.stringify(stripComments(JSON.parse(rightsJson)))
+    .replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+  return body.slice(0, at) + literal + body.slice(end);
+}
+
+module.exports = { MARKER, inlineManifest, RIGHTS_MARKER, inlineRights };

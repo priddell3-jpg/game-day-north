@@ -2,11 +2,21 @@
    document GitHub Pages serves. */
 const fs = require("fs");
 const crypto = require("crypto");
-const { inlineManifest } = require("./scripts/lib/inline.cjs");
+const { inlineManifest, inlineRights } = require("./scripts/lib/inline.cjs");
+const { readRights, rightsProblems } = require("./scripts/lib/rights.cjs");
 /* The team manifest is substituted in here rather than fetched at run
    time, so the page stays a single self-contained file. */
 const manifest = fs.readFileSync(__dirname + "/data/teams.json", "utf8");
-const body = inlineManifest(fs.readFileSync(__dirname + "/src/page.html", "utf8"), manifest);
+/* So is the rights table: the copy every build carries, used until (and
+   unless) data.json brings a newer one. A document that fails the strict
+   check stops the build, because this copy is the one an offline app
+   falls back to. */
+const rightsPath = __dirname + "/data/rights.json";
+const rightsIssues = rightsProblems(readRights(rightsPath));
+if(rightsIssues.length) throw new Error("data/rights.json has problems:\n  " + rightsIssues.join("\n  "));
+const body = inlineRights(
+  inlineManifest(fs.readFileSync(__dirname + "/src/page.html", "utf8"), manifest),
+  fs.readFileSync(rightsPath, "utf8"));
 const title = (body.match(/<title>([^<]*)<\/title>/) || [, "Game Day North"])[1];
 /* Keep the app as a self-contained page without granting every inline
    script permission to run. The hash authorises the one script we built;

@@ -10,10 +10,11 @@ import { createRequire } from "node:module";
    tests evaluate the page that ships rather than one whose manifest is
    still the empty placeholder. */
 const require_ = createRequire(import.meta.url);
-const { inlineManifest } = require_("../../scripts/lib/inline.cjs");
-const SRC = inlineManifest(
+const { inlineManifest, inlineRights } = require_("../../scripts/lib/inline.cjs");
+const SRC = inlineRights(inlineManifest(
   readFileSync(new URL("../../src/page.html", import.meta.url), "utf8"),
-  readFileSync(new URL("../../data/teams.json", import.meta.url), "utf8"));
+  readFileSync(new URL("../../data/teams.json", import.meta.url), "utf8")),
+  readFileSync(new URL("../../data/rights.json", import.meta.url), "utf8"));
 
 function declarationOf(name){
   // [async] function NAME(...) { ... }  — closing brace at column 0
@@ -49,8 +50,21 @@ function declarationOf(name){
    not. */
 const MANIFEST_DECL = declarationOf("TEAM_MANIFEST");
 
+/* The rights tables are built from the inlined rights document when the
+   page starts, so asking for any of them brings in what builds them, in
+   the order the page declares it. */
+const RIGHTS_BASE = ["RIGHTS_BUNDLED", "compileRights", "RIGHTS_STATE"];
+const RIGHTS_FAMILY = new Set(["SERVICES", "CARRIER_SERVICE", "SRC", "RIGHTS", "CHECKED", "adoptRights", "resolveRights"]);
+
+/* loadStatic hands data.json's rights to adoptRights, which refills the
+   tables in place, so evaluating it needs all of them. */
+const RIGHTS_TABLES = ["SERVICES", "CARRIER_SERVICE", "SRC", "RIGHTS", "CHECKED", "adoptRights"];
+
 export function loadFromPage(names, preamble = ""){
-  const wanted = names.filter(n => n !== "TEAM_MANIFEST");
+  const needsRights = names.some(n => RIGHTS_FAMILY.has(n) || RIGHTS_BASE.includes(n)) || names.includes("loadStatic");
+  const base = !needsRights ? [] : [...RIGHTS_BASE, ...(names.includes("loadStatic") ? RIGHTS_TABLES : [])]
+    .filter(n => !names.includes(n));
+  const wanted = [...base, ...names.filter(n => n !== "TEAM_MANIFEST")];
   const body = wanted.map(declarationOf).join("\n\n");
   const factory = new Function(preamble + "\n" + MANIFEST_DECL + "\n" + body
     + "\nreturn {" + names.join(",") + "};");
