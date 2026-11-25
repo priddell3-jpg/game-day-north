@@ -1200,9 +1200,47 @@ const RACES = [
    emptied again if it ever arrives without them, so a race can never
    outlive the data behind it. */
 let STANDINGS = [];
-function attachStandings(list){
+function attachStandings(list, fixtures, now){
   STANDINGS = Array.isArray(list) ? list.filter(g=>g && g.comp && Array.isArray(g.rows) && g.rows.length) : [];
+  /* Whether each competition still has a regular-season game to come, read
+     from the whole schedule file rather than the viewer's slice of it. It
+     is what tells a finished season from one in its last week (see
+     raceSeasonOver). Copies, so the file's own objects stay as they came. */
+  if(Array.isArray(fixtures)){
+    const ahead = raceGamesAhead(fixtures, now == null ? Date.now() : now);
+    STANDINGS = STANDINGS.map(g => Object.assign({}, g, {ahead: ahead.has(g.comp)}));
+  }
   return STANDINGS.length;
+}
+
+/* Competitions with a regular-season game live or still to come. A
+   playoff game carries its series and does not count: once only the
+   postseason is left, the race for a place in it is over. A game listed
+   as scheduled is still owed for a while after its start time, because a
+   rain delay before the first pitch does not change its status. */
+const RACE_START_GRACE = 12*3600000;
+function raceGamesAhead(fixtures, now){
+  const out = new Set();
+  for(const f of fixtures){
+    if(!f || typeof f.comp !== "string" || f.series) continue;
+    const start = Number(f.start);
+    if(f.status === "live" || (f.status === "scheduled" && Number.isFinite(start) && start > now - RACE_START_GRACE))
+      out.add(f.comp);
+  }
+  return out;
+}
+
+/* A race is over when its regular season is. Every club having played
+   the full schedule settles it. So does the leaders having played it
+   with no regular-season game left anywhere in the file, which is the
+   case baseball needs: a rained-out game that cannot change the standings
+   is never made up, so a finished season can end with a club on 161 of
+   162 for good. Without a schedule to consult (`ahead` unknown) only the
+   first test applies, so a race is never ended on a guess. */
+function raceSeasonOver(view, grp){
+  if(!grp || !grp.played || !view || !view.length) return false;
+  if(grp.played.min >= view.length) return true;
+  return grp.played.max >= view.length && grp.ahead === false;
 }
 
 /* ---- a team's record, from the full tables ------------------------
@@ -1453,6 +1491,10 @@ function raceFollowsComp(comp, followed){
 function raceRelevance(view, grp, now, followed){
   if(!grp || !grp.rows.length) return null;
   if(!grp.played || grp.played.max <= 0) return null;         // nothing played yet
+  /* A settled table is a result, not a race: the final standings of a
+     season that ended in September are not "in the race" in November.
+     Pinning still shows it, for anyone who asked for it by name. */
+  if(raceSeasonOver(view, grp)) return null;
   if(grp.heldFrom){
     const from = Date.parse(grp.heldFrom);
     if(!Number.isFinite(from) || now - from > RACE_MAX_AGE) return null;
@@ -2449,7 +2491,7 @@ async function loadStatic(){
   /* A followed race is another route into the board. Read its standings
      before filtering fixtures so the race teams are known on the same
      pass; otherwise they would not appear until a later refresh. */
-  attachStandings(r.standings);
+  attachStandings(r.standings, r.fixtures, Date.now());
   /* The rights travel with the schedule, so a rights fix reaches an
      installed app with the next data refresh. A file without them, or
      with a copy older than the one this build carries, changes nothing. */
