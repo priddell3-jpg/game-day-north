@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<title>Support — Game Day North</title>
+<meta name="description" content="Help with Game Day North: what the coverage labels mean, why a game shows no carrier, and how to report a wrong channel.">
+<style>
+@font-face{font-family:"Archivo";font-style:normal;font-weight:400 900;font-stretch:62% 125%;font-display:swap;src:url("./fonts/archivo-latin-variable.woff2") format("woff2")}
+:root{--ground:#F1F3F8;--surface:#FFFFFF;--ink:#0C1120;--ink-2:#2A3346;--muted:#68738C;--line:#DCE2EE;--accent:#1F3BE0;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif}
+@media (prefers-color-scheme: dark){:root{--ground:#080B14;--surface:#121828;--ink:#E8ECF7;--ink-2:#C3CBDC;--muted:#8590A9;--line:#212A3D;--accent:#7B90FF}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink-2);font:16px/1.6 var(--display)}
+main{max-width:720px;margin:0 auto;padding:40px 20px 64px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:28px 24px}
+h1{color:var(--ink);font-size:30px;line-height:1.2;font-weight:850;font-stretch:112%;margin:0 0 6px}
+h2{color:var(--ink);font-size:19px;font-weight:800;margin:28px 0 6px}
+.meta{color:var(--muted);font-size:14px;margin:0 0 20px}
+.lead{font-size:18px;color:var(--ink)}
+.contact{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;margin:18px 0}
+a{color:var(--accent)}
+footer{color:var(--muted);font-size:14px;margin-top:24px;text-align:center}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<h1>Support</h1>
+<p class="meta">Game Day North</p>
+
+<p class="lead">Game Day North shows when your teams play and which Canadian service carries each game, with scores you can hide.</p>
+
+<div class="contact">
+  <strong>Report a problem or a wrong channel.</strong> Open an issue on the
+  <a href="https://github.com/priddell3-jpg/game-day-north/issues/new">Game Day North issue tracker</a>.
+  Say which game, the date, and what you saw. A link to the broadcaster's own listing helps most.
+</div>
+
+<h2>Why does a game say Carrier TBC?</h2>
+<p>No Canadian rights holder could be confirmed for that competition. Rather than guess, the app says so. It changes as soon as a broadcaster or league announces the deal.</p>
+
+<h2>What do Confirmed and Expected mean?</h2>
+<p><strong>Confirmed</strong> comes from a league or broadcaster announcement or a published listing for that game. <strong>Expected</strong> follows a known pattern, such as a national window or regional rights, but has not been listed for that game yet. Inside five days, only confirmed carriers are shown. The rights table at the bottom of the app links each rule to its source.</p>
+
+<h2>Why is a channel wrong for my area?</h2>
+<p>Regional hockey games depend on where you live, and some games are blacked out in or outside a team's region. The app shows the regional carrier for the team; check the broadcaster's app for blackout rules where you are.</p>
+
+<h2>Scores look old or a game is missing</h2>
+<p>The note at the bottom of the app says where the schedule came from and how old it is. Fixtures refresh every few hours and anything in progress is read live. Offline, the app shows its last saved schedule and says so.</p>
+
+<h2>How do I avoid spoilers?</h2>
+<p>Turn scores off. Results and the In the Race section stay hidden until you turn scores back on.</p>
+
+<h2>Where does the data come from?</h2>
+<p>Fixtures and scores come from public sports feeds: ESPN, World Rugby and, for cycling, Wikipedia. Canadian broadcast rights are researched by hand from league and broadcaster announcements and checked weekly. The <a href="./privacy.html">privacy policy</a> lists every service the app contacts.</p>
+
+<h2>Does the app stream games?</h2>
+<p>No. It tells you where a game is on and links to that service. You need your own subscription to watch.</p>
+</div>
+<footer>Game Day North is an independent app and is not affiliated with or endorsed by any league, team or broadcaster. Team, league and broadcaster names are used only to identify them.</footer>
+</main>
+</body>
+</html>
