@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-JxQUoor20z0IPCfEHotAXOd6zogyJi3NeoWt28pJ/sA='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-JMMzRcTR5IdDcofm1OujtNZHx8pim+ssNtxWW6/Z56Q='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -458,6 +458,8 @@ main{padding:22px 0 80px}
 }
 .note b{font-weight:800;font-stretch:112%}
 .note code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.note-legal{display:block;margin-top:8px;color:var(--muted)}
+.note-legal a{color:var(--accent)}
 
 @media (max-width:760px){
   .wrap{
@@ -9304,7 +9306,20 @@ function noteBlock(){
     + 'Your teams, services and score setting are stored '+statePlace+' only &mdash; anyone else opening the same link sets up their own. '
     + (n? '<b>'+n+'</b> game'+(n===1?"":"s")+' saved '+statePlace+'.'
         : 'Save a game to mark it here &mdash; a bookmark '+statePlace+', not a notification.')
+    + '<span class="note-legal">Not affiliated with or endorsed by any league, team or broadcaster; their names are used only to identify them. '
+    + '<a href="'+esc(sitePage("privacy.html"))+'">Privacy</a> &middot; <a href="'+esc(sitePage("support.html"))+'">Support</a></span>'
     + '</div>';
+}
+
+/* A page of the public website: the privacy policy, the support page.
+   On iOS the app runs from its own bundle, so these are absolute links to
+   the website, which the native bridge opens in the system browser. On
+   the web they sit beside the page itself, which also covers GitHub
+   Pages serving the site from a subfolder. */
+function sitePage(path){
+  const native = typeof window!=="undefined" && window.GDNNative && window.GDNNative.isNative;
+  try{ return new URL(path, native ? window.GDNNative.webUrl : location.href).href; }
+  catch(e){ return path; }
 }
 function emptyState(){
   if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn())

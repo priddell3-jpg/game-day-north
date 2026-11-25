@@ -13,6 +13,9 @@ await mkdir(output, { recursive: true });
 // locally hosted fonts; native projects and source files do not belong there.
 await copyFile(join(root, "index.html"), join(output, "index.html"));
 await copyFile(join(root, "data.json"), join(output, "data.json"));
+// The App Store listing links to these two, so they live on the site.
+await copyFile(join(root, "privacy.html"), join(output, "privacy.html"));
+await copyFile(join(root, "support.html"), join(output, "support.html"));
 await cp(join(root, "fonts"), join(output, "fonts"), { recursive: true });
 
 console.log("built web assets in public/");
