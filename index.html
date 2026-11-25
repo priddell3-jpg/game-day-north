@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-CAH0iK7D9dJfDdJQH+x8+L00/5ObIA5DOKBTtkNjjXY='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UxwHXqGTXySYCYEdLgpaOLhNyfodme1YlWjUV+RGY7I='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -6057,9 +6057,29 @@ const pick = (arr,r)=>arr[Math.floor(r()*arr.length)];
    ================================================================== */
 const DAY = 86400000;
 const GAMES = [];
-let gid = 0;
-function addGame(o){
-  o.id = o.comp+"-"+(++gid)+"-"+(o.home?o.home.id:"x")+"-"+(o.away?o.away.id:"tbd");
+/* A game's id is what a saved game is remembered by, so it has to come
+   out the same on every load and through every refresh. It used to carry
+   a load-order counter: a reload that met the fixtures in another order
+   (remembered results first, say), or a refresh that replaced the
+   fixture, gave the same game a new id and quietly unsaved it. Now the
+   competition, the kickoff's UTC day and both clubs name it, a second
+   meeting on the same day gets a suffix, and a refreshed copy inherits
+   the id of the copy it replaces (mergeReal). */
+function gameKey(o){
+  const day = Number.isFinite(o.start) ? new Date(o.start).toISOString().slice(0, 10) : "tbd";
+  return o.comp+"-"+day+"-"+(o.home?o.home.id:"x")+"-"+(o.away?o.away.id:"tbd");
+}
+function addGame(o, taken){
+  taken = taken || new Set(GAMES.map(g => g.id));
+  let id = o.keepId;
+  if(!id || taken.has(id)){
+    const base = gameKey(o);
+    id = base;
+    for(let n = 2; taken.has(id); n++) id = base+"-"+n;
+  }
+  delete o.keepId;
+  o.id = id;
+  taken.add(id);
   o.seed = hash(o.id);
   o.stage = o.stage || "";
   GAMES.push(o);
@@ -6132,6 +6152,7 @@ function mergeReal(built){
          labelled rather than passed off as freshly fetched. A newer copy
          that does carry a score always wins. */
       const prev = GAMES[i];
+      if(!g.keepId) g.keepId = prev.id;   // the same game keeps its id
       const hadFinal = prev.result && prev.result.status === "final" && prev.result.score;
       const hasScore = g.result && g.result.score;
       if(hadFinal && !hasScore){ g.result = prev.result; g.remembered = true; }
@@ -6189,7 +6210,8 @@ function mergeReal(built){
     });
     if(hit) GAMES.splice(i,1);
   }
-  built.forEach(g=>addGame(g));
+  const taken = new Set(GAMES.map(g => g.id));
+  built.forEach(g=>addGame(g, taken));
   GAMES.sort((a,b)=>a.start-b.start);
 }
 
