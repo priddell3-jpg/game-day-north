@@ -43,12 +43,12 @@ test("a payload that is not a rankings answer yields null, not an empty list", (
   assert.equal(normalizeRankings({rankings: [{ranks: []}]}), null);
 });
 
-test("the committed file carries both tours, keyed on the scoreboard's own athlete ids", () => {
-  const t = FILE.tennis || {};
-  assert.ok(t.rankings && t.rankings.ATP && t.rankings.WTA, "both lists");
-  assert.ok(t.rankedAt && t.rankedAt.ATP && t.rankedAt.WTA, "each dated, so staleness is answerable");
+test("the committed file carries both tours, keyed on the scoreboard's own athlete ids", (t) => {
+  const tennis = FILE.tennis || {};
+  assert.ok(tennis.rankings && tennis.rankings.ATP && tennis.rankings.WTA, "both lists");
+  assert.ok(tennis.rankedAt && tennis.rankedAt.ATP && tennis.rankedAt.WTA, "each dated, so staleness is answerable");
   for(const tour of ["ATP", "WTA"]){
-    const list = t.rankings[tour];
+    const list = tennis.rankings[tour];
     const places = Object.values(list);
     assert.ok(places.length > 50, tour + " should carry a real list, got " + places.length);
     assert.ok(Math.min(...places) === 1 && Math.max(...places) <= RANK_DEPTH);
@@ -56,9 +56,20 @@ test("the committed file carries both tours, keyed on the scoreboard's own athle
   /* The join this whole feature rests on: ids in the rankings are the
      ids in the matches. If ESPN ever changed one of them, everything
      would silently stop matching and the draw would widen. */
-  const ids = new Set((t.matches || []).flatMap(m => (m.players || [])
+  const ids = new Set((tennis.matches || []).flatMap(m => (m.players || [])
     .filter(p => p && p.id != null).map(p => String(p.id))));
-  const hit = [...ids].filter(id => t.rankings.ATP[id] != null || t.rankings.WTA[id] != null);
+  const hit = [...ids].filter(id => tennis.rankings.ATP[id] != null || tennis.rankings.WTA[id] != null);
+  /* The join can only be judged when the tours are playing. In the
+     off-season the board holds a handful of exhibition and lower-tier
+     matches whose players are mostly outside the ranked depth: on
+     2026-11-24 it held 37 players, two of them ranked, and this check
+     failed while nothing was wrong. Fewer players than one
+     32-player draw per tour is too few to tell a changed id from an
+     empty calendar, so the check waits for the season. */
+  if(ids.size < 64){
+    t.skip("off-season: " + ids.size + " players on the board, too few to judge the id join");
+    return;
+  }
   assert.ok(hit.length > 10, "only " + hit.length + " players on the board are in either list");
 });
 
