@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadFromPage } from "./helpers/page.mjs";
+import { readFileSync } from "node:fs";
 
 const { findScored, applyScored, orientation, sameClub } = loadFromPage(
   ["normName", "idKey", "SAME_WINDOW", "sameGame", "clubKeys", "sameClub",
@@ -605,8 +606,8 @@ function mergeHarness(){
   /* hash() only seeds the per-fixture shuffle and is a one-liner the
      extractor cannot bound, so it is stubbed rather than pulled in. */
   const page = loadFromPage(
-    ["normName", "idKey", "SAME_WINDOW", "sameGame", "addGame", "mergeReal"],
-    "const GAMES = globalThis.__g.GAMES; let gid = 0; const hash = () => 0;");
+    ["normName", "idKey", "SAME_WINDOW", "sameGame", "gameKey", "addGame", "mergeReal"],
+    "const GAMES = globalThis.__g.GAMES; const hash = () => 0;");
   return {page, GAMES: globalThis.__g.GAMES};
 }
 
@@ -704,4 +705,57 @@ test("the counters describe the latest pass only", async () => {
   h.stubSummary("EPL", LIVE_EVENT(g.start));
   assert.equal(await h.page.fillScores(), 1, "the next pass answers and the score lands");
   assert.deepEqual({asked:h.page.scoreReqs.asked, failed:h.page.scoreReqs.failed}, {asked:1, failed:0});
+});
+
+/* ---- game ids ---------------------------------------------------------
+   A saved game is remembered by its id. The id used to carry a load-order
+   counter, so the browser journeys caught a saved game coming back unsaved
+   after a reload: the second load met remembered results first, and the
+   same match became UCL-63 instead of UCL-54. */
+
+const later = (h) => KICKOFF + h * 3600000;
+const fixture = (over = {}) => ({eid:"401879318", comp:"EPL", start:KICKOFF, real:true, listed:true,
+  home:{id:"ful", name:"Fulham"}, away:{id:"che", name:"Chelsea"},
+  result:{status:"scheduled", label:"", score:null}, ...over});
+
+test("a game's id names the game, not the order it was loaded in", () => {
+  const {page, GAMES} = mergeHarness();
+  page.mergeReal([fixture()]);
+  const day = new Date(KICKOFF).toISOString().slice(0, 10);
+  assert.equal(GAMES[0].id, "EPL-" + day + "-ful-che");
+});
+
+test("the same fixtures loaded in another order get the same ids", () => {
+  const a = fixture(), b = fixture({eid:"401879319", home:{id:"ars", name:"Arsenal"}, away:{id:"liv", name:"Liverpool"}, start:later(2)}),
+        c = fixture({eid:"401800001", comp:"NHL", home:{id:"van", name:"Canucks"}, away:{id:"det", name:"Red Wings"}, start:later(30)});
+  const one = mergeHarness(); one.page.mergeReal([a, b]); one.page.mergeReal([c]);
+  const ids1 = Object.fromEntries(one.GAMES.map(g => [g.home.id, g.id]));
+  const two = mergeHarness(); two.page.mergeReal([structuredClone(c)]); two.page.mergeReal([structuredClone(b), structuredClone(a)]);
+  const ids2 = Object.fromEntries(two.GAMES.map(g => [g.home.id, g.id]));
+  assert.deepEqual(ids2, ids1);
+});
+
+test("a refreshed copy keeps the id, even when the kickoff moved to another day", () => {
+  const {page, GAMES} = mergeHarness();
+  page.mergeReal([fixture()]);
+  const id = GAMES[0].id;
+  page.mergeReal([fixture({fromFeed:true, result:{status:"live", label:"12'", score:[0, 0]}})]);
+  assert.equal(GAMES.length, 1);
+  assert.equal(GAMES[0].id, id, "a live top-up does not rename the game");
+  page.mergeReal([fixture({start:later(30)})]);
+  assert.equal(GAMES.length, 1);
+  assert.notEqual(new Date(GAMES[0].start).toISOString().slice(0, 10), new Date(KICKOFF).toISOString().slice(0, 10));
+  assert.equal(GAMES[0].id, id, "nor does a postponement to the next day");
+});
+
+test("two meetings on the same day get different ids", () => {
+  const {page, GAMES} = mergeHarness();
+  page.mergeReal([fixture({comp:"MLB", eid:"1", start:KICKOFF}), fixture({comp:"MLB", eid:"2", start:later(3)})]);
+  assert.equal(GAMES.length, 2);
+  assert.notEqual(GAMES[0].id, GAMES[1].id);
+  assert.match(GAMES[1].id, /-2$/);
+});
+
+test("no load-order counter is left in the page", () => {
+  assert.doesNotMatch(readFileSync(new URL("../src/page.html", import.meta.url), "utf8"), /\+\+gid\b/);
 });
