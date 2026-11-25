@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XYRh8galtp/9brkcbLAXApAWWvp9P2KyTXOyhPLKYHs='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-uKaDxaEHaQdqSUVenc6Y07ex+onfCdfAgOEp99VscnY='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -809,6 +809,37 @@ main{padding:22px 0 80px}
   .svc-name{font-size:12px}
   .rights-tbl th,.rights-tbl td{padding:8px 12px}
 }
+/* TRIAL (layout-trial branch, not for merge): ways to lay out a matchup,
+   switched from the bar at the foot of the page. The current layout lets
+   the two teams sit side by side when the names happen to fit and wraps
+   them when they do not, so neighbouring rows come out in different
+   shapes. Each trial layout is one shape for every row. */
+@media (max-width:760px){
+  body.lay-stack .g-teams{display:grid;grid-template-columns:minmax(0,1fr);gap:3px}
+  body.lay-stack .g-side{display:grid;gap:1px}
+  body.lay-stack .g-team{white-space:normal}
+  body.lay-stack .g-rec{padding-left:26px}
+  body.lay-stack .g-teams .at{padding-left:26px;font-size:9.5px;line-height:1.1}
+  body.lay-side .game{grid-template-columns:minmax(0,1fr) auto auto;
+    grid-template-areas:"time score bell" "match match match" "watch watch watch"}
+  body.lay-side .g-score{flex-direction:row;align-items:baseline;gap:6px;align-self:center}
+  body.lay-side .g-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:start;gap:10px;padding:4px 0 2px}
+  body.lay-side .g-side{align-items:center;text-align:center}
+  body.lay-side .g-team{flex-direction:column;gap:5px;white-space:normal;text-align:center}
+  body.lay-side .g-team .crest{width:34px;height:34px;font-size:11px}
+  body.lay-side .g-rec{white-space:normal;text-align:center}
+  body.lay-side .g-teams .at{align-self:start;padding-top:11px}
+}
+.trial-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:6px;overflow-x:auto;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--surface);
+  border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.10)}
+.trial-bar b{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);align-self:center;white-space:nowrap;font-weight:500}
+.trial-bar button{flex:none;font:inherit;font-size:13px;padding:8px 12px;border-radius:999px;
+  border:1px solid var(--line-strong);background:transparent;color:var(--ink);min-height:40px}
+.trial-bar button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+body.has-trial{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
 </style>
 
 <header class="topbar">
@@ -8627,11 +8658,22 @@ function saveButton(id, on, what){
     + ' title="'+esc(on?"Saved in this browser":"Save in this browser")+'"'
     + ' aria-label="'+esc(label)+'">'+BELL+'</button>';
 }
+/* TRIAL: which layout the bar at the foot of the page has chosen. The
+   "-home" ones put the home team first in every sport. */
+const LAYOUTS = [["now", "Current"], ["stack", "Stacked"], ["stack-home", "Stacked, home first"],
+  ["side", "Side by side"], ["side-home", "Side by side, home first"]];
+let layoutTrial = (function(v){ return LAYOUTS.some(l => l[0] === v) ? v : "now"; })(LS.get("gdn.layout.trial", "now"));
+function applyLayout(){
+  const b = document.body;
+  b.classList.remove("lay-stack", "lay-side");
+  if(layoutTrial !== "now") b.classList.add("lay-" + layoutTrial.split("-")[0]);
+}
 function orderedTeams(g){
   /* Rugby is written home v away, like soccer and unlike the North
      American "away at home". Getting this wrong would not merely read
      oddly: `flip` is what decides which way round a score is printed. */
   if(g.rugby) return {a:g.home,b:g.away,sep:"v",flip:false};
+  if(typeof layoutTrial !== "undefined" && /-home$/.test(layoutTrial)) return {a:g.home,b:g.away,sep:"vs",flip:false};
   return SOCCER[g.comp] ? {a:g.home,b:g.away,sep:"vs",flip:false} : {a:g.away,b:g.home,sep:"at",flip:true};
 }
 const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
@@ -10882,6 +10924,26 @@ setInterval(()=>{
 syncRaceTeams(Date.now());
 if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn()) openDrawer(drawer);
 persist(); renderDrawer(); render();
+/* TRIAL: the layout switcher. */
+(function trialBar(){
+  const bar = document.createElement("div");
+  bar.className = "trial-bar"; bar.setAttribute("role", "group"); bar.setAttribute("aria-label", "Layout trial");
+  bar.innerHTML = '<b>Layout</b>' + LAYOUTS.map(l => '<button type="button" data-layout="' + l[0]
+    + '" aria-pressed="' + (l[0] === layoutTrial) + '">' + esc(l[1]) + '</button>').join("");
+  bar.addEventListener("click", e => {
+    const btn = e.target.closest("[data-layout]");
+    if(!btn) return;
+    layoutTrial = btn.getAttribute("data-layout");
+    LS.set("gdn.layout.trial", layoutTrial);
+    bar.querySelectorAll("[data-layout]").forEach(x => x.setAttribute("aria-pressed", String(x.getAttribute("data-layout") === layoutTrial)));
+    applyLayout(); render();
+  });
+  document.body.appendChild(bar);
+  document.body.classList.add("has-trial");
+  applyLayout();
+  const on = bar.querySelector('[aria-pressed="true"]');
+  if(on) on.scrollIntoView({inline:"center", block:"nearest"});
+})();
 })();
 </script>
 
