@@ -699,6 +699,8 @@ On iOS, `data.json` refreshes from `https://game-day-north.vercel.app/data.json`
 
 Preferences keep their existing `gdn.*` localStorage keys under Capacitor's stable local origin. Share links retain the same hash format and use the public Game Day North URL rather than a local `capacitor://` address.
 
+Game-time alerts are an iOS-only setting, "Remind me 30 minutes before my teams' games", in the My teams drawer; it is off by default, kept in `gdn.remind`, and hidden on the website. They are local notifications (`@capacitor/local-notifications`): the page works out the list and the phone fires each one itself, so there is no push service, no token and nothing sent anywhere. iOS is asked for permission only when the setting is turned on, never at launch. The list is every upcoming game of a followed team in the next 14 days, hidden competitions skipped, nearest first, capped at 50 because iOS keeps at most 64 pending; it is replaced whole (cancel everything pending, schedule what is true now) after each schedule load and on return to the app, and again when a saved choice changes it. The text is "<Away> at <Home>" and "Starts in 30 min · on <carriers>" from the rights table, in its own confidence, and never a score. `window.GDNNative.alerts` in `src/native-bridge.js` is the whole native surface (`status`, `request`, `replace`, `clear`), and `src/alert-list.mjs` is the check every list passes before anything is cancelled or scheduled.
+
 ### Hosting and security boundaries
 
 GitHub is the source repository and runs the scheduled sports-data builds. Vercel is the canonical public site and the iOS app's `data.json` origin. GitHub Pages can remain a static backup, but only the Vercel address is used in native code and share links.

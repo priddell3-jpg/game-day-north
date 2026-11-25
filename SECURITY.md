@@ -2,7 +2,9 @@
 
 Game Day North stores no accounts, passwords, payment details, location history,
 or private user records. Team, service, spoiler, and display preferences remain
-on the viewer's device in `localStorage`.
+on the viewer's device in `localStorage`. Game reminders in the iOS app are
+local notifications scheduled on the phone itself; there is no push service
+and no device token.
 
 The iOS app ships its HTML, CSS, JavaScript, and fonts inside the signed app. It
 does not load executable application code from the public website. Remote hosts
