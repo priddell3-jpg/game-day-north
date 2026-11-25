@@ -366,7 +366,7 @@ const ROW_PREAMBLE = `
   let SPOILED = new Set();
   globalThis.__spoil = now => { SPOILED = spoiledTeams(now); return SPOILED; };
 `;
-const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
+const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","RIGHTS",
   "resolveRights","SOCCER","fullName","esc","inkOn","pad","ymd","normName",
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag","seriesTag",

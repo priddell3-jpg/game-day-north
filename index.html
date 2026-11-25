@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-VC50FlSTRW5jE2SfQ6hqW5frnJ3enThdFV2x8xE+/EM='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-JxQUoor20z0IPCfEHotAXOd6zogyJi3NeoWt28pJ/sA='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -5041,263 +5041,139 @@ const RUGBY_COMPS = Object.keys(COMPS).filter(c=>COMPS[c].rugby);
 const isRugbyComp = c => !!(COMPS[c] && COMPS[c].rugby);
 
 /* ============================================================
-   SERVICES — carriers roll up to the subscription you'd buy.
-   Sportsnet Pacific / One / + are all "a Sportsnet sub".
+   RIGHTS — which Canadian service carries each game.
+
+   The table itself is data, in data/rights.json: ordered rules, first
+   match wins, each carrying its confidence and its source so a listing
+   can say how much it should be trusted. build.js inlines that file
+   here, so every build carries a copy. data.json carries the same
+   document, and loadStatic hands it to adoptRights: a rights fix reaches
+   an installed iPhone on the next data refresh, without a new build or
+   an App Store review.
+
+   Nothing downloaded is ever run. A rule's conditions are plain fields
+   (teams, day, dow, hourFrom, stage, tournamentIs, tournamentHas,
+   major), and compileRights turns them into a test here, in code that
+   shipped with the app. A rule with a condition this build does not know
+   is skipped rather than half-applied, so a newer document can never
+   make an older app match more games than the rule meant.
+
+   SERVICES are what a viewer subscribes to; CARRIER_SERVICE rolls each
+   carrier up to one (Sportsnet Pacific, One and + are all "a Sportsnet
+   sub"). Both come from the same document.
    ============================================================ */
-const SERVICES = {
-  sportsnet:{label:"Sportsnet", kind:"tv"},
-  tsn:      {label:"TSN",       kind:"tv"},
-  rds:      {label:"RDS",       kind:"tv"},
-  tva:      {label:"TVA Sports",kind:"tv"},
-  ctv:      {label:"CTV",       kind:"tv"},
-  prime:    {label:"Prime Video",kind:"stream"},
-  fubo:     {label:"Fubo",      kind:"stream"},
-  dazn:     {label:"DAZN",      kind:"stream"},
-  apple:    {label:"Apple TV",  kind:"stream"},
-  mlbtv:    {label:"MLB.TV",    kind:"stream"},
-  nbalp:    {label:"NBA League Pass", kind:"stream"},
-  flobikes: {label:"FloBikes",  kind:"stream"},
-  premier:  {label:"Premier Sports", kind:"stream"}
-};
-const CARRIER_SERVICE = {
-  "Sportsnet":"sportsnet","Sportsnet One":"sportsnet","Sportsnet Pacific":"sportsnet",
-  "Sportsnet West":"sportsnet","Sportsnet Ontario":"sportsnet","Sportsnet+":"sportsnet",
-  "TSN":"tsn","TSN1":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn",
-  "RDS":"rds","TVA Sports":"tva","CTV":"ctv","CTV2":"ctv",
-  "Prime Video":"prime","Fubo Canada":"fubo","DAZN Canada":"dazn",
-  "MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp","FloBikes":"flobikes",
-  "Premier Sports":"premier"
-};
+const RIGHTS_BUNDLED = {"schema":1,"checked":"2026-08-22","services":{"sportsnet":{"label":"Sportsnet","kind":"tv"},"tsn":{"label":"TSN","kind":"tv"},"rds":{"label":"RDS","kind":"tv"},"tva":{"label":"TVA Sports","kind":"tv"},"ctv":{"label":"CTV","kind":"tv"},"prime":{"label":"Prime Video","kind":"stream"},"fubo":{"label":"Fubo","kind":"stream"},"dazn":{"label":"DAZN","kind":"stream"},"apple":{"label":"Apple TV","kind":"stream"},"mlbtv":{"label":"MLB.TV","kind":"stream"},"nbalp":{"label":"NBA League Pass","kind":"stream"},"flobikes":{"label":"FloBikes","kind":"stream"},"premier":{"label":"Premier Sports","kind":"stream"}},"carrierService":{"Sportsnet":"sportsnet","Sportsnet One":"sportsnet","Sportsnet Pacific":"sportsnet","Sportsnet West":"sportsnet","Sportsnet Ontario":"sportsnet","Sportsnet+":"sportsnet","TSN":"tsn","TSN1":"tsn","TSN3":"tsn","TSN4":"tsn","TSN5":"tsn","TSN+":"tsn","RDS":"rds","TVA Sports":"tva","CTV":"ctv","CTV2":"ctv","Prime Video":"prime","Fubo Canada":"fubo","DAZN Canada":"dazn","MLS Season Pass":"apple","MLB.TV":"mlbtv","NBA League Pass":"nbalp","FloBikes":"flobikes","Premier Sports":"premier"},"sources":{"fubo":{"label":"Fubo press release","url":"https://www.businesswire.com/news/home/20250417021019/en/Fubo-Retains-Exclusive-Rights-to-Premier-League-in-Canada-With-Multi-Year-Agreement-Beginning-With-20252026-Season"},"dazn":{"label":"DAZN press room","url":"https://dazngroup.com/press-room/dazn-canada-retains-exclusive-rights-to-uefa-club-competitions/"},"daznlist":{"label":"DAZN Canada rights list","url":"https://www.livesoccertv.com/channels/dazn-canada/"},"rogers":{"label":"Rogers / Prime Video","url":"https://about.rogers.com/news-ideas/rogers-and-prime-video-announce-12-year-sublicensing-agreement-for-nhl-rights-in-canada/"},"cbc":{"label":"CBC sublicence ended","url":"https://www.sportsvideo.org/2026/06/16/nhl-games-leaving-cbc-in-canada-as-sublicense-rogers-sportsnet-ends/"},"tsnreg":{"label":"TSN/RDS regional extension","url":"https://www.tsn.ca/nhl/article/montreal-canadiens-tsn-and-rds-announce-landmark-long-term-rights-extension/"},"nflca":{"label":"NFL.com — ways to watch in Canada","url":"https://www.nfl.com/international/ways-to-watch/canada"},"wikica":{"label":"Sports broadcasting contracts in Canada","url":"https://en.wikipedia.org/wiki/Sports_broadcasting_contracts_in_Canada"},"mlslin":{"label":"MLS linear TV deals (TSN/RDS)","url":"https://www.mlssoccer.com/news/major-league-soccer-fox-sports-televisaunivision-tsn-rds-announce-multi-year-lin"},"nbatsn":{"label":"TSN — NBA rights extension to 2035-36","url":"https://www.tsn.ca/nba/video/2026/10/30/tsn-continues-to-be-home-to-live-coverage-of-the-nba/"},"nbasn":{"label":"Sportsnet — Rogers NBA renewal to 2035-36","url":"https://x.com/Sportsnet/status/2116317175497806296"},"nbaprime":{"label":"Prime Video Canada — NBA package","url":"https://www.aboutamazon.ca/news/amazon-prime/prime-video-to-bring-nba-games-to-canadian-basketball-fans-starting-in-2026"},"jays":{"label":"Sportsnet+ carries the MLB postseason","url":"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},"flo":{"label":"Escape Collective — how to watch 2026","url":"https://escapecollective.com/how-to-watch-pro-bike-racing-in-2026/"},"pcs":{"label":"ProCyclingStats — 2026 WorldTour calendar","url":"https://www.procyclingstats.com/races.php?year=2026&circuit=1"},"none":{"label":"No Canadian rights holder found","url":""},"m6n":{"label":"Six Nations — where to watch","url":"https://www.sixnationsrugby.com/en/m6n/where-to-watch-guinness-six-nations"},"nchamp":{"label":"Nations Championship — where to watch","url":"https://nationschampionshiprugby.com/en/news/where-to-watch-the-inaugural-2026-nations-championship"},"ans":{"label":"Autumn Nations Series — where to watch","url":"https://www.sixnationsrugby.com/en/autumn-nations-series/where-to-watch-ans"},"lions25":{"label":"British & Irish Lions 2025 — where to watch","url":"https://www.lionsrugby.com/en/news/where-to-watch-the-british-and-irish-lions-this-summer"},"atptv":{"label":"ATP Tour — Watch Live, broadcaster list","url":"https://www.atptour.com/en/video/watch-live"},"usopen":{"label":"US Open — international broadcasters","url":"https://www.usopen.org/en_US/about/tv_intl.html"},"tsnfall":{"label":"TSN — Canada's national teams, fall 2026 lineup","url":"https://www.tsn.ca/soccer/article/canadas-national-teams-back-in-action-in-loaded-fall-soccer-lineup-on-tsn/"},"uefanl":{"label":"UEFA — where to watch the Nations League","url":"https://www.uefa.com/uefanationsleague/news/02a9-219ae5c877f5-740390ccb3e5-1000--where-to-watch-the-nations-league-tv-broadcast-partners-li/"}},"rules":[{"comp":"ATP","if":{"tournamentIs":["us open"]},"carriers":[{"name":"TSN","kind":"tv"},{"name":"RDS","kind":"tv"}],"confidence":"confirmed","note":"The US Open's own international broadcaster listing names TSN and RDS for Canada. Grand Slam rights are sold separately from the ATP tour deal","src":"usopen"},{"comp":"WTA","if":{"tournamentIs":["us open"]},"carriers":[{"name":"TSN","kind":"tv"},{"name":"RDS","kind":"tv"}],"confidence":"confirmed","note":"The US Open's own international broadcaster listing names TSN and RDS for Canada. Grand Slam rights are sold separately from the WTA tour deal","src":"usopen"},{"comp":"ATP","if":{"major":true},"carriers":[],"confidence":"unknown","note":"A Grand Slam outside the US Open. Its Canadian rights are sold separately from the ATP tour deal and no current source was found for them","src":"none"},{"comp":"WTA","if":{"major":true},"carriers":[],"confidence":"unknown","note":"A Grand Slam outside the US Open. Its Canadian rights are sold separately from the WTA tour deal and no current source was found for them","src":"none"},{"comp":"ATP","if":{"tournamentHas":["national bank open","canada masters","rogers cup","omnium banque nationale"]},"carriers":[{"name":"Sportsnet","kind":"tv"}],"confidence":"confirmed","note":"ATP's broadcaster list names Sportsnet for the Canadian Masters event","src":"atptv"},{"comp":"WTA","if":{"tournamentHas":["national bank open","canada masters","rogers cup","omnium banque nationale"]},"carriers":[],"confidence":"unknown","note":"ATP's listing covers the men's Canadian Masters only; no current source was found for the women's event","src":"none"},{"comp":"ATP","carriers":[{"name":"TSN","kind":"tv"},{"name":"TSN+","kind":"stream"}],"confidence":"expected","note":"ATP's own broadcaster list names TSN as the Canadian home of the tour. Which specific matches reach a channel is not published per event, so this is the tour deal rather than a confirmed listing for this match","src":"atptv"},{"comp":"WTA","carriers":[],"confidence":"unknown","note":"No current Canadian rights source was found for the WTA tour. ATP's broadcaster list does not cover it","src":"none"},{"comp":"UCI","carriers":[{"name":"FloBikes","kind":"stream"}],"confidence":"confirmed","note":"Exclusive Canadian home of the men's and women's WorldTour","src":"flo"},{"comp":"RU6N","carriers":[{"name":"Premier Sports","kind":"stream"}],"confidence":"confirmed","note":"Premier Sports is the Canadian home of the Guinness Men's Six Nations","src":"m6n"},{"comp":"RUNC","carriers":[{"name":"Premier Sports","kind":"stream"}],"confidence":"confirmed","note":"Premier Sports carries the inaugural 2026 Nations Championship in Canada","src":"nchamp"},{"comp":"RUANS","carriers":[{"name":"DAZN Canada","kind":"stream"}],"confidence":"confirmed","note":"DAZN carries the Quilter Autumn Nations Series in Canada","src":"ans"},{"comp":"RULIONS","carriers":[],"confidence":"unknown","note":"DAZN carried the 2025 tour in Canada; no current source for any later tour, so no carrier is claimed","src":"lions25"},{"comp":"RUTRC","carriers":[],"confidence":"unknown","note":"No Canadian rights holder verified for The Rugby Championship","src":"none"},{"comp":"RURWC","carriers":[],"confidence":"unknown","note":"No Canadian rights holder verified for Rugby World Cup 2027","src":"none"},{"comp":"RUPNC","carriers":[],"confidence":"unknown","note":"No Canadian rights holder verified for the Pacific Nations Cup","src":"none"},{"comp":"RUWNC","carriers":[],"confidence":"unknown","note":"No Canadian rights holder verified for the World Rugby Nations Cup","src":"none"},{"comp":"RUTEST","carriers":[],"confidence":"unknown","note":"Test-match carriage in Canada is sold per series and none is confirmed for these fixtures","src":"none"},{"comp":"INTF","if":{"teams":["nt-can"],"day":["2026-09-26"]},"carriers":[{"name":"TSN4","kind":"tv"}],"confidence":"confirmed","note":"TSN's published fall lineup: Canada v Chile, Sat Sept 26, 7 p.m. ET, TSN4","src":"tsnfall","checked":"2026-09-29"},{"comp":"INTF","if":{"teams":["nt-can"],"day":["2026-10-03"]},"carriers":[{"name":"TSN4","kind":"tv"},{"name":"TSN5","kind":"tv"}],"confidence":"confirmed","note":"TSN's published fall lineup: Canada v Peru, Sat Oct 3, 2 p.m. ET, TSN4/5","src":"tsnfall","checked":"2026-09-29"},{"comp":"INTF","if":{"teams":["nt-can"],"day":["2026-10-06"]},"carriers":[{"name":"TSN1","kind":"tv"}],"confidence":"confirmed","note":"TSN's published fall lineup: USA v Canada, Tue Oct 6, 8 p.m. ET, TSN1","src":"tsnfall","checked":"2026-09-29"},{"comp":"INTF","if":{"teams":["nt-can"]},"carriers":[{"name":"TSN","kind":"tv"}],"confidence":"expected","note":"TSN carries Canada's men's matches in its published fall lineup, which runs to Oct 6. This match is not in that lineup, so TSN is expected rather than confirmed","src":"tsnfall","checked":"2026-09-29"},{"comp":"INTF","carriers":[],"confidence":"unknown","note":"Friendlies are sold match by match and no primary source names a Canadian carrier for this one","src":"none","checked":"2026-09-29"},{"comp":"UNL","carriers":[{"name":"DAZN Canada","kind":"stream"}],"confidence":"confirmed","note":"UEFA's own where-to-watch listing for the 2026/27 Nations League names DAZN for Canada","src":"uefanl","checked":"2026-09-29"},{"comp":"CNL","carriers":[],"confidence":"unknown","note":"No Canadian rights holder verified for the 2026-27 Concacaf Nations League","src":"none","checked":"2026-09-29"},{"comp":"EPL","carriers":[{"name":"Fubo Canada","kind":"stream"}],"confidence":"confirmed","note":"Exclusive — every match, through 2027-28. Note: LiveSoccerTV also lists DAZN Canada for EPL fixtures; Fubo's own release says exclusive, so Fubo is used here","src":"fubo"},{"comp":"UCL","carriers":[{"name":"DAZN Canada","kind":"stream"}],"confidence":"confirmed","note":"Exclusive UEFA club competitions. DAZN's cycle is 2024-25 to 2026-27, so this is the final season — Paramount+ is expected to take over in Canada from 2027-28 (trade press, no UC3 or Paramount release for Canada found).","src":"dazn","checked":"2026-10-14"},{"comp":"EFL","carriers":[{"name":"DAZN Canada","kind":"stream"}],"confidence":"confirmed","note":"League Cup, 2024–2028","src":"daznlist"},{"comp":"FAC","carriers":[],"confidence":"unknown","note":"No Canadian rights holder found — re-check before the third round in January","src":"none"},{"comp":"SERIEA","carriers":[{"name":"DAZN Canada","kind":"stream"}],"confidence":"confirmed","note":"2024–2027","src":"daznlist"},{"comp":"BUNDES","carriers":[{"name":"DAZN Canada","kind":"stream"}],"confidence":"confirmed","note":"2025–2028","src":"daznlist"},{"comp":"LALIGA","carriers":[],"confidence":"unknown","note":"Canadian carrier not confirmed","src":"none"},{"comp":"LIGUE1","carriers":[],"confidence":"unknown","note":"Canadian carrier not confirmed","src":"none"},{"comp":"MLS","if":{"teams":["van-mls","tfc","mtl-mls"]},"carriers":[{"name":"MLS Season Pass","kind":"stream","confidence":"confirmed"},{"name":"TSN","kind":"tv","confidence":"expected"}],"confidence":"expected","note":"Apple carries every match; TSN/RDS simulcast at least one Canadian club match a week — that 2023-2026 window has not been renewed as of 2026-10-14, so treat it as lapsing after this season.","src":"mlslin","checked":"2026-10-14"},{"comp":"MLS","carriers":[{"name":"MLS Season Pass","kind":"stream"}],"confidence":"confirmed","note":"Apple is global rightsholder, every match, through 2032","src":"wikica"},{"comp":"NHL","if":{"dow":[3]},"carriers":[{"name":"Prime Video","kind":"stream"}],"confidence":"confirmed","note":"Wednesday national exclusive — 26+ games, from 2026-27","src":"rogers"},{"comp":"NHL","if":{"dow":[6,1]},"carriers":[{"name":"Sportsnet","kind":"tv"},{"name":"Sportsnet+","kind":"stream"}],"confidence":"confirmed","note":"Sportsnet national window (Sat + Mon). Hockey Night in Canada is no longer on CBC","src":"cbc"},{"comp":"NHL","if":{"teams":["mtl-nhl"]},"carriers":[{"name":"TSN5","kind":"tv"},{"name":"RDS","kind":"tv"},{"name":"TSN+","kind":"stream"}],"confidence":"confirmed","note":"Bell Media holds Canadiens regional rights under a long-term extension","src":"tsnreg"},{"comp":"NHL","if":{"teams":["ott"]},"carriers":[{"name":"TSN5","kind":"tv"},{"name":"TSN+","kind":"stream"}],"confidence":"expected","note":"Senators regional — Bell Media","src":"tsnreg"},{"comp":"NHL","if":{"teams":["wpg"]},"carriers":[{"name":"TSN3","kind":"tv"},{"name":"TSN+","kind":"stream"}],"confidence":"expected","note":"Jets regional — TSN","src":"tsnreg"},{"comp":"NHL","if":{"teams":["van-nhl"]},"carriers":[{"name":"Sportsnet Pacific","kind":"tv"},{"name":"Sportsnet+","kind":"stream"}],"confidence":"expected","note":"Canucks regional — Sportsnet","src":"rogers"},{"comp":"NHL","if":{"teams":["tor-nhl"]},"carriers":[{"name":"Sportsnet Ontario","kind":"tv"},{"name":"Sportsnet+","kind":"stream"}],"confidence":"expected","note":"Leafs regional — Rogers-owned","src":"rogers"},{"comp":"NHL","if":{"teams":["edm","cgy"]},"carriers":[{"name":"Sportsnet West","kind":"tv"},{"name":"Sportsnet+","kind":"stream"}],"confidence":"expected","note":"Oilers/Flames regional","src":"rogers"},{"comp":"NHL","carriers":[{"name":"Sportsnet One","kind":"tv"},{"name":"Sportsnet+","kind":"stream"}],"confidence":"expected","note":"Sportsnet is national rightsholder for all other games","src":"rogers"},{"comp":"MLB","if":{"stage":true},"carriers":[{"name":"Sportsnet","kind":"tv"},{"name":"Sportsnet+","kind":"stream"}],"confidence":"confirmed","note":"Sportsnet holds national MLB rights in Canada; Sportsnet+ carries the entire postseason","src":"jays"},{"comp":"MLB","if":{"teams":["tor-mlb"]},"carriers":[{"name":"Sportsnet","kind":"tv"},{"name":"Sportsnet+","kind":"stream"}],"confidence":"confirmed","note":"Rogers owns the Blue Jays — every game on Sportsnet","src":"wikica"},{"comp":"MLB","carriers":[{"name":"MLB.TV","kind":"stream"}],"confidence":"expected","note":"Out-of-market. Some national US games also appear on TSN or RDS","src":"wikica"},{"comp":"NBA","if":{"day":["2026-10-30","2026-11-06","2026-11-13","2026-11-20","2026-11-24","2026-11-25","2026-11-27","2026-12-04","2026-12-05","2026-12-08","2026-12-11"]},"carriers":[{"name":"Prime Video","kind":"stream"}],"confidence":"confirmed","note":"Emirates NBA Cup night — every game scheduled is a Cup game, and the Cup is Prime Video's exclusively in Canada from 2026-27","src":"nbaprime","checked":"2026-11-15"},{"comp":"NBA","if":{"teams":["tor-nba"]},"carriers":[{"name":"TSN","kind":"tv"},{"name":"Sportsnet","kind":"tv"}],"confidence":"confirmed","note":"TSN and Sportsnet split the 82 regular-season Raptors games 41/41 under the ten-year renewals each announced on 2026-10-30, through 2035-36. Two Raptors games this season are Prime Video exclusives on no traditional carrier; the feed cannot tell which, so this row is wrong on those two nights","src":"nbatsn","checked":"2026-11-15"},{"comp":"NBA","carriers":[{"name":"TSN","kind":"tv"},{"name":"Sportsnet","kind":"tv"},{"name":"Prime Video","kind":"stream"},{"name":"NBA League Pass","kind":"stream"}],"confidence":"expected","note":"National games are shared between TSN, Sportsnet and Prime Video; Sportsnet carries the Playoffs and the Finals; Prime Video has the Play-In and select playoff and Conference Finals games exclusively; everything else is on League Pass","src":"nbasn","checked":"2026-11-15"},{"comp":"NFL","if":{"dow":[4,1]},"carriers":[{"name":"TSN","kind":"tv"},{"name":"RDS","kind":"tv"},{"name":"DAZN","kind":"stream"}],"confidence":"confirmed","note":"TSN carries all primetime games — Thursday, Sunday and Monday night","src":"nflca"},{"comp":"NFL","if":{"dow":[0],"hourFrom":19},"carriers":[{"name":"TSN","kind":"tv"},{"name":"DAZN","kind":"stream"}],"confidence":"confirmed","note":"Sunday Night Football — TSN","src":"nflca"},{"comp":"NFL","carriers":[{"name":"CTV","kind":"tv"},{"name":"RDS","kind":"tv"},{"name":"DAZN","kind":"stream"}],"confidence":"confirmed","note":"CTV is the free-to-air home of Sunday afternoon games; DAZN carries every game via Game Pass","src":"nflca"}]};
 
-/* ============================================================
-   RIGHTS TABLE — ordered rules, first match wins.
-   Every row carries its confidence and its source, so a listing
-   can say how much it should be trusted. Editing a rights change
-   is a data edit here, not a code change.
-   ============================================================ */
-const CHECKED = "2026-08-22";
-const SRC = {
-  fubo:    {label:"Fubo press release", url:"https://www.businesswire.com/news/home/20250417021019/en/Fubo-Retains-Exclusive-Rights-to-Premier-League-in-Canada-With-Multi-Year-Agreement-Beginning-With-20252026-Season"},
-  dazn:    {label:"DAZN press room", url:"https://dazngroup.com/press-room/dazn-canada-retains-exclusive-rights-to-uefa-club-competitions/"},
-  daznlist:{label:"DAZN Canada rights list", url:"https://www.livesoccertv.com/channels/dazn-canada/"},
-  rogers:  {label:"Rogers / Prime Video", url:"https://about.rogers.com/news-ideas/rogers-and-prime-video-announce-12-year-sublicensing-agreement-for-nhl-rights-in-canada/"},
-  cbc:     {label:"CBC sublicence ended", url:"https://www.sportsvideo.org/2026/06/16/nhl-games-leaving-cbc-in-canada-as-sublicense-rogers-sportsnet-ends/"},
-  tsnreg:  {label:"TSN/RDS regional extension", url:"https://www.tsn.ca/nhl/article/montreal-canadiens-tsn-and-rds-announce-landmark-long-term-rights-extension/"},
-  nflca:   {label:"NFL.com — ways to watch in Canada", url:"https://www.nfl.com/international/ways-to-watch/canada"},
-  wikica:  {label:"Sports broadcasting contracts in Canada", url:"https://en.wikipedia.org/wiki/Sports_broadcasting_contracts_in_Canada"},
-  mlslin:  {label:"MLS linear TV deals (TSN/RDS)", url:"https://www.mlssoccer.com/news/major-league-soccer-fox-sports-televisaunivision-tsn-rds-announce-multi-year-lin"},
-  nbatsn:  {label:"TSN — NBA rights extension to 2035-36", url:"https://www.tsn.ca/nba/video/2026/10/30/tsn-continues-to-be-home-to-live-coverage-of-the-nba/"},
-  nbasn:   {label:"Sportsnet — Rogers NBA renewal to 2035-36", url:"https://x.com/Sportsnet/status/2116317175497806296"},
-  nbaprime:{label:"Prime Video Canada — NBA package", url:"https://www.aboutamazon.ca/news/amazon-prime/prime-video-to-bring-nba-games-to-canadian-basketball-fans-starting-in-2026"},
-  jays:    {label:"Sportsnet+ carries the MLB postseason", url:"https://www.sportsmediawatch.com/tv-schedules/mlb-tv-schedule/toronto-blue-jays/"},
-  flo:     {label:"Escape Collective — how to watch 2026", url:"https://escapecollective.com/how-to-watch-pro-bike-racing-in-2026/"},
-  pcs:     {label:"ProCyclingStats — 2026 WorldTour calendar", url:"https://www.procyclingstats.com/races.php?year=2026&circuit=1"},
-  none:    {label:"No Canadian rights holder found", url:""},
-  m6n:     {label:"Six Nations — where to watch", url:"https://www.sixnationsrugby.com/en/m6n/where-to-watch-guinness-six-nations"},
-  nchamp:  {label:"Nations Championship — where to watch", url:"https://nationschampionshiprugby.com/en/news/where-to-watch-the-inaugural-2026-nations-championship"},
-  ans:     {label:"Autumn Nations Series — where to watch", url:"https://www.sixnationsrugby.com/en/autumn-nations-series/where-to-watch-ans"},
-  lions25: {label:"British & Irish Lions 2025 — where to watch", url:"https://www.lionsrugby.com/en/news/where-to-watch-the-british-and-irish-lions-this-summer"},
-  atptv:   {label:"ATP Tour — Watch Live, broadcaster list", url:"https://www.atptour.com/en/video/watch-live"},
-  usopen:  {label:"US Open — international broadcasters", url:"https://www.usopen.org/en_US/about/tv_intl.html"},
-  tsnfall: {label:"TSN — Canada's national teams, fall 2026 lineup", url:"https://www.tsn.ca/soccer/article/canadas-national-teams-back-in-action-in-loaded-fall-soccer-lineup-on-tsn/"},
-  uefanl:  {label:"UEFA — where to watch the Nations League", url:"https://www.uefa.com/uefanationsleague/news/02a9-219ae5c877f5-740390ccb3e5-1000--where-to-watch-the-nations-league-tv-broadcast-partners-li/"}
-};
-const tv = (n, confidence) => ({name:n, kind:"tv", confidence});
-const st = (n, confidence) => ({name:n, kind:"stream", confidence});
-const CDN_MLS = ["van-mls","tfc","mtl-mls"];
-/* Every Emirates NBA Cup night of 2026-27, by Eastern listing date, as
-   ESPN's scoreboard marks them ("NBA Cup - Group Play", "- Quarterfinals",
-   "- Semifinals", "NBA Cup Championship"). The feed carries no stage for
-   basketball, so a Cup game cannot be read off the fixture; it can be
-   read off the calendar, because on each of these nights every game
-   scheduled is a Cup game — checked day by day from 2026-10-20 to
-   2027-01-05 on 2026-11-15. Group play runs through November, the
-   knockout rounds in December. Rewritten each season. */
-const NBA_CUP_NIGHTS = ["2026-10-30","2026-11-06","2026-11-13","2026-11-20","2026-11-24","2026-11-25","2026-11-27",
-                        "2026-12-04","2026-12-05","2026-12-08","2026-12-11"];
+/* A rights document as this build can use it, or null if it cannot be
+   trusted at all. Strict checking happens before anything ships
+   (scripts/lib/rights.cjs); this is the defensive half, for a file that
+   arrived over the network and may be from a newer or broken build. */
+function compileRights(doc){
+  try{
+    const isObj = v => !!v && typeof v === "object" && !Array.isArray(v);
+    const isDate = s => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+    if(!isObj(doc) || doc.schema !== 1 || !isDate(doc.checked)) return null;
+    if(!isObj(doc.services) || !isObj(doc.carrierService) || !isObj(doc.sources) || !Array.isArray(doc.rules)) return null;
+    if(doc.rules.length === 0 || doc.rules.length > 1000) return null;
+    const services = {}, carrierService = {}, sources = {};
+    for(const [id, s] of Object.entries(doc.services)){
+      if(!isObj(s) || typeof s.label !== "string" || (s.kind !== "tv" && s.kind !== "stream")) return null;
+      services[id] = {label:s.label, kind:s.kind};
+    }
+    for(const [name, id] of Object.entries(doc.carrierService)){
+      if(typeof id !== "string") return null;
+      carrierService[name] = id;
+    }
+    for(const [key, s] of Object.entries(doc.sources)){
+      if(!isObj(s) || typeof s.label !== "string" || typeof s.url !== "string") return null;
+      if(s.url && !/^https:\/\//.test(s.url)) return null;
+      sources[key] = {label:s.label, url:s.url};
+    }
+    if(!sources.none) return null;
+    const lower = list => list.map(v => String(v).toLowerCase());
+    const TESTS = {
+      teams: v => Array.isArray(v) && (g => v.some(id => g.has(id))),
+      day: v => Array.isArray(v) && (g => v.indexOf(g.day()) >= 0),
+      dow: v => Array.isArray(v) && (g => v.indexOf(g.dow) >= 0),
+      hourFrom: v => Number.isFinite(v) && (g => g.hour >= v),
+      stage: v => v === true && (g => g.stage !== ""),
+      tournamentIs: v => Array.isArray(v) && (l => g => l.indexOf(String(g.tournament).toLowerCase()) >= 0)(lower(v)),
+      tournamentHas: v => Array.isArray(v) && (l => g => { const t = String(g.tournament).toLowerCase(); return l.some(s => t.indexOf(s) >= 0); })(lower(v)),
+      major: v => v === true && (g => g.major)
+    };
+    const never = () => false;
+    let revised = doc.checked;
+    const rules = [];
+    for(const r of doc.rules){
+      if(!isObj(r)) return null;
+      if(r.comp === undefined && Object.keys(r).every(k => k === "//")) continue;
+      if(typeof r.comp !== "string" || !Array.isArray(r.carriers) || typeof r.confidence !== "string"
+        || typeof r.note !== "string" || !Object.prototype.hasOwnProperty.call(sources, r.src)) return null;
+      if(r.checked !== undefined && !isDate(r.checked)) return null;
+      const carriers = [];
+      for(const c of r.carriers){
+        if(!isObj(c) || typeof c.name !== "string" || (c.kind !== "tv" && c.kind !== "stream")) return null;
+        carriers.push({name:c.name, kind:c.kind, confidence:c.confidence});
+      }
+      const rule = {comp:r.comp, carriers, confidence:r.confidence, note:r.note, src:sources[r.src],
+        checked:r.checked || doc.checked};
+      if(r.if !== undefined){
+        if(!isObj(r.if)) return null;
+        const tests = [];
+        let known = true;
+        for(const [k, v] of Object.entries(r.if)){
+          const t = Object.prototype.hasOwnProperty.call(TESTS, k) ? TESTS[k](v) : null;
+          if(!t){ known = false; break; }
+          tests.push(t);
+        }
+        rule.if = r.if;
+        rule.when = known ? (g => tests.every(t => t(g))) : never;
+      }
+      if(rule.checked > revised) revised = rule.checked;
+      rules.push(rule);
+    }
+    return {services, carrierService, sources, rules, checked:doc.checked, revised,
+      text:JSON.stringify(doc), source:"bundled"};
+  }catch(e){ return null; }
+}
 
-/* Tennis rights attach to a tournament, never to a player. Following
-   Alcaraz tells you nothing about who shows his matches; the tournament
-   he is playing decides that, and it changes from week to week. So these
-   rules key on the event, and a player's row inherits whatever the
-   tournament he is in resolves to.
+/* The tables the rest of the page reads. They are filled in place by
+   adoptRights rather than reassigned, so everything that holds one keeps
+   seeing the current table, and a rule's src stays the very object in
+   SRC that it cites. */
+const RIGHTS_STATE = compileRights(RIGHTS_BUNDLED) || {services:{}, carrierService:{},
+  sources:{none:{label:"No Canadian rights holder found", url:""}}, rules:[], checked:"", revised:"",
+  text:"", source:"none"};
+const SERVICES = RIGHTS_STATE.services;
+const CARRIER_SERVICE = RIGHTS_STATE.carrierService;
+const SRC = RIGHTS_STATE.sources;
+const RIGHTS = RIGHTS_STATE.rules;
+/* The bundled copy's default checked date. Read by listings that have
+   no rule behind them; a rule carries its own. */
+const CHECKED = RIGHTS_STATE.checked;
 
-   Two sources were checked and neither covers everything, which is why
-   most of this table is honest about not knowing:
-
-   · ATP's own broadcaster list names TSN in Canada for the tour, and
-     Sportsnet for the Canadian Masters event specifically.
-   · The US Open's own international broadcaster page names TSN and RDS.
-
-   A Grand Slam is not an ATP tour event and its rights are sold
-   separately, so the ATP listing says nothing about Melbourne, Paris or
-   Wimbledon — those resolve to Coverage not confirmed rather than being assumed to
-   follow the tour. Neither source covers the WTA tour at all, so a WTA
-   event outside a Slam is unknown too. Guessing here would put a service
-   badge on a match nobody can confirm is carried. */
-const CANADA_MASTERS = /national bank open|canada masters|rogers cup|omnium banque nationale/i;
-const US_OPEN = /^us open$/i;
-
-const RIGHTS = [
-  /* ---------------- tennis ----------------
-     Slam first: its rights are its own, whichever tour the draw sits in. */
-  {comp:"ATP", when:g=>US_OPEN.test(g.tournament), carriers:[tv("TSN"), tv("RDS")], confidence:"confirmed",
-   note:"The US Open's own international broadcaster listing names TSN and RDS for Canada. Grand Slam rights are sold separately from the ATP tour deal", src:SRC.usopen, checked:CHECKED},
-  {comp:"WTA", when:g=>US_OPEN.test(g.tournament), carriers:[tv("TSN"), tv("RDS")], confidence:"confirmed",
-   note:"The US Open's own international broadcaster listing names TSN and RDS for Canada. Grand Slam rights are sold separately from the WTA tour deal", src:SRC.usopen, checked:CHECKED},
-  {comp:"ATP", when:g=>g.major, carriers:[], confidence:"unknown",
-   note:"A Grand Slam outside the US Open. Its Canadian rights are sold separately from the ATP tour deal and no current source was found for them", src:SRC.none, checked:CHECKED},
-  {comp:"WTA", when:g=>g.major, carriers:[], confidence:"unknown",
-   note:"A Grand Slam outside the US Open. Its Canadian rights are sold separately from the WTA tour deal and no current source was found for them", src:SRC.none, checked:CHECKED},
-  {comp:"ATP", when:g=>CANADA_MASTERS.test(g.tournament), carriers:[tv("Sportsnet")], confidence:"confirmed",
-   note:"ATP's broadcaster list names Sportsnet for the Canadian Masters event", src:SRC.atptv, checked:CHECKED},
-  {comp:"WTA", when:g=>CANADA_MASTERS.test(g.tournament), carriers:[], confidence:"unknown",
-   note:"ATP's listing covers the men's Canadian Masters only; no current source was found for the women's event", src:SRC.none, checked:CHECKED},
-  {comp:"ATP", carriers:[tv("TSN"), st("TSN+")], confidence:"expected",
-   note:"ATP's own broadcaster list names TSN as the Canadian home of the tour. Which specific matches reach a channel is not published per event, so this is the tour deal rather than a confirmed listing for this match", src:SRC.atptv, checked:CHECKED},
-  {comp:"WTA", carriers:[], confidence:"unknown",
-   note:"No current Canadian rights source was found for the WTA tour. ATP's broadcaster list does not cover it", src:SRC.none, checked:CHECKED},
-
-  /* ---------------- cycling ----------------
-     Refreshingly simple: one platform holds essentially the whole
-     men's and women's WorldTour in Canada. */
-  {comp:"UCI", carriers:[st("FloBikes")], confidence:"confirmed",
-   note:"Exclusive Canadian home of the men's and women's WorldTour", src:SRC.flo, checked:CHECKED},
-
-  /* ---------------- men's international rugby union ----------------
-     Rights here attach to the competition and never to a nation. Ireland
-     appear in the Six Nations (Premier Sports), the Nations Championship
-     (Premier Sports) and a summer tour test (nobody confirmed), and a
-     rule keyed on "Ireland" would get two of those three wrong. */
-  {comp:"RU6N", carriers:[st("Premier Sports")], confidence:"confirmed",
-   note:"Premier Sports is the Canadian home of the Guinness Men's Six Nations",
-   src:SRC.m6n, checked:CHECKED},
-  {comp:"RUNC", carriers:[st("Premier Sports")], confidence:"confirmed",
-   note:"Premier Sports carries the inaugural 2026 Nations Championship in Canada",
-   src:SRC.nchamp, checked:CHECKED},
-  {comp:"RUANS", carriers:[st("DAZN Canada")], confidence:"confirmed",
-   note:"DAZN carries the Quilter Autumn Nations Series in Canada",
-   src:SRC.ans, checked:CHECKED},
-  /* The 2025 tour was on DAZN in Canada. That is a fact about 2025 and
-     not about the next tour, which is sold separately and has no
-     announced Canadian carriage — so it is recorded here as unknown
-     with the old listing named in the note rather than carried forward
-     as though it still applied. */
-  {comp:"RULIONS", carriers:[], confidence:"unknown",
-   note:"DAZN carried the 2025 tour in Canada; no current source for any later tour, so no carrier is claimed",
-   src:SRC.lions25, checked:CHECKED},
-  {comp:"RUTRC", carriers:[], confidence:"unknown",
-   note:"No Canadian rights holder verified for The Rugby Championship", src:SRC.none, checked:CHECKED},
-  {comp:"RURWC", carriers:[], confidence:"unknown",
-   note:"No Canadian rights holder verified for Rugby World Cup 2027", src:SRC.none, checked:CHECKED},
-  {comp:"RUPNC", carriers:[], confidence:"unknown",
-   note:"No Canadian rights holder verified for the Pacific Nations Cup", src:SRC.none, checked:CHECKED},
-  {comp:"RUWNC", carriers:[], confidence:"unknown",
-   note:"No Canadian rights holder verified for the World Rugby Nations Cup", src:SRC.none, checked:CHECKED},
-  {comp:"RUTEST", carriers:[], confidence:"unknown",
-   note:"Test-match carriage in Canada is sold per series and none is confirmed for these fixtures",
-   src:SRC.none, checked:CHECKED},
-
-  /* ---------------- men's national teams ----------------
-     A friendly is sold match by match, usually by the home federation,
-     so there is no competition-wide deal to read a carrier from. What
-     can be known is what a broadcaster has published, and TSN has
-     published Canada's fall lineup match by match, with channels.
-
-     So the rule keys on Canada being in the match, and then on what TSN
-     actually listed. The three matches it names are confirmed, on the
-     channels it names. A Canada match it does not name is expected on
-     TSN and no more than that: the article is a lineup, not a rights
-     announcement, and says nothing about a match after 6 October. Every
-     other nation's friendly is unknown, because nothing primary names a
-     Canadian carrier for it.
-
-     These rows carry their own date: they were sourced on 2026-09-29,
-     later than the rest of the table, and do not borrow CHECKED. */
-  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-09-26", carriers:[tv("TSN4")], confidence:"confirmed",
-   note:"TSN's published fall lineup: Canada v Chile, Sat Sept 26, 7 p.m. ET, TSN4", src:SRC.tsnfall, checked:"2026-09-29"},
-  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-10-03", carriers:[tv("TSN4"), tv("TSN5")], confidence:"confirmed",
-   note:"TSN's published fall lineup: Canada v Peru, Sat Oct 3, 2 p.m. ET, TSN4/5", src:SRC.tsnfall, checked:"2026-09-29"},
-  {comp:"INTF", when:g=>g.has("nt-can") && g.day()==="2026-10-06", carriers:[tv("TSN1")], confidence:"confirmed",
-   note:"TSN's published fall lineup: USA v Canada, Tue Oct 6, 8 p.m. ET, TSN1", src:SRC.tsnfall, checked:"2026-09-29"},
-  {comp:"INTF", when:g=>g.has("nt-can"), carriers:[tv("TSN")], confidence:"expected",
-   note:"TSN carries Canada's men's matches in its published fall lineup, which runs to Oct 6. This match is not in that lineup, so TSN is expected rather than confirmed", src:SRC.tsnfall, checked:"2026-09-29"},
-  {comp:"INTF", carriers:[], confidence:"unknown",
-   note:"Friendlies are sold match by match and no primary source names a Canadian carrier for this one", src:SRC.none, checked:"2026-09-29"},
-  {comp:"UNL", carriers:[st("DAZN Canada")], confidence:"confirmed",
-   note:"UEFA's own where-to-watch listing for the 2026/27 Nations League names DAZN for Canada", src:SRC.uefanl, checked:"2026-09-29"},
-  {comp:"CNL", carriers:[], confidence:"unknown",
-   note:"No Canadian rights holder verified for the 2026-27 Concacaf Nations League", src:SRC.none, checked:"2026-09-29"},
-
-  /* ---------------- soccer ---------------- */
-  {comp:"EPL", carriers:[st("Fubo Canada")], confidence:"confirmed",
-   note:"Exclusive — every match, through 2027-28. Note: LiveSoccerTV also lists DAZN Canada for EPL fixtures; Fubo's own release says exclusive, so Fubo is used here", src:SRC.fubo, checked:CHECKED},
-  {comp:"UCL", carriers:[st("DAZN Canada")], confidence:"confirmed",
-   note:"Exclusive UEFA club competitions. DAZN's cycle is 2024-25 to 2026-27, so this is the final season — Paramount+ is expected to take over in Canada from 2027-28 (trade press, no UC3 or Paramount release for Canada found).", src:SRC.dazn, checked:"2026-10-14"},
-  {comp:"EFL", carriers:[st("DAZN Canada")], confidence:"confirmed",
-   note:"League Cup, 2024–2028", src:SRC.daznlist, checked:CHECKED},
-  {comp:"FAC", carriers:[], confidence:"unknown",
-   note:"No Canadian rights holder found — re-check before the third round in January", src:SRC.none, checked:CHECKED},
-  {comp:"SERIEA", carriers:[st("DAZN Canada")], confidence:"confirmed", note:"2024–2027", src:SRC.daznlist, checked:CHECKED},
-  {comp:"BUNDES", carriers:[st("DAZN Canada")], confidence:"confirmed", note:"2025–2028", src:SRC.daznlist, checked:CHECKED},
-  {comp:"LALIGA", carriers:[], confidence:"unknown", note:"Canadian carrier not confirmed", src:SRC.none, checked:CHECKED},
-  {comp:"LIGUE1", carriers:[], confidence:"unknown", note:"Canadian carrier not confirmed", src:SRC.none, checked:CHECKED},
-
-  /* ---------------- MLS ---------------- */
-  {comp:"MLS", when:g=>CDN_MLS.some(id=>g.has(id)),
-   carriers:[st("MLS Season Pass", "confirmed"), tv("TSN", "expected")],
-   confidence:"expected",
-   note:"Apple carries every match; TSN/RDS simulcast at least one Canadian club match a week — that 2023-2026 window has not been renewed as of 2026-10-14, so treat it as lapsing after this season.", src:SRC.mlslin, checked:"2026-10-14"},
-  {comp:"MLS", carriers:[st("MLS Season Pass")], confidence:"confirmed",
-   note:"Apple is global rightsholder, every match, through 2032", src:SRC.wikica, checked:CHECKED},
-
-  /* ---------------- NHL: first year of the new Rogers deal ---------------- */
-  {comp:"NHL", when:g=>g.dow===3, carriers:[st("Prime Video")], confidence:"confirmed",
-   note:"Wednesday national exclusive — 26+ games, from 2026-27", src:SRC.rogers, checked:CHECKED},
-  {comp:"NHL", when:g=>g.dow===6||g.dow===1, carriers:[tv("Sportsnet"), st("Sportsnet+")], confidence:"confirmed",
-   note:"Sportsnet national window (Sat + Mon). Hockey Night in Canada is no longer on CBC", src:SRC.cbc, checked:CHECKED},
-  {comp:"NHL", when:g=>g.has("mtl-nhl"), carriers:[tv("TSN5"), tv("RDS"), st("TSN+")], confidence:"confirmed",
-   note:"Bell Media holds Canadiens regional rights under a long-term extension", src:SRC.tsnreg, checked:CHECKED},
-  {comp:"NHL", when:g=>g.has("ott"), carriers:[tv("TSN5"), st("TSN+")], confidence:"expected", note:"Senators regional — Bell Media", src:SRC.tsnreg, checked:CHECKED},
-  {comp:"NHL", when:g=>g.has("wpg"), carriers:[tv("TSN3"), st("TSN+")], confidence:"expected", note:"Jets regional — TSN", src:SRC.tsnreg, checked:CHECKED},
-  {comp:"NHL", when:g=>g.has("van-nhl"), carriers:[tv("Sportsnet Pacific"), st("Sportsnet+")], confidence:"expected", note:"Canucks regional — Sportsnet", src:SRC.rogers, checked:CHECKED},
-  {comp:"NHL", when:g=>g.has("tor-nhl"), carriers:[tv("Sportsnet Ontario"), st("Sportsnet+")], confidence:"expected", note:"Leafs regional — Rogers-owned", src:SRC.rogers, checked:CHECKED},
-  {comp:"NHL", when:g=>g.has("edm")||g.has("cgy"), carriers:[tv("Sportsnet West"), st("Sportsnet+")], confidence:"expected", note:"Oilers/Flames regional", src:SRC.rogers, checked:CHECKED},
-  {comp:"NHL", carriers:[tv("Sportsnet One"), st("Sportsnet+")], confidence:"expected",
-   note:"Sportsnet is national rightsholder for all other games", src:SRC.rogers, checked:CHECKED},
-
-  /* ---------------- MLB ---------------- */
-  {comp:"MLB", when:g=>g.stage!=="", carriers:[tv("Sportsnet"), st("Sportsnet+")], confidence:"confirmed",
-   note:"Sportsnet holds national MLB rights in Canada; Sportsnet+ carries the entire postseason", src:SRC.jays, checked:CHECKED},
-  {comp:"MLB", when:g=>g.has("tor-mlb"), carriers:[tv("Sportsnet"), st("Sportsnet+")], confidence:"confirmed",
-   note:"Rogers owns the Blue Jays — every game on Sportsnet", src:SRC.wikica, checked:CHECKED},
-  {comp:"MLB", carriers:[st("MLB.TV")], confidence:"expected",
-   note:"Out-of-market. Some national US games also appear on TSN or RDS", src:SRC.wikica, checked:CHECKED},
-
-  /* ---------------- NBA: Bell and Rogers renewed to 2035-36; Prime Video from 2026-27 ---------------- */
-  /* Prime Video Canada's package began this season — exclusive regular-
-     season games, the Emirates NBA Cup, the SoFi Play-In and select
-     playoff and Conference Finals games — and none of it is on TSN or
-     Sportsnet. The Cup is the one window the schedule can place, by
-     night (NBA_CUP_NIGHTS above), so it gets a row of its own ahead of
-     the Raptors row. The Play-In (April 2027) and Prime's playoff games
-     are not in the feed yet, so the general row names Prime among the
-     carriers rather than pretending to know the night. */
-  {comp:"NBA", when:g=>NBA_CUP_NIGHTS.indexOf(g.day())>=0, carriers:[st("Prime Video")], confidence:"confirmed",
-   note:"Emirates NBA Cup night — every game scheduled is a Cup game, and the Cup is Prime Video's exclusively in Canada from 2026-27", src:SRC.nbaprime, checked:"2026-11-15"},
-  {comp:"NBA", when:g=>g.has("tor-nba"), carriers:[tv("TSN"), tv("Sportsnet")], confidence:"confirmed",
-   note:"TSN and Sportsnet split the 82 regular-season Raptors games 41/41 under the ten-year renewals each announced on 2026-10-30, through 2035-36. Two Raptors games this season are Prime Video exclusives on no traditional carrier; the feed cannot tell which, so this row is wrong on those two nights", src:SRC.nbatsn, checked:"2026-11-15"},
-  {comp:"NBA", carriers:[tv("TSN"), tv("Sportsnet"), st("Prime Video"), st("NBA League Pass")], confidence:"expected",
-   note:"National games are shared between TSN, Sportsnet and Prime Video; Sportsnet carries the Playoffs and the Finals; Prime Video has the Play-In and select playoff and Conference Finals games exclusively; everything else is on League Pass", src:SRC.nbasn, checked:"2026-11-15"},
-
-  /* ---------------- NFL ---------------- */
-  {comp:"NFL", when:g=>g.dow===4||g.dow===1, carriers:[tv("TSN"), tv("RDS"), st("DAZN")], confidence:"confirmed",
-   note:"TSN carries all primetime games — Thursday, Sunday and Monday night", src:SRC.nflca, checked:CHECKED},
-  {comp:"NFL", when:g=>g.dow===0&&g.hour>=19, carriers:[tv("TSN"), st("DAZN")], confidence:"confirmed",
-   note:"Sunday Night Football — TSN", src:SRC.nflca, checked:CHECKED},
-  {comp:"NFL", carriers:[tv("CTV"), tv("RDS"), st("DAZN")], confidence:"confirmed",
-   note:"CTV is the free-to-air home of Sunday afternoon games; DAZN carries every game via Game Pass", src:SRC.nflca, checked:CHECKED}
-];
+/* Take the rights carried in data.json, if they are usable and not older
+   than the copy this build shipped with. An app updated since its saved
+   data.json was written keeps its newer bundled table until a fresher
+   download arrives. Returns whether the table changed. */
+function adoptRights(doc){
+  if(doc == null) return false;
+  const next = compileRights(doc);
+  if(!next){ console.warn("Ignoring the rights in data.json: not a document this build can read"); return false; }
+  if(next.text === RIGHTS_STATE.text) return false;
+  const bundledRevised = RIGHTS_STATE.bundledRevised || RIGHTS_STATE.revised;
+  if(next.revised < bundledRevised) return false;
+  const refill = (into, from) => { Object.keys(into).forEach(k => { delete into[k]; }); Object.assign(into, from); };
+  refill(SERVICES, next.services);
+  refill(CARRIER_SERVICE, next.carrierService);
+  refill(SRC, next.sources);
+  RIGHTS.splice(0, RIGHTS.length, ...next.rules);
+  RIGHTS_STATE.bundledRevised = bundledRevised;
+  RIGHTS_STATE.revised = next.revised;
+  RIGHTS_STATE.text = next.text;
+  RIGHTS_STATE.source = "feed";
+  return true;
+}
 
 function listingDay(ms){
   const p = zoneParts("ET", ms);
@@ -6695,6 +6571,10 @@ async function loadStatic(){
      before filtering fixtures so the race teams are known on the same
      pass; otherwise they would not appear until a later refresh. */
   attachStandings(r.standings);
+  /* The rights travel with the schedule, so a rights fix reaches an
+     installed app with the next data refresh. A file without them, or
+     with a copy older than the one this build carries, changes nothing. */
+  adoptRights(r.rights);
   syncRaceTeams(Date.now());
   const built = [];
   r.fixtures.forEach(f=>{

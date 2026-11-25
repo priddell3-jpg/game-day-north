@@ -20,7 +20,11 @@ Everything is per-viewer: teams, services and the score toggle live in `localSto
 
 ## Competitions, not leagues
 
-Broadcast rights attach to a **competition**, not a team. Liverpool in one season plays the Premier League (Fubo), the Champions League (DAZN), the League Cup (DAZN) and the FA Cup (no confirmed Canadian carrier). Modelling carriage per league gets that wrong, so `RIGHTS` is an ordered rules table keyed on competition, stage and matchday, first match wins.
+Broadcast rights attach to a **competition**, not a team. Liverpool in one season plays the Premier League (Fubo), the Champions League (DAZN), the League Cup (DAZN) and the FA Cup (no confirmed Canadian carrier). Modelling carriage per league gets that wrong, so the rights table is an ordered list of rules keyed on competition, stage and matchday, first match wins.
+
+**The table is data, in `data/rights.json`, and it reaches installed apps without a new build.** `build.js` inlines the file into the page, so every build of the website and the iOS app carries a copy, and `scripts/fetch-data.mjs` copies it into `data.json` under `rights`. The page adopts that copy on load (`adoptRights`) unless the copy it was built with is newer, judged by the newest `checked` date in each. A rights fix is therefore one edit to one file: merge it and the refresh job, which runs on any push touching `data/rights.json`, publishes it to the website and to every iPhone on their next data refresh, with no App Store review.
+
+A rule's conditions are plain fields — `teams`, `day` (the Eastern listing date), `dow`, `hourFrom`, `stage`, `tournamentIs`, `tournamentHas`, `major` — listed at the top of the file. Nothing downloaded is ever run: the page turns those fields into tests with its own code. A rule using a condition an older app does not know is skipped by that app rather than half-applied, so adding a condition can never make an old build match more games than the rule meant. The file is checked strictly by `scripts/lib/rights.cjs` in the tests, in `build.js` (which refuses to build) and in the data job (which refuses to publish it and carries the previous copy instead, naming the problems in its log and in `counts.rightsProblems`). Set a per-row `checked` on the rows you verify and leave the top-level date alone. Never rename a service id: viewers' service choices are stored by id.
 
 Every row carries a confidence level and a source:
 
@@ -711,7 +715,7 @@ Settings → Pages → deploy from `main`, folder `/ (root)`. `index.html` is co
 
 ## Keeping it current
 
-A scheduled task refreshes `LIVE_FIXTURES` daily and re-checks the rights table weekly against primary sources. That matters more than it sounds: 2026-27 is the first season of a new 12-year Rogers deal, so Hockey Night in Canada is no longer on CBC, Sportsnet has Saturday and Monday, and Prime Video has Wednesday nights exclusively. Any model of Canadian hockey built on the previous decade is wrong right now.
+A scheduled task refreshes `LIVE_FIXTURES` daily and re-checks the rights table (`data/rights.json`) weekly against primary sources. That matters more than it sounds: 2026-27 is the first season of a new 12-year Rogers deal, so Hockey Night in Canada is no longer on CBC, Sportsnet has Saturday and Monday, and Prime Video has Wednesday nights exclusively. Any model of Canadian hockey built on the previous decade is wrong right now.
 
 ## Roadmap
 

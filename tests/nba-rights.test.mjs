@@ -8,7 +8,7 @@ import { loadFromPage } from "./helpers/page.mjs";
    Eastern listing night, and that is what most of this file checks. */
 
 const page = loadFromPage(
-  ["SRC", "CHECKED", "tv", "st", "CDN_MLS", "NBA_CUP_NIGHTS", "CANADA_MASTERS", "US_OPEN", "RIGHTS",
+  ["SRC", "CHECKED", "RIGHTS",
    "ZONE_IANA", "_zoneFmt", "zoneParts", "listingDay", "resolveRights"],
   "const tourneyOf = () => null;");
 
@@ -18,6 +18,8 @@ const nba = (home, away, startIso) => ({
   localDow: new Date(startIso).getUTCDay(), slotHour: 0,
   result: { status: "scheduled", label: "", score: null } });
 const names = r => r.carriers.map(c => c.name);
+/* The Cup nights are the day list on the Cup row of data/rights.json. */
+const CUP_NIGHTS = page.RIGHTS.find(r => r.comp === "NBA" && r.if && r.if.day).if.day;
 
 /* 00:00 UTC on the 21st is 7 p.m. Eastern on the 20th: a Cup night. */
 const CUP_NIGHT_TOR = () => nba("det", "tor-nba", "2026-11-21T00:00:00Z");
@@ -45,13 +47,13 @@ test("a Cup night is Prime Video's alone, whoever is playing", () => {
 
 test("the Cup nights are keyed on the Eastern listing date, like the INTF rows", () => {
   assert.equal(page.listingDay(CUP_NIGHT_TOR().start), "2026-11-20");
-  assert.ok(page.NBA_CUP_NIGHTS.includes("2026-11-20"));
-  assert.ok(!page.NBA_CUP_NIGHTS.includes("2026-11-21"));
+  assert.ok(CUP_NIGHTS.includes("2026-11-20"));
+  assert.ok(!CUP_NIGHTS.includes("2026-11-21"));
   /* Eleven nights, from the first group-play Friday to the Championship. */
-  assert.equal(page.NBA_CUP_NIGHTS.length, 11);
-  assert.equal(page.NBA_CUP_NIGHTS[0], "2026-10-30");
-  assert.equal(page.NBA_CUP_NIGHTS[page.NBA_CUP_NIGHTS.length - 1], "2026-12-11");
-  assert.deepEqual([...page.NBA_CUP_NIGHTS].sort(), page.NBA_CUP_NIGHTS, "in calendar order");
+  assert.equal(CUP_NIGHTS.length, 11);
+  assert.equal(CUP_NIGHTS[0], "2026-10-30");
+  assert.equal(CUP_NIGHTS[CUP_NIGHTS.length - 1], "2026-12-11");
+  assert.deepEqual([...CUP_NIGHTS].sort(), CUP_NIGHTS, "in calendar order");
 });
 
 test("a Raptors game on an ordinary night is TSN and Sportsnet, confirmed, citing TSN's renewal", () => {

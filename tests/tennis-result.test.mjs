@@ -37,8 +37,8 @@ const PREAMBLE = `
   globalThis.__setScores = v => { showScores = v; };
   globalThis.__reveal = id => { revealed.add(id); };
 `;
-const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","tv","st","CDN_MLS","RIGHTS",
-  "US_OPEN","resolveRights","SOCCER","esc","inkOn","pad","ymd","normName","fmtTime","fmtShortDate",
+const NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","RIGHTS",
+  "resolveRights","SOCCER","esc","inkOn","pad","ymd","normName","fmtTime","fmtShortDate",
   "countdownText","BELL","saveButton","servicesFor","covered","RESULTS_DAYS","TENNIS_SETTLED",
   "visibleRights","carrierHtml","TENNIS_STATE","setText","setHtml","setTally","tourneyOf","spoiledPlayers","playerSpoiled",
   "TBD_PLAYER","nextMatchFor","nextOpponentLine","RANK_STALE_DAYS","attachRankings",
