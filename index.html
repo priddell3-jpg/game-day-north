@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XYRh8galtp/9brkcbLAXApAWWvp9P2KyTXOyhPLKYHs='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-OJwrrAogkKxvzZqfTno0x1ZD983GXvFAPtvqpSwpWfg='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -809,6 +809,57 @@ main{padding:22px 0 80px}
   .svc-name{font-size:12px}
   .rights-tbl th,.rights-tbl td{padding:8px 12px}
 }
+/* TRIAL (layout-trial branch, not for merge): ways to lay out a matchup,
+   switched from the bar at the foot of the page. The current layout lets
+   the two teams sit side by side when the names happen to fit and wraps
+   them when they do not, so neighbouring rows come out in different
+   shapes. Each trial layout is one shape for every row. */
+@media (max-width:760px){
+  body.lay-stack .g-teams{display:grid;grid-template-columns:minmax(0,1fr);gap:3px}
+  body.lay-stack .g-side{display:grid;gap:1px}
+  body.lay-stack .g-team{white-space:normal}
+  body.lay-stack .g-rec{padding-left:26px}
+  body.lay-stack .g-teams .at{padding-left:26px;font-size:9.5px;line-height:1.1}
+  body.lay-side .game{grid-template-columns:minmax(0,1fr) auto auto;
+    grid-template-areas:"time score bell" "match match match" "watch watch watch"}
+  body.lay-side .g-score{flex-direction:row;align-items:baseline;gap:6px;align-self:center}
+  body.lay-side .g-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:start;gap:10px;padding:4px 0 2px}
+  body.lay-side .g-side{align-items:center;text-align:center}
+  body.lay-side .g-team{flex-direction:column;gap:5px;white-space:normal;text-align:center}
+  body.lay-side .g-team .crest{width:34px;height:34px;font-size:11px}
+  body.lay-side .g-rec{white-space:normal;text-align:center}
+  body.lay-side .g-teams .at{align-self:start;padding-top:11px}
+}
+.g-pts,.mid-score{display:none}
+@media (max-width:760px){
+  body.lay-stack .g-teams.scored .at{display:none}
+  body.lay-stack .g-teams.scored .g-side{grid-template-columns:minmax(0,1fr) auto;column-gap:10px}
+  body.lay-stack .g-pts{display:block;grid-column:2;grid-row:1;align-self:center;line-height:1;
+    font-family:var(--mono);font-size:19px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted)}
+  body.lay-stack .g-pts.win{color:var(--ink);font-weight:700}
+  body.lay-stack .g-teams.scored ~ * .score-line, body.lay-stack .game:has(.g-teams.scored) .score-line{display:none}
+  body.lay-stack .game:has(.g-teams.scored) .g-score{align-self:center;min-width:64px}
+  body.lay-side .g-teams.scored .at{display:none}
+  body.lay-side .g-teams.no-crest .at, body.lay-side .g-teams.no-crest .mid-score{padding-top:0}
+  body.lay-side .mid-score{display:flex;align-items:center;gap:6px;align-self:start;padding-top:4px;
+    font-family:var(--mono);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+  body.lay-side .mid-score i{font-style:normal;color:var(--muted);font-weight:400}
+  body.lay-side .mid-score.live{color:var(--live)}
+  body.lay-side .game:has(.g-teams.scored) .score-line{display:none}
+  body.lay-stack .g-teams.no-crest .g-rec, body.lay-stack .g-teams.no-crest .at{padding-left:0}
+}
+.trial-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;flex-direction:column;gap:6px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--surface);
+  border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.10)}
+.trial-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.trial-row b{min-width:58px}
+.trial-bar b{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);align-self:center;white-space:nowrap;font-weight:500}
+.trial-bar button{flex:none;font:inherit;font-size:13px;padding:8px 12px;border-radius:999px;
+  border:1px solid var(--line-strong);background:transparent;color:var(--ink);min-height:36px;padding:6px 12px}
+.trial-bar button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+body.has-trial{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 </style>
 
 <header class="topbar">
@@ -7758,6 +7809,7 @@ function provenanceOf(g, stale){
 }
 
 function stateOf(g, now){
+  if(typeof sampleTrial !== "undefined" && sampleTrial && SAMPLE.has(g.id)) return Object.assign({real:true}, SAMPLE.get(g.id));
   if(g.away===null) return {status:"scheduled"};
   const r = g.result, said = r && r.status;
   if(said==="final" || said==="live"){
@@ -8627,11 +8679,36 @@ function saveButton(id, on, what){
     + ' title="'+esc(on?"Saved in this browser":"Save in this browser")+'"'
     + ' aria-label="'+esc(label)+'">'+BELL+'</button>';
 }
+/* TRIAL: which layout the bar at the foot of the page has chosen. The
+   "-home" ones put the home team first in every sport. */
+const LAYOUTS = [["now", "Current"], ["stack", "Stacked"], ["stack-home", "Stacked, home first"],
+  ["side", "Side by side"], ["side-home", "Side by side, home first"]];
+let layoutTrial = (function(v){ return LAYOUTS.some(l => l[0] === v) ? v : "now"; })(LS.get("gdn.layout.trial", "now"));
+const NAME_MODES = [["full", "Badge + full name"], ["short", "Badge + short name"], ["plain", "Name only"]];
+let nameTrial = (function(v){ return NAME_MODES.some(l => l[0] === v) ? v : "full"; })(LS.get("gdn.names.trial", "full"));
+let sampleTrial = false, SAMPLE = new Map();
+const shortName = t => !t ? "TBD" : (t.full || !t.name) ? fullName(t) : t.name;
+/* Made-up results laid over the first rows of the board, so the layouts
+   can be judged with scores in them. Trial only; never stored. */
+const SAMPLE_STATES = [
+  {status:"live",  score:[2, 1],   label:"2nd · 12:41"},
+  {status:"final", score:[3, 4],   label:"Final/OT"},
+  {status:"final", score:[1, 1],   label:"FT"},
+  {status:"live",  score:[0, 2],   label:"67'"},
+  {status:"final", score:[105, 98], label:"Final"},
+  {status:"final", score:[6, 3],   label:"Final"}
+];
+function applyLayout(){
+  const b = document.body;
+  b.classList.remove("lay-stack", "lay-side");
+  if(layoutTrial !== "now") b.classList.add("lay-" + layoutTrial.split("-")[0]);
+}
 function orderedTeams(g){
   /* Rugby is written home v away, like soccer and unlike the North
      American "away at home". Getting this wrong would not merely read
      oddly: `flip` is what decides which way round a score is printed. */
   if(g.rugby) return {a:g.home,b:g.away,sep:"v",flip:false};
+  if(typeof layoutTrial !== "undefined" && /-home$/.test(layoutTrial)) return {a:g.home,b:g.away,sep:"vs",flip:false};
   return SOCCER[g.comp] ? {a:g.home,b:g.away,sep:"vs",flip:false} : {a:g.away,b:g.home,sep:"at",flip:true};
 }
 const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
@@ -9129,17 +9206,25 @@ function gameRow(g, now){
      the record already counts that game, so showing it anywhere would
      announce the result the person asked not to see. The judgement is
      per team and made once per render, in spoiledTeams above. */
-  const side = (t, mine, tbd) => {
+  /* TRIAL: a score per team for the stacked layout, and one in the
+     middle for side by side. The current layout keeps its score cell. */
+  const nm = typeof nameTrial !== "undefined" ? nameTrial : "full";
+  const sc = (reveal && st.score && (st.status === "final" || st.status === "live")) ? scoreFor(g, st) : null;
+  const done = sc && st.status === "final";
+  const side = (t, mine, tbd, pts, win) => {
     const line = (t && SPOILED.has(t.id)) ? null : recordLine(t, g.comp);
+    const name = nm === "short" ? shortName(t) : fullName(t);
     return '<span class="g-side">'
-      + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+crest(t)+esc(fullName(t))+'</span>'
+      + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+(nm === "plain" ? "" : crest(t))+esc(name)+'</span>'
       + (line ? '<span class="g-rec">'+esc(line)+'</span>' : '')
+      + (pts != null ? '<span class="g-pts'+(win ? " win" : "")+'">'+pts+'</span>' : '')
       + '</span>';
   };
-  const teams = '<div class="g-teams">'
-    + side(o.a, mineA, false)
+  const teams = '<div class="g-teams'+(sc ? " scored" : "")+(nm === "plain" ? " no-crest" : "")+'">'
+    + side(o.a, mineA, false, sc && sc[0], done && sc[0] > sc[1])
     + '<span class="at">'+o.sep+'</span>'
-    + side(o.b, mineB, !o.b) + '</div>';
+    + (sc ? '<span class="mid-score'+(st.status === "live" ? " live" : "")+'">'+sc[0]+'<i>&ndash;</i>'+sc[1]+'</span>' : '')
+    + side(o.b, mineB, !o.b, sc && sc[1], done && sc[1] > sc[0]) + '</div>';
 
   const meta = '<div class="g-meta">'
     + '<span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
@@ -10882,6 +10967,42 @@ setInterval(()=>{
 syncRaceTeams(Date.now());
 if(!selected.size && !raceIncluded.size && !tennisTours.size && !rugbyOn()) openDrawer(drawer);
 persist(); renderDrawer(); render();
+/* TRIAL: the layout switcher. */
+(function trialBar(){
+  const bar = document.createElement("div");
+  bar.className = "trial-bar"; bar.setAttribute("role", "group"); bar.setAttribute("aria-label", "Layout trial");
+  const row = (label, key, list, current) => '<div class="trial-row"><b>' + label + '</b>'
+    + list.map(l => '<button type="button" data-' + key + '="' + l[0] + '" aria-pressed="' + (l[0] === current) + '">' + esc(l[1]) + '</button>').join("")
+    + '</div>';
+  const paint = () => {
+    bar.innerHTML = row("Layout", "layout", LAYOUTS, layoutTrial)
+      + row("Names", "names", NAME_MODES, nameTrial)
+      + row("Scores", "sample", [["real", "Real"], ["sample", "Sample scores"]], sampleTrial ? "sample" : "real");
+    bar.querySelectorAll('[aria-pressed="true"]').forEach(on => {
+      const r = on.parentElement; r.scrollLeft = on.offsetLeft - (r.clientWidth - on.offsetWidth) / 2;
+    });
+  };
+  const pickSample = () => {
+    SAMPLE = new Map();
+    if(!sampleTrial) return;
+    render();
+    const ids = [...document.querySelectorAll("#main .game[data-game-id]:not(.tennis-game):not(.event-game)")]
+      .map(el => el.getAttribute("data-game-id")).filter((v, i, a) => a.indexOf(v) === i).slice(0, SAMPLE_STATES.length);
+    ids.forEach((id, i) => SAMPLE.set(id, SAMPLE_STATES[i]));
+  };
+  bar.addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if(!btn) return;
+    if(btn.hasAttribute("data-layout")){ layoutTrial = btn.getAttribute("data-layout"); LS.set("gdn.layout.trial", layoutTrial); }
+    if(btn.hasAttribute("data-names")){ nameTrial = btn.getAttribute("data-names"); LS.set("gdn.names.trial", nameTrial); }
+    if(btn.hasAttribute("data-sample")){ sampleTrial = btn.getAttribute("data-sample") === "sample"; pickSample(); }
+    paint(); applyLayout(); render();
+  });
+  paint();
+  document.body.appendChild(bar);
+  document.body.classList.add("has-trial");
+  applyLayout(); render();
+})();
 })();
 </script>
 
