@@ -63,10 +63,11 @@ test("the committed file carries both tours, keyed on the scoreboard's own athle
      off-season the board holds a handful of exhibition and lower-tier
      matches whose players are mostly outside the ranked depth: on
      2026-11-24 it held 37 players, two of them ranked, and this check
-     failed while nothing was wrong. Fewer players than one
-     32-player draw per tour is too few to tell a changed id from an
+     failed while nothing was wrong. The smallest in-season board on
+     record is ATP Finals week, 52 players on 2026-11-15 with the join
+     holding. Below 40 the board is too thin to tell a changed id from an
      empty calendar, so the check waits for the season. */
-  if(ids.size < 64){
+  if(ids.size < 40){
     t.skip("off-season: " + ids.size + " players on the board, too few to judge the id join");
     return;
   }
