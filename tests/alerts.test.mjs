@@ -2,10 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { loadFromPage } from "./helpers/page.mjs";
-import { checkedAlerts, clipAlertText, ALERT_MAX, ALERT_TEXT_MAX, ALERT_ID_MAX } from "../src/alert-list.mjs";
+import { checkedAlerts, clipAlertText, ALERT_MAX, ALERT_TITLE_MAX, ALERT_BODY_MAX, ALERT_ID_MAX } from "../src/alert-list.mjs";
 
-/* Game-time alerts: "Remind me 30 minutes before my teams' games", in
-   the iOS app only. The page decides which games and what to say; the
+/* Game-time alerts: "Remind me about my teams' games", at a time the
+   viewer picks (the morning of, or 3 h, 2 h, 1 h or 30 min before), in
+   the iOS app only. Most cases below run at thirty minutes, the timing
+   the feature first shipped with; the timing cases are at the end. The page decides which games and what to say; the
    bridge checks the list and hands it to the notification centre. Both
    halves are tested here as they ship — the page functions pulled out of
    src/page.html, the validator imported from the file the bridge
@@ -19,8 +21,10 @@ const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
 /* A Sunday afternoon, well clear of any Emirates NBA Cup night. */
 const NOW = Date.parse("2026-11-29T20:00:00Z");
 
-const SELECTION = ["REMIND_LEAD", "REMIND_WINDOW", "REMIND_MAX", "REMIND_TEXT_MAX", "REMIND_SLACK",
-  "fullName", "alertKey", "alertId", "alertGames", "alertClip", "alertCarriers", "alertText", "alertList"];
+const SELECTION = ["REMIND_CHOICES", "REMIND_DEFAULT", "REMIND_MORNING_HOUR", "REMIND_WINDOW", "REMIND_MAX",
+  "REMIND_TITLE_MAX", "REMIND_BODY_MAX", "REMIND_SLACK", "pad", "ymd", "localKey", "fmtTime",
+  "fullName", "remindChoice", "alertKey", "alertId", "alertGames", "alertClip", "alertCarriers", "alertText",
+  "gameAlerts", "morningDay", "morningAt", "alertShort", "morningAlerts", "alertList"];
 
 /* A page scope with a board of its own. `rights`, when given, stands in
    for resolveRights so the wording can be checked against each
@@ -30,6 +34,7 @@ function page(opts = {}){
   globalThis.__gdnAlertBox = box;
   const pre = "const box = globalThis.__gdnAlertBox;\n"
     + "const DAY = 86400000;\n"
+    + "let remindWhen = " + JSON.stringify(opts.when || "30") + ";\n"
     + "const GAMES = box.games;\n"
     + "const selected = new Set(box.picks);\n"
     + "const hiddenComps = new Set(box.hidden);\n"
@@ -64,7 +69,7 @@ test("a followed team's games in the next fourteen days are chosen, nearest firs
   const list = P.alertList(NOW);
   assert.equal(list.length, 2);
   assert.equal(list[0].at, sooner.start - 30 * MIN, "thirty minutes before the start");
-  assert.equal(P.REMIND_LEAD, 30 * MIN);
+  assert.equal(P.remindChoice("30").lead, 30 * MIN);
 });
 
 test("the window is fourteen days: the last moment inside it is in, the next is out", () => {
@@ -84,7 +89,7 @@ test("a game that has started, finished, or is inside its last half hour gets no
   /* A final the feed has not moved off a future slot is still a final. */
   const settledEarly = game(VAN, EDM, NOW + 2 * DAY, { result: { status: "final", label: "Final", score: [1, 0] } });
   const P = page({ games: [started, finished, tooClose, exactlyDue, ok, settledEarly], picks: ["van-nhl"], rights: CONFIRMED });
-  assert.deepEqual(P.alertGames(NOW), [ok]);
+  assert.deepEqual(P.alertList(NOW).map(a => a.at), [ok.start - 30 * MIN]);
   for(const a of P.alertList(NOW)) assert.ok(a.at > NOW, "every reminder is in the future");
 });
 
@@ -110,7 +115,7 @@ test("no more than fifty are scheduled, and they are the fifty nearest", () => {
   assert.ok(P.REMIND_MAX < 64, "under the 64 pending notifications iOS keeps");
   const list = P.alertList(NOW);
   assert.equal(list.length, 50);
-  assert.deepEqual(P.alertGames(NOW), games.slice(0, 50));
+  assert.deepEqual(list.map(a => a.at), games.slice(0, 50).map(g => g.start - 30 * MIN));
   assert.deepEqual(checkedAlerts(list, NOW), list, "and the bridge accepts exactly what the page builds");
 });
 
@@ -214,7 +219,7 @@ test("a reminder never carries a score", () => {
   assert.equal(a.body, "Starts in 30 min · on Sportsnet");
   assert.doesNotMatch(a.title + a.body, /[0-9]+\s*[-–]\s*[0-9]+|lead|7|5/);
   /* And structurally: the functions that write the text never read one. */
-  const text = /function alertCarriers\(g\)\{[\s\S]*?\n\}/.exec(PAGE)[0] + /function alertText\(g\)\{[\s\S]*?\n\}/.exec(PAGE)[0];
+  const text = /function alertCarriers\(g\)\{[\s\S]*?\n\}/.exec(PAGE)[0] + /function alertText\(g, choice\)\{[\s\S]*?\n\}/.exec(PAGE)[0];
   assert.doesNotMatch(text.replace(/\/\*[\s\S]*?\*\//g, ""), /result|score|series|label/);
 });
 
@@ -223,7 +228,8 @@ test("long names are clipped to the cap rather than refused", () => {
   long.full = true;
   const P = page({ games: [game(long, VAN, NOW + DAY)], picks: ["van-nhl"], rights: CONFIRMED });
   const [a] = P.alertList(NOW);
-  assert.equal(P.REMIND_TEXT_MAX, ALERT_TEXT_MAX);
+  assert.equal(P.REMIND_TITLE_MAX, ALERT_TITLE_MAX);
+  assert.equal(P.REMIND_BODY_MAX, ALERT_BODY_MAX);
   assert.equal(a.title.length, 120);
   assert.match(a.title, /…$/);
   assert.deepEqual(checkedAlerts([a], NOW), [a], "already within what the bridge allows");
@@ -253,10 +259,12 @@ test("the bridge refuses a time that is not in the future", () => {
   assert.doesNotThrow(() => checkedAlerts([good({ at: NOW + 1 })], NOW));
 });
 
-test("the bridge caps text at 120 characters and refuses what is not text", () => {
+test("the bridge caps a title at 120 characters and a body at 240, and refuses what is not text", () => {
   const [a] = checkedAlerts([good({ title: "T".repeat(500), body: "  spaced \n out  " + "b".repeat(500) })], NOW);
-  assert.equal(a.title.length, ALERT_TEXT_MAX);
-  assert.equal(a.body.length, ALERT_TEXT_MAX);
+  assert.equal(a.title.length, ALERT_TITLE_MAX);
+  assert.equal(a.body.length, ALERT_BODY_MAX);
+  assert.equal(ALERT_TITLE_MAX, 120);
+  assert.equal(ALERT_BODY_MAX, 240);
   assert.match(a.body, /^spaced out b/);
   assert.equal(clipAlertText("x".repeat(120)), "x".repeat(120), "exactly at the cap is left alone");
   for(const bad of [{ title: 5 }, { body: null }, { title: ["a"] }, { body: undefined }, { title: "   " }, { title: "" }])
@@ -323,9 +331,11 @@ function live(opts = {}){
     + "const renderRemind = () => { box.drawn = {on: remindOn, blocked: remindBlocked}; };\n"
     + "const console = {warn(){}};\n"
     + "let remindOn = box.on, remindBlocked = false, remindSynced = null, remindReady = true;\n"
+    + "let remindWhen = " + JSON.stringify(opts.when || "30") + ";\n"
     + "let remindWork = Promise.resolve();\n"
     + "box.hide = id => { hiddenComps.add(id); };\n";
-  const P = loadFromPage(["REMIND_KEY", ...SELECTION, "remindApi", "remindQueue", "syncAlerts", "setRemind"], pre);
+  const P = loadFromPage(["REMIND_KEY", "REMIND_WHEN_KEY", ...SELECTION, "remindApi", "remindQueue", "syncAlerts",
+    "setRemind", "setRemindWhen"], pre);
   return { P, api, calls, box, replaced: () => calls.filter(c => Array.isArray(c)).map(c => c[1]) };
 }
 const soon = () => game(VAN, EDM, Date.now() + DAY);
@@ -422,7 +432,7 @@ test("permission taken away in Settings stops scheduling and is noticed on retur
 test("the setting is off by default, hidden outside the app, and kept out of the share link", () => {
   assert.match(PAGE, /let remindOn = LS\.get\(REMIND_KEY, false\) === true;/);
   assert.match(PAGE, /<div class="remind" id="remindRow" hidden>/);
-  assert.match(PAGE, /Remind me 30 minutes before my teams&rsquo; games/);
+  assert.match(PAGE, /Remind me about my teams&rsquo; games/);
   const draw = /function renderRemind\(\)\{[\s\S]*?\n\}/.exec(PAGE)[0];
   assert.match(draw, /if\(!remindApi\(\)\)\{ row\.setAttribute\("hidden", ""\); return; \}/);
   assert.match(/function remindApi\(\)\{[\s\S]*?\n\}/.exec(PAGE)[0], /n\.isNative && n\.alerts/);
@@ -443,4 +453,112 @@ test("the privacy policy lists the alert setting among what stays on the device"
   const onDevice = /<h2>What stays on your device<\/h2>[\s\S]*?<\/ul>/.exec(PRIVACY)[0];
   assert.match(onDevice, /your alert setting/);
   assert.match(PRIVACY, /collects no personal data/);
+});
+
+/* --- when: the timing choice --- */
+
+test("each lead time schedules that long before the game and says so", () => {
+  const g = game(VAN, EDM, NOW + DAY);
+  for(const [when, lead, phrase] of [["180", 3 * HOUR, "3 hours"], ["120", 2 * HOUR, "2 hours"],
+                                     ["60", HOUR, "1 hour"], ["30", 30 * MIN, "30 min"]]){
+    const P = page({ games: [g], picks: ["van-nhl"], rights: CONFIRMED, when });
+    const [a] = P.alertList(NOW);
+    assert.equal(a.at, g.start - lead, when);
+    assert.equal(a.body, "Starts in " + phrase + " · on Sportsnet", when);
+  }
+});
+
+test("a game too close for the chosen lead gets no reminder, though it would at a shorter one", () => {
+  const g = game(VAN, EDM, NOW + 90 * MIN);
+  assert.deepEqual(page({ games: [g], picks: ["van-nhl"], rights: CONFIRMED, when: "120" }).alertList(NOW), []);
+  assert.equal(page({ games: [g], picks: ["van-nhl"], rights: CONFIRMED, when: "60" }).alertList(NOW).length, 1);
+});
+
+test("one hour is the default, and a choice the page no longer offers falls back to it", () => {
+  const P = page({ rights: CONFIRMED });
+  assert.equal(P.REMIND_DEFAULT, "60");
+  assert.equal(P.remindChoice("60").label, "1 hour before");
+  assert.equal(P.remindChoice("45").id, "60");
+  assert.equal(P.remindChoice(undefined).id, "60");
+  assert.deepEqual(P.REMIND_CHOICES.map(c => c.id), ["morning", "180", "120", "60", "30"], "morning first, then nearer");
+  assert.match(PAGE, /let remindWhen = remindChoice\(LS\.get\(REMIND_WHEN_KEY, REMIND_DEFAULT\)\)\.id;/);
+});
+
+/* The morning cases are built on the local clock of whatever machine runs
+   them, as the phone's own clock decides 8 a.m. */
+const local = (y, mo, d, h, mi = 0) => new Date(y, mo - 1, d, h, mi).getTime();
+const EVE = local(2026, 12, 4, 20);        // Fri 4 Dec, 8 p.m.
+
+test("the morning of: one 8 a.m. summary per day a followed team plays, listing that day's games", () => {
+  const noon = game(VAN, EDM, local(2026, 12, 5, 12));
+  const evening = game(TOR, VAN, local(2026, 12, 5, 19, 30));
+  const overnight = game(VAN, CGY, local(2026, 12, 6, 4, 30));   // before 8 a.m.: the previous morning's
+  const later = game(EDM, VAN, local(2026, 12, 7, 13));
+  const P = page({ games: [later, overnight, evening, noon], picks: ["van-nhl"], rights: CONFIRMED, when: "morning" });
+  const list = P.alertList(EVE);
+  assert.deepEqual(list.map(a => a.at), [local(2026, 12, 5, 8), local(2026, 12, 7, 8)], "Saturday and Monday; nothing on Sunday");
+  const [sat, mon] = list;
+  assert.equal(sat.title, "Game day · 3 games");
+  assert.equal(sat.body, P.fmtTime(noon.start) + " Oilers at Canucks, on Sportsnet; "
+    + P.fmtTime(evening.start) + " Canucks at Maple Leafs, on Sportsnet; "
+    + "Tomorrow " + P.fmtTime(overnight.start) + " Flames at Canucks, on Sportsnet");
+  assert.equal(mon.title, "Game day");
+  assert.notEqual(sat.id, mon.id);
+  assert.deepEqual(checkedAlerts(list, EVE), list, "the bridge accepts the summaries as built");
+});
+
+test("a morning already past is skipped, and the next one still goes", () => {
+  const today = game(VAN, EDM, local(2026, 12, 5, 19));
+  const tomorrow = game(VAN, CGY, local(2026, 12, 6, 19));
+  const P = page({ games: [today, tomorrow], picks: ["van-nhl"], rights: CONFIRMED, when: "morning" });
+  assert.deepEqual(P.alertList(local(2026, 12, 5, 9)).map(a => a.at), [local(2026, 12, 6, 8)]);
+});
+
+test("a busy day fills the summary to its cap and counts the rest", () => {
+  const games = [];
+  for(let i = 0; i < 12; i++) games.push(game(VAN, EDM, local(2026, 12, 5, 9 + i), { eid: "busy" + i }));
+  const P = page({ games, picks: ["van-nhl"], rights: CONFIRMED, when: "morning" });
+  const [a] = P.alertList(EVE);
+  assert.ok(a.body.length <= ALERT_BODY_MAX, a.body.length + " characters");
+  assert.match(a.body, /; and \d+ more$/);
+  assert.equal(a.title, "Game day · 12 games");
+});
+
+test("a summary carries no score either", () => {
+  const g = game(TOR, VAN, local(2026, 12, 5, 19), {
+    result: { status: "scheduled", label: "Leafs lead 3-1", score: [7, 5] }, series: { summary: "TOR leads 3-1" } });
+  const [a] = page({ games: [g], picks: ["van-nhl"], rights: CONFIRMED, when: "morning" }).alertList(EVE);
+  assert.doesNotMatch(a.title + a.body, /lead|3-1|\b7\b|\b5\b(?!:)/);
+  const text = /function morningAlerts\(now\)\{[\s\S]*?\n\}/.exec(PAGE)[0];
+  assert.doesNotMatch(text.replace(/\/\*[\s\S]*?\*\//g, ""), /result|score|series|label/);
+});
+
+test("changing the time replaces what is pending with the new timing, and is remembered", async () => {
+  const g = game(VAN, EDM, Date.now() + 2 * DAY);
+  const t = live({ games: [g], permission: "granted", on: true });
+  await t.P.syncAlerts(true);
+  assert.equal(t.replaced()[0][0].at, g.start - 30 * MIN);
+  await t.P.setRemindWhen("180");
+  assert.equal(t.box.stored["gdn.remind.when"], "180");
+  assert.equal(t.replaced()[1][0].at, g.start - 3 * HOUR);
+  await t.P.setRemindWhen("morning");
+  assert.equal(t.replaced()[2][0].body.includes("Oilers at Canucks"), true, "the summary replaces the per-game reminder");
+  await t.P.setRemindWhen("bogus");
+  assert.equal(t.box.stored["gdn.remind.when"], "60", "an unknown value is stored as the default");
+});
+
+test("with reminders off, a new time is kept and nothing is scheduled", async () => {
+  const t = live({ games: [soon()], permission: "granted", on: false });
+  await t.P.setRemindWhen("120");
+  assert.equal(t.box.stored["gdn.remind.when"], "120");
+  assert.deepEqual(t.calls, []);
+});
+
+test("the choice is in the My teams row, shown only while reminders are on", () => {
+  assert.match(PAGE, /<label class="remind-when" id="remindWhenRow" hidden>[\s\S]*?<select id="remindWhen" aria-label="When to remind me"><\/select>/);
+  const draw = /function renderRemind\(\)\{[\s\S]*?\n\}/.exec(PAGE)[0];
+  assert.match(draw, /REMIND_CHOICES\.map\(/);
+  assert.match(draw, /if\(remindOn\) whenRow\.removeAttribute\("hidden"\); else whenRow\.setAttribute\("hidden", ""\);/);
+  assert.match(PAGE, /getElementById\("remindWhen"\)\.addEventListener\("change",e=>\{ setRemindWhen\(e\.target\.value\); \}\);/);
+  assert.doesNotMatch(/function shareLink\(\)\{[\s\S]*?\n\}/.exec(PAGE)[0], /remindWhen/, "a setting of this phone, not of a board");
 });
