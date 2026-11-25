@@ -63,7 +63,9 @@ test("no active race means no race control", () => {
   const at = SRC.indexOf("function homeRaceState");
   const body = SRC.slice(at, SRC.indexOf("function toggleHomeTool", at));
   assert.match(body, /!showScores\) return null/);
-  assert.match(body, /if\(!cards\.length\) return null/);
+  /* With no card left the control goes, unless races were hidden: then
+     it stays as the way back to Customize. */
+  assert.match(body, /if\(!cards\.length\)\{[\s\S]*?racesHidden\(now\)[\s\S]*?: null;/);
 });
 
 test("multiple races get a compact selector and a plus count", () => {

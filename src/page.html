@@ -5494,7 +5494,7 @@ function raceShort(card){
    followed, whatever Auto currently thinks of it — which is the point,
    because a hidden race has no card left to act on and a race Auto is
    declining still needs a way to be pinned. */
-function racePrefsHtml(now){
+function racePrefsHtml(now, open){
   /* Only races in competitions this viewer actually follows. Offering
      all eight NFL divisions to someone following baseball and Liverpool
      is a settings screen, which is the thing this is trying not to be. */
@@ -5506,7 +5506,7 @@ function racePrefsHtml(now){
     + esc(racePrefBtnId(c.id, pref, "opt")) + '" data-race-pref="' + esc(c.id)
     + '" data-pref="' + pref + '" aria-pressed="' + (racePrefOf(c.id) === pref) + '">'
     + label + '</button>';
-  return '<details class="race-prefs"><summary>Customize</summary><div class="race-prefs-in">'
+  return '<details class="race-prefs"' + (open ? " open" : "") + '><summary>Customize</summary><div class="race-prefs-in">'
     + '<p class="race-prefs-note">Auto shows a race when a club you follow is near the line, or '
     + 'when a season is far enough along that the race matters on its own. Follow one to keep it '
     + 'here; when games-behind data is available, teams within 3.5 games of its line also join '
@@ -5526,7 +5526,14 @@ function renderRaces(now, compact){
      and a table that moved overnight tells them anyway. */
   if(!showScores) return "";
   const cards = raceCards(now, selected);
-  if(!cards.length) return "";
+  if(!cards.length){
+    /* Everything left is hidden: keep the way back in reach. */
+    const hidden = compact ? racesHidden(now).length : 0;
+    if(!hidden) return "";
+    return '<div class="races-in"><p class="race-prefs-note">No race to show. You have hidden '
+      + (hidden === 1 ? "one race; set it" : hidden + " races; set one") + ' back to Auto or Follow '
+      + 'below to see it again.</p>' + racePrefsHtml(now, true) + '</div>';
+  }
   /* Shut, this is one row, and the row has to earn it. The count says
      how much is in there and the second line says the thing you would
      have opened it to find out. */
@@ -5668,10 +5675,20 @@ function homeResultsState(now){
   return {past, text:past.length ? past.length+" game"+(past.length===1?"":"s")
       +(showScores&&scored ? " \u00b7 "+scored+" final"+(scored===1?"":"s") : "") : "Nothing confirmed"};
 }
+/* Races the viewer has hidden among the competitions they follow. Hiding
+   the last visible race used to take the whole tool away, and with it
+   Customize, the only place a hidden race can be brought back. */
+function racesHidden(now){
+  return raceCandidates(now, selected)
+    .filter(c => raceFollowsComp(c.comp, selected) && racePrefOf(c.id) === RACE_HIDE);
+}
 function homeRaceState(now){
   if((!selected.size && !followedRaces.length) || !showScores) return null;
   const cards=raceCards(now,selected);
-  if(!cards.length) return null;
+  if(!cards.length){
+    const hidden = racesHidden(now).length;
+    return hidden ? {cards, text:hidden + (hidden === 1 ? " race hidden" : " races hidden")} : null;
+  }
   return {cards, text:raceShort(cards[0])+(cards.length>1 ? " \u00b7 +"+(cards.length-1) : "")};
 }
 function toggleHomeTool(kind){

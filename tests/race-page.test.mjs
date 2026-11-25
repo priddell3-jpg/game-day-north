@@ -26,7 +26,7 @@ const NAMES = ["esc", "COMPS", "SOCCER", "TEAM_MANIFEST", "TEAMS", "fullName",
   "RACE_CLINCH",
   "raceAge", "raceHeldAt", "raceOrdinal", "raceRowName", "raceShortName", "raceFigures",
   "raceOrigin", "raceLineHtml", "raceRowHtml", "raceCardHtml", "raceGapPhrase", "raceShort",
-  "racePrefsHtml", "renderRaces", "racePickerCandidates", "racePickerKey", "racePickerHtml"];
+  "racePrefsHtml", "racesHidden", "homeRaceState", "renderRaces", "racePickerCandidates", "racePickerKey", "racePickerHtml"];
 
 /* A fresh page scope per case. `showScores` and the followed set are read
    by the code under test and never written by it, so they are baked into
@@ -776,6 +776,31 @@ test("a hidden race is still reachable, or there is no way back", () => {
   assert.match(html, /data-race-pref="mlb-wc-al"[^>]*data-pref="hide" aria-pressed="true"/,
     "showing the state it is actually in");
   assert.match(html, /data-pref="auto"/, "with a way back to Auto");
+});
+
+/* Found by the browser journeys: hiding the only race on screen took the
+   In the Race control away, and Customize lives inside that control, so
+   the race could never be brought back. */
+test("hiding the last race keeps Customize in reach", () => {
+  const P = page({ picks: ["tor-mlb"], prefs: { "mlb-wc-al": "hide" } });
+  P.attachStandings(MLB);
+  assert.deepEqual(P.raceCards(NOW, new Set(["tor-mlb"])), []);
+  const state = P.homeRaceState(NOW);
+  assert.ok(state, "the control stays");
+  assert.equal(state.text, "1 race hidden");
+  const html = P.renderRaces(NOW, true);
+  assert.match(html, /No race to show\. You have hidden one race; set it back to Auto or Follow/);
+  assert.match(html, /<details class="race-prefs" open>/, "with Customize already open");
+  assert.match(html, /data-race-pref="mlb-wc-al"[^>]*data-pref="auto"/, "and the way back to Auto");
+});
+
+test("with nothing relevant and nothing hidden, there is still no race control", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  assert.equal(P.homeRaceState(NOW), null, "no standings at all");
+  assert.equal(P.renderRaces(NOW, true), "");
+  const off = page({ picks: ["tor-mlb"], prefs: { "mlb-wc-al": "hide" }, scores: false });
+  off.attachStandings(MLB);
+  assert.equal(off.homeRaceState(NOW), null, "scores off still hides every race figure");
 });
 
 test("preferences key on the race, live in their own store, and leave teams alone", () => {
