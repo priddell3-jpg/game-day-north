@@ -188,6 +188,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .drawer-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .drawer-head h2{margin:0;font-size:14px;font-weight:800;font-stretch:118%;letter-spacing:-.1px}
 .drawer-head .count{font-family:var(--mono);font-size:11px;color:var(--muted)}
+/* The reminder switch: iOS app only, so it is hidden until the page has
+   found the native bridge. One row, a switch on the right, and a line
+   under it that appears only when iOS is refusing to deliver. */
+.remind{margin:0 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.remind-btn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;
+  padding:0;border:0;background:none;color:var(--ink);font:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
+.remind-switch{flex:none;width:42px;height:26px;border-radius:999px;background:var(--line-strong);position:relative;transition:background .15s}
+.remind-switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.remind-btn[aria-checked="true"] .remind-switch{background:var(--accent)}
+.remind-btn[aria-checked="true"] .remind-switch::after{transform:translateX(16px)}
+.remind-note{margin:6px 0 2px;font-size:12px;line-height:1.45;color:var(--muted)}
 .search{
   margin-left:auto;padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);
   font:inherit;font-size:13px;color:var(--ink);min-width:180px;
@@ -819,6 +830,13 @@ main{padding:22px 0 80px}
       <h2>Choose what to follow</h2>
       <span class="count" id="drawerCount"></span>
       <input class="search" id="teamSearch" type="search" placeholder="Search teams…" aria-label="Search teams">
+    </div>
+    <div class="remind" id="remindRow" hidden>
+      <button class="remind-btn" id="remindToggle" role="switch" aria-checked="false">
+        <span>Remind me 30 minutes before my teams&rsquo; games</span>
+        <span class="remind-switch" aria-hidden="true"></span>
+      </button>
+      <p class="remind-note" id="remindNote" role="status" hidden></p>
     </div>
     <div id="teamGroups"></div>
   </div>
@@ -3718,6 +3736,9 @@ function persist(){
   LS.set("gdn.tennis.stars",[...tennisStars]);
   LS.set("gdn.tennisTours",[...tennisTours]); LS.set("gdn.tennisEvents",[...tennisEvents]);
   LS.set(TENNIS_ALL_KEY, tennisAll);
+  /* A team unfollowed or a competition hidden changes which games are
+     worth a reminder, and neither necessarily causes a reload. */
+  if(typeof syncAlerts === "function") syncAlerts();
 }
 /* Built only when you ask for it, so the address bar stays clean. */
 function shareLink(){
@@ -3865,6 +3886,229 @@ const isMine = g => g.rugby ? rugbyOn()
 const isStarred = t => !!(t && t.nation && rugbyStars.has(t.nation));
 const isStarredPlayer = p => !!(p && p.id && tennisStars.has(String(p.id)));
 const myGames = () => GAMES.filter(g=>isMine(g) && !hiddenComps.has(g.comp));
+
+/* ============================================================
+   GAME-TIME ALERTS — iOS app only.
+
+   "Remind me 30 minutes before my teams' games." Off until someone
+   turns it on, and iOS is asked for permission at that moment and never
+   before: a permission prompt at launch is a question about a feature
+   nobody has seen yet.
+
+   These are local notifications. The page works out which games and
+   what to say, hands the whole list to the phone, and the phone fires
+   each one itself. No server learns which teams are followed, so there
+   is nothing to collect.
+
+   The list is always replaced whole, never patched: every pass cancels
+   what is pending and schedules what is true now. A kickoff that moved,
+   a fixture that appeared, a team that was unfollowed and a competition
+   that was hidden are then all the same case.
+
+   Not to be confused with `alerts` above, which is the set of games a
+   viewer has saved with the bookmark and predates this.
+   ============================================================ */
+const REMIND_KEY = "gdn.remind";
+const REMIND_LEAD = 30*60000;
+const REMIND_WINDOW = 14*DAY;
+/* iOS holds 64 pending notifications per app and drops the rest without
+   saying so. Fifty keeps the limit this page's own, nearest games first,
+   and the bridge refuses a longer list outright. */
+const REMIND_MAX = 50;
+const REMIND_TEXT_MAX = 120;
+/* A reminder due in the next few seconds is not scheduled: by the time
+   the list has crossed the bridge its moment may have passed, and the
+   bridge refuses a list holding a time that is not in the future. */
+const REMIND_SLACK = 15000;
+/* Read strictly as a boolean, like every other switch kept here. Not in
+   the share link: it is a setting of this phone, not of a board. */
+let remindOn = LS.get(REMIND_KEY, false) === true;
+/* What iOS last said, when it was not "granted". */
+let remindBlocked = false;
+/* The list last handed over in this launch, so a pass that would
+   schedule exactly what is already pending costs nothing. */
+let remindSynced = null;
+/* Nothing is replaced until a schedule has loaded in this launch. The
+   board is empty for a moment at startup and stays empty offline, and
+   replacing with that would cancel good alerts in favour of none. */
+let remindReady = false;
+let remindWork = Promise.resolve();
+
+function remindApi(){
+  const n = typeof window !== "undefined" ? window.GDNNative : null;
+  return (n && n.isNative && n.alerts) ? n.alerts : null;
+}
+
+/* What the notification id is derived from. The ESPN event id where the
+   feed gave one, because it survives a moved kickoff; otherwise the
+   pairing and its listing date. Never the row id, which is numbered in
+   load order and differs from one launch to the next. */
+function alertKey(g){
+  if(g.eid != null && g.eid !== "") return g.comp + ":" + g.eid;
+  return g.comp + ":" + (g.home && g.home.id) + ":" + (g.away && g.away.id) + ":" + listingDay(g.start);
+}
+/* A stable positive 31-bit integer, which is what iOS wants for an id:
+   FNV-1a over the key, top bit dropped, and never zero. */
+function alertId(key){
+  const s = String(key);
+  let h = 2166136261 >>> 0;
+  for(let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h & 0x7fffffff) || 1;
+}
+
+/* Every upcoming game of a followed team in the next fourteen days,
+   nearest first, at most fifty.
+
+   Followed means followed: a club that is on the board only because a
+   race it is in was pinned is not one the viewer asked to be told about.
+   Rugby, tennis and cycling are followed as a sport or an event rather
+   than as a team, and are not "my teams' games". A hidden competition
+   is skipped, as it is everywhere else. A game whose reminder moment has
+   already gone by is skipped too — there is nothing left to schedule. */
+function alertGames(now){
+  return GAMES.filter(g => g && !g.rugby && !g.tennis && !g.event && g.home && g.away
+      && (selected.has(g.home.id) || selected.has(g.away.id))
+      && !hiddenComps.has(g.comp)
+      && !(g.result && g.result.status === "final")
+      && Number.isFinite(g.start)
+      && g.start - REMIND_LEAD > now + REMIND_SLACK
+      && g.start <= now + REMIND_WINDOW)
+    .sort((a,b) => a.start - b.start || alertKey(a).localeCompare(alertKey(b)))
+    .slice(0, REMIND_MAX);
+}
+
+function alertClip(text){
+  const t = String(text).replace(/\s+/g, " ").trim();
+  return t.length <= REMIND_TEXT_MAX ? t : t.slice(0, REMIND_TEXT_MAX - 1).trimEnd() + "\u2026";
+}
+
+/* Where it is on, in the rights table's own confidence. A confirmed
+   carrier is named; an expected one is named as expected; and where the
+   table does not know, the alert says so rather than guessing. A carrier
+   may state its own confidence, which then outranks its rule's. */
+function alertCarriers(g){
+  const rights = resolveRights(g);
+  if(!rights || rights.confidence === "unknown") return "carrier not confirmed";
+  const sure = [], maybe = [];
+  (rights.carriers || []).forEach(w => {
+    if(!w || !w.name) return;
+    const c = w.confidence || rights.confidence;
+    if(c === "confirmed") sure.push(w.name);
+    else if(c === "expected") maybe.push(w.name);
+  });
+  const parts = [];
+  if(sure.length) parts.push("on " + sure.join(", "));
+  if(maybe.length) parts.push("expected on " + maybe.join(", "));
+  return parts.length ? parts.join(" \u00b7 ") : "carrier not confirmed";
+}
+
+/* The two lines of the notification. Nothing here reads a result: a
+   reminder is sent before the game, and a lock screen is the last place
+   a hidden score should turn up. */
+function alertText(g){
+  return {
+    title: alertClip(fullName(g.away) + " at " + fullName(g.home)),
+    body: alertClip("Starts in 30 min \u00b7 " + alertCarriers(g))
+  };
+}
+
+function alertList(now){
+  const out = [], used = new Set();
+  alertGames(now).forEach(g => {
+    const id = alertId(alertKey(g));
+    if(used.has(id)) return;          // a hash collision keeps the nearer game
+    used.add(id);
+    const text = alertText(g);
+    out.push({id, at: g.start - REMIND_LEAD, title: text.title, body: text.body});
+  });
+  return out;
+}
+
+function renderRemind(){
+  if(typeof document === "undefined") return;
+  const row = document.getElementById("remindRow");
+  if(!row) return;
+  if(!remindApi()){ row.setAttribute("hidden", ""); return; }
+  row.removeAttribute("hidden");
+  document.getElementById("remindToggle").setAttribute("aria-checked", String(remindOn));
+  const note = document.getElementById("remindNote");
+  if(remindBlocked){
+    note.textContent = "Notifications are off for Game Day North in iOS Settings. "
+      + "Turn them on there, then switch this on again.";
+    note.removeAttribute("hidden");
+  } else {
+    note.textContent = "";
+    note.setAttribute("hidden", "");
+  }
+}
+
+/* One pass at a time, in order, so a switch-off can never be overtaken
+   by a replace that started before it. */
+function remindQueue(task){
+  const run = remindWork.then(task, task);
+  remindWork = run.catch(()=>{});
+  return run;
+}
+
+/* Bring the phone's pending alerts into line with the board: cancel
+   what is pending, schedule what is true now.
+
+   After a schedule load and on returning to the app it is `force`d, so
+   the whole list is replaced whether or not it looks changed — those are
+   the moments a kickoff may have moved, and replacing is also what puts
+   right anything the phone lost on its own. Saving a choice calls it
+   unforced, and then an unchanged list costs nothing: persist() runs on
+   every tap, and most taps change no game. */
+function syncAlerts(force){
+  const api = remindApi();
+  if(!api || !remindOn || !remindReady) return Promise.resolve(false);
+  return remindQueue(async () => {
+    if(!remindOn) return false;
+    const list = alertList(Date.now());
+    const sig = JSON.stringify(list);
+    if(!force && sig === remindSynced && !remindBlocked) return false;
+    /* Permission can be taken away in Settings while the switch here
+       stays on. Nothing can be scheduled then, and the row says why. */
+    const status = await api.status();
+    if(status !== "granted"){
+      if(!remindBlocked){ remindBlocked = true; renderRemind(); }
+      return false;
+    }
+    if(remindBlocked){ remindBlocked = false; renderRemind(); }
+    await api.replace(list);
+    remindSynced = sig;
+    return true;
+  }).catch(e => { console.warn("Could not update game reminders", e); return false; });
+}
+
+/* The switch. Turning it on is the only place permission is asked for;
+   turning it off cancels everything pending, whatever was scheduled. */
+function setRemind(on){
+  const api = remindApi();
+  if(!api) return Promise.resolve(false);
+  return remindQueue(async () => {
+    if(!on){
+      remindOn = false; remindBlocked = false; remindSynced = null;
+      LS.set(REMIND_KEY, false);
+      renderRemind();
+      await api.clear();
+      return false;
+    }
+    let status = await api.status();
+    if(status === "prompt") status = await api.request();
+    if(status !== "granted"){
+      remindOn = false; remindBlocked = true;
+      LS.set(REMIND_KEY, false);
+      renderRemind();
+      return false;
+    }
+    remindOn = true; remindBlocked = false; remindSynced = null;
+    LS.set(REMIND_KEY, true);
+    renderRemind();
+    return true;
+  }).then(on => { if(on) return syncAlerts(true).then(()=>true); return false; })
+    .catch(e => { console.warn("Could not change game reminders", e); renderRemind(); return false; });
+}
 /* The matchup-only rail is also the boundary for fast score traffic.
    Filters can hide a league in the full list, but they do not make a game
    the viewer follows stop being part of today's agenda. */
@@ -5650,6 +5894,7 @@ function clearAllPickedTeams(){
 }
 function renderDrawer(){
   if(typeof syncRaceTeams === "function") syncRaceTeams(Date.now());
+  if(typeof renderRemind === "function") renderRemind();
   const q=search.trim().toLowerCase();
   const groupRoot = document.getElementById("teamGroups");
   if(typeof pickerOpenSections !== "undefined" && groupRoot && groupRoot.querySelectorAll){
@@ -5945,6 +6190,7 @@ document.getElementById("teamsToggle").addEventListener("click",function(){
   toggleDrawer(drawer);
 });
 document.getElementById("servicesToggle").addEventListener("click",()=>toggleDrawer(svcDrawer));
+document.getElementById("remindToggle").addEventListener("click",()=>{ setRemind(!remindOn); });
 function jumpToGame(id){
   /* The rail is intentionally independent of the competition filter.
      If its destination is hidden, reveal that competition so the jump
@@ -6206,6 +6452,9 @@ async function runRefresh(scope){
     dataAge = staticAt || null;
     dataStale = !fresh;
     rememberResults(); render();
+    /* A schedule has loaded, so the reminders can be made to match it:
+       moved kickoffs and new fixtures arrive here. */
+    if(typeof syncAlerts === "function"){ remindReady = true; syncAlerts(true); }
   }
   /* The scores pass tops up whatever is on the board, however it got
      there; only a full pass decides between the file and the direct
@@ -6325,6 +6574,10 @@ document.addEventListener("visibilitychange", ()=>{
   if(document.hidden) return;
   if(liveMode !== false) refreshLive();
   if(tennisPollDue(Date.now())) refreshTennis(true);
+  /* Reminders too, from what is already loaded. The refresh above runs
+     them again if the schedule changed, but it may fail, and time has
+     passed either way. */
+  if(typeof syncAlerts === "function") syncAlerts(true);
 });
 setInterval(()=>{ if(liveMode!==false) refreshLive(); }, 15*60000);
 setInterval(()=>{

@@ -1,6 +1,8 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import { checkedAlerts } from "./alert-list.mjs";
 
 const WEB_APP_URL = "https://game-day-north.vercel.app/";
 const DATA_URL = new URL("data.json", WEB_APP_URL).href;
@@ -154,6 +156,67 @@ async function openExternal(rawUrl) {
   await Browser.open({ url: url.href });
 }
 
+/* Game-time alerts. These are local notifications: the phone holds the
+   list and fires each one itself, so nothing about what is followed or
+   when leaves the device, and there is no push service or token.
+
+   The page owns which games; this owns the notification centre. The four
+   calls run one at a time, in the order they were made, so a replace
+   that is still cancelling can never interleave with the next one. */
+let alertWork = Promise.resolve();
+function inAlertOrder(task) {
+  const run = alertWork.then(task, task);
+  alertWork = run.catch(() => {});
+  return run;
+}
+
+/* "granted", "denied" or "prompt". Nothing here ever asks: status() only
+   reads, and request() is called by the page when the setting is turned
+   on, never at launch. */
+function alertPermission(result) {
+  const state = result && result.display;
+  return state === "granted" || state === "denied" ? state : "prompt";
+}
+
+async function alertStatus() {
+  return alertPermission(await LocalNotifications.checkPermissions());
+}
+
+async function requestAlerts() {
+  return alertPermission(await LocalNotifications.requestPermissions());
+}
+
+async function cancelPendingAlerts() {
+  const pending = await LocalNotifications.getPending();
+  const notifications = (pending && pending.notifications || []).map(n => ({ id: n.id }));
+  if (notifications.length) await LocalNotifications.cancel({ notifications });
+  return notifications.length;
+}
+
+/* Cancels every pending alert, then schedules the list. The list is
+   checked first, so a bad one throws with the pending alerts untouched. */
+function replaceAlerts(list) {
+  return inAlertOrder(async () => {
+    const alerts = checkedAlerts(list, Date.now());
+    const cancelled = await cancelPendingAlerts();
+    if (alerts.length) {
+      await LocalNotifications.schedule({
+        notifications: alerts.map(a => ({
+          id: a.id,
+          title: a.title,
+          body: a.body,
+          schedule: { at: new Date(a.at), allowWhileIdle: true }
+        }))
+      });
+    }
+    return { cancelled, scheduled: alerts.length };
+  });
+}
+
+function clearAlerts() {
+  return inAlertOrder(async () => ({ cancelled: await cancelPendingAlerts() }));
+}
+
 const native = Capacitor.isNativePlatform();
 
 window.GDNNative = Object.freeze({
@@ -165,7 +228,13 @@ window.GDNNative = Object.freeze({
   writeCachedSchedule,
   readCachedSchedule,
   forgetScheduleTag,
-  openExternal
+  openExternal,
+  alerts: Object.freeze({
+    status: alertStatus,
+    request: requestAlerts,
+    replace: replaceAlerts,
+    clear: clearAlerts
+  })
 });
 
 if (native) {

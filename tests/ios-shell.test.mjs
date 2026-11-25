@@ -41,6 +41,21 @@ test("the Swift package points at plain node_modules paths, never a pnpm store",
   assert.doesNotMatch(SPM, /\.pnpm/);
   assert.match(SPM, /path: "\.\.\/\.\.\/\.\.\/node_modules\/@capacitor\/browser"/);
   assert.match(SPM, /path: "\.\.\/\.\.\/\.\.\/node_modules\/@capacitor\/filesystem"/);
+  assert.match(SPM, /path: "\.\.\/\.\.\/\.\.\/node_modules\/@capacitor\/local-notifications"/);
+  assert.match(SPM, /\.product\(name: "CapacitorLocalNotifications", package: "CapacitorLocalNotifications"\)/);
+});
+
+test("the shell carries exactly the three plugins it uses, pinned, and alerts are local to the phone", () => {
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  const plugins = Object.keys(pkg.dependencies).filter(n => n.startsWith("@capacitor/") && !/\/(core|ios)$/.test(n)).sort();
+  assert.deepEqual(plugins, ["@capacitor/browser", "@capacitor/filesystem", "@capacitor/local-notifications"]);
+  assert.match(pkg.dependencies["@capacitor/local-notifications"], /^8\.\d+\.\d+$/, "Capacitor 8, pinned like the others");
+  assert.equal((SPM.match(/\.package\(name: "Capacitor/g) || []).length, plugins.length);
+  assert.match(BRIDGE, /from "@capacitor\/local-notifications"/);
+  /* Local notifications only: no push plugin, no remote-notification
+     entitlement, and no new host for the bridge to talk to. */
+  assert.doesNotMatch(JSON.stringify(pkg.dependencies), /push-notifications|firebase|onesignal/i);
+  assert.doesNotMatch(BRIDGE, /PushNotifications|registerForRemoteNotifications/);
 });
 
 test("fonts are local assets, not requests to Google", () => {
