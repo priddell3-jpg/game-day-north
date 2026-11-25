@@ -10,14 +10,17 @@
    drops the rest, soonest kept. Fifty leaves room and keeps the limit
    ours rather than the system's. */
 export const ALERT_MAX = 50;
-export const ALERT_TEXT_MAX = 120;
+/* A title is one line on a lock screen. A body wraps, and the morning
+   summary lists a day's games in it, so it gets twice the room. */
+export const ALERT_TITLE_MAX = 120;
+export const ALERT_BODY_MAX = 240;
 /* A notification id is a 32-bit signed integer on the native side; zero
    and negatives are kept out so an id is always a plain positive one. */
 export const ALERT_ID_MAX = 0x7fffffff;
 
-export function clipAlertText(value) {
+export function clipAlertText(value, max = ALERT_TITLE_MAX) {
   const text = value.replace(/\s+/g, " ").trim();
-  return text.length <= ALERT_TEXT_MAX ? text : text.slice(0, ALERT_TEXT_MAX - 1).trimEnd() + "…";
+  return text.length <= max ? text : text.slice(0, max - 1).trimEnd() + "…";
 }
 
 /* Returns a clean copy — only the four fields, text clipped — or throws.
@@ -35,8 +38,8 @@ export function checkedAlerts(list, now) {
     seen.add(id);
     if (typeof at !== "number" || !Number.isFinite(at) || at <= now) throw new Error("Alert time is not in the future");
     if (typeof title !== "string" || typeof body !== "string") throw new Error("Alert text is not a string");
-    const cleanTitle = clipAlertText(title);
+    const cleanTitle = clipAlertText(title, ALERT_TITLE_MAX);
     if (!cleanTitle) throw new Error("Alert has no title");
-    return { id, at, title: cleanTitle, body: clipAlertText(body) };
+    return { id, at, title: cleanTitle, body: clipAlertText(body, ALERT_BODY_MAX) };
   });
 }

@@ -213,3 +213,27 @@ test("calendar cells and events keep their shrink guarantees", () => {
 test("no rule reintroduces a fixed seven-column calendar grid", () => {
   assert.doesNotMatch(css, /grid-template-columns\s*:\s*repeat\(7,\s*1fr\)/);
 });
+
+/* A class that sets display beats the hidden attribute, so an element
+   written with hidden showed anyway. The reminder timing row did this:
+   in the app, "When" sat under a switch that was off. Every element the
+   markup hides by attribute must have a rule that keeps it hidden. */
+test("every element written hidden stays hidden despite its class's display", () => {
+  const markup = SRC.slice(SRC.lastIndexOf("</style>"), SRC.indexOf("<script"));
+  const tags = [...markup.matchAll(/<([a-z]+)\b([^>]*\bhidden\b[^>]*)>/g)];
+  assert.ok(tags.length >= 5, "found the hidden elements");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({sel: m[1].trim(), body: m[2]}));
+  const problems = [];
+  for(const [, tag, attrs] of tags){
+    if(!/(^|\s)hidden(\s|=|$)/.test(attrs)) continue;
+    const cls = (attrs.match(/\bclass="([^"]*)"/) || [, ""])[1].split(/\s+/).filter(Boolean);
+    const id = (attrs.match(/\bid="([^"]*)"/) || [, ""])[1];
+    const shows = rules.some(r => /display\s*:\s*(?!none)/.test(r.body) && r.sel.split(",").some(sel =>
+      cls.some(c => new RegExp("(^|\\s|>)\\." + c.replace(/[-]/g, "\\-") + "$").test(sel.trim()))));
+    if(!shows) continue;
+    const hides = rules.some(r => /display\s*:\s*none/.test(r.body) && r.sel.split(",").some(sel =>
+      /\[hidden\]$/.test(sel.trim()) && (cls.some(c => sel.trim().endsWith("." + c + "[hidden]")) || sel.trim() === "[hidden]")));
+    if(!hides) problems.push((id ? "#" + id : tag) + " ." + cls.join("."));
+  }
+  assert.deepEqual(problems, []);
+});
