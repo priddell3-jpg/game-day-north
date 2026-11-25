@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ri3A6PJzKa4e8RhNiAfqLWMvEcUQ47UQM0NHGxti80I='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Bz8nfMK9J7bmUyFSFUyi/FpwieGV/QMsvdu9Pq6o1zU='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -5199,6 +5199,14 @@ function listingDay(ms){
   const p = zoneParts("ET", ms);
   return p.year + "-" + p.month + "-" + p.day;
 }
+function rightsClock(g){
+  if(Number.isFinite(g.start)){
+    const p = zoneParts("ET", g.start);
+    return {dow:new Date(Date.UTC(+p.year, +p.month - 1, +p.day)).getUTCDay(), hour:+p.hour};
+  }
+  /* No kickoff to read: fall back to what the row carries. */
+  return {dow:g.localDow, hour:g.slotHour || 0};
+}
 function resolveRights(g){
   const ids = [g.home&&g.home.id, g.away&&g.away.id];
   const ctx = {stage:g.stage||"", has:id=>ids.indexOf(id)>=0, comp:g.comp, hour:g.slotHour||0,
@@ -5209,8 +5217,17 @@ function resolveRights(g){
     day:()=>listingDay(g.start),
     // tennis rules key on the tournament; every other sport ignores these
     tournament:(tourneyOf(g)||{}).name || "", major:!!((tourneyOf(g)||{}).major)};
-  // day-of-week must be the HOME team's local day, not UTC
-  ctx.dow = g.localDow;
+  /* The weekday and hour of the broadcast window, on the Eastern clock
+     that national windows are sold and listed by: Prime Video's NHL
+     Wednesday, Sportsnet's Saturday, the NFL's Sunday night. They used to
+     be read in UTC, where an evening game in North America has already
+     moved to the next day: every Wednesday night game missed Prime
+     Video's rule, and a Tuesday 8 p.m. game was given it as confirmed.
+     Worked out here, from the kickoff, so every source of fixtures gets
+     the same answer whatever it stored. */
+  const clock = rightsClock(g);
+  ctx.dow = clock.dow;
+  ctx.hour = clock.hour;
   if(g.liveCarriers) return {carriers:g.liveCarriers, confidence:"confirmed", listed:true,
     note:"Taken from a published TV listing, not inferred", src:g.liveSrc, checked:CHECKED};
   for(const r of RIGHTS){

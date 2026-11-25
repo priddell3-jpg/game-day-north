@@ -59,11 +59,17 @@ const RIGHTS_FAMILY = new Set(["SERVICES", "CARRIER_SERVICE", "SRC", "RIGHTS", "
 /* loadStatic hands data.json's rights to adoptRights, which refills the
    tables in place, so evaluating it needs all of them. */
 const RIGHTS_TABLES = ["SERVICES", "CARRIER_SERVICE", "SRC", "RIGHTS", "CHECKED", "adoptRights"];
+/* resolveRights reads every game on the Eastern clock (rightsClock), so
+   it brings the zone helpers that clock is built from. */
+const RIGHTS_CLOCK = ["ZONE_IANA", "_zoneFmt", "zoneParts", "listingDay", "rightsClock"];
 
 export function loadFromPage(names, preamble = ""){
   const needsRights = names.some(n => RIGHTS_FAMILY.has(n) || RIGHTS_BASE.includes(n)) || names.includes("loadStatic");
-  const base = !needsRights ? [] : [...RIGHTS_BASE, ...(names.includes("loadStatic") ? RIGHTS_TABLES : [])]
-    .filter(n => !names.includes(n));
+  const base = !needsRights ? [] : [...RIGHTS_BASE, ...(names.includes("loadStatic") ? RIGHTS_TABLES : []),
+    ...(names.includes("resolveRights") ? RIGHTS_CLOCK : [])]
+    /* Not what the caller asked for by name, nor what its preamble already
+       declares for itself. */
+    .filter(n => !names.includes(n) && !new RegExp("\\b(?:const|let|var|function)\\s+" + n + "\\b").test(preamble));
   const wanted = [...base, ...names.filter(n => n !== "TEAM_MANIFEST")];
   const body = wanted.map(declarationOf).join("\n\n");
   const factory = new Function(preamble + "\n" + MANIFEST_DECL + "\n" + body
