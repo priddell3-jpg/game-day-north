@@ -16,7 +16,8 @@ import { CLINCH, RACE_KINDS, groupsFrom, STANDINGS_HOLD } from "../scripts/lib/r
    checked against each other rather than against a hand-made object. */
 
 const NAMES = ["esc", "COMPS", "SOCCER", "TEAM_MANIFEST", "TEAMS", "fullName",
-  "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "attachStandings", "raceZoneHit", "raceCutoff",
+  "RACE_MAX_AGE", "RACE_CHECKED", "RACES", "RACE_START_GRACE", "raceGamesAhead", "attachStandings",
+  "raceSeasonOver", "raceZoneHit", "raceCutoff",
   "racePhase", "RACE_PHASES", "racePhaseOf", "raceRelevance", "RACE_PRIORITY",
   "racePriority", "raceAutoAllowed", "RACE_GAP_TOLERANCE", "RACE_AUTO", "racePrefOf",
   "RACE_PIN", "RACE_HIDE", "setRacePref", "raceCardId", "racePrefBtnId", "raceStarHtml", "raceFollowsComp", "raceGroupsFor",
@@ -64,13 +65,21 @@ const norm = (file, opts) => groupsFrom(fx(file), Object.assign({ idFor }, opts)
 const MLB = norm("standings-mlb-wildcard.json", { comp: "MLB", kind: RACE_KINDS.SEED,
   groupFor: n => ({ "American League": "AL", "National League": "NL" })[n.name] });
 const EPL = norm("standings-epl.json", { comp: "EPL", kind: RACE_KINDS.TABLE, group: "table" });
-const EPL_PREV = norm("standings-epl-2025-final.json",
-  { comp: "EPL", kind: RACE_KINDS.TABLE, group: "table" });
+/* The final-stretch cases below are built on last season's final tables,
+   the best record of a season's closing shape there is. A table on which
+   every club has played every game is a finished season, though, and a
+   finished season is not a race (see "when a season is over" at the end).
+   So these stand-ins keep one game owed somewhere: the last round still
+   to play, which is the moment these cases are about. */
+const lastRoundToPlay = groups => groups.map(g =>
+  Object.assign(g, { played: Object.assign({}, g.played, { min: g.played.max - 1 }) }));
+const EPL_PREV = lastRoundToPlay(norm("standings-epl-2025-final.json",
+  { comp: "EPL", kind: RACE_KINDS.TABLE, group: "table" }));
 const UCL = norm("standings-ucl.json", { comp: "UCL", kind: RACE_KINDS.TABLE, group: "league" });
-const NFL = norm("standings-nfl-conference-2025-final.json", { comp: "NFL", kind: RACE_KINDS.SEED,
-  groupFor: n => ({ "American Football Conference": "AFC", "National Football Conference": "NFC" })[n.name] });
-const NFL_DIV = norm("standings-nfl-divisions-2025-final.json",
-  { comp: "NFL", kind: RACE_KINDS.DIVISION });
+const NFL = lastRoundToPlay(norm("standings-nfl-conference-2025-final.json", { comp: "NFL", kind: RACE_KINDS.SEED,
+  groupFor: n => ({ "American Football Conference": "AFC", "National Football Conference": "NFC" })[n.name] }));
+const NFL_DIV = lastRoundToPlay(norm("standings-nfl-divisions-2025-final.json",
+  { comp: "NFL", kind: RACE_KINDS.DIVISION }));
 
 const NOW = Date.parse("2026-09-08T21:00:00Z");
 const view = (P, id) => P.RACES.find(v => v.id === id);
@@ -966,4 +975,77 @@ test("a more valuable race at the same distance takes the club", () => {
   assert.ok(forBuf);
   assert.equal(forBuf.view.id, "nfl-afc", "the playoff picture, not the division it shares a gap with");
   assert.ok(P.racePriority(view(P, "nfl-afc")) < P.racePriority(view(P, "nfl-div")));
+});
+
+/* ============================ when a season is over ============================ */
+
+/* The 2026 regular season as it ended: every club on 161 or 162, because
+   a rained-out game that cannot change the standings is never made up. */
+const FINISHED = () => JSON.parse(JSON.stringify(MLB)).map(g => Object.assign(g, { played: { min: 161, max: 162 } }));
+const DAY = 86400000;
+const game = (comp, status, start, extra = {}) => ({ comp, status, start, home: {}, away: {}, ...extra });
+
+test("a finished season's table is not a race, once the schedule shows nothing left to play", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(FINISHED(), [game("EPL", "scheduled", NOW + DAY)], NOW);
+  assert.deepEqual(P.raceCards(NOW, new Set(["tor-mlb"])), [], "the November board shows no AL wild card");
+});
+
+test("the last week of a season is still a race while a regular-season game is owed", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(FINISHED(), [game("MLB", "scheduled", NOW + DAY)], NOW);
+  assert.equal(P.raceCards(NOW, new Set(["tor-mlb"]))[0].id, "mlb-wc-al");
+  const live = page({ picks: ["tor-mlb"] });
+  live.attachStandings(FINISHED(), [game("MLB", "live", NOW - 2 * 3600000)], NOW);
+  assert.equal(live.raceCards(NOW, new Set(["tor-mlb"])).length, 1, "a game in progress on the final day keeps it open");
+});
+
+test("playoff games do not keep a regular-season race open", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(FINISHED(), [game("MLB", "scheduled", NOW + DAY, { series: { summary: "Series tied 1-1" } })], NOW);
+  assert.deepEqual(P.raceCards(NOW, new Set(["tor-mlb"])), []);
+});
+
+test("without a schedule to consult, a season is ended only when every club has played it all", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  P.attachStandings(FINISHED());
+  assert.equal(P.raceCards(NOW, new Set(["tor-mlb"])).length, 1, "161 of 162 is not proof on its own");
+  const all = JSON.parse(JSON.stringify(MLB)).map(g => Object.assign(g, { played: { min: 162, max: 162 } }));
+  P.attachStandings(all);
+  assert.deepEqual(P.raceCards(NOW, new Set(["tor-mlb"])), []);
+});
+
+test("a pinned race still shows a finished table to the person who asked for it", () => {
+  const P = page({ picks: ["tor-mlb"], prefs: { "mlb-wc-al": "pin" } });
+  P.attachStandings(FINISHED(), [], NOW);
+  const cards = P.raceCards(NOW, new Set(["tor-mlb"]));
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].pinned, true);
+});
+
+test("what counts as a game still to come", () => {
+  const P = page();
+  const ahead = P.raceGamesAhead([
+    game("MLB", "final", NOW - DAY),
+    game("NFL", "scheduled", NOW - 13 * 3600000),            // long past its start: not owed
+    game("NHL", "scheduled", NOW - 2 * 3600000),             // a delayed start is still owed
+    game("EPL", "live", NOW - 3600000),
+    game("NBA", "scheduled", NOW + DAY, { series: { summary: "Game 1" } }),
+    null, { status: "scheduled", start: NOW + DAY }
+  ], NOW);
+  assert.deepEqual([...ahead].sort(), ["EPL", "NHL"]);
+});
+
+test("the schedule file's own standings objects are left as they came", () => {
+  const P = page({ picks: ["tor-mlb"] });
+  const groups = FINISHED();
+  P.attachStandings(groups, [], NOW);
+  assert.ok(groups.every(g => !("ahead" in g)));
+});
+
+test("the page hands the whole schedule to the race, not the viewer's slice of it", () => {
+  const src = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
+  const load = /async function loadStatic\(\)\{[\s\S]*?\n\}/.exec(src)[0];
+  assert.match(load, /attachStandings\(r\.standings, r\.fixtures, Date\.now\(\)\)/);
+  assert.ok(load.indexOf("attachStandings(") < load.indexOf("followsTeam("), "before the fixtures are filtered");
 });
