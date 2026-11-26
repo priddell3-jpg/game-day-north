@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1B1w6nbrx9iMSR4JlwYfAf2904Xlum70JtA+2a6E/2I='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-5KdP8fFNpKSV3UozQ3aHcOLjZSxGCAYmxGELcR1gwdU='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -816,31 +816,49 @@ main{padding:22px 0 80px}
    names happened to fit and wrapped them when they did not, so that
    neighbouring rows came out in different shapes. */
 .g-name,.g-city,.g-nick{display:inline}
-.mid-score{display:none}
+.mid-score,.g-rec-short{display:none}
 @media (max-width:760px){
-  .game.matchup{grid-template-columns:minmax(0,1fr) auto auto;
-    grid-template-areas:"time score bell" "match match match" "watch watch watch"}
+  /* Condensed: the time, countdown and save button share the top line;
+     the competition, place and carriers share the bottom one. The save
+     button keeps its 44px target, overlapping the padding rather than
+     adding to the row's height. */
+  .game.matchup{display:flex;flex-wrap:wrap;align-items:center;gap:3px 10px;padding:7px 10px 8px}
+  .game.matchup .g-match{display:contents}
+  .game.matchup .g-time{order:1;flex:1 1 auto}
+  .game.matchup .g-score{order:2;flex:none}
+  .game.matchup .bell{order:3;flex:none}
+  .game.matchup .g-teams{order:4;flex:1 0 100%}
+  /* The competition and place, then the carriers, on one line when they
+     fit; the carriers move down whole when they do not. */
+  .game.matchup .g-meta{order:5;flex:0 0 auto;max-width:100%;gap:6px;font-size:11px}
+  .game.matchup .g-watch{order:6;flex:0 1 auto;gap:3px 10px}
+  .game.matchup .svc{font-size:11.5px}
+  .game.matchup .bell{align-self:center;margin:-12px -8px -12px 0}
+  .game.matchup .g-time{font-size:11px}
   .game.matchup .g-score{flex-direction:row;align-items:baseline;gap:6px;align-self:center;min-width:0}
   .game.matchup .g-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-    align-items:start;gap:10px;padding:2px 0}
+    align-items:start;gap:8px;padding:1px 0}
   .game.matchup .g-side{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
-  .game.matchup .g-team{display:flex;flex-direction:column;align-items:center;gap:1px;
-    white-space:normal;overflow-wrap:anywhere;text-align:center;font-size:15.5px;line-height:1.2}
+  .game.matchup .g-team{display:flex;flex-direction:column;align-items:center;gap:0;
+    white-space:normal;overflow-wrap:anywhere;text-align:center;font-size:15px;line-height:1.15}
   .game.matchup .g-name{display:flex;flex-direction:column;align-items:center}
-  .game.matchup .g-city{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+  .game.matchup .g-city{display:block;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0;line-height:1.25}
   .game.matchup .g-nick{display:block}
-  .game.matchup .g-rec{white-space:normal;text-align:center;margin-top:3px}
-  .game.matchup .g-teams .at{align-self:center;font-size:13px;letter-spacing:0;text-transform:none}
+  .game.matchup .g-rec,.game.matchup .g-rec-short{white-space:normal;text-align:center;margin-top:1px;letter-spacing:0}
+  .game.matchup .has-short > .g-rec{display:none}
+  .game.matchup .g-rec-short{display:block;font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .game.matchup .g-teams .at{align-self:center;font-size:12px;letter-spacing:0;text-transform:none}
   .game.matchup .g-teams.scored .at{display:none}
-  .game.matchup .mid-score{display:flex;align-items:center;gap:6px;align-self:center;
-    font-family:var(--mono);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .game.matchup .mid-score{display:flex;align-items:center;gap:5px;align-self:center;
+    font-family:var(--mono);font-size:21px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted)}
   .game.matchup .mid-score b{font-weight:500}
   .game.matchup .mid-score b.win{color:var(--ink);font-weight:700}
   .game.matchup .mid-score i{font-style:normal;color:var(--muted);font-weight:400}
   .game.matchup .mid-score.live,.game.matchup .mid-score.live b{color:var(--live);font-weight:600}
   .game.matchup.scored .score-line{display:none}
   .game.matchup .star-pip{align-self:center}
-  .game.matchup .g-meta{justify-content:center}
+  .day{margin-bottom:14px}
+  .day-head{padding-bottom:5px}
 }
 </style>
 
@@ -9194,9 +9212,14 @@ function gameRow(g, now){
      per team and made once per render, in spoiledTeams above. */
   const side = (t, mine, tbd) => {
     const line = (t && SPOILED.has(t.id)) ? null : recordLine(t, g.comp);
-    return '<span class="g-side">'
+    /* A phone column is narrow: "8th in the Pacific" is said there as
+       "8th Pacific", so the record stays on one line. */
+    const short = line && line.replace(" in the ", " ");
+    const hasShort = !!(short && short !== line);
+    return '<span class="g-side'+(hasShort ? " has-short" : "")+'">'
       + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+teamNameHtml(t, g.comp)+'</span>'
       + (line ? '<span class="g-rec">'+esc(line)+'</span>' : '')
+      + (hasShort ? '<span class="g-rec-short" aria-hidden="true">'+esc(short)+'</span>' : '')
       + '</span>';
   };
   const scored = !!(reveal && st.score && (st.status === "final" || st.status === "live"));
