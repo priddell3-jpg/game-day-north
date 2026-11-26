@@ -576,3 +576,36 @@ test("the name keeps every rule it had — the wrapper is new, .g-team is not", 
   assert.match(ruleFor(css, ".g-team"), /min-width\s*:\s*0/);
   assert.match(ruleFor(css, ".g-team"), /white-space\s*:\s*nowrap/);
 });
+
+/* ---- clubs with no id of ours ----------------------------------------
+   Fifteen of the thirty-six Champions League clubs have no id in the app,
+   and their table rows were skipped, so a Brugge-Liverpool row showed
+   Liverpool's record and nothing under Club Brugge, in the same table.
+   Both clubs in a fixture from the same table should always carry one. */
+
+test("a club with no id of ours still has its record, under the key its fixture is filed by", () => {
+  const m = loadFromPage([...RECORD_NAMES, "feedKey"], RECORD_PREAMBLE);
+  m.attachTables([{comp:"UCL", group:"league", scope:"League Phase", kind:"table", rows:[
+    {tid:"364", id:"liv", name:"Liverpool", abbr:"LIV", w:4, d:0, l:1, gp:5, pts:12, pos:5},
+    {tid:"570", name:"Club Brugge", abbr:"BRU", w:3, d:0, l:2, gp:5, pts:9, pos:13}]}]);
+  assert.equal(m.feedKey("UCL", {id:null, abbr:"BRU", name:"Club Brugge"}), "feed:UCL:BRU");
+  assert.equal(m.recordLine({id:"feed:UCL:BRU"}, "UCL"), "3-0-2 · 13th");
+  assert.equal(m.recordLine({id:"liv"}, "UCL"), "4-0-1 · 5th");
+  assert.match(SRC, /function staticTeam[\s\S]*?const key = feedKey\(comp, t\);/, "fixtures file their clubs by the same key");
+});
+
+test("in the committed file, two clubs from the same table both carry a record", () => {
+  const m = loadFromPage([...RECORD_NAMES, "feedKey"], RECORD_PREAMBLE);
+  m.attachTables(FILE.tables);
+  const inTable = (comp, t) => FILE.tables.some(g => g.comp === comp && g.rows.some(r =>
+    r && (t.id ? r.id === t.id : (!r.id && r.abbr === t.abbr)) && ((r.gp || 0) > 0)));
+  let both = 0, lopsided = [];
+  for(const f of FILE.fixtures){
+    if(!f.home || !f.away || !inTable(f.comp, f.home) || !inTable(f.comp, f.away)) continue;
+    const key = t => t.id || m.feedKey(f.comp, t);
+    const a = m.recordLine({id:key(f.away)}, f.comp), h = m.recordLine({id:key(f.home)}, f.comp);
+    if(a && h) both++; else lopsided.push(f.comp + " " + f.away.name + " at " + f.home.name);
+  }
+  assert.ok(both > 100, "checked a real slate, got " + both);
+  assert.deepEqual(lopsided, []);
+});

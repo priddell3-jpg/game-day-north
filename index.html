@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Which of your teams are playing, and which Canadian service each game is on.">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XYRh8galtp/9brkcbLAXApAWWvp9P2KyTXOyhPLKYHs='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1B1w6nbrx9iMSR4JlwYfAf2904Xlum70JtA+2a6E/2I='; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://game-day-north.vercel.app https://site.api.espn.com https://api.wr-rims-prod.pulselive.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 <meta property="og:title" content="Game Day North">
 <meta property="og:description" content="Multi-team game tracker for Canada — fixtures, where to watch, and scores you can hide.">
 </head>
@@ -808,6 +808,39 @@ main{padding:22px 0 80px}
   .svc-card{padding:8px 9px}
   .svc-name{font-size:12px}
   .rights-tbl th,.rights-tbl td{padding:8px 12px}
+}
+/* Side by side on a phone, the same shape on every matchup row: away
+   on the left, home on the right, "at" or the score between them. The
+   countdown or clock moves up beside the time so the two teams get the
+   whole width. It replaces a row that sat the teams on one line when both
+   names happened to fit and wrapped them when they did not, so that
+   neighbouring rows came out in different shapes. */
+.g-name,.g-city,.g-nick{display:inline}
+.mid-score{display:none}
+@media (max-width:760px){
+  .game.matchup{grid-template-columns:minmax(0,1fr) auto auto;
+    grid-template-areas:"time score bell" "match match match" "watch watch watch"}
+  .game.matchup .g-score{flex-direction:row;align-items:baseline;gap:6px;align-self:center;min-width:0}
+  .game.matchup .g-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:start;gap:10px;padding:2px 0}
+  .game.matchup .g-side{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+  .game.matchup .g-team{display:flex;flex-direction:column;align-items:center;gap:1px;
+    white-space:normal;overflow-wrap:anywhere;text-align:center;font-size:15.5px;line-height:1.2}
+  .game.matchup .g-name{display:flex;flex-direction:column;align-items:center}
+  .game.matchup .g-city{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+  .game.matchup .g-nick{display:block}
+  .game.matchup .g-rec{white-space:normal;text-align:center;margin-top:3px}
+  .game.matchup .g-teams .at{align-self:center;font-size:13px;letter-spacing:0;text-transform:none}
+  .game.matchup .g-teams.scored .at{display:none}
+  .game.matchup .mid-score{display:flex;align-items:center;gap:6px;align-self:center;
+    font-family:var(--mono);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .game.matchup .mid-score b{font-weight:500}
+  .game.matchup .mid-score b.win{color:var(--ink);font-weight:700}
+  .game.matchup .mid-score i{font-style:normal;color:var(--muted);font-weight:400}
+  .game.matchup .mid-score.live,.game.matchup .mid-score.live b{color:var(--live);font-weight:600}
+  .game.matchup.scored .score-line{display:none}
+  .game.matchup .star-pip{align-self:center}
+  .game.matchup .g-meta{justify-content:center}
 }
 </style>
 
@@ -5432,6 +5465,13 @@ let TABLES = [], RECORDS = new Map();
    two parties each assuming the other checked. */
 const rowPlayed = r => !!r && (r.gp > 0 || (r.w || 0) + (r.l || 0) + (r.d || 0) + (r.otl || 0) > 0);
 const tablePlayed = g => (g.rows || []).some(rowPlayed);
+/* The key a club with no id of ours goes by. staticTeam files a
+   fixture's unknown club under it, and attachTables files that club's
+   table row under the same key, so the two meet. Before, a row without an
+   id was skipped: fifteen of the thirty-six Champions League clubs had no
+   record, so Club Brugge sat bare beside Liverpool's "4-0-1 · 5th" in the
+   same table. */
+const feedKey = (comp, t) => "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
 function attachTables(list){
   TABLES = Array.isArray(list)
     ? list.filter(g=>g && g.comp && Array.isArray(g.rows) && g.rows.length && tablePlayed(g)) : [];
@@ -5443,8 +5483,10 @@ function attachTables(list){
        and is meaningless in one of six baseball divisions. */
     const scoped = groupsFor(g.comp) > 1;
     for(const row of g.rows){
-      if(!row || !row.id) continue;
-      const entry = RECORDS.get(row.id) || {byComp:{}, primary:null};
+      if(!row) continue;
+      const id = row.id || ((row.abbr || row.name) ? feedKey(g.comp, {abbr:row.abbr, name:row.name}) : null);
+      if(!id) continue;
+      const entry = RECORDS.get(id) || {byComp:{}, primary:null};
       entry.byComp[g.comp] = {row, group:g, scoped};
       /* The club's own league, not the cup it happens to be in this
          week: a Champions League row is a record too, but "3 pts, 12th"
@@ -5452,7 +5494,7 @@ function attachTables(list){
          First table wins, and the sources are ordered leagues first. */
       if(!entry.primary && g.comp !== "UCL") entry.primary = entry.byComp[g.comp];
       if(!entry.primary) entry.primary = entry.byComp[g.comp];
-      RECORDS.set(row.id, entry);
+      RECORDS.set(id, entry);
     }
   }
   return TABLES.length;
@@ -6658,7 +6700,7 @@ async function readStaticPayload(){
 
 function staticTeam(t, comp){
   if(t.id && TEAMS[t.id]) return TEAMS[t.id];
-  const key = "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
+  const key = feedKey(comp, t);
   if(!TEAMS[key]){
     TEAMS[key] = {id:key, home:comp, city:t.city || "", name:t.name || "?", abbr:(t.abbr||"?").slice(0,4),
       color:t.color || "#5A6478", ghost:true, full:true, comps:[comp]};
@@ -8628,11 +8670,28 @@ function saveButton(id, on, what){
     + ' aria-label="'+esc(label)+'">'+BELL+'</button>';
 }
 function orderedTeams(g){
-  /* Rugby is written home v away, like soccer and unlike the North
-     American "away at home". Getting this wrong would not merely read
-     oddly: `flip` is what decides which way round a score is printed. */
-  if(g.rugby) return {a:g.home,b:g.away,sep:"v",flip:false};
-  return SOCCER[g.comp] ? {a:g.home,b:g.away,sep:"vs",flip:false} : {a:g.away,b:g.home,sep:"at",flip:true};
+  /* Away first, home second, "at" between, in every sport: "LA at New
+     York", the way listings and broadcasts write a game and the way the
+     reminders already title one. Soccer and rugby used to be written home
+     v away, so the board read two ways down one day. `flip` is what
+     decides which way round a score is printed, so it is always set. */
+  return {a:g.away,b:g.home,sep:"at",flip:true};
+}
+/* A North American club is a city and a nickname. On a phone the two
+   sit one over the other, so "Detroit Red Wings" never breaks as
+   "Detroit Red / Wings". A club whose name is one thing (soccer, a club
+   from the feed, a name written out in full) stays one. */
+function teamNameHtml(t, comp){
+  if(t && !t.full && !t.display && !SOCCER[comp] && t.city && t.name)
+    return '<span class="g-name"><span class="g-city">'+esc(t.city)+'</span> <span class="g-nick">'+esc(t.name)+'</span></span>';
+  return '<span class="g-name"><span class="g-nick">'+esc(fullName(t))+'</span></span>';
+}
+/* The score between the two names, for the side-by-side phone layout:
+   away first like the names, the winner's figure at full strength. */
+function midScore(sc, live, final){
+  const w = final && sc[0] !== sc[1] ? (sc[0] > sc[1] ? 0 : 1) : -1;
+  return '<span class="mid-score'+(live ? " live" : "")+'" aria-hidden="true">'
+    + '<b'+(w === 0 ? ' class="win"' : '')+'>'+sc[0]+'</b><i>&ndash;</i><b'+(w === 1 ? ' class="win"' : '')+'>'+sc[1]+'</b></span>';
 }
 const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
 
@@ -8770,10 +8829,14 @@ function rugbyRow(g, now){
   if(vnote) timeCell += '<span class="venue-day">'+esc(vnote)+'</span>';
   timeCell += '</div>';
 
-  const side = (t, starred) => '<span class="g-team'+(starred?" starred":"")+(t.tbdSide?" tbd":"")+'">'
-    + crest(t)+esc(t.name)+(starred?'<span class="star-pip" aria-label="Starred nation">&#9733;</span>':"")+'</span>';
-  const teams = '<div class="g-teams">'+side(g.home,starA)
-    + '<span class="at">v</span>'+side(g.away,starB)+'</div>';
+  const side = (t, starred) => '<span class="g-side"><span class="g-team'+(starred?" starred":"")+(t.tbdSide?" tbd":"")+'">'
+    + '<span class="g-nick">'+esc(t.name)+'</span>'+(starred?'<span class="star-pip" aria-label="Starred nation">&#9733;</span>':"")+'</span></span>';
+  /* Away at home, like every other row; the score follows (flipped below). */
+  const scored = !!(g.result && g.result.score && reveal && state !== "scheduled" && state !== "unknown");
+  const teams = '<div class="g-teams'+(scored ? " scored" : "")+'">'+side(g.away,starB)
+    + '<span class="at">at</span>'
+    + (scored ? midScore([g.result.score[1], g.result.score[0]], live, state === "final") : '')
+    + side(g.home,starA)+'</div>';
 
   const place = g.venue && (g.venue.name || g.venue.city)
     ? (g.venue.name || g.venue.city) + (g.venue.city && g.venue.name ? ", "+g.venue.city : "") : "";
@@ -8817,7 +8880,7 @@ function rugbyRow(g, now){
       + (live?'<span class="dot-live"></span>':"")+esc(detail||said)+'</span>'
       + '<span class="conf-note">'+(state==="final"?"No score available":"No score yet")+'</span>';
   } else if(reveal){
-    const sc = g.result.score;
+    const sc = [g.result.score[1], g.result.score[0]];
     scoreCell += '<span class="score-line">'+sc[0]+' &ndash; '+sc[1]+'</span>'
       + '<span class="score-state'+(live?" live":"")+'">'
       + (live?'<span class="dot-live"></span>':"")+esc(detail||said)+'</span>';
@@ -8829,7 +8892,7 @@ function rugbyRow(g, now){
   scoreCell += '</div>';
 
   const bell = saveButton(g.id, alerts.has(g.id), g.home.name + " v " + g.away.name);
-  return '<div class="game'+(live?" is-live":"")+(starA||starB?" has-star":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'
+  return '<div class="game matchup'+(live?" is-live":"")+(scored?" scored":"")+(starA||starB?" has-star":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'
     + timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
@@ -9132,13 +9195,15 @@ function gameRow(g, now){
   const side = (t, mine, tbd) => {
     const line = (t && SPOILED.has(t.id)) ? null : recordLine(t, g.comp);
     return '<span class="g-side">'
-      + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+crest(t)+esc(fullName(t))+'</span>'
+      + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+teamNameHtml(t, g.comp)+'</span>'
       + (line ? '<span class="g-rec">'+esc(line)+'</span>' : '')
       + '</span>';
   };
-  const teams = '<div class="g-teams">'
-    + side(o.a, mineA, false)
+  const scored = !!(reveal && st.score && (st.status === "final" || st.status === "live"));
+  const teams = '<div class="g-teams'+(scored ? " scored" : "")+'">'
+    + side(o.a, mineA, !o.a)
     + '<span class="at">'+o.sep+'</span>'
+    + (scored ? midScore(scoreFor(g, st), st.status === "live", st.status === "final") : '')
     + side(o.b, mineB, !o.b) + '</div>';
 
   const meta = '<div class="g-meta">'
@@ -9199,7 +9264,7 @@ function gameRow(g, now){
 
   const on = alerts.has(g.id);
   const bell = saveButton(g.id, on, fullName(g.home) + " v " + fullName(g.away));
-  return '<div class="game'+(st.status==="live"?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
+  return '<div class="game matchup'+(st.status==="live"?" is-live":"")+(scored?" scored":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
 function daySection(key, games, now, todayKey){

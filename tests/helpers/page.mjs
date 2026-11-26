@@ -63,10 +63,19 @@ const RIGHTS_TABLES = ["SERVICES", "CARRIER_SERVICE", "SRC", "RIGHTS", "CHECKED"
    it brings the zone helpers that clock is built from. */
 const RIGHTS_CLOCK = ["ZONE_IANA", "_zoneFmt", "zoneParts", "listingDay", "rightsClock"];
 
+/* A matchup row writes its names, separator and middle score through
+   these, and the tables file a club with no id of ours under feedKey. */
+const MATCHUP_HELPERS = ["teamNameHtml", "midScore"];
+const NEEDS_MATCHUP = new Set(["gameRow", "rugbyRow", "matchupLabel"]);
+const FEED_KEY = ["norm", "feedKey"];
+const NEEDS_FEED_KEY = new Set(["attachTables", "staticTeam"]);
+
 export function loadFromPage(names, preamble = ""){
   const needsRights = names.some(n => RIGHTS_FAMILY.has(n) || RIGHTS_BASE.includes(n)) || names.includes("loadStatic");
-  const base = !needsRights ? [] : [...RIGHTS_BASE, ...(names.includes("loadStatic") ? RIGHTS_TABLES : []),
-    ...(names.includes("resolveRights") ? RIGHTS_CLOCK : [])]
+  const base = [...(!needsRights ? [] : [...RIGHTS_BASE, ...(names.includes("loadStatic") ? RIGHTS_TABLES : []),
+    ...(names.includes("resolveRights") ? RIGHTS_CLOCK : [])]),
+    ...(names.some(n => NEEDS_FEED_KEY.has(n)) ? FEED_KEY : []),
+    ...(names.some(n => NEEDS_MATCHUP.has(n)) ? MATCHUP_HELPERS : [])]
     /* Not what the caller asked for by name, nor what its preamble already
        declares for itself. */
     .filter(n => !names.includes(n) && !new RegExp("\\b(?:const|let|var|function)\\s+" + n + "\\b").test(preamble));

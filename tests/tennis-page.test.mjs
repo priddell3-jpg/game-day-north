@@ -458,12 +458,11 @@ test("a team matchup keeps the order its separator claims", () => {
   const arsenal = {home: "EPL", city: "Arsenal", name: "Arsenal"};
   const chelsea = {home: "EPL", city: "Chelsea", name: "Chelsea"};
 
-  // away at home, the North American convention
+  // away at home, in every sport
   assert.equal(matchupLabel({comp: "NHL", home: bruins, away: leafs}),
     "Toronto Maple Leafs at Boston Bruins");
-  // home vs away, the soccer one
   assert.equal(matchupLabel({comp: "EPL", home: arsenal, away: chelsea}),
-    "Arsenal vs Chelsea");
+    "Chelsea at Arsenal");
 });
 
 /* ---------------- the picker ---------------- */

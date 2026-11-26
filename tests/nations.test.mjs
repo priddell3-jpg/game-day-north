@@ -296,10 +296,11 @@ const game = (home, away, startIso, over = {}) => Object.assign({
 const PERU = () => game("nt-can", "Peru", "2026-10-03T18:00:00Z");
 const USA = () => game("nt-usa", "nt-can", "2026-10-07T00:00:00Z");
 
-test("a nation reads by its name, home side first, like any soccer fixture", () => {
-  const html = page.gameRow(PERU(), NOW);
+test("a nation reads by its name, away side first and at between, like every row", () => {
+  const g = PERU(), html = page.gameRow(g, NOW);
   assert.match(html, />Canada</);
-  assert.match(html, /<span class="at">vs<\/span>/);
+  assert.match(html, /<span class="at">at<\/span>/);
+  assert.ok(html.indexOf(">" + g.away.name + "<") < html.indexOf(">" + g.home.name + "<"), "away first");
   assert.match(html, />Friendly</);
 });
 
