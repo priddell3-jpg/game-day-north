@@ -58,7 +58,24 @@ test("on a phone every matchup row is side by side, never wrapped by name length
   const css = styleText();
   const phone = css.slice(css.lastIndexOf("Side by side on a phone"));
   assert.match(phone, /\.game\.matchup \.g-teams\{display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
-  assert.match(phone, /grid-template-areas:"time score bell" "match match match" "watch watch watch"/);
+  assert.match(phone, /\.game\.matchup\{display:flex;flex-wrap:wrap/);
+  assert.match(phone, /\.game\.matchup \.g-match\{display:contents\}/);
+  assert.match(phone, /\.game\.matchup \.g-teams\{order:4;flex:1 0 100%\}/, "the teams always get a line of their own");
   assert.match(phone, /\.game\.matchup\.scored \.score-line\{display:none\}/);
-  assert.match(css, /\.mid-score\{display:none\}/, "wider screens keep their score cell");
+  assert.match(css, /\.mid-score,\.g-rec-short\{display:none\}/, "wider screens keep their score cell");
+});
+
+test("a phone says a record short, so it stays on one line", () => {
+  const css = styleText();
+  const phone = css.slice(css.lastIndexOf("Side by side on a phone"));
+  assert.match(phone, /\.game\.matchup \.has-short > \.g-rec\{display:none\}/);
+  assert.match(css, /\.mid-score,\.g-rec-short\{display:none\}/, "wider screens keep the full record");
+  assert.match(SRC, /const short = line && line\.replace\(" in the ", " "\);/);
+});
+
+test("the condensed row keeps the save button's 44px target", () => {
+  const css = styleText();
+  const phone = css.slice(css.lastIndexOf("Side by side on a phone"));
+  assert.match(phone, /\.game\.matchup \.bell\{align-self:center;margin:-12px -8px -12px 0\}/);
+  assert.doesNotMatch(phone, /\.bell\{[^}]*(width|height):\s*(?!44)\d/);
 });
