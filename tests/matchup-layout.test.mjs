@@ -63,7 +63,9 @@ test("on a phone every matchup row is side by side, never wrapped by name length
   assert.match(phone, /\.game\.matchup \.g-teams\{display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
   assert.match(phone, /\.game\.matchup\{display:flex;flex-wrap:wrap/);
   assert.match(phone, /\.game\.matchup \.g-match\{display:contents\}/);
-  assert.match(phone, /\.game\.matchup \.g-teams\{order:4;flex:1 0 100%\}/, "the teams always get a line of their own");
+  assert.match(phone, /\.game\.matchup \.g-teams\{order:5;flex:1 0 100%\}/, "the teams always get a line of their own");
+  assert.match(phone, /\.game\.matchup \.g-time\{order:1[^}]*\}\s*\.game\.matchup \.g-meta\{order:2/, "the league sits beside the time");
+  assert.match(phone, /\.game\.matchup \.g-watch\{order:6;flex:1 0 100%/, "where to watch has the bottom line to itself");
   assert.match(phone, /\.game\.matchup\.scored \.score-line\{display:none\}/);
   assert.match(css, /\.mid-score\{display:none\}/, "wider screens keep their score cell");
 });
