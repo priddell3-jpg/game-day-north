@@ -1,0 +1,528 @@
+{
+ "//": "ESPN game summary for event 401892789, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own.",
+ "header": {
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "state": "post",
+      "completed": true,
+      "detail": "Final",
+      "shortDetail": "Final"
+     },
+     "featuredAthletes": [
+      {
+       "name": "winningGoalie",
+       "athlete": {
+        "displayName": "Daniil Tarasov",
+        "shortName": "D. Tarasov"
+       },
+       "team": {
+        "id": "5"
+       }
+      },
+      {
+       "name": "losingGoalie",
+       "athlete": {
+        "displayName": "Leevi Merilainen",
+        "shortName": "L. Merilainen"
+       },
+       "team": {
+        "id": "22"
+       }
+      },
+      {
+       "name": "firstStar",
+       "athlete": {
+        "displayName": "Emmitt Finnie",
+        "shortName": "E. Finnie"
+       },
+       "team": {
+        "id": "5"
+       }
+      },
+      {
+       "name": "secondStar",
+       "athlete": {
+        "displayName": "Viktor Arvidsson",
+        "shortName": "V. Arvidsson"
+       },
+       "team": {
+        "id": "5"
+       }
+      },
+      {
+       "name": "thirdStar",
+       "athlete": {
+        "displayName": "Moritz Seider",
+        "shortName": "M. Seider"
+       },
+       "team": {
+        "id": "5"
+       }
+      }
+     ]
+    },
+    "competitors": [
+     {
+      "id": "5",
+      "homeAway": "home",
+      "score": "5",
+      "winner": true,
+      "team": {
+       "id": "5",
+       "abbreviation": "DET",
+       "displayName": "Detroit Red Wings"
+      },
+      "linescores": [
+       {
+        "displayValue": "3"
+       },
+       {
+        "displayValue": "1"
+       },
+       {
+        "displayValue": "1"
+       }
+      ]
+     },
+     {
+      "id": "22",
+      "homeAway": "away",
+      "score": "1",
+      "winner": false,
+      "team": {
+       "id": "22",
+       "abbreviation": "VAN",
+       "displayName": "Vancouver Canucks"
+      },
+      "linescores": [
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "1"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "boxscore": {
+  "teams": [
+   {
+    "team": {
+     "id": "22",
+     "abbreviation": "VAN"
+    },
+    "statistics": [
+     {
+      "name": "shotsTotal",
+      "displayValue": "26",
+      "label": "Shots"
+     },
+     {
+      "name": "powerPlayGoals",
+      "displayValue": "0",
+      "label": "Power Play Goals"
+     },
+     {
+      "name": "powerPlayOpportunities",
+      "displayValue": "2",
+      "label": "Power Play Opportunities"
+     },
+     {
+      "name": "faceoffPercent",
+      "displayValue": "48.9",
+      "label": "Faceoff Win Percent"
+     }
+    ]
+   },
+   {
+    "team": {
+     "id": "5",
+     "abbreviation": "DET"
+    },
+    "statistics": [
+     {
+      "name": "shotsTotal",
+      "displayValue": "26",
+      "label": "Shots"
+     },
+     {
+      "name": "powerPlayGoals",
+      "displayValue": "1",
+      "label": "Power Play Goals"
+     },
+     {
+      "name": "powerPlayOpportunities",
+      "displayValue": "1",
+      "label": "Power Play Opportunities"
+     },
+     {
+      "name": "faceoffPercent",
+      "displayValue": "51.1",
+      "label": "Faceoff Win Percent"
+     }
+    ]
+   }
+  ],
+  "players": [
+   {
+    "team": {
+     "id": "22",
+     "abbreviation": "VAN"
+    },
+    "statistics": [
+     {
+      "name": "goalies",
+      "keys": [
+       "goalsAgainst",
+       "shotsAgainst",
+       "shootoutSaves",
+       "shootoutShotsAgainst",
+       "saves",
+       "savePct",
+       "evenStrengthSaves",
+       "powerPlaySaves",
+       "shortHandedSaves",
+       "timeOnIce",
+       "ytdGoals",
+       "penaltyMinutes"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Leevi Merilainen",
+         "shortName": "L. Merilainen"
+        },
+        "stats": [
+         "5",
+         "26",
+         "0",
+         "0",
+         "21",
+         ".808",
+         "20",
+         "1",
+         "0",
+         "59:30",
+         "0",
+         "0"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "team": {
+     "id": "5",
+     "abbreviation": "DET"
+    },
+    "statistics": [
+     {
+      "name": "goalies",
+      "keys": [
+       "goalsAgainst",
+       "shotsAgainst",
+       "shootoutSaves",
+       "shootoutShotsAgainst",
+       "saves",
+       "savePct",
+       "evenStrengthSaves",
+       "powerPlaySaves",
+       "shortHandedSaves",
+       "timeOnIce",
+       "ytdGoals",
+       "penaltyMinutes"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Daniil Tarasov",
+         "shortName": "D. Tarasov"
+        },
+        "stats": [
+         "1",
+         "26",
+         "0",
+         "0",
+         "25",
+         ".962",
+         "24",
+         "1",
+         "0",
+         "59:41",
+         "0",
+         "0"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "plays": [
+  {
+   "type": {
+    "text": "Goal"
+   },
+   "text": "Emmitt Finnie Goal (9) Tip-In, assists: Viktor Arvidsson (8)",
+   "awayScore": 0,
+   "homeScore": 1,
+   "period": {
+    "number": 1,
+    "displayValue": "1st"
+   },
+   "clock": {
+    "displayValue": "1:16"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "5"
+   },
+   "strength": {
+    "text": "Even Strength",
+    "abbreviation": "even-strength"
+   },
+   "participants": [
+    {
+     "type": "scorer",
+     "athlete": {
+      "displayName": "Emmitt Finnie",
+      "shortName": "E. Finnie"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Viktor Arvidsson",
+      "shortName": "V. Arvidsson"
+     }
+    }
+   ]
+  },
+  {
+   "type": {
+    "text": "Goal"
+   },
+   "text": "Emmitt Finnie Goal (10) Snap Shot, assists: Marco Kasper (2)",
+   "awayScore": 0,
+   "homeScore": 2,
+   "period": {
+    "number": 1,
+    "displayValue": "1st"
+   },
+   "clock": {
+    "displayValue": "4:05"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "5"
+   },
+   "strength": {
+    "text": "Even Strength",
+    "abbreviation": "even-strength"
+   },
+   "participants": [
+    {
+     "type": "scorer",
+     "athlete": {
+      "displayName": "Emmitt Finnie",
+      "shortName": "E. Finnie"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Marco Kasper",
+      "shortName": "M. Kasper"
+     }
+    }
+   ]
+  },
+  {
+   "type": {
+    "text": "Goal"
+   },
+   "text": "Lucas Raymond Goal (10) Snap Shot, assists: Moritz Seider (13), Viktor Arvidsson (9)",
+   "awayScore": 0,
+   "homeScore": 3,
+   "period": {
+    "number": 1,
+    "displayValue": "1st"
+   },
+   "clock": {
+    "displayValue": "19:03"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "5"
+   },
+   "strength": {
+    "text": "Power Play",
+    "abbreviation": "power-play"
+   },
+   "participants": [
+    {
+     "type": "scorer",
+     "athlete": {
+      "displayName": "Lucas Raymond",
+      "shortName": "L. Raymond"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Moritz Seider",
+      "shortName": "M. Seider"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Viktor Arvidsson",
+      "shortName": "V. Arvidsson"
+     }
+    }
+   ]
+  },
+  {
+   "type": {
+    "text": "Goal"
+   },
+   "text": "J.T. Compher Goal (4) Snap Shot, assists: Michael Brandsegg-Nygård (8)",
+   "awayScore": 0,
+   "homeScore": 4,
+   "period": {
+    "number": 2,
+    "displayValue": "2nd"
+   },
+   "clock": {
+    "displayValue": "6:24"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "5"
+   },
+   "strength": {
+    "text": "Even Strength",
+    "abbreviation": "even-strength"
+   },
+   "participants": [
+    {
+     "type": "scorer",
+     "athlete": {
+      "displayName": "J.T. Compher",
+      "shortName": "J.T. Compher"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Michael Brandsegg-Nygard",
+      "shortName": "M. Brandsegg-Nygard"
+     }
+    }
+   ]
+  },
+  {
+   "type": {
+    "text": "Goal"
+   },
+   "text": "Paul Cotter Goal (5) Snap Shot, assists: Cole Reinhardt (1), Jacob Quillan (3)",
+   "awayScore": 1,
+   "homeScore": 4,
+   "period": {
+    "number": 3,
+    "displayValue": "3rd"
+   },
+   "clock": {
+    "displayValue": "7:26"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "22"
+   },
+   "strength": {
+    "text": "Even Strength",
+    "abbreviation": "even-strength"
+   },
+   "participants": [
+    {
+     "type": "scorer",
+     "athlete": {
+      "displayName": "Paul Cotter",
+      "shortName": "P. Cotter"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Cole Reinhardt",
+      "shortName": "C. Reinhardt"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Jacob Quillan",
+      "shortName": "J. Quillan"
+     }
+    }
+   ]
+  },
+  {
+   "type": {
+    "text": "Goal"
+   },
+   "text": "Viktor Arvidsson Goal (9) Tip-In, assists: Moritz Seider (14), Emmitt Finnie (5)",
+   "awayScore": 1,
+   "homeScore": 5,
+   "period": {
+    "number": 3,
+    "displayValue": "3rd"
+   },
+   "clock": {
+    "displayValue": "8:08"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "5"
+   },
+   "strength": {
+    "text": "Even Strength",
+    "abbreviation": "even-strength"
+   },
+   "participants": [
+    {
+     "type": "scorer",
+     "athlete": {
+      "displayName": "Viktor Arvidsson",
+      "shortName": "V. Arvidsson"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Moritz Seider",
+      "shortName": "M. Seider"
+     }
+    },
+    {
+     "type": "assister",
+     "athlete": {
+      "displayName": "Emmitt Finnie",
+      "shortName": "E. Finnie"
+     }
+    }
+   ]
+  }
+ ]
+}

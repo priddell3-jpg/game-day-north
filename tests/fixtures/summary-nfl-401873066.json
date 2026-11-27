@@ -1,0 +1,408 @@
+{
+ "//": "ESPN game summary for event 401873066, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own.",
+ "header": {
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "state": "post",
+      "completed": true,
+      "detail": "Final",
+      "shortDetail": "Final"
+     },
+     "featuredAthletes": []
+    },
+    "competitors": [
+     {
+      "id": "34",
+      "homeAway": "home",
+      "score": "26",
+      "winner": true,
+      "team": {
+       "id": "34",
+       "abbreviation": "HOU",
+       "displayName": "Houston Texans"
+      },
+      "linescores": [
+       {
+        "displayValue": "7"
+       },
+       {
+        "displayValue": "10"
+       },
+       {
+        "displayValue": "9"
+       },
+       {
+        "displayValue": "0"
+       }
+      ]
+     },
+     {
+      "id": "11",
+      "homeAway": "away",
+      "score": "3",
+      "winner": false,
+      "team": {
+       "id": "11",
+       "abbreviation": "IND",
+       "displayName": "Indianapolis Colts"
+      },
+      "linescores": [
+       {
+        "displayValue": "3"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "boxscore": {
+  "teams": [
+   {
+    "team": {
+     "id": "11",
+     "abbreviation": "IND"
+    },
+    "statistics": [
+     {
+      "name": "totalYards",
+      "displayValue": "167",
+      "label": "Total Yards"
+     },
+     {
+      "name": "turnovers",
+      "displayValue": "1",
+      "label": "Turnovers"
+     },
+     {
+      "name": "possessionTime",
+      "displayValue": "22:14",
+      "label": "Possession"
+     }
+    ]
+   },
+   {
+    "team": {
+     "id": "34",
+     "abbreviation": "HOU"
+    },
+    "statistics": [
+     {
+      "name": "totalYards",
+      "displayValue": "354",
+      "label": "Total Yards"
+     },
+     {
+      "name": "turnovers",
+      "displayValue": "1",
+      "label": "Turnovers"
+     },
+     {
+      "name": "possessionTime",
+      "displayValue": "37:46",
+      "label": "Possession"
+     }
+    ]
+   }
+  ]
+ },
+ "leaders": [
+  {
+   "team": {
+    "id": "34",
+    "abbreviation": "HOU"
+   },
+   "leaders": [
+    {
+     "name": "passingYards",
+     "displayName": "Passing Yards",
+     "leaders": [
+      {
+       "displayValue": "21/27, 194 YDS, 3 TD, 1 INT",
+       "athlete": {
+        "displayName": "C.J. Stroud",
+        "shortName": "C.J. Stroud"
+       }
+      }
+     ]
+    },
+    {
+     "name": "rushingYards",
+     "displayName": "Rushing Yards",
+     "leaders": [
+      {
+       "displayValue": "26 CAR, 107 YDS",
+       "athlete": {
+        "displayName": "David Montgomery",
+        "shortName": "D. Montgomery"
+       }
+      }
+     ]
+    },
+    {
+     "name": "receivingYards",
+     "displayName": "Receiving Yards",
+     "leaders": [
+      {
+       "displayValue": "3 REC, 58 YDS, 1 TD",
+       "athlete": {
+        "displayName": "Nico Collins",
+        "shortName": "N. Collins"
+       }
+      }
+     ]
+    },
+    {
+     "name": "sacks",
+     "displayName": "Sacks",
+     "leaders": [
+      {
+       "displayValue": "1",
+       "athlete": {
+        "displayName": "Jadeveon Clowney",
+        "shortName": "J. Clowney"
+       }
+      }
+     ]
+    },
+    {
+     "name": "totalTackles",
+     "displayName": "Tackles",
+     "leaders": [
+      {
+       "displayValue": "6",
+       "athlete": {
+        "displayName": "Tommy Togiai",
+        "shortName": "T. Togiai"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "team": {
+    "id": "11",
+    "abbreviation": "IND"
+   },
+   "leaders": [
+    {
+     "name": "passingYards",
+     "displayName": "Passing Yards",
+     "leaders": [
+      {
+       "displayValue": "12/27, 144 YDS, 1 INT",
+       "athlete": {
+        "displayName": "Daniel Jones",
+        "shortName": "D. Jones"
+       }
+      }
+     ]
+    },
+    {
+     "name": "rushingYards",
+     "displayName": "Rushing Yards",
+     "leaders": [
+      {
+       "displayValue": "11 CAR, 21 YDS",
+       "athlete": {
+        "displayName": "Jonathan Taylor",
+        "shortName": "J. Taylor"
+       }
+      }
+     ]
+    },
+    {
+     "name": "receivingYards",
+     "displayName": "Receiving Yards",
+     "leaders": [
+      {
+       "displayValue": "2 REC, 48 YDS",
+       "athlete": {
+        "displayName": "Anthony Gould",
+        "shortName": "A. Gould"
+       }
+      }
+     ]
+    },
+    {
+     "name": "sacks",
+     "displayName": "Sacks",
+     "leaders": [
+      {
+       "displayValue": "1",
+       "athlete": {
+        "displayName": "Adetomiwa Adebawore",
+        "shortName": "A. Adebawore"
+       }
+      }
+     ]
+    },
+    {
+     "name": "totalTackles",
+     "displayName": "Tackles",
+     "leaders": [
+      {
+       "displayValue": "16",
+       "athlete": {
+        "displayName": "CJ Allen",
+        "shortName": "C. Allen"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "scoringPlays": [
+  {
+   "type": {
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Spencer Shrader 34 Yd Field Goal ",
+   "awayScore": 3,
+   "homeScore": 0,
+   "period": {
+    "number": 1
+   },
+   "clock": {
+    "displayValue": "10:43"
+   },
+   "team": {
+    "id": "11",
+    "abbreviation": "IND"
+   },
+   "scoringType": {
+    "abbreviation": "FG",
+    "displayName": "Field Goal"
+   }
+  },
+  {
+   "type": {
+    "text": "Passing Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Nico Collins 42 Yd pass from C.J. Stroud (Ka'imi Fairbairn Kick)",
+   "awayScore": 3,
+   "homeScore": 7,
+   "period": {
+    "number": 1
+   },
+   "clock": {
+    "displayValue": "2:14"
+   },
+   "team": {
+    "id": "34",
+    "abbreviation": "HOU"
+   },
+   "scoringType": {
+    "abbreviation": "TD",
+    "displayName": "Touchdown"
+   }
+  },
+  {
+   "type": {
+    "text": "Passing Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Kayshon Boutte 24 Yd pass from C.J. Stroud (Ka'imi Fairbairn Kick)",
+   "awayScore": 3,
+   "homeScore": 14,
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "displayValue": "7:38"
+   },
+   "team": {
+    "id": "34",
+    "abbreviation": "HOU"
+   },
+   "scoringType": {
+    "abbreviation": "TD",
+    "displayName": "Touchdown"
+   }
+  },
+  {
+   "type": {
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Ka'imi Fairbairn 27 Yd Field Goal",
+   "awayScore": 3,
+   "homeScore": 17,
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "displayValue": "0:15"
+   },
+   "team": {
+    "id": "34",
+    "abbreviation": "HOU"
+   },
+   "scoringType": {
+    "abbreviation": "FG",
+    "displayName": "Field Goal"
+   }
+  },
+  {
+   "type": {
+    "text": "Safety",
+    "abbreviation": "SF"
+   },
+   "text": "Daniel Jones Sacked by Will Anderson Jr. For 7 Yd Loss for Safety",
+   "awayScore": 3,
+   "homeScore": 19,
+   "period": {
+    "number": 3
+   },
+   "clock": {
+    "displayValue": "10:22"
+   },
+   "team": {
+    "id": "34",
+    "abbreviation": "HOU"
+   },
+   "scoringType": {
+    "abbreviation": "SF",
+    "displayName": "Safety"
+   }
+  },
+  {
+   "type": {
+    "text": "Passing Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Marlin Klein 13 Yd pass from C.J. Stroud (Ka'imi Fairbairn Kick)",
+   "awayScore": 3,
+   "homeScore": 26,
+   "period": {
+    "number": 3
+   },
+   "clock": {
+    "displayValue": "4:19"
+   },
+   "team": {
+    "id": "34",
+    "abbreviation": "HOU"
+   },
+   "scoringType": {
+    "abbreviation": "TD",
+    "displayName": "Touchdown"
+   }
+  }
+ ]
+}
