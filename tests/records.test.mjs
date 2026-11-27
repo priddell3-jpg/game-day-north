@@ -371,7 +371,7 @@ const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","RIGHTS"
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag","seriesTag",
   "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope",
-  "RESULTS_DAYS","spoiledTeams","gameRow"];
+  "RESULTS_DAYS","spoiledTeams","gameRow","fmtLongDay","stripTags","gameDetail"];
 
 const NOW = Date.parse("2026-11-20T23:00:00Z");
 const TEAM = (id, city, name, comp) => ({id, home:comp, city, name, abbr:id.toUpperCase().slice(0,3), color:"#123456"});
@@ -608,4 +608,43 @@ test("in the committed file, two clubs from the same table both carry a record",
   }
   assert.ok(both > 100, "checked a real slate, got " + both);
   assert.deepEqual(lopsided, []);
+});
+
+
+/* ---- the game's window ------------------------------------------------
+   The phone row dropped the records, venue and countdown; the window a
+   tap opens carries them, under the same spoiler rule as the row. */
+
+test("the window carries both records, the date, the venue, the carriers and saving", () => {
+  const p = rowHarness([SCHEDULED_ONLY]);
+  const g = Object.assign({}, SCHEDULED_ONLY, {venue:{name:"Rogers Arena", city:"Vancouver"}});
+  const html = p.gameDetail(g, NOW);
+  assert.match(html, /<h2 class="vh" id="sheetTitle">Boston Bruins at Vancouver Canucks<\/h2>/);
+  assert.match(html, /9-7-1 · 2nd in the Atlantic/, "the Bruins' record");
+  assert.match(html, /8-8-3 · 4th in the Pacific/, "and the Canucks'");
+  assert.ok(html.indexOf("Bruins") < html.indexOf("Canucks"), "away first");
+  assert.match(html, /<dt>When<\/dt><dd>[^<]*Sunday, November 22[^<]*/, "the full date");
+  assert.match(html, /in 2d 0h/, "how long until it");
+  assert.match(html, /<dt>Where<\/dt><dd>Rogers Arena, Vancouver<\/dd>/);
+  assert.match(html, /<dt>Watch<\/dt>/);
+  assert.match(html, /class="sd-save" data-alert="g8" aria-pressed="false">/);
+  assert.doesNotMatch(html, /<dt>Series<\/dt>/, "no series line for a regular-season game");
+});
+
+test("a finished game shows its score in the window only when scores are shown", () => {
+  const hidden = rowHarness([FINISHED]);
+  const h = hidden.gameDetail(FINISHED, NOW);
+  assert.doesNotMatch(h, /mid-score/);
+  assert.match(h, /data-reveal="g1"/, "a Reveal button instead");
+  assert.doesNotMatch(h, /12-4-2|9-7-1/, "and the records stay down, as on the row");
+  const shown = rowHarness([FINISHED], ROW_PREAMBLE.replace("let showScores = false", "let showScores = true"));
+  const s = shown.gameDetail(FINISHED, NOW);
+  assert.match(s, /<span class="mid-score" aria-hidden="true"><b class="win">4<\/b><i>&ndash;<\/i><b>2<\/b><\/span>/, "away first, the winner marked");
+});
+
+test("a scheduled row is marked so the phone can drop its countdown, and has a Details button", () => {
+  const p = rowHarness([SCHEDULED_ONLY]);
+  const html = p.gameRow(SCHEDULED_ONLY, NOW);
+  assert.match(html, /class="game matchup is-sched"/);
+  assert.match(html, /<button type="button" class="g-open" data-open="g8" aria-haspopup="dialog">Details<span class="vh">: Boston Bruins at Vancouver Canucks<\/span><\/button>/);
 });
