@@ -73,9 +73,10 @@ test("a scheduled row names both nations, the competition and the venue", () => 
   assert.match(html, /Kick-off/);
 });
 
-test("the two nations are separated by v, not by at", () => {
-  const html = page().rugbyRow(row(), NOW);
-  assert.match(html, /<span class="at">v<\/span>/);
+test("the two nations are written away at home, like every other row", () => {
+  const g = row(), html = page().rugbyRow(g, NOW);
+  assert.match(html, /<span class="at">at<\/span>/);
+  assert.ok(html.indexOf(">" + g.away.name + "<") < html.indexOf(">" + g.home.name + "<"), "away first");
 });
 
 test("a round is shown when the source gave one", () => {
@@ -97,7 +98,7 @@ const stateRow = (state, over = {}) => row(Object.assign({
 
 test("a live row is marked live and carries the source's own clock text", () => {
   const html = page().rugbyRow(stateRow("live", {ru:{state:"live", label:"52'"}}), NOW);
-  assert.match(html, /class="game is-live/);
+  assert.match(html, /class="game matchup is-live/);
   assert.match(html, /dot-live/);
   assert.match(html, /52&#039;|52'/);
 });
@@ -128,7 +129,7 @@ test("postponed, cancelled and abandoned are said plainly and are not live", () 
 test("a final says FT and shows the score", () => {
   const html = page().rugbyRow(stateRow("final", {ru:{state:"final", label:"FT"},
     result:{status:"final", label:"FT", score:[31, 24]}}), NOW);
-  assert.match(html, /31 &ndash; 24/);
+  assert.match(html, /24 &ndash; 31/, "away first, like the names");
   assert.match(html, /FT/);
   assert.doesNotMatch(html, /is-live/);
 });
@@ -153,10 +154,10 @@ test("with scores off the number is hidden behind a reveal, and the state is not
   assert.match(html, /Live now/);
 });
 
-test("with scores on the number is printed as given", () => {
+test("with scores on the numbers are printed away first, like the names", () => {
   const html = page().rugbyRow(stateRow("live", {ru:{state:"live", label:"52'"},
     result:{status:"live", label:"52'", score:[17, 12]}}), NOW);
-  assert.match(html, /17 &ndash; 12/);
+  assert.match(html, /12 &ndash; 17/);
 });
 
 test("a final with no score says so rather than showing zeros", () => {

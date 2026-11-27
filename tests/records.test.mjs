@@ -371,7 +371,7 @@ const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","RIGHTS"
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag","seriesTag",
   "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope",
-  "RESULTS_DAYS","spoiledTeams","gameRow"];
+  "RESULTS_DAYS","spoiledTeams","gameRow","fmtLongDay","stripTags","gameDetail"];
 
 const NOW = Date.parse("2026-11-20T23:00:00Z");
 const TEAM = (id, city, name, comp) => ({id, home:comp, city, name, abbr:id.toUpperCase().slice(0,3), color:"#123456"});
@@ -575,4 +575,76 @@ test("the name keeps every rule it had — the wrapper is new, .g-team is not", 
     "the record goes under the name, so each side is a column");
   assert.match(ruleFor(css, ".g-team"), /min-width\s*:\s*0/);
   assert.match(ruleFor(css, ".g-team"), /white-space\s*:\s*nowrap/);
+});
+
+/* ---- clubs with no id of ours ----------------------------------------
+   Fifteen of the thirty-six Champions League clubs have no id in the app,
+   and their table rows were skipped, so a Brugge-Liverpool row showed
+   Liverpool's record and nothing under Club Brugge, in the same table.
+   Both clubs in a fixture from the same table should always carry one. */
+
+test("a club with no id of ours still has its record, under the key its fixture is filed by", () => {
+  const m = loadFromPage([...RECORD_NAMES, "feedKey"], RECORD_PREAMBLE);
+  m.attachTables([{comp:"UCL", group:"league", scope:"League Phase", kind:"table", rows:[
+    {tid:"364", id:"liv", name:"Liverpool", abbr:"LIV", w:4, d:0, l:1, gp:5, pts:12, pos:5},
+    {tid:"570", name:"Club Brugge", abbr:"BRU", w:3, d:0, l:2, gp:5, pts:9, pos:13}]}]);
+  assert.equal(m.feedKey("UCL", {id:null, abbr:"BRU", name:"Club Brugge"}), "feed:UCL:BRU");
+  assert.equal(m.recordLine({id:"feed:UCL:BRU"}, "UCL"), "3-0-2 · 13th");
+  assert.equal(m.recordLine({id:"liv"}, "UCL"), "4-0-1 · 5th");
+  assert.match(SRC, /function staticTeam[\s\S]*?const key = feedKey\(comp, t\);/, "fixtures file their clubs by the same key");
+});
+
+test("in the committed file, two clubs from the same table both carry a record", () => {
+  const m = loadFromPage([...RECORD_NAMES, "feedKey"], RECORD_PREAMBLE);
+  m.attachTables(FILE.tables);
+  const inTable = (comp, t) => FILE.tables.some(g => g.comp === comp && g.rows.some(r =>
+    r && (t.id ? r.id === t.id : (!r.id && r.abbr === t.abbr)) && ((r.gp || 0) > 0)));
+  let both = 0, lopsided = [];
+  for(const f of FILE.fixtures){
+    if(!f.home || !f.away || !inTable(f.comp, f.home) || !inTable(f.comp, f.away)) continue;
+    const key = t => t.id || m.feedKey(f.comp, t);
+    const a = m.recordLine({id:key(f.away)}, f.comp), h = m.recordLine({id:key(f.home)}, f.comp);
+    if(a && h) both++; else lopsided.push(f.comp + " " + f.away.name + " at " + f.home.name);
+  }
+  assert.ok(both > 100, "checked a real slate, got " + both);
+  assert.deepEqual(lopsided, []);
+});
+
+
+/* ---- the game's window ------------------------------------------------
+   The phone row dropped the records, venue and countdown; the window a
+   tap opens carries them, under the same spoiler rule as the row. */
+
+test("the window carries both records, the date, the venue, the carriers and saving", () => {
+  const p = rowHarness([SCHEDULED_ONLY]);
+  const g = Object.assign({}, SCHEDULED_ONLY, {venue:{name:"Rogers Arena", city:"Vancouver"}});
+  const html = p.gameDetail(g, NOW);
+  assert.match(html, /<h2 class="vh" id="sheetTitle">Boston Bruins at Vancouver Canucks<\/h2>/);
+  assert.match(html, /9-7-1 · 2nd in the Atlantic/, "the Bruins' record");
+  assert.match(html, /8-8-3 · 4th in the Pacific/, "and the Canucks'");
+  assert.ok(html.indexOf("Bruins") < html.indexOf("Canucks"), "away first");
+  assert.match(html, /<dt>When<\/dt><dd>[^<]*Sunday, November 22[^<]*/, "the full date");
+  assert.match(html, /in 2d 0h/, "how long until it");
+  assert.match(html, /<dt>Where<\/dt><dd>Rogers Arena, Vancouver<\/dd>/);
+  assert.match(html, /<dt>Watch<\/dt>/);
+  assert.match(html, /class="sd-save" data-alert="g8" aria-pressed="false">/);
+  assert.doesNotMatch(html, /<dt>Series<\/dt>/, "no series line for a regular-season game");
+});
+
+test("a finished game shows its score in the window only when scores are shown", () => {
+  const hidden = rowHarness([FINISHED]);
+  const h = hidden.gameDetail(FINISHED, NOW);
+  assert.doesNotMatch(h, /mid-score/);
+  assert.match(h, /data-reveal="g1"/, "a Reveal button instead");
+  assert.doesNotMatch(h, /12-4-2|9-7-1/, "and the records stay down, as on the row");
+  const shown = rowHarness([FINISHED], ROW_PREAMBLE.replace("let showScores = false", "let showScores = true"));
+  const s = shown.gameDetail(FINISHED, NOW);
+  assert.match(s, /<span class="mid-score" aria-hidden="true"><b class="win">4<\/b><i>&ndash;<\/i><b>2<\/b><\/span>/, "away first, the winner marked");
+});
+
+test("a scheduled row is marked so the phone can drop its countdown, and has a Details button", () => {
+  const p = rowHarness([SCHEDULED_ONLY]);
+  const html = p.gameRow(SCHEDULED_ONLY, NOW);
+  assert.match(html, /class="game matchup is-sched"/);
+  assert.match(html, /<button type="button" class="g-open" data-open="g8" aria-haspopup="dialog">Details<span class="vh">: Boston Bruins at Vancouver Canucks<\/span><\/button>/);
 });

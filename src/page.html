@@ -797,6 +797,99 @@ main{padding:22px 0 80px}
   .svc-name{font-size:12px}
   .rights-tbl th,.rights-tbl td{padding:8px 12px}
 }
+/* Side by side on a phone, the same shape on every matchup row: away
+   on the left, home on the right, "at" or the score between them. The
+   countdown or clock moves up beside the time so the two teams get the
+   whole width. It replaces a row that sat the teams on one line when both
+   names happened to fit and wrapped them when they did not, so that
+   neighbouring rows came out in different shapes. */
+.g-name{display:inline}
+.mid-score{display:none}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.g-open{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+  border:0;padding:0;background:none;font:inherit}
+.g-open:focus-visible{position:static;width:auto;height:auto;clip:auto;overflow:visible;order:7;
+  font-size:12px;font-weight:600;color:var(--accent);padding:4px 0}
+.game.matchup{cursor:pointer}
+.game.matchup:active{background:var(--surface-2)}
+html.sheet-open,html.sheet-open body{overflow:hidden}
+.sheet-back{position:fixed;inset:0;z-index:80;background:rgba(10,14,24,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet-back[hidden]{display:none}
+.sheet{width:100%;max-width:460px;max-height:86vh;overflow:auto;background:var(--surface);color:var(--ink);
+  border-radius:18px 18px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);outline:none;
+  padding:10px 18px calc(18px + env(safe-area-inset-bottom))}
+@media (min-width:761px){ .sheet-back{align-items:center} .sheet{border-radius:16px;padding-bottom:18px} }
+.sd-head{display:flex;align-items:center;gap:8px;min-height:44px}
+.sd-stage{font-size:12px;color:var(--muted)}
+.sd-close{margin-left:auto;width:44px;height:44px;border:0;background:none;color:var(--muted);font-size:26px;line-height:1;margin-right:-10px}
+.sd-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:6px 0 2px}
+.sd-side{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;min-width:0}
+.sd-name{font-size:18px;font-weight:700;line-height:1.15;overflow-wrap:anywhere}
+.sd-name .g-name{display:block;text-wrap:balance;hyphens:none}
+.sd-rec{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sd-teams .at{font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0}
+.sd-teams .mid-score{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:28px;font-weight:500;
+  font-variant-numeric:tabular-nums;color:var(--muted)}
+.sd-teams .mid-score b{font-weight:500}
+.sd-teams .mid-score b.win{color:var(--ink);font-weight:700}
+.sd-teams .mid-score i{font-style:normal;font-weight:400}
+.sd-teams .mid-score.live,.sd-teams .mid-score.live b{color:var(--live);font-weight:600}
+.sd-status{text-align:center;margin:4px 0 12px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.sd-status.live{color:var(--live)}
+.sd-facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 14px;margin:0 0 16px;padding:12px 0 0;border-top:1px solid var(--line)}
+.sd-facts dt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.sd-facts dd{margin:0;font-size:14px;line-height:1.35}
+.sd-watch{display:flex;flex-wrap:wrap;gap:4px 12px}
+.sd-save{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;border-radius:12px;
+  border:1px solid var(--line-strong);background:transparent;color:var(--ink);font:inherit;font-weight:600;font-size:15px}
+.sd-save[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.sd-save svg{width:18px;height:18px}
+@media (max-width:760px){
+  /* Condensed: the time, countdown and save button share the top line;
+     the competition, place and carriers share the bottom one. The save
+     button keeps its 44px target, overlapping the padding rather than
+     adding to the row's height. */
+  .game.matchup{display:flex;flex-wrap:wrap;align-items:center;gap:3px 10px;padding:7px 10px 8px}
+  .game.matchup .g-match{display:contents}
+  /* Top line: time and league, then the score state and the save button.
+     The league sits beside the time so it is the first thing read; the
+     bottom line is only where to watch. */
+  .game.matchup .g-time{order:1;flex:0 0 auto}
+  .game.matchup .g-meta{order:2;flex:1 1 auto;min-width:0;gap:6px;font-size:11px}
+  .game.matchup .g-score{order:3;flex:none}
+  .game.matchup .bell{order:4;flex:none}
+  .game.matchup .g-teams{order:5;flex:1 0 100%}
+  .game.matchup .g-watch{order:6;flex:1 0 100%;gap:3px 10px}
+  .game.matchup .svc{font-size:11.5px}
+  .game.matchup .bell{align-self:center;margin:-12px -8px -12px 0}
+  .game.matchup .g-time{font-size:11px}
+  .game.matchup .g-score{flex-direction:row;align-items:baseline;gap:6px;align-self:center;min-width:0}
+  .game.matchup .g-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:start;gap:8px;padding:1px 0}
+  .game.matchup .g-side{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+  .game.matchup .g-team{display:flex;flex-direction:column;align-items:center;gap:0;
+    white-space:normal;overflow-wrap:anywhere;text-align:center;font-size:15px;line-height:1.15}
+  .game.matchup .g-name{display:block;text-wrap:balance;hyphens:none}
+  /* Simpler, after the first round of feedback: no countdown before a
+     game, and records, venue, stage and series move into the game's
+     window. The row keeps the time, the teams, the league and where to
+     watch. */
+  .game.matchup .g-rec{display:none}
+  .game.matchup.is-sched .g-score{display:none}
+  .game.matchup .g-meta > :not(.lg-tag):not(.conf-note){display:none}
+  .game.matchup .g-teams .at{align-self:center;font-size:12px;letter-spacing:0;text-transform:none}
+  .game.matchup .g-teams.scored .at{display:none}
+  .game.matchup .mid-score{display:flex;align-items:center;gap:5px;align-self:center;
+    font-family:var(--mono);font-size:21px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .game.matchup .mid-score b{font-weight:500}
+  .game.matchup .mid-score b.win{color:var(--ink);font-weight:700}
+  .game.matchup .mid-score i{font-style:normal;color:var(--muted);font-weight:400}
+  .game.matchup .mid-score.live,.game.matchup .mid-score.live b{color:var(--live);font-weight:600}
+  .game.matchup.scored .score-line{display:none}
+  .game.matchup .star-pip{align-self:center}
+  .day{margin-bottom:14px}
+  .day-head{padding-bottom:5px}
+}
 </style>
 
 <header class="topbar">
@@ -1309,6 +1402,13 @@ let TABLES = [], RECORDS = new Map();
    two parties each assuming the other checked. */
 const rowPlayed = r => !!r && (r.gp > 0 || (r.w || 0) + (r.l || 0) + (r.d || 0) + (r.otl || 0) > 0);
 const tablePlayed = g => (g.rows || []).some(rowPlayed);
+/* The key a club with no id of ours goes by. staticTeam files a
+   fixture's unknown club under it, and attachTables files that club's
+   table row under the same key, so the two meet. Before, a row without an
+   id was skipped: fifteen of the thirty-six Champions League clubs had no
+   record, so Club Brugge sat bare beside Liverpool's "4-0-1 · 5th" in the
+   same table. */
+const feedKey = (comp, t) => "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
 function attachTables(list){
   TABLES = Array.isArray(list)
     ? list.filter(g=>g && g.comp && Array.isArray(g.rows) && g.rows.length && tablePlayed(g)) : [];
@@ -1320,8 +1420,10 @@ function attachTables(list){
        and is meaningless in one of six baseball divisions. */
     const scoped = groupsFor(g.comp) > 1;
     for(const row of g.rows){
-      if(!row || !row.id) continue;
-      const entry = RECORDS.get(row.id) || {byComp:{}, primary:null};
+      if(!row) continue;
+      const id = row.id || ((row.abbr || row.name) ? feedKey(g.comp, {abbr:row.abbr, name:row.name}) : null);
+      if(!id) continue;
+      const entry = RECORDS.get(id) || {byComp:{}, primary:null};
       entry.byComp[g.comp] = {row, group:g, scoped};
       /* The club's own league, not the cup it happens to be in this
          week: a Champions League row is a record too, but "3 pts, 12th"
@@ -1329,7 +1431,7 @@ function attachTables(list){
          First table wins, and the sources are ordered leagues first. */
       if(!entry.primary && g.comp !== "UCL") entry.primary = entry.byComp[g.comp];
       if(!entry.primary) entry.primary = entry.byComp[g.comp];
-      RECORDS.set(row.id, entry);
+      RECORDS.set(id, entry);
     }
   }
   return TABLES.length;
@@ -2535,7 +2637,7 @@ async function readStaticPayload(){
 
 function staticTeam(t, comp){
   if(t.id && TEAMS[t.id]) return TEAMS[t.id];
-  const key = "feed:"+comp+":"+(t.id || t.abbr || norm(t.name));
+  const key = feedKey(comp, t);
   if(!TEAMS[key]){
     TEAMS[key] = {id:key, home:comp, city:t.city || "", name:t.name || "?", abbr:(t.abbr||"?").slice(0,4),
       color:t.color || "#5A6478", ghost:true, full:true, comps:[comp]};
@@ -4505,11 +4607,30 @@ function saveButton(id, on, what){
     + ' aria-label="'+esc(label)+'">'+BELL+'</button>';
 }
 function orderedTeams(g){
-  /* Rugby is written home v away, like soccer and unlike the North
-     American "away at home". Getting this wrong would not merely read
-     oddly: `flip` is what decides which way round a score is printed. */
-  if(g.rugby) return {a:g.home,b:g.away,sep:"v",flip:false};
-  return SOCCER[g.comp] ? {a:g.home,b:g.away,sep:"vs",flip:false} : {a:g.away,b:g.home,sep:"at",flip:true};
+  /* Away first, home second, "at" between, in every sport: "LA at New
+     York", the way listings and broadcasts write a game and the way the
+     reminders already title one. Soccer and rugby used to be written home
+     v away, so the board read two ways down one day. `flip` is what
+     decides which way round a score is printed, so it is always set. */
+  return {a:g.away,b:g.home,sep:"at",flip:true};
+}
+/* Every club is written one way: its full name, in one size and weight,
+   "Vancouver Canucks" and "Vancouver Whitecaps" alike. Splitting a city
+   off as a small line above worked for the four North American leagues
+   but not for soccer, where most names have no city to split ("Real Salt
+   Lake", "Liverpool"), so two clubs from the same city looked like two
+   different conventions. A long name wraps onto two even lines on a
+   phone (text-wrap: balance), "Detroit / Red Wings" rather than
+   "Detroit Red / Wings". */
+function teamNameHtml(t, comp){
+  return '<span class="g-name">'+esc(fullName(t))+'</span>';
+}
+/* The score between the two names, for the side-by-side phone layout:
+   away first like the names, the winner's figure at full strength. */
+function midScore(sc, live, final){
+  const w = final && sc[0] !== sc[1] ? (sc[0] > sc[1] ? 0 : 1) : -1;
+  return '<span class="mid-score'+(live ? " live" : "")+'" aria-hidden="true">'
+    + '<b'+(w === 0 ? ' class="win"' : '')+'>'+sc[0]+'</b><i>&ndash;</i><b'+(w === 1 ? ' class="win"' : '')+'>'+sc[1]+'</b></span>';
 }
 const scoreFor = (g,s) => orderedTeams(g).flip ? [s.score[1],s.score[0]] : [s.score[0],s.score[1]];
 
@@ -4647,10 +4768,14 @@ function rugbyRow(g, now){
   if(vnote) timeCell += '<span class="venue-day">'+esc(vnote)+'</span>';
   timeCell += '</div>';
 
-  const side = (t, starred) => '<span class="g-team'+(starred?" starred":"")+(t.tbdSide?" tbd":"")+'">'
-    + crest(t)+esc(t.name)+(starred?'<span class="star-pip" aria-label="Starred nation">&#9733;</span>':"")+'</span>';
-  const teams = '<div class="g-teams">'+side(g.home,starA)
-    + '<span class="at">v</span>'+side(g.away,starB)+'</div>';
+  const side = (t, starred) => '<span class="g-side"><span class="g-team'+(starred?" starred":"")+(t.tbdSide?" tbd":"")+'">'
+    + '<span class="g-name">'+esc(t.name)+'</span>'+(starred?'<span class="star-pip" aria-label="Starred nation">&#9733;</span>':"")+'</span></span>';
+  /* Away at home, like every other row; the score follows (flipped below). */
+  const scored = !!(g.result && g.result.score && reveal && state !== "scheduled" && state !== "unknown");
+  const teams = '<div class="g-teams'+(scored ? " scored" : "")+'">'+side(g.away,starB)
+    + '<span class="at">at</span>'
+    + (scored ? midScore([g.result.score[1], g.result.score[0]], live, state === "final") : '')
+    + side(g.home,starA)+'</div>';
 
   const place = g.venue && (g.venue.name || g.venue.city)
     ? (g.venue.name || g.venue.city) + (g.venue.city && g.venue.name ? ", "+g.venue.city : "") : "";
@@ -4694,7 +4819,7 @@ function rugbyRow(g, now){
       + (live?'<span class="dot-live"></span>':"")+esc(detail||said)+'</span>'
       + '<span class="conf-note">'+(state==="final"?"No score available":"No score yet")+'</span>';
   } else if(reveal){
-    const sc = g.result.score;
+    const sc = [g.result.score[1], g.result.score[0]];
     scoreCell += '<span class="score-line">'+sc[0]+' &ndash; '+sc[1]+'</span>'
       + '<span class="score-state'+(live?" live":"")+'">'
       + (live?'<span class="dot-live"></span>':"")+esc(detail||said)+'</span>';
@@ -4706,7 +4831,7 @@ function rugbyRow(g, now){
   scoreCell += '</div>';
 
   const bell = saveButton(g.id, alerts.has(g.id), g.home.name + " v " + g.away.name);
-  return '<div class="game'+(live?" is-live":"")+(starA||starB?" has-star":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'
+  return '<div class="game matchup'+(live?" is-live":"")+(scored?" scored":"")+(starA||starB?" has-star":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'
     + timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
 }
 
@@ -5009,13 +5134,15 @@ function gameRow(g, now){
   const side = (t, mine, tbd) => {
     const line = (t && SPOILED.has(t.id)) ? null : recordLine(t, g.comp);
     return '<span class="g-side">'
-      + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+crest(t)+esc(fullName(t))+'</span>'
+      + '<span class="g-team'+(mine?"":" dim")+(tbd?" tbd":"")+'">'+teamNameHtml(t, g.comp)+'</span>'
       + (line ? '<span class="g-rec">'+esc(line)+'</span>' : '')
       + '</span>';
   };
-  const teams = '<div class="g-teams">'
-    + side(o.a, mineA, false)
+  const scored = !!(reveal && st.score && (st.status === "final" || st.status === "live"));
+  const teams = '<div class="g-teams'+(scored ? " scored" : "")+'">'
+    + side(o.a, mineA, !o.a)
     + '<span class="at">'+o.sep+'</span>'
+    + (scored ? midScore(scoreFor(g, st), st.status === "live", st.status === "final") : '')
     + side(o.b, mineB, !o.b) + '</div>';
 
   const meta = '<div class="g-meta">'
@@ -5075,8 +5202,127 @@ function gameRow(g, now){
   scoreCell += '</div>';
 
   const on = alerts.has(g.id);
-  const bell = saveButton(g.id, on, fullName(g.home) + " v " + fullName(g.away));
-  return '<div class="game'+(st.status==="live"?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+'</div>';
+  const bell = saveButton(g.id, on, matchupLabel(g));
+  /* The whole row opens the game's window; this button is the same door
+     for a keyboard or a screen reader, out of sight until focused. */
+  const open = '<button type="button" class="g-open" data-open="'+esc(String(g.id))+'" aria-haspopup="dialog">Details<span class="vh">: '+esc(matchupLabel(g))+'</span></button>';
+  const sched = st.status==="scheduled" && ts.state!=="tbd";
+  return '<div class="game matchup'+(st.status==="live"?" is-live":"")+(scored?" scored":"")+(sched?" is-sched":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell+'<div class="g-match">'+teams+meta+'</div>'+watch+scoreCell+bell+open+'</div>';
+}
+
+/* ---- a game's own window -------------------------------------------
+   The phone row says who, when and where to watch, and no more. A tap
+   brings up this window with the rest: the full date and how long until
+   it, both records, the venue, every carrier and why it is listed, the
+   series, and saving. It is a sheet over the board, not a page, so
+   closing it leaves the board exactly where it was. */
+const fmtLongDay = ms => new Intl.DateTimeFormat(undefined,{weekday:"long",month:"long",day:"numeric"}).format(new Date(ms));
+const stripTags = h => String(h || "").replace(/<[^>]+>/g, "");
+function gameDetail(g, now){
+  const st = stateOf(g, now), ts = timeState(g, now);
+  const c = COMPS[g.comp] || {short:g.comp, color:"#555"};
+  const o = orderedTeams(g);
+  if(ts.state==="tbd") o.a = null;
+  const reveal = showScores || revealed.has(g.id);
+  const scored = !!(reveal && st.score && (st.status==="final" || st.status==="live"));
+  const side = t => {
+    const line = (t && SPOILED.has(t.id)) ? null : recordLine(t, g.comp);
+    return '<div class="sd-side"><span class="sd-name">'+teamNameHtml(t, g.comp)+'</span>'
+      + (line ? '<span class="sd-rec">'+esc(line)+'</span>' : '') + '</div>';
+  };
+  const mid = scored ? midScore(scoreFor(g, st), st.status==="live", st.status==="final")
+                     : '<span class="at">'+o.sep+'</span>';
+  let status;
+  if(ts.state==="tbd") status = "Opponent TBD &middot; draw ~"+esc(fmtShortDate(g.drawAt));
+  else if(st.status==="scheduled") status = ts.state==="tbc" ? "Time to be confirmed" : esc(countdownText(g.start, now));
+  else if(st.status==="unknown") status = "Status unavailable";
+  else if(st.status==="live") status = '<span class="dot-live"></span>'+esc(st.label || "Live");
+  else status = esc(st.label || "Final");
+  if(st.score && !reveal && (st.status==="final" || st.status==="live"))
+    status += ' <button type="button" class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal score</button>';
+
+  const rights = visibleRights(g, now);
+  const watch = rights.carriers.length
+    ? rights.carriers.map(w => carrierHtml(w, rights)).join("")
+    : '<span class="svc unconfirmed"><span class="pip"></span>Coverage not confirmed</span>';
+  const v = g.venue || {};
+  const where = [v.name, v.city].filter(Boolean).join(", ");
+  const series = stripTags(seriesTag(g));
+  const prov = provenanceOf(g, dataStale);
+  let when = esc(fmtLongDay(g.start))+' &middot; '+esc(fmtTime(g.start));
+  if(ts.state==="tbc") when += ' <span class="conf-note">time to be confirmed</span>';
+  if(g.moved) when += ' <span class="conf-note">moved from '+esc(fmtTime(g.moved))+'</span>';
+  const fact = (k, val) => val ? '<dt>'+k+'</dt><dd>'+val+'</dd>' : '';
+  const on = alerts.has(g.id);
+  return '<div class="sd-head"><span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
+      + (g.stage ? '<span class="sd-stage">'+esc(g.stage)+'</span>' : '')
+      + '<button type="button" class="sd-close" data-sheet-close aria-label="Close">&times;</button></div>'
+    + '<h2 class="vh" id="sheetTitle">'+esc(matchupLabel(g))+'</h2>'
+    + '<div class="sd-teams'+(scored ? " scored" : "")+'">'+side(o.a)+mid+side(o.b)+'</div>'
+    + '<p class="sd-status'+(st.status==="live" ? " live" : "")+'">'+status+'</p>'
+    + '<dl class="sd-facts">'
+    + fact("When", when)
+    + fact("Where", esc(where))
+    /* The rights note is written for whoever maintains the table (sources,
+       trade press, what is still unconfirmed), so it stays a tooltip on
+       the carrier, as on the row, and is not printed here. */
+    + fact("Watch", '<span class="sd-watch">'+watch+'</span>')
+    + fact("Series", esc(series))
+    + (prov ? fact("Note", esc(prov.label)) : '')
+    + '</dl>'
+    + '<button type="button" class="sd-save" data-alert="'+esc(g.id)+'" aria-pressed="'+on+'">'+BELL
+    + '<span>'+(on ? "Saved" : "Save game")+'</span></button>';
+}
+let sheetGame = null, sheetOpener = null, sheetEl = null;
+function sheetBox(){
+  if(sheetEl) return sheetEl;
+  sheetEl = document.createElement("div");
+  sheetEl.className = "sheet-back"; sheetEl.hidden = true;
+  sheetEl.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1"><div class="sheet-in"></div></div>';
+  sheetEl.addEventListener("click", e => {
+    if(e.target === sheetEl || e.target.closest("[data-sheet-close]")){ closeGame(); return; }
+    const al = e.target.closest("[data-alert]");
+    if(al){ const id = al.getAttribute("data-alert"); alerts.has(id) ? alerts.delete(id) : alerts.add(id); persist(); render(); return; }
+    const rv = e.target.closest("[data-reveal]");
+    if(rv){ revealed.add(rv.getAttribute("data-reveal")); render(); }
+  });
+  /* Tab stays inside the window while it is open. */
+  sheetEl.addEventListener("keydown", e => {
+    if(e.key !== "Tab") return;
+    const f = [...sheetEl.querySelectorAll("button, a[href]")].filter(x => x.offsetParent);
+    if(!f.length) return;
+    if(e.shiftKey && document.activeElement === f[0]){ e.preventDefault(); f[f.length-1].focus(); }
+    else if(!e.shiftKey && document.activeElement === f[f.length-1]){ e.preventDefault(); f[0].focus(); }
+  });
+  document.body.appendChild(sheetEl);
+  return sheetEl;
+}
+function paintSheet(){
+  const g = sheetGame && GAMES.find(x => String(x.id) === sheetGame);
+  if(!g){ closeGame(); return; }
+  sheetBox().querySelector(".sheet-in").innerHTML = gameDetail(g, Date.now());
+}
+function openGame(id, opener){
+  sheetGame = String(id); sheetOpener = opener || null;
+  const box = sheetBox();
+  paintSheet();
+  if(!sheetGame) return;
+  box.hidden = false;
+  document.documentElement.classList.add("sheet-open");
+  const close = box.querySelector(".sd-close");
+  if(close) close.focus();
+}
+function closeGame(){
+  if(!sheetEl || sheetEl.hidden){ sheetGame = null; return; }
+  const id = sheetGame;
+  sheetEl.hidden = true; sheetGame = null;
+  document.documentElement.classList.remove("sheet-open");
+  /* Focus goes back where it came from; if a re-render replaced that row
+     (saving does), to the same game's row as it is now. */
+  let back = sheetOpener && document.contains(sheetOpener) ? sheetOpener : null;
+  if(!back && id) back = [...document.querySelectorAll("#main [data-open]")].find(b => b.getAttribute("data-open") === id) || null;
+  sheetOpener = null;
+  if(back) back.focus();
 }
 
 function daySection(key, games, now, todayKey){
@@ -6286,6 +6532,7 @@ function render(){
        opens history every morning should not have to open it again. */
     LS.set(RESULTS_OPEN_KEY, rs.open);
   });
+  if(sheetGame) paintSheet();
   stg.querySelector("svg").innerHTML = showScores
     ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'
     : '<path d="M3 3l18 18"/><path d="M10.6 5.2A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4"/><path d="M6.3 6.4A16.7 16.7 0 0 0 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
@@ -6343,6 +6590,7 @@ appMenuToggle.addEventListener("click",()=>setAppMenu(appMenu.hidden));
 document.addEventListener("click",e=>{ if(!appMenu.hidden && !e.target.closest(".brand")) setAppMenu(false); });
 document.addEventListener("keydown",e=>{
   if(e.key!=="Escape") return;
+  if(sheetGame){ closeGame(); return; }
   if(!appMenu.hidden){ setAppMenu(false); appMenuToggle.focus(); return; }
   if(DRAWERS.some(d=>!d.panel.hasAttribute("hidden"))){ showDrawer(null); appMenuToggle.focus(); }
 });
@@ -6476,6 +6724,15 @@ document.getElementById("teamGroups").addEventListener("click",function(e){
     try{ navigator.clipboard.writeText(box.value); }catch(err){ try{ document.execCommand("copy"); }catch(e2){} }
     const btn=e.target.closest("#copyLink"); btn.textContent="Copied"; setTimeout(()=>{btn.textContent="Copy";},1400);
   }
+});
+/* A tap on a matchup row, anywhere but its own buttons and links, opens
+   the game's window; the row's hidden Details button does the same. */
+document.getElementById("main").addEventListener("click",function(e){
+  const op = e.target.closest("[data-open]");
+  if(op){ openGame(op.getAttribute("data-open"), op); return; }
+  if(e.target.closest("button, a, summary, input, select, label")) return;
+  const row = e.target.closest(".game.matchup[data-game-id]");
+  if(row) openGame(row.getAttribute("data-game-id"), row.querySelector("[data-open]") || row);
 });
 document.getElementById("main").addEventListener("click",function(e){
   const home=e.target.closest("[data-home-tool]");
