@@ -810,8 +810,8 @@ main{padding:22px 0 80px}
   border:0;padding:0;background:none;font:inherit}
 .g-open:focus-visible{position:static;width:auto;height:auto;clip:auto;overflow:visible;order:7;
   font-size:12px;font-weight:600;color:var(--accent);padding:4px 0}
-.game.matchup{cursor:pointer}
-.game.matchup:active{background:var(--surface-2)}
+.game[data-game-id]{cursor:pointer}
+.game[data-game-id]:active{background:var(--surface-2)}
 html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet-back{position:fixed;inset:0;z-index:80;background:rgba(10,14,24,.45);display:flex;align-items:flex-end;justify-content:center}
 .sheet-back[hidden]{display:none}
@@ -863,6 +863,12 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
   background:transparent;color:var(--ink);font:inherit;font-size:13px}
 .sd-stand li{display:grid;grid-template-columns:3.2em minmax(0,1fr);gap:6px;font-size:13.5px;line-height:1.3}
 .sd-stand li:not(:has(.sd-abbr)){grid-template-columns:minmax(0,1fr)}
+.sd-side.lost .sd-name{color:var(--muted);font-weight:500}
+.sd-line sup{font-size:8px;margin-left:1px;color:var(--muted)}
+.sd-teams.sd-solo{grid-template-columns:minmax(0,1fr)}
+.sd-form{display:flex;gap:4px}
+.sd-form b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff}
+.sd-form b.w{background:#2e7d32}.sd-form b.l{background:#c62828}.sd-form b.d{background:#757575}
 .sd-stats{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
 .sd-stats thead th{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);padding:0 0 4px}
 .sd-stats td{width:30%;text-align:center;font-family:var(--mono);font-weight:600;padding:4px 0}
@@ -4622,6 +4628,16 @@ function countdownText(ms, now){
   if(m>0) return "in "+m+"m "+pad(s)+"s";
   return "starting now";
 }
+/* The window's countdown: to the minute, in words. It repaints every 30
+   seconds, so a seconds count would sit still and then jump. */
+function startsIn(ms, now){
+  const min = Math.max(0, Math.round((ms - now) / 60000));
+  if(min < 1) return "Starting now";
+  const d = Math.floor(min / 1440), h = Math.floor(min % 1440 / 60), m = min % 60;
+  if(d > 0) return "Starts in " + d + (d === 1 ? " day" : " days") + (d < 2 && h ? " " + h + " h" : "");
+  if(h > 0) return "Starts in " + h + " h" + (m ? " " + m + " min" : "");
+  return "Starts in " + m + " min";
+}
 /* A bookmark, not a bell: nothing here schedules a notification, and a
    bell icon promises one. Saving a game is local to this browser. */
 const BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4Z"/></svg>';
@@ -4736,8 +4752,9 @@ function eventRow(g, now){
 
   const on = alerts.has(g.id);
   const bell = saveButton(g.id, on, g.race || "this race");
+  const open = '<button type="button" class="g-open" data-open="'+esc(String(g.id))+'" aria-haspopup="dialog">Details<span class="vh">: '+esc([g.race, g.stage].filter(Boolean).join(", "))+'</span></button>';
   return '<div class="game event-game'+(racing?" is-live":"")+'" data-game-id="'+esc(String(g.id))+'" tabindex="-1">'+timeCell
-    + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + '</div>';
+    + '<div class="g-match">'+title+meta+'</div>' + watch + right + bell + open + '</div>';
 }
 
 /* What the venue's own calendar says, when it disagrees with the
@@ -5118,8 +5135,9 @@ function tennisRow(g, now){
      the title and left in the button is not blanked. */
   const label = m.players.map(p=>playerSpoiled(m, p) ? TBD_PLAYER.name : p.name).join(" v ");
   const bell = saveButton(g.id, alerts.has(g.id), label);
+  const open = '<button type="button" class="g-open" data-open="' + esc(String(g.id)) + '" aria-haspopup="dialog">Details<span class="vh">: ' + esc(label) + '</span></button>';
   return '<div class="game tennis-game' + (state.live ? " is-live" : "") + '" data-game-id="' + esc(String(g.id)) + '" tabindex="-1">' + timeCell
-    + '<div class="g-match">' + title + meta + '</div>' + watch + right + bell + '</div>';
+    + '<div class="g-match">' + title + meta + '</div>' + watch + right + bell + open + '</div>';
 }
 
 function gameRow(g, now){
@@ -5245,7 +5263,120 @@ function gameRow(g, now){
    closing it leaves the board exactly where it was. */
 const fmtLongDay = ms => new Intl.DateTimeFormat(undefined,{weekday:"long",month:"long",day:"numeric"}).format(new Date(ms));
 const stripTags = h => String(h || "").replace(/<[^>]+>/g, "");
+/* The pieces every window shares, in the same places for every sport:
+   the league and round on top, the close button, the facts table, the
+   Save button at the foot. */
+function sheetHead(c, stage){
+  return '<div class="sd-head"><span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
+    + (stage ? '<span class="sd-stage">'+esc(stage)+'</span>' : '')
+    + '<button type="button" class="sd-close" data-sheet-close aria-label="Close">&times;</button></div>';
+}
+function sheetFacts(rows){
+  return '<dl class="sd-facts">' + rows.filter(r => r && r[1]).map(r => '<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>').join("") + '</dl>';
+}
+function sheetSave(id, on){
+  return '<button type="button" class="sd-save" data-alert="'+esc(id)+'" aria-pressed="'+on+'">'+BELL
+    + '<span>'+(on ? "Saved" : "Save game")+'</span></button>';
+}
+function sheetWatch(rights){
+  return '<span class="sd-watch">' + (rights.carriers.length
+    ? rights.carriers.map(w => carrierHtml(w, rights)).join("")
+    : '<span class="svc unconfirmed"><span class="pip"></span>Coverage not confirmed</span>') + '</span>';
+}
+function sheetWhen(g){
+  return esc(fmtLongDay(g.start)) + (g.timeKnown === false ? '' : ' &middot; ' + esc(fmtTime(g.start)));
+}
+
+/* Tennis: the two players with their country and ranking where a team's
+   record sits, the sets where a team sport's periods sit (tiebreak points
+   beside the set they decided), and the tournament, round and court below.
+   Names and order follow the row's rules: a player whose earlier match is
+   hidden is shown as TBD, and nothing says who won until revealed. */
+function tennisDetail(g, now){
+  const m = g.match, c = COMPS[g.comp] || {short:g.comp, color:"#555"};
+  const reveal = showScores || revealed.has(g.id);
+  const settled = m.winner != null, show = settled && reveal;
+  const played = (m.sets || []).some((_, i) => setText(m, i));
+  const state = TENNIS_STATE[m.status] || TENNIS_STATE.unknown;
+  const shown = i => { const p = m.players[i]; return !p || p.tbd || playerSpoiled(m, p) ? null : p; };
+  const side = i => {
+    const p = shown(i);
+    if(!p) return '<div class="sd-side"><span class="sd-name"><span class="g-name">TBD</span></span></div>';
+    const rank = rankLine(p, m.tour, now);
+    return '<div class="sd-side'+(show && m.winner !== i ? " lost" : "")+'"><span class="sd-name"><span class="g-name">'+esc(p.name)+'</span></span>'
+      + (p.country || rank ? '<span class="sd-rec">'+esc([p.country, rank].filter(Boolean).join(" \u00b7 "))+'</span>' : '') + '</div>';
+  };
+  let status;
+  if(m.status === "scheduled") status = m.timeKnown ? esc(startsIn(g.start, now)) : "Time not yet published";
+  else if((played || settled) && !reveal) status = esc(state.text) + ' <button type="button" class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal score</button>';
+  else status = (state.live ? '<span class="dot-live"></span>' : '') + esc(state.text) + (state.note ? ' &middot; ' + esc(state.note) : '');
+  let line = "";
+  if(played && reveal){
+    const n = (m.sets || []).length;
+    const cell = (i, k) => {
+      const pair = m.sets[k] || [null, null], tb = (m.tiebreaks || [])[k];
+      const v = pair[i] == null ? "" : String(pair[i]);
+      const lostTb = tb && tb[0] != null && tb[1] != null && tb[i] < tb[1 - i];
+      return '<td'+(settled && pair[i] > pair[1 - i] ? ' class="sd-x"' : '')+'>'+esc(v)+(lostTb ? '<sup>'+tb[i]+'</sup>' : '')+'</td>';
+    };
+    const row = i => { const p = shown(i); return '<tr><th scope="row">'+esc(p ? (p.short || p.name) : "TBD")+'</th>'+Array.from({length:n}, (_, k) => cell(i, k)).join("")+'</tr>'; };
+    line = '<div class="sd-details"><div class="sd-line-wrap"><table class="sd-line"><thead><tr><th></th>'
+      + Array.from({length:n}, (_, k) => '<th scope="col">Set '+(k + 1)+'</th>').join("") + '</tr></thead><tbody>'+row(0)+row(1)+'</tbody></table></div></div>';
+  }
+  const t = tourneyOf(g);
+  const label = [0, 1].map(i => shown(i) ? shown(i).name : "TBD").join(" v ");
+  /* Sets won sit in the middle, where a team sport's score does, once the
+     match is over and revealed. A walkover has no sets to count. */
+  const mid = show && played ? midScore([setsWon(m, 0), setsWon(m, 1)], false, true) : '<span class="at">v</span>';
+  return sheetHead(c, m.round)
+    + '<h2 class="vh" id="sheetTitle">'+esc(label)+'</h2>'
+    + '<div class="sd-teams'+(show && played ? " scored" : "")+'">'+side(0)+mid+side(1)+'</div>'
+    + '<p class="sd-status'+(state.live ? " live" : "")+'">'+status+'</p>'
+    + line
+    + sheetFacts([["When", sheetWhen(Object.assign({}, g, {timeKnown:m.timeKnown}))],
+        ["Event", t ? esc(t.name) + (t.major ? ' <span class="slam">Slam</span>' : '') : ""],
+        ["Where", esc([m.court, m.venue].filter(Boolean).join(", "))],
+        ["Watch", sheetWatch(visibleRights(g, now))]])
+    + sheetSave(g.id, alerts.has(g.id));
+}
+
+/* A race: one name instead of two sides, the stage and route under it,
+   and the stage result where a match's scoring would be, behind the same
+   Reveal as the row. */
+function eventDetail(g, now){
+  const c = COMPS[g.comp] || {short:g.comp, color:"#555"};
+  const reveal = showScores || revealed.has(g.id);
+  const day = localKey(g.start), today = ymd(new Date(now));
+  let status;
+  if(g.podium) status = reveal ? "Finished" : 'Finished <button type="button" class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal result</button>';
+  else if(day > today || (g.timeKnown && now < g.start)) status = g.timeKnown ? esc(startsIn(g.start, now)) : "Race day";
+  else if(g.finishUtc && now > g.finishUtc) status = "Finished &middot; awaiting result";
+  else if(day === today) status = '<span class="dot-live"></span>Racing now';
+  else status = "Finished";
+  let result = "";
+  if(reveal && (g.podium || (g.leader && g.leaderStage))){
+    result = '<div class="sd-details">';
+    if(g.podium) result += '<h3 class="sd-h">Stage result</h3><ol class="sd-events">'
+      + g.podium.map((n, i) => '<li><span class="sd-when">'+(i + 1)+'</span><span class="sd-abbr"></span><span class="sd-what">'+esc(n)+'</span></li>').join("") + '</ol>';
+    if(g.leader && g.leaderStage) result += '<h3 class="sd-h">Overall leader</h3><ul class="sd-stand"><li><span>'+esc(g.leader)+' &middot; after stage '+g.leaderStage+'</span></li></ul>';
+    result += '</div>';
+  }
+  const label = [g.race, g.stage].filter(Boolean).join(", ");
+  return sheetHead(c, g.stage)
+    + '<h2 class="vh" id="sheetTitle">'+esc(label)+'</h2>'
+    + '<div class="sd-teams sd-solo"><div class="sd-side"><span class="sd-name"><span class="g-name">'+esc(g.race)+'</span></span>'
+    + (g.route ? '<span class="sd-rec">'+esc(g.route)+'</span>' : '') + '</div></div>'
+    + '<p class="sd-status">'+status+'</p>'
+    + result
+    + sheetFacts([["When", sheetWhen(g) + (g.finishUtc ? ' &middot; est. finish ' + esc(fmtTime(g.finishUtc)) : '')],
+        ["Distance", g.km ? esc(String(g.km)) + " km" : ""],
+        ["Watch", sheetWatch(visibleRights(g, now))]])
+    + sheetSave(g.id, alerts.has(g.id));
+}
+
 function gameDetail(g, now){
+  if(g.match) return tennisDetail(g, now);
+  if(g.race) return eventDetail(g, now);
   const st = stateOf(g, now), ts = timeState(g, now);
   const c = COMPS[g.comp] || {short:g.comp, color:"#555"};
   const o = orderedTeams(g);
@@ -5261,17 +5392,13 @@ function gameDetail(g, now){
                      : '<span class="at">'+o.sep+'</span>';
   let status;
   if(ts.state==="tbd") status = "Opponent TBD &middot; draw ~"+esc(fmtShortDate(g.drawAt));
-  else if(st.status==="scheduled") status = ts.state==="tbc" ? "Time to be confirmed" : esc(countdownText(g.start, now));
+  else if(st.status==="scheduled") status = ts.state==="tbc" ? "Time to be confirmed" : esc(startsIn(g.start, now));
   else if(st.status==="unknown") status = "Status unavailable";
   else if(st.status==="live") status = '<span class="dot-live"></span>'+esc(st.label || "Live");
   else status = esc(st.label || "Final");
   if(st.score && !reveal && (st.status==="final" || st.status==="live"))
     status += ' <button type="button" class="hidden-score" data-reveal="'+esc(g.id)+'">Reveal score</button>';
 
-  const rights = visibleRights(g, now);
-  const watch = rights.carriers.length
-    ? rights.carriers.map(w => carrierHtml(w, rights)).join("")
-    : '<span class="svc unconfirmed"><span class="pip"></span>Coverage not confirmed</span>';
   const v = g.venue || {};
   const where = [v.name, v.city].filter(Boolean).join(", ");
   const series = stripTags(seriesTag(g));
@@ -5279,27 +5406,18 @@ function gameDetail(g, now){
   let when = esc(fmtLongDay(g.start))+' &middot; '+esc(fmtTime(g.start));
   if(ts.state==="tbc") when += ' <span class="conf-note">time to be confirmed</span>';
   if(g.moved) when += ' <span class="conf-note">moved from '+esc(fmtTime(g.moved))+'</span>';
-  const fact = (k, val) => val ? '<dt>'+k+'</dt><dd>'+val+'</dd>' : '';
   const on = alerts.has(g.id);
-  return '<div class="sd-head"><span class="lg-tag" style="background:'+c.color+'">'+esc(c.short)+'</span>'
-      + (g.stage ? '<span class="sd-stage">'+esc(g.stage)+'</span>' : '')
-      + '<button type="button" class="sd-close" data-sheet-close aria-label="Close">&times;</button></div>'
+  return sheetHead(c, g.stage)
     + '<h2 class="vh" id="sheetTitle">'+esc(matchupLabel(g))+'</h2>'
     + '<div class="sd-teams'+(scored ? " scored" : "")+'">'+side(o.a)+mid+side(o.b)+'</div>'
     + '<p class="sd-status'+(st.status==="live" ? " live" : "")+'">'+status+'</p>'
     + detailsBlock(g, now)
-    + '<dl class="sd-facts">'
-    + fact("When", when)
-    + fact("Where", esc(where))
     /* The rights note is written for whoever maintains the table (sources,
        trade press, what is still unconfirmed), so it stays a tooltip on
        the carrier, as on the row, and is not printed here. */
-    + fact("Watch", '<span class="sd-watch">'+watch+'</span>')
-    + fact("Series", esc(series))
-    + (prov ? fact("Note", esc(prov.label)) : '')
-    + '</dl>'
-    + '<button type="button" class="sd-save" data-alert="'+esc(g.id)+'" aria-pressed="'+on+'">'+BELL
-    + '<span>'+(on ? "Saved" : "Save game")+'</span></button>';
+    + sheetFacts([["When", when], ["Where", esc(where)], ["Watch", sheetWatch(visibleRights(g, now))],
+        ["Series", esc(series)], ["Note", prov ? esc(prov.label) : ""]])
+    + sheetSave(g.id, on);
 }
 let sheetGame = null, sheetOpener = null, sheetEl = null;
 function sheetBox(){
@@ -5384,6 +5502,17 @@ function detailSport(comp){
     : p.startsWith("football/") ? "football" : p.startsWith("baseball/") ? "baseball"
     : p.startsWith("soccer/") ? "soccer" : null;
 }
+/* Where a game's details come from: ESPN's summary for the leagues it
+   covers, World Rugby's summary and stats for rugby. */
+function detailsSource(g){
+  if(g && g.rugby){
+    const wr = (g.ids || []).find(x => /^wr:/.test(String(x)));
+    return wr ? {sport:"rugby", urls:[RUGBY_WR+"/"+encodeURIComponent(String(wr).slice(3))+"/summary",
+                                    RUGBY_WR+"/"+encodeURIComponent(String(wr).slice(3))+"/stats"]} : null;
+  }
+  const url = detailsUrl(g), sport = g && detailSport(g.comp);
+  return url && sport ? {sport, urls:[url]} : null;
+}
 function detailsUrl(g){
   if(!g || !g.eid || !ESPN_PATH[g.comp] || String(g.eid).indexOf(":") >= 0) return null;
   return ESPN+ESPN_PATH[g.comp]+"/summary?event="+encodeURIComponent(g.eid);
@@ -5405,7 +5534,19 @@ function parseDetails(sport, json){
     const v = t && (t.statistics || []).find(s => s.name === name);
     return v ? String(v.displayValue) : null;
   };
-  const statRow = (label, fn) => { const a = fn(away), h = fn(home); return a != null && h != null ? {label, away:a, home:h} : null; };
+  /* Whole percentages in every sport, as rugby's are. A pair that shares
+     100% (possession, faceoffs) still adds up after rounding: 46.5 and
+     53.5 read 47% and 53%, not 47% and 54%. */
+  const statRow = (label, fn) => {
+    let a = fn(away), h = fn(home);
+    if(a == null || h == null) return null;
+    const na = parseFloat(a), nh = parseFloat(h);
+    if(/%$/.test(a) && /%$/.test(h) && Number.isFinite(na) && Number.isFinite(nh)){
+      const ra = Math.round(na);
+      a = ra + "%"; h = (Math.abs(na + nh - 100) < 0.6 ? 100 - ra : Math.round(nh)) + "%";
+    }
+    return {label, away:a, home:h};
+  };
   const pct = name => x => { const v = stat(x, name); return v == null ? null : v + "%"; };
   const leaderOf = (x, name) => {
     const t = (json.leaders || []).find(t => t.team && String(t.team.id) === tid(x));
@@ -5414,7 +5555,17 @@ function parseDetails(sport, json){
     return top && top.athlete ? {who:lastName(top.athlete.displayName), value:String(top.displayValue)} : null;
   };
   const m = {sport, final:!!status.completed, awayAbbr:abbr(away), homeAbbr:abbr(home),
-             line:null, notes:[], eventsTitle:"", events:[], standTitle:"", stand:[], stats:[]};
+             line:null, notes:[], eventsTitle:"", events:[], standTitle:"", stand:[], stats:[], pre:null};
+  /* Before the game: the season series, and each side's last five where
+     ESPN gives them (soccer does, the North American leagues do not).
+     Oldest first, as ESPN lists them, so the newest result is on the right. */
+  const series = (json.seasonseries || []).find(x => x && x.summary);
+  const form = [away, home].map(x => {
+    const t = (json.lastFiveGames || []).find(t => t.team && String(t.team.id) === tid(x));
+    const r = t ? (t.events || []).map(e => String(e.gameResult || "").toUpperCase()).filter(v => /^[WDLT]$/.test(v)) : [];
+    return r.length ? {side:x === away ? "away" : "home", abbr:abbr(x), results:r} : null;
+  }).filter(Boolean);
+  if(series || form.length) m.pre = {series: series ? String(series.summary) : "", form};
   const ls = x => (x.linescores || []).map(l => String(l.displayValue));
   const la = ls(away), lh = ls(home), n = Math.max(la.length, lh.length);
   const cells = (arr, fill) => Array.from({length:n}, (_, i) => arr[i] != null ? arr[i] : fill);
@@ -5451,9 +5602,14 @@ function parseDetails(sport, json){
       statRow("Faceoffs", pct("faceoffPercent"))].filter(Boolean);
   }
   else if(sport === "soccer"){
-    if(la.length && lh.length) m.notes.push("Half-time: " + abbr(away) + " " + la[0] + "\u2013" + lh[0] + " " + abbr(home));
-    if(away.shootoutScore != null && home.shootoutScore != null)
-      m.notes.push("Penalties: " + abbr(away) + " " + away.shootoutScore + "\u2013" + home.shootoutScore + " " + abbr(home));
+    /* Halves, the way the other sports show periods: 1st, 2nd, then extra
+       time and a penalty shootout when a cup tie needed them. */
+    if(n){
+      const labels = Array.from({length:n}, (_, i) => i < 2 ? ordinalWord(i + 1) : "ET" + (i - 1));
+      const pens = away.shootoutScore != null && home.shootoutScore != null;
+      m.line = {labels, away:cells(la, ""), home:cells(lh, ""),
+        extra: pens ? {labels:["Pens"], away:[String(away.shootoutScore)], home:[String(home.shootoutScore)]} : null};
+    }
     m.eventsTitle = "Goals";
     (json.keyEvents || []).forEach(k => {
       const type = ((k.type || {}).text) || "";
@@ -5465,6 +5621,12 @@ function parseDetails(sport, json){
       m.events.push({when:((k.clock || {}).displayValue) || "", side, abbr:abbrOf(side),
         text:(parts[0] || String(k.shortText || "")) + (!og && !pen && !red && parts[1] ? " (" + lastName(parts[1]) + ")" : ""),
         tag: red ? "red card" : og ? "own goal" : pen ? "pen" : ""});
+    });
+    m.standTitle = "Goalkeepers";
+    [away, home].forEach(x => {
+      const side = x === away ? "away" : "home";
+      const k = leaderOf(x, "saves");
+      if(k) m.stand.push({side, abbr:abbrOf(side), text:k.who+" "+k.value+(k.value === "1" ? " save" : " saves")});
     });
     m.stats = [statRow("Possession", pct("possessionPct")),
       statRow("Shots on target", x => stat(x, "shotsOnTarget")),
@@ -5484,7 +5646,7 @@ function parseDetails(sport, json){
         statRow("3-pointers", x => stat(x, "threePointFieldGoalsMade-threePointFieldGoalsAttempted")),
         statRow("Turnovers", x => stat(x, "totalTurnovers"))].filter(Boolean);
     } else {
-      m.eventsTitle = "Scoring plays";
+      m.eventsTitle = "Scoring";
       (json.scoringPlays || []).forEach(sp => {
         const q = (sp.period || {}).number;
         const side = sideOf((sp.team || {}).id);
@@ -5523,6 +5685,88 @@ function parseDetails(sport, json){
   }
   return m;
 }
+/* Rugby comes from World Rugby's match summary (who scored, when, and
+   the cards) and its stats, the same service the fixtures come from and
+   already named on the privacy page. Its teams[0] is the home side. Every
+   point is accounted for: a conversion is written beside the try it
+   followed, and the half scores are summed from the scoring itself; if
+   they do not add up to the final score the table is left out rather than
+   shown wrong. */
+const RUGBY_POINTS = {Try:5, Con:2, Pen:3, dropGoals:3};
+function parseRugby(summary, stats){
+  const mt = summary && summary.match, tm = summary && summary.teams;
+  if(!mt || !Array.isArray(tm) || tm.length < 2 || !Array.isArray(mt.teams) || mt.teams.length < 2) return null;
+  const sideAt = i => i === 0 ? "home" : "away";
+  const abbrAt = i => (mt.teams[i] && (mt.teams[i].abbreviation || mt.teams[i].name)) || "";
+  const m = {sport:"rugby", final:mt.status === "C", awayAbbr:abbrAt(1), homeAbbr:abbrAt(0),
+             line:null, notes:[], eventsTitle:"Scoring", events:[], standTitle:"Kickers", stand:[], stats:[], pre:null};
+  const halves = [[0, 0, 0], [0, 0, 0]];     // per team: 1st, 2nd, extra time
+  let usedExtra = false;
+  const nameOf = (i, id) => {
+    const p = (((tm[i] || {}).teamList || {}).list || []).find(x => x.player && String(x.player.id) === String(id));
+    return p ? {full:p.player.name.display, last:(p.player.name.last && p.player.name.last.known) || lastName(p.player.name.display)} : {full:"", last:""};
+  };
+  const minute = e => { const s = e.time && e.time.secs; return Number.isFinite(s) ? (Math.floor(s / 60) + 1) + "'" : ((e.time && e.time.label) || ""); };
+  const kicks = [{}, {}];
+  [0, 1].forEach(i => {
+    const sc = (tm[i] || {}).scoring || {}, dc = (tm[i] || {}).disciplinary || {};
+    const side = sideAt(i), ab = abbrAt(i);
+    Object.keys(RUGBY_POINTS).forEach(k => (sc[k] || []).forEach(e => {
+      const pts = Number((String(e.type || "").match(/\d+$/) || [])[0]) || RUGBY_POINTS[k];
+      const half = e.phase === "L1" ? 0 : e.phase === "L2" ? 1 : 2;
+      if(half === 2) usedExtra = true;
+      halves[i][half] += pts;
+      if(k !== "Try"){
+        const who = nameOf(i, e.playerId).last;
+        if(who){ const t = kicks[i][who] = kicks[i][who] || {Con:0, Pen:0, dropGoals:0}; t[k]++; }
+      }
+    }));
+    const cons = (sc.Con || []).map(e => Object.assign({used:false}, e));
+    (sc.Try || []).forEach(e => {
+      const c = cons.find(c => !c.used && c.time && e.time && c.time.secs >= e.time.secs && c.time.secs - e.time.secs <= 240);
+      if(c) c.used = true;
+      m.events.push({secs:(e.time || {}).secs || 0, when:minute(e), side, abbr:ab,
+        text:(nameOf(i, e.playerId).full || "Try") + (c && nameOf(i, c.playerId).last ? " (con " + nameOf(i, c.playerId).last + ")" : ""), tag:"try"});
+    });
+    (sc.Pen || []).forEach(e => m.events.push({secs:(e.time || {}).secs || 0, when:minute(e), side, abbr:ab, text:nameOf(i, e.playerId).full || "Penalty", tag:"pen"}));
+    (sc.dropGoals || []).forEach(e => m.events.push({secs:(e.time || {}).secs || 0, when:minute(e), side, abbr:ab, text:nameOf(i, e.playerId).full || "Drop goal", tag:"drop goal"}));
+    (dc.YC || []).forEach(e => m.events.push({secs:(e.time || {}).secs || 0, when:minute(e), side, abbr:ab, text:nameOf(i, e.playerId).full, tag:"yellow card"}));
+    (dc.RC || []).forEach(e => m.events.push({secs:(e.time || {}).secs || 0, when:minute(e), side, abbr:ab, text:nameOf(i, e.playerId).full, tag:"red card"}));
+  });
+  m.events.sort((a, b) => a.secs - b.secs);
+  m.events.forEach(e => { delete e.secs; });
+  const scores = Array.isArray(mt.scores) ? mt.scores.map(Number) : [];
+  const total = i => halves[i][0] + halves[i][1] + halves[i][2];
+  if(scores.length === 2 && total(0) === scores[0] && total(1) === scores[1]){
+    const cols = usedExtra ? 3 : 2;
+    m.line = {labels:["1st", "2nd", "ET"].slice(0, cols), away:halves[1].slice(0, cols).map(String), home:halves[0].slice(0, cols).map(String)};
+  }
+  // one line per side, like the leaders in the other sports
+  [1, 0].forEach(i => {
+    const line = Object.keys(kicks[i]).map(who => {
+      const t = kicks[i][who];
+      const bits = [[t.Con, "con"], [t.Pen, "pen"], [t.dropGoals, "drop goal"]].filter(([n]) => n).map(([n, u]) => n + " " + u);
+      return bits.length ? who + " " + bits.join(", ") : "";
+    }).filter(Boolean).join(" \u00b7 ");
+    if(line) m.stand.push({side:sideAt(i), abbr:abbrAt(i), text:line});
+  });
+  const ts = ((stats || {}).teamStats || []).map(t => (t && t.stats) || {});
+  if(ts.length === 2){
+    const pc = v => Number.isFinite(v) ? Math.round(v * 100) + "%" : null;
+    const row = (label, f) => { const a = f(ts[1]), h = f(ts[0]); return a != null && h != null ? {label, away:String(a), home:String(h)} : null; };
+    m.stats = [row("Possession", t => pc(t.Possession)), row("Territory", t => pc(t.Territory)),
+               row("Tackles", t => Number.isFinite(t.Tackles) ? t.Tackles : null)].filter(Boolean);
+  }
+  return m;
+}
+function preHtml(pre){
+  if(!pre) return "";
+  let h = '<div class="sd-details"><h3 class="sd-h">Before the game</h3>';
+  h += '<ul class="sd-stand">' + pre.form.map(f => '<li><span class="sd-abbr">'+esc(f.abbr)+'</span><span class="sd-form" aria-label="Last five, oldest first: '+esc(f.results.join(" "))+'">'
+      + f.results.map(r => '<b class="'+(r === "W" ? "w" : r === "L" ? "l" : "d")+'">'+esc(r)+'</b>').join("") + '</span></li>').join("")
+    + (pre.series ? '<li><span class="sd-abbr">Series</span><span>'+esc(pre.series)+'</span></li>' : '') + '</ul>';
+  return h + '</div>';
+}
 function detailsHtml(m){
   if(!m) return "";
   let h = '<div class="sd-details">';
@@ -5558,25 +5802,34 @@ function detailsHtml(m){
    with scores off until revealed, and nothing for a game ESPN has no
    summary for (rugby, tennis, cycling). */
 function detailsBlock(g, now){
-  if(!detailsUrl(g) || !detailSport(g.comp)) return "";
+  if(!detailsSource(g)) return "";
   const st = stateOf(g, now).status;
+  const d = DETAILS.get(g.id);
+  /* Before kickoff, the series and recent form; they are results too, so
+     only with scores on. */
+  if(st === "scheduled") return showScores && d && d.model && d.model.pre ? preHtml(d.model.pre) : "";
   if(st !== "live" && st !== "final") return "";
   if(!(showScores || revealed.has(g.id))) return "";
-  const d = DETAILS.get(g.id);
   if(d && d.model) return detailsHtml(d.model);
   if(d && d.failed) return '<p class="sd-loading">Game details aren&rsquo;t available right now.</p>';
   return '<p class="sd-loading">Loading game details&hellip;</p>';
 }
 function ensureDetails(g, now){
-  const url = detailsUrl(g);
-  if(!url || !detailSport(g.comp)) return;
+  const src = detailsSource(g);
+  if(!src) return;
   const st = stateOf(g, now).status;
-  if((st !== "live" && st !== "final") || !(showScores || revealed.has(g.id))) return;
   const d = DETAILS.get(g.id) || {};
-  if(d.busy || (d.model && d.model.final) || (d.at && now - d.at < DETAIL_TTL)) return;
+  if(d.busy) return;
+  if(st === "scheduled"){
+    // before kickoff: once, for the series and form, and only with scores on
+    if(!showScores || src.sport === "rugby" || d.model || d.failed) return;
+  } else {
+    if((st !== "live" && st !== "final") || !(showScores || revealed.has(g.id))) return;
+    if((d.model && d.model.final) || (d.at && now - d.at < DETAIL_TTL && !(d.model && d.model.pre && !d.model.events.length && !d.model.line))) return;
+  }
   DETAILS.set(g.id, Object.assign({}, d, {busy:true}));
-  jget(url, 12000)
-    .then(json => { const model = parseDetails(detailSport(g.comp), json); DETAILS.set(g.id, model ? {model, at:Date.now()} : Object.assign({}, d, {failed:!d.model, at:Date.now()})); })
+  Promise.all(src.urls.map((u, i) => i ? jget(u, 12000).catch(() => null) : jget(u, 12000)))
+    .then(([a, b]) => { const model = src.sport === "rugby" ? parseRugby(a, b) : parseDetails(src.sport, a); DETAILS.set(g.id, model ? {model, at:Date.now()} : Object.assign({}, d, {failed:!d.model, at:Date.now()})); })
     .catch(() => DETAILS.set(g.id, Object.assign({}, d, {failed:!d.model, at:Date.now()})))
     .then(() => { if(sheetGame === String(g.id)) paintSheet(); });
 }
@@ -6987,7 +7240,7 @@ document.getElementById("main").addEventListener("click",function(e){
   const op = e.target.closest("[data-open]");
   if(op){ openGame(op.getAttribute("data-open"), op); return; }
   if(e.target.closest("button, a, summary, input, select, label")) return;
-  const row = e.target.closest(".game.matchup[data-game-id]");
+  const row = e.target.closest(".game[data-game-id]");
   if(row) openGame(row.getAttribute("data-game-id"), row.querySelector("[data-open]") || row);
 });
 document.getElementById("main").addEventListener("click",function(e){

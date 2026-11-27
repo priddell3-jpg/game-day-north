@@ -1,5 +1,5 @@
 {
- "//": "ESPN game summary for event 401892789, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own.",
+ "//": "ESPN game summary for event 401892789, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own. seasonseries added from the same summary, refetched the same day.",
  "header": {
   "competitions": [
    {
@@ -523,6 +523,14 @@
      }
     }
    ]
+  }
+ ],
+ "seasonseries": [
+  {
+   "type": "season",
+   "title": "Regular Season Series",
+   "summary": "DET wins series 2-0",
+   "completed": true
   }
  ]
 }

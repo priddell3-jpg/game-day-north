@@ -81,7 +81,7 @@ test("the phone row is the simple one: no countdown, no records, no venue", () =
 });
 
 test("the window opens from the row, closes on Escape first, and stays current", () => {
-  assert.match(SRC, /const row = e\.target\.closest\("\.game\.matchup\[data-game-id\]"\);\s*if\(row\) openGame\(/);
+  assert.match(SRC, /const row = e\.target\.closest\("\.game\[data-game-id\]"\);\s*if\(row\) openGame\(/);
   assert.match(SRC, /if\(e\.target\.closest\("button, a, summary, input, select, label"\)\) return;/, "a row's own buttons keep their jobs");
   assert.match(SRC, /if\(e\.key!=="Escape"\) return;\s*if\(sheetGame\)\{ closeGame\(\); return; \}/);
   assert.match(SRC, /if\(sheetGame\) paintSheet\(\);/, "a re-render repaints the open window");
