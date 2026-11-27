@@ -62,15 +62,26 @@ test("on a phone every matchup row is side by side, never wrapped by name length
   assert.match(phone, /\.game\.matchup \.g-match\{display:contents\}/);
   assert.match(phone, /\.game\.matchup \.g-teams\{order:4;flex:1 0 100%\}/, "the teams always get a line of their own");
   assert.match(phone, /\.game\.matchup\.scored \.score-line\{display:none\}/);
-  assert.match(css, /\.mid-score,\.g-rec-short\{display:none\}/, "wider screens keep their score cell");
+  assert.match(css, /\.mid-score\{display:none\}/, "wider screens keep their score cell");
 });
 
-test("a phone says a record short, so it stays on one line", () => {
+test("the phone row is the simple one: no countdown, no records, no venue", () => {
   const css = styleText();
   const phone = css.slice(css.lastIndexOf("Side by side on a phone"));
-  assert.match(phone, /\.game\.matchup \.has-short > \.g-rec\{display:none\}/);
-  assert.match(css, /\.mid-score,\.g-rec-short\{display:none\}/, "wider screens keep the full record");
-  assert.match(SRC, /const short = line && line\.replace\(" in the ", " "\);/);
+  assert.match(phone, /\.game\.matchup \.g-rec\{display:none\}/, "records move to the window");
+  assert.match(phone, /\.game\.matchup\.is-sched \.g-score\{display:none\}/, "no countdown before a game");
+  assert.match(phone, /\.game\.matchup \.g-meta > :not\(\.lg-tag\):not\(\.conf-note\)\{display:none\}/,
+    "the league tag and a stale-schedule warning stay; venue, stage and series move");
+  assert.doesNotMatch(phone, /\.g-watch\{display:none/, "where to watch stays on the row");
+});
+
+test("the window opens from the row, closes on Escape first, and stays current", () => {
+  assert.match(SRC, /const row = e\.target\.closest\("\.game\.matchup\[data-game-id\]"\);\s*if\(row\) openGame\(/);
+  assert.match(SRC, /if\(e\.target\.closest\("button, a, summary, input, select, label"\)\) return;/, "a row's own buttons keep their jobs");
+  assert.match(SRC, /if\(e\.key!=="Escape"\) return;\s*if\(sheetGame\)\{ closeGame\(\); return; \}/);
+  assert.match(SRC, /if\(sheetGame\) paintSheet\(\);/, "a re-render repaints the open window");
+  assert.match(SRC, /role="dialog" aria-modal="true" aria-labelledby="sheetTitle"/);
+  assert.match(styleText(), /\.sd-close\{[^}]*width:44px;height:44px/, "a 44px close target");
 });
 
 test("the condensed row keeps the save button's 44px target", () => {

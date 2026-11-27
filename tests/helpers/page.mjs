@@ -65,7 +65,7 @@ const RIGHTS_CLOCK = ["ZONE_IANA", "_zoneFmt", "zoneParts", "listingDay", "right
 
 /* A matchup row writes its names, separator and middle score through
    these, and the tables file a club with no id of ours under feedKey. */
-const MATCHUP_HELPERS = ["teamNameHtml", "midScore"];
+const MATCHUP_HELPERS = ["teamNameHtml", "midScore", "matchupLabel"];
 const NEEDS_MATCHUP = new Set(["gameRow", "rugbyRow", "matchupLabel"]);
 const FEED_KEY = ["norm", "feedKey"];
 const NEEDS_FEED_KEY = new Set(["attachTables", "staticTeam"]);
