@@ -13,7 +13,7 @@ import { loadFromPage } from "./helpers/page.mjs";
 const SRC = readFileSync(new URL("../src/page.html", import.meta.url), "utf8");
 const fixture = name => JSON.parse(readFileSync(new URL("./fixtures/" + name, import.meta.url), "utf8"));
 const P = loadFromPage(["ESPN", "ESPN_PATH", "esc", "DETAIL_ROWS", "detailSport", "detailsUrl",
-  "lastName", "ordinalWord", "parseDetails", "detailsHtml"], "let sheetShowAll = false; globalThis.__showAll = v => { sheetShowAll = v; };");
+  "lastName", "ordinalWord", "parseDetails", "RUGBY_WR", "RUGBY_POINTS", "parseRugby", "detailsSource", "preHtml", "detailsHtml"], "let sheetShowAll = false; globalThis.__showAll = v => { sheetShowAll = v; };");
 
 test("each league maps to the sport whose details it gets", () => {
   assert.equal(P.detailSport("NHL"), "hockey");
@@ -46,18 +46,19 @@ test("hockey: goals with assists and strength, goalies, three numbers", () => {
                              {side:"home", abbr:"DET", text:"Tarasov 25 saves on 26"}]);
   assert.deepEqual(m.stats, [{label:"Shots", away:"26", home:"26"},
                              {label:"Power play", away:"0/2", home:"1/1"},
-                             {label:"Faceoffs", away:"48.9%", home:"51.1%"}]);
+                             {label:"Faceoffs", away:"49%", home:"51%"}]);
 });
 
-test("soccer: goals with assists, the half-time score, three numbers", () => {
+test("soccer: halves like any other sport's periods, goals with assists, keepers, three numbers", () => {
   const m = P.parseDetails("soccer", fixture("summary-ucl-401915292.json"));
-  assert.equal(m.line, null, "soccer reads by half-time, not a line score");
-  assert.deepEqual(m.notes, ["Half-time: LIV 1–0 BRU"]);
+  assert.deepEqual(m.line, {labels:["1st", "2nd"], away:["1", "2"], home:["0", "0"], extra:null});
+  assert.deepEqual(m.notes, []);
+  assert.deepEqual(m.stand, [{side:"away", abbr:"LIV", text:"Becker 5 saves"}, {side:"home", abbr:"BRU", text:"Sommer 1 save"}]);
   assert.deepEqual(m.events.map(e => [e.when, e.abbr, e.text, e.tag]), [
     ["13'", "LIV", "Alexander Isak (Szoboszlai)", ""],
     ["79'", "LIV", "Florian Wirtz (Ngumoha)", ""],
     ["82'", "LIV", "Alexander Isak (Becker)", ""]]);
-  assert.deepEqual(m.stats, [{label:"Possession", away:"46.5%", home:"53.5%"},
+  assert.deepEqual(m.stats, [{label:"Possession", away:"47%", home:"53%"},
                              {label:"Shots on target", away:"4", home:"5"},
                              {label:"Corners", away:"4", home:"8"}]);
 });
@@ -156,4 +157,58 @@ test("details are fetched only for an open window, only once the score may be sh
   assert.match(SRC, /sheetTimer = setInterval\(\(\) => \{ if\(sheetGame\) paintSheet\(\); \}, DETAIL_TTL\);/);
   assert.match(SRC, /if\(sheetTimer\)\{ clearInterval\(sheetTimer\); sheetTimer = null; \}/, "and stops when the window closes");
   assert.match(SRC.slice(SRC.indexOf("function paintSheet("), SRC.indexOf("function openGame(")), /ensureDetails\(g, now\);/);
+});
+
+test("before the game: the season series and each side's last five, oldest first", () => {
+  const soccer = P.parseDetails("soccer", fixture("summary-ucl-401915292.json"));
+  assert.deepEqual(soccer.pre.form, [{side:"away", abbr:"LIV", results:["W", "L", "L", "W", "W"]},
+                                     {side:"home", abbr:"BRU", results:["W", "W", "W", "D", "W"]}]);
+  const hockey = P.parseDetails("hockey", fixture("summary-nhl-401892789.json"));
+  assert.deepEqual(hockey.pre, {series:"DET wins series 2-0", form:[]});
+  const html = P.preHtml(soccer.pre);
+  assert.match(html, /<h3 class="sd-h">Before the game<\/h3>/);
+  assert.match(html, /aria-label="Last five, oldest first: W L L W W"/);
+  assert.match(html, /<b class="d">D<\/b>/);
+  assert.match(P.preHtml(hockey.pre), /<li><span class="sd-abbr">Series<\/span><span>DET wins series 2-0<\/span><\/li>/,
+    "the series is a row of the same list, not a note set apart");
+});
+
+test("rugby: every point accounted for, conversions beside their tries, cards, kickers, three numbers", () => {
+  // Australia 29-26 at Wales, 2026-11-21, from World Rugby's summary and stats
+  const f = fixture("summary-rugby-e7552a9b.json");
+  const m = P.parseRugby(f.summary, f.stats);
+  assert.equal(m.final, true);
+  assert.equal(m.awayAbbr, "AUS"); assert.equal(m.homeAbbr, "WAL");
+  assert.deepEqual(m.line, {labels:["1st", "2nd"], away:["12", "17"], home:["7", "19"]}, "halves summed from the scoring add up to 29-26");
+  assert.deepEqual(m.events.map(e => [e.when, e.abbr, e.text, e.tag]), [
+    ["2'", "WAL", "Max Llewellyn", "yellow card"],
+    ["21'", "AUS", "Taniela Tupou", "try"],
+    ["33'", "AUS", "Brandon Paenga-Amosa (con Lonergan)", "try"],
+    ["41'", "WAL", "Dewi Lake (con Costelow)", "try"],
+    ["47'", "AUS", "Max Jorgensen (con Lonergan)", "try"],
+    ["50'", "WAL", "Dewi Lake (con Costelow)", "try"],
+    ["55'", "WAL", "Blair Murray (con Costelow)", "try"],
+    ["64'", "AUS", "Len Ikitau (con Gordon)", "try"],
+    ["74'", "AUS", "Carter Gordon", "pen"],
+    ["78'", "AUS", "Harry Wilson", "yellow card"],
+    ["79'", "WAL", "Ryan Elias", "try"]]);
+  assert.deepEqual(m.stand, [{side:"away", abbr:"AUS", text:"Lonergan 2 con \u00b7 Gordon 1 con, 1 pen"},
+                             {side:"home", abbr:"WAL", text:"Costelow 3 con"}]);
+  assert.deepEqual(m.stats, [{label:"Possession", away:"49%", home:"51%"}, {label:"Territory", away:"47%", home:"53%"},
+                             {label:"Tackles", away:"156", home:"165"}]);
+});
+
+test("rugby: when the halves do not add up to the score, the table is left out rather than shown wrong", () => {
+  const f = JSON.parse(JSON.stringify(fixture("summary-rugby-e7552a9b.json")));
+  f.summary.match.scores = [30, 29];
+  assert.equal(P.parseRugby(f.summary, f.stats).line, null);
+  assert.equal(P.parseRugby({}, null), null);
+});
+
+test("a rugby game's details come from World Rugby, by its wr: id", () => {
+  assert.deepEqual(P.detailsSource({rugby:true, ids:["espn:604010", "wr:e7552a9b-439f-4141-8a47-14bb57279e46"]}).urls, [
+    "https://api.wr-rims-prod.pulselive.com/rugby/v3/match/e7552a9b-439f-4141-8a47-14bb57279e46/summary",
+    "https://api.wr-rims-prod.pulselive.com/rugby/v3/match/e7552a9b-439f-4141-8a47-14bb57279e46/stats"]);
+  assert.equal(P.detailsSource({rugby:true, ids:["espn:604010"]}), null);
+  assert.equal(P.detailsSource({comp:"NHL", eid:"401892789"}).sport, "hockey");
 });

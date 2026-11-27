@@ -1,5 +1,5 @@
 {
- "//": "ESPN game summary for event 401915292, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own.",
+ "//": "ESPN game summary for event 401915292, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own. leaders (saves) and lastFiveGames added from the same summary, refetched the same day.",
  "header": {
   "competitions": [
    {
@@ -244,6 +244,108 @@
      "athlete": {
       "displayName": "Alisson Becker"
      }
+    }
+   ]
+  }
+ ],
+ "leaders": [
+  {
+   "team": {
+    "id": "570",
+    "abbreviation": "BRU"
+   },
+   "leaders": [
+    {
+     "name": "saves",
+     "displayName": "Saves",
+     "leaders": [
+      {
+       "displayValue": "1",
+       "athlete": {
+        "displayName": "Yann Sommer",
+        "shortName": "Y. Sommer"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "team": {
+    "id": "364",
+    "abbreviation": "LIV"
+   },
+   "leaders": [
+    {
+     "name": "saves",
+     "displayName": "Saves",
+     "leaders": [
+      {
+       "displayValue": "5",
+       "athlete": {
+        "displayName": "Alisson Becker",
+        "shortName": "A. Becker"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "lastFiveGames": [
+  {
+   "team": {
+    "id": "570",
+    "abbreviation": "BRU"
+   },
+   "events": [
+    {
+     "gameDate": "2026-10-25T15:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-10-30T19:45Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-04T20:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-08T12:30Z",
+     "gameResult": "D"
+    },
+    {
+     "gameDate": "2026-11-21T19:45Z",
+     "gameResult": "W"
+    }
+   ]
+  },
+  {
+   "team": {
+    "id": "364",
+    "abbreviation": "LIV"
+   },
+   "events": [
+    {
+     "gameDate": "2026-10-28T20:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-01T16:30Z",
+     "gameResult": "L"
+    },
+    {
+     "gameDate": "2026-11-04T17:45Z",
+     "gameResult": "L"
+    },
+    {
+     "gameDate": "2026-11-08T14:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-22T16:30Z",
+     "gameResult": "W"
     }
    ]
   }

@@ -372,7 +372,7 @@ const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","RIGHTS"
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag","seriesTag",
   "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope",
-  "RESULTS_DAYS","spoiledTeams","gameRow","fmtLongDay","stripTags","ESPN","ESPN_PATH","DETAILS","DETAIL_ROWS","detailSport","detailsUrl","lastName","ordinalWord","parseDetails","detailsHtml","detailsBlock","gameDetail"];
+  "RESULTS_DAYS","spoiledTeams","gameRow","fmtLongDay","stripTags","ESPN","ESPN_PATH","DETAILS","DETAIL_ROWS","detailSport","detailsUrl","lastName","ordinalWord","parseDetails","RUGBY_WR","RUGBY_POINTS","parseRugby","detailsSource","preHtml","detailsHtml","detailsBlock","startsIn","sheetHead","sheetFacts","sheetSave","sheetWatch","sheetWhen","gameDetail"];
 
 const NOW = Date.parse("2026-11-20T23:00:00Z");
 const TEAM = (id, city, name, comp) => ({id, home:comp, city, name, abbr:id.toUpperCase().slice(0,3), color:"#123456"});
@@ -625,11 +625,23 @@ test("the window carries both records, the date, the venue, the carriers and sav
   assert.match(html, /8-8-3 · 4th in the Pacific/, "and the Canucks'");
   assert.ok(html.indexOf("Bruins") < html.indexOf("Canucks"), "away first");
   assert.match(html, /<dt>When<\/dt><dd>[^<]*Sunday, November 22[^<]*/, "the full date");
-  assert.match(html, /in 2d 0h/, "how long until it");
+  assert.match(html, /<p class="sd-status">Starts in 2 days<\/p>/, "how long until it, to the minute and in words");
   assert.match(html, /<dt>Where<\/dt><dd>Rogers Arena, Vancouver<\/dd>/);
   assert.match(html, /<dt>Watch<\/dt>/);
   assert.match(html, /class="sd-save" data-alert="g8" aria-pressed="false">/);
   assert.doesNotMatch(html, /<dt>Series<\/dt>/, "no series line for a regular-season game");
+});
+
+test("the window's countdown is to the minute, since it repaints every 30 seconds", () => {
+  const p = rowHarness([SCHEDULED_ONLY]);
+  const M = 60000, at = NOW;
+  assert.equal(p.startsIn(at + 20 * 1000, at), "Starting now");
+  assert.equal(p.startsIn(at + 18 * M + 10 * 1000, at), "Starts in 18 min");
+  assert.equal(p.startsIn(at + 3 * 60 * M, at), "Starts in 3 h");
+  assert.equal(p.startsIn(at + 3 * 60 * M + 20 * M, at), "Starts in 3 h 20 min");
+  assert.equal(p.startsIn(at + 26 * 60 * M, at), "Starts in 1 day 2 h");
+  assert.equal(p.startsIn(at + 5 * 24 * 60 * M + 7 * 60 * M, at), "Starts in 5 days");
+  assert.equal(p.startsIn(at - 5 * M, at), "Starting now");
 });
 
 test("a finished game shows its score in the window only when scores are shown", () => {
