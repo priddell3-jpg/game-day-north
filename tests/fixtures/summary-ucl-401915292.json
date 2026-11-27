@@ -1,0 +1,353 @@
+{
+ "//": "ESPN game summary for event 401915292, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own. leaders (saves) and lastFiveGames added from the same summary, refetched the same day.",
+ "header": {
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "state": "post",
+      "completed": true,
+      "detail": "FT",
+      "shortDetail": "FT"
+     },
+     "featuredAthletes": []
+    },
+    "competitors": [
+     {
+      "id": "570",
+      "homeAway": "home",
+      "score": "0",
+      "winner": false,
+      "team": {
+       "id": "570",
+       "abbreviation": "BRU",
+       "displayName": "Club Brugge"
+      },
+      "linescores": [
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       }
+      ]
+     },
+     {
+      "id": "364",
+      "homeAway": "away",
+      "score": "3",
+      "winner": true,
+      "team": {
+       "id": "364",
+       "abbreviation": "LIV",
+       "displayName": "Liverpool"
+      },
+      "linescores": [
+       {
+        "displayValue": "1"
+       },
+       {
+        "displayValue": "2"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "boxscore": {
+  "teams": [
+   {
+    "team": {
+     "id": "570",
+     "abbreviation": "BRU"
+    },
+    "statistics": [
+     {
+      "name": "yellowCards",
+      "displayValue": "0",
+      "label": "Yellow Cards"
+     },
+     {
+      "name": "redCards",
+      "displayValue": "0",
+      "label": "Red Cards"
+     },
+     {
+      "name": "wonCorners",
+      "displayValue": "8",
+      "label": "Corner Kicks"
+     },
+     {
+      "name": "possessionPct",
+      "displayValue": "53.5",
+      "label": "Possession"
+     },
+     {
+      "name": "totalShots",
+      "displayValue": "17",
+      "label": "SHOTS"
+     },
+     {
+      "name": "shotsOnTarget",
+      "displayValue": "5",
+      "label": "ON GOAL"
+     }
+    ]
+   },
+   {
+    "team": {
+     "id": "364",
+     "abbreviation": "LIV"
+    },
+    "statistics": [
+     {
+      "name": "yellowCards",
+      "displayValue": "0",
+      "label": "Yellow Cards"
+     },
+     {
+      "name": "redCards",
+      "displayValue": "0",
+      "label": "Red Cards"
+     },
+     {
+      "name": "wonCorners",
+      "displayValue": "4",
+      "label": "Corner Kicks"
+     },
+     {
+      "name": "possessionPct",
+      "displayValue": "46.5",
+      "label": "Possession"
+     },
+     {
+      "name": "totalShots",
+      "displayValue": "13",
+      "label": "SHOTS"
+     },
+     {
+      "name": "shotsOnTarget",
+      "displayValue": "4",
+      "label": "ON GOAL"
+     }
+    ]
+   }
+  ]
+ },
+ "keyEvents": [
+  {
+   "type": {
+    "text": "Goal",
+    "type": "goal"
+   },
+   "text": "Goal! Club Brugge 0, Liverpool 1. Alexander Isak (Liverpool) right footed shot from the centre of the box to the bottom left corner. Assisted by Dominik Szoboszlai.",
+   "shortText": "Alexander Isak Goal",
+   "period": {
+    "number": 1
+   },
+   "clock": {
+    "value": 723,
+    "displayValue": "13'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "364",
+    "displayName": "Liverpool"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "displayName": "Alexander Isak"
+     }
+    },
+    {
+     "athlete": {
+      "displayName": "Dominik Szoboszlai"
+     }
+    }
+   ]
+  },
+  {
+   "type": {
+    "text": "Halftime",
+    "type": "halftime"
+   },
+   "period": {
+    "number": 1
+   },
+   "clock": {
+    "value": 2700,
+    "displayValue": "45'+5'"
+   },
+   "scoringPlay": false,
+   "participants": []
+  },
+  {
+   "type": {
+    "text": "Goal",
+    "type": "goal"
+   },
+   "text": "Goal! Club Brugge 0, Liverpool 2. Florian Wirtz (Liverpool) right footed shot from outside the box to the bottom left corner. Assisted by Rio Ngumoha following a fast break.",
+   "shortText": "Florian Wirtz Goal",
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "value": 4697,
+    "displayValue": "79'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "364",
+    "displayName": "Liverpool"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "displayName": "Florian Wirtz"
+     }
+    },
+    {
+     "athlete": {
+      "displayName": "Rio Ngumoha"
+     }
+    }
+   ]
+  },
+  {
+   "type": {
+    "text": "Goal",
+    "type": "goal"
+   },
+   "text": "Goal! Club Brugge 0, Liverpool 3. Alexander Isak (Liverpool) right footed shot from the centre of the box to the centre of the goal. Assisted by Alisson Becker following a fast break.",
+   "shortText": "Alexander Isak Goal",
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "value": 4918,
+    "displayValue": "82'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "364",
+    "displayName": "Liverpool"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "displayName": "Alexander Isak"
+     }
+    },
+    {
+     "athlete": {
+      "displayName": "Alisson Becker"
+     }
+    }
+   ]
+  }
+ ],
+ "leaders": [
+  {
+   "team": {
+    "id": "570",
+    "abbreviation": "BRU"
+   },
+   "leaders": [
+    {
+     "name": "saves",
+     "displayName": "Saves",
+     "leaders": [
+      {
+       "displayValue": "1",
+       "athlete": {
+        "displayName": "Yann Sommer",
+        "shortName": "Y. Sommer"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "team": {
+    "id": "364",
+    "abbreviation": "LIV"
+   },
+   "leaders": [
+    {
+     "name": "saves",
+     "displayName": "Saves",
+     "leaders": [
+      {
+       "displayValue": "5",
+       "athlete": {
+        "displayName": "Alisson Becker",
+        "shortName": "A. Becker"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "lastFiveGames": [
+  {
+   "team": {
+    "id": "570",
+    "abbreviation": "BRU"
+   },
+   "events": [
+    {
+     "gameDate": "2026-10-25T15:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-10-30T19:45Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-04T20:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-08T12:30Z",
+     "gameResult": "D"
+    },
+    {
+     "gameDate": "2026-11-21T19:45Z",
+     "gameResult": "W"
+    }
+   ]
+  },
+  {
+   "team": {
+    "id": "364",
+    "abbreviation": "LIV"
+   },
+   "events": [
+    {
+     "gameDate": "2026-10-28T20:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-01T16:30Z",
+     "gameResult": "L"
+    },
+    {
+     "gameDate": "2026-11-04T17:45Z",
+     "gameResult": "L"
+    },
+    {
+     "gameDate": "2026-11-08T14:00Z",
+     "gameResult": "W"
+    },
+    {
+     "gameDate": "2026-11-22T16:30Z",
+     "gameResult": "W"
+    }
+   ]
+  }
+ ]
+}

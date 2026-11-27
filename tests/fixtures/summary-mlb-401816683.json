@@ -1,0 +1,154 @@
+{
+ "//": "ESPN game summary for event 401816683, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own.",
+ "header": {
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "state": "post",
+      "completed": true,
+      "detail": "Final",
+      "shortDetail": "Final"
+     },
+     "featuredAthletes": [
+      {
+       "name": "winningPitcher",
+       "athlete": {
+        "displayName": "Chad Dallas",
+        "shortName": "C. Dallas",
+        "record": "2-1"
+       },
+       "team": {
+        "id": "14"
+       }
+      },
+      {
+       "name": "losingPitcher",
+       "athlete": {
+        "displayName": "Randy Dobnak",
+        "shortName": "R. Dobnak",
+        "record": "2-2"
+       },
+       "team": {
+        "id": "7"
+       }
+      },
+      {
+       "name": "savingPitcher",
+       "athlete": {
+        "displayName": "Louis Varland",
+        "shortName": "L. Varland",
+        "record": "5-4"
+       },
+       "team": {
+        "id": "14"
+       }
+      }
+     ]
+    },
+    "competitors": [
+     {
+      "id": "14",
+      "homeAway": "home",
+      "score": "3",
+      "winner": true,
+      "team": {
+       "id": "14",
+       "abbreviation": "TOR",
+       "displayName": "Toronto Blue Jays"
+      },
+      "linescores": [
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "3"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       }
+      ],
+      "hits": 6,
+      "errors": 0
+     },
+     {
+      "id": "7",
+      "homeAway": "away",
+      "score": "0",
+      "winner": false,
+      "team": {
+       "id": "7",
+       "abbreviation": "KC",
+       "displayName": "Kansas City Royals"
+      },
+      "linescores": [
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       },
+       {
+        "displayValue": "0"
+       }
+      ],
+      "hits": 6,
+      "errors": 0
+     }
+    ]
+   }
+  ]
+ },
+ "plays": [
+  {
+   "type": {
+    "text": "Play Result"
+   },
+   "text": "Lukes homered to right center (390 feet), Sánchez scored and Okamoto scored.",
+   "awayScore": 0,
+   "homeScore": 3,
+   "period": {
+    "type": "Bottom",
+    "number": 4,
+    "displayValue": "4th Inning"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "14"
+   }
+  }
+ ]
+}

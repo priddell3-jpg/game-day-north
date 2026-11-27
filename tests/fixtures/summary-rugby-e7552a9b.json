@@ -1,0 +1,397 @@
+{
+ "//": "World Rugby match summary and stats for Australia at Wales, 29-26, Nations Championship, 2026-11-21 (match e7552a9b-439f-4141-8a47-14bb57279e46; ESPN 604010), fetched 2026-11-27 and cut to the fields the game window reads; teamList keeps only players who scored or were carded. Paths are World Rugby's own: summary = /match/{id}/summary, stats = /match/{id}/stats.",
+ "summary": {
+  "match": {
+   "teams": [
+    {
+     "name": "Wales",
+     "abbreviation": "WAL"
+    },
+    {
+     "name": "Australia",
+     "abbreviation": "AUS"
+    }
+   ],
+   "scores": [
+    26,
+    29
+   ],
+   "status": "C"
+  },
+  "teams": [
+   {
+    "teamList": {
+     "list": [
+      {
+       "player": {
+        "id": "65575",
+        "name": {
+         "display": "Sam Costelow",
+         "last": {
+          "known": "Costelow"
+         }
+        }
+       },
+       "number": "10"
+      },
+      {
+       "player": {
+        "id": "62334",
+        "name": {
+         "display": "Dewi Lake",
+         "last": {
+          "known": "Lake"
+         }
+        }
+       },
+       "number": "2"
+      },
+      {
+       "player": {
+        "id": "55677",
+        "name": {
+         "display": "Ryan Elias",
+         "last": {
+          "known": "Elias"
+         }
+        }
+       },
+       "number": "16"
+      },
+      {
+       "player": {
+        "id": "b53251f8-9f18-4f35-b502-f91846b557fc",
+        "name": {
+         "display": "Blair Murray",
+         "last": {
+          "known": "Murray"
+         }
+        }
+       },
+       "number": "15"
+      },
+      {
+       "player": {
+        "id": "62478",
+        "name": {
+         "display": "Max Llewellyn",
+         "last": {
+          "known": "Llewellyn"
+         }
+        }
+       },
+       "number": "12"
+      }
+     ]
+    },
+    "scoring": {
+     "Con": [
+      {
+       "phase": "L1",
+       "time": {
+        "secs": 2465,
+        "label": "41:05"
+       },
+       "type": "C2",
+       "typeLabel": "Conversion",
+       "playerId": "65575"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 3050,
+        "label": "50:50"
+       },
+       "type": "C2",
+       "typeLabel": "Conversion",
+       "playerId": "65575"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 3326,
+        "label": "55:26"
+       },
+       "type": "C2",
+       "typeLabel": "Conversion",
+       "playerId": "65575"
+      }
+     ],
+     "Pen": [],
+     "Try": [
+      {
+       "phase": "L1",
+       "time": {
+        "secs": 2409,
+        "label": "40:09"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "62334"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 2997,
+        "label": "49:57"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "62334"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 3267,
+        "label": "54:27"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "b53251f8-9f18-4f35-b502-f91846b557fc"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 4735,
+        "label": "78:55"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "55677"
+      }
+     ],
+     "dropGoals": []
+    },
+    "disciplinary": {
+     "RC": [],
+     "YC": [
+      {
+       "phase": "L1",
+       "time": {
+        "secs": 69,
+        "label": "01:09"
+       },
+       "type": "Yellow",
+       "typeLabel": "Yellow Card",
+       "playerId": "62478"
+      }
+     ]
+    }
+   },
+   {
+    "teamList": {
+     "list": [
+      {
+       "player": {
+        "id": "a3fbed60-014b-4fc7-82e3-61eb8e720847",
+        "name": {
+         "display": "Max Jorgensen",
+         "last": {
+          "known": "Jorgensen"
+         }
+        }
+       },
+       "number": "14"
+      },
+      {
+       "player": {
+        "id": "66851",
+        "name": {
+         "display": "Harry Wilson",
+         "last": {
+          "known": "Wilson"
+         }
+        }
+       },
+       "number": "8"
+      },
+      {
+       "player": {
+        "id": "61868",
+        "name": {
+         "display": "Taniela Tupou",
+         "last": {
+          "known": "Tupou"
+         }
+        }
+       },
+       "number": "3"
+      },
+      {
+       "player": {
+        "id": "60437",
+        "name": {
+         "display": "Len Ikitau",
+         "last": {
+          "known": "Ikitau"
+         }
+        }
+       },
+       "number": "12"
+      },
+      {
+       "player": {
+        "id": "c492f469-c69e-49d3-b916-b7f80afd5b5f",
+        "name": {
+         "display": "Carter Gordon",
+         "last": {
+          "known": "Gordon"
+         }
+        }
+       },
+       "number": "10"
+      },
+      {
+       "player": {
+        "id": "63983",
+        "name": {
+         "display": "Brandon Paenga-Amosa",
+         "last": {
+          "known": "Paenga-Amosa"
+         }
+        }
+       },
+       "number": "2"
+      },
+      {
+       "player": {
+        "id": "60431",
+        "name": {
+         "display": "Ryan Lonergan",
+         "last": {
+          "known": "Lonergan"
+         }
+        }
+       },
+       "number": "9"
+      }
+     ]
+    },
+    "scoring": {
+     "Con": [
+      {
+       "phase": "L1",
+       "time": {
+        "secs": 2014,
+        "label": "33:34"
+       },
+       "type": "C2",
+       "typeLabel": "Conversion",
+       "playerId": "60431"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 2830,
+        "label": "47:10"
+       },
+       "type": "C2",
+       "typeLabel": "Conversion",
+       "playerId": "60431"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 3850,
+        "label": "64:10"
+       },
+       "type": "C2",
+       "typeLabel": "Conversion",
+       "playerId": "c492f469-c69e-49d3-b916-b7f80afd5b5f"
+      }
+     ],
+     "Pen": [
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 4388,
+        "label": "73:08"
+       },
+       "type": "P3",
+       "typeLabel": "Penalty",
+       "playerId": "c492f469-c69e-49d3-b916-b7f80afd5b5f"
+      }
+     ],
+     "Try": [
+      {
+       "phase": "L1",
+       "time": {
+        "secs": 1256,
+        "label": "20:56"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "61868"
+      },
+      {
+       "phase": "L1",
+       "time": {
+        "secs": 1957,
+        "label": "32:37"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "63983"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 2782,
+        "label": "46:22"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "a3fbed60-014b-4fc7-82e3-61eb8e720847"
+      },
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 3797,
+        "label": "63:17"
+       },
+       "type": "T5",
+       "typeLabel": "Try",
+       "playerId": "60437"
+      }
+     ],
+     "dropGoals": []
+    },
+    "disciplinary": {
+     "RC": [],
+     "YC": [
+      {
+       "phase": "L2",
+       "time": {
+        "secs": 4657,
+        "label": "77:37"
+       },
+       "type": "Yellow",
+       "typeLabel": "Yellow Card",
+       "playerId": "66851"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "stats": {
+  "teamStats": [
+   {
+    "stats": {
+     "Possession": 0.51,
+     "Territory": 0.53,
+     "Tackles": 165,
+     "Metres": 391
+    }
+   },
+   {
+    "stats": {
+     "Possession": 0.49,
+     "Territory": 0.47,
+     "Tackles": 156,
+     "Metres": 474
+    }
+   }
+  ]
+ }
+}

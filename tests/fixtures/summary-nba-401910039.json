@@ -1,0 +1,226 @@
+{
+ "//": "ESPN game summary for event 401910039, fetched 2026-11-27 and cut to the fields the game window reads; paths are ESPN's own.",
+ "header": {
+  "competitions": [
+   {
+    "status": {
+     "type": {
+      "state": "post",
+      "completed": true,
+      "detail": "Final",
+      "shortDetail": "Final"
+     },
+     "featuredAthletes": []
+    },
+    "competitors": [
+     {
+      "id": "28",
+      "homeAway": "home",
+      "score": "111",
+      "winner": false,
+      "team": {
+       "id": "28",
+       "abbreviation": "TOR",
+       "displayName": "Toronto Raptors"
+      },
+      "linescores": [
+       {
+        "displayValue": "28"
+       },
+       {
+        "displayValue": "25"
+       },
+       {
+        "displayValue": "27"
+       },
+       {
+        "displayValue": "31"
+       }
+      ]
+     },
+     {
+      "id": "15",
+      "homeAway": "away",
+      "score": "116",
+      "winner": true,
+      "team": {
+       "id": "15",
+       "abbreviation": "MIL",
+       "displayName": "Milwaukee Bucks"
+      },
+      "linescores": [
+       {
+        "displayValue": "28"
+       },
+       {
+        "displayValue": "21"
+       },
+       {
+        "displayValue": "36"
+       },
+       {
+        "displayValue": "31"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "boxscore": {
+  "teams": [
+   {
+    "team": {
+     "id": "15",
+     "abbreviation": "MIL"
+    },
+    "statistics": [
+     {
+      "name": "fieldGoalPct",
+      "displayValue": "51",
+      "label": "Field Goal %"
+     },
+     {
+      "name": "threePointFieldGoalsMade-threePointFieldGoalsAttempted",
+      "displayValue": "14-28",
+      "label": "3PT"
+     },
+     {
+      "name": "totalRebounds",
+      "displayValue": "44",
+      "label": "Rebounds"
+     },
+     {
+      "name": "totalTurnovers",
+      "displayValue": "17",
+      "label": "Total Turnovers"
+     }
+    ]
+   },
+   {
+    "team": {
+     "id": "28",
+     "abbreviation": "TOR"
+    },
+    "statistics": [
+     {
+      "name": "fieldGoalPct",
+      "displayValue": "43",
+      "label": "Field Goal %"
+     },
+     {
+      "name": "threePointFieldGoalsMade-threePointFieldGoalsAttempted",
+      "displayValue": "14-38",
+      "label": "3PT"
+     },
+     {
+      "name": "totalRebounds",
+      "displayValue": "44",
+      "label": "Rebounds"
+     },
+     {
+      "name": "totalTurnovers",
+      "displayValue": "12",
+      "label": "Total Turnovers"
+     }
+    ]
+   }
+  ]
+ },
+ "leaders": [
+  {
+   "team": {
+    "id": "28",
+    "abbreviation": "TOR"
+   },
+   "leaders": [
+    {
+     "name": "points",
+     "displayName": "Points",
+     "leaders": [
+      {
+       "displayValue": "31",
+       "athlete": {
+        "displayName": "Scottie Barnes",
+        "shortName": "S. Barnes"
+       }
+      }
+     ]
+    },
+    {
+     "name": "assists",
+     "displayName": "Assists",
+     "leaders": [
+      {
+       "displayValue": "8",
+       "athlete": {
+        "displayName": "Scottie Barnes",
+        "shortName": "S. Barnes"
+       }
+      }
+     ]
+    },
+    {
+     "name": "rebounds",
+     "displayName": "Rebounds",
+     "leaders": [
+      {
+       "displayValue": "10",
+       "athlete": {
+        "displayName": "Jakob Poeltl",
+        "shortName": "J. Poeltl"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "team": {
+    "id": "15",
+    "abbreviation": "MIL"
+   },
+   "leaders": [
+    {
+     "name": "points",
+     "displayName": "Points",
+     "leaders": [
+      {
+       "displayValue": "32",
+       "athlete": {
+        "displayName": "Tyler Herro",
+        "shortName": "T. Herro"
+       }
+      }
+     ]
+    },
+    {
+     "name": "assists",
+     "displayName": "Assists",
+     "leaders": [
+      {
+       "displayValue": "8",
+       "athlete": {
+        "displayName": "Tyler Herro",
+        "shortName": "T. Herro"
+       }
+      }
+     ]
+    },
+    {
+     "name": "rebounds",
+     "displayName": "Rebounds",
+     "leaders": [
+      {
+       "displayValue": "11",
+       "athlete": {
+        "displayName": "Myles Turner",
+        "shortName": "M. Turner"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
