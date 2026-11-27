@@ -803,7 +803,7 @@ main{padding:22px 0 80px}
    whole width. It replaces a row that sat the teams on one line when both
    names happened to fit and wrapped them when they did not, so that
    neighbouring rows came out in different shapes. */
-.g-name,.g-city,.g-nick{display:inline}
+.g-name{display:inline}
 .mid-score{display:none}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .g-open{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
@@ -825,9 +825,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .sd-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:6px 0 2px}
 .sd-side{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;min-width:0}
 .sd-name{font-size:18px;font-weight:700;line-height:1.15;overflow-wrap:anywhere}
-.sd-name .g-name{display:flex;flex-direction:column;align-items:center}
-.sd-name .g-city{display:block;font-size:12.5px;font-weight:500;color:var(--muted)}
-.sd-name .g-nick{display:block}
+.sd-name .g-name{display:block;text-wrap:balance;hyphens:none}
 .sd-rec{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .sd-teams .at{font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0}
 .sd-teams .mid-score{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:28px;font-weight:500;
@@ -870,9 +868,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
   .game.matchup .g-side{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
   .game.matchup .g-team{display:flex;flex-direction:column;align-items:center;gap:0;
     white-space:normal;overflow-wrap:anywhere;text-align:center;font-size:15px;line-height:1.15}
-  .game.matchup .g-name{display:flex;flex-direction:column;align-items:center}
-  .game.matchup .g-city{display:block;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0;line-height:1.25}
-  .game.matchup .g-nick{display:block}
+  .game.matchup .g-name{display:block;text-wrap:balance;hyphens:none}
   /* Simpler, after the first round of feedback: no countdown before a
      game, and records, venue, stage and series move into the game's
      window. The row keeps the time, the teams, the league and where to
@@ -4617,14 +4613,16 @@ function orderedTeams(g){
      decides which way round a score is printed, so it is always set. */
   return {a:g.away,b:g.home,sep:"at",flip:true};
 }
-/* A North American club is a city and a nickname. On a phone the two
-   sit one over the other, so "Detroit Red Wings" never breaks as
-   "Detroit Red / Wings". A club whose name is one thing (soccer, a club
-   from the feed, a name written out in full) stays one. */
+/* Every club is written one way: its full name, in one size and weight,
+   "Vancouver Canucks" and "Vancouver Whitecaps" alike. Splitting a city
+   off as a small line above worked for the four North American leagues
+   but not for soccer, where most names have no city to split ("Real Salt
+   Lake", "Liverpool"), so two clubs from the same city looked like two
+   different conventions. A long name wraps onto two even lines on a
+   phone (text-wrap: balance), "Detroit / Red Wings" rather than
+   "Detroit Red / Wings". */
 function teamNameHtml(t, comp){
-  if(t && !t.full && !t.display && !SOCCER[comp] && t.city && t.name)
-    return '<span class="g-name"><span class="g-city">'+esc(t.city)+'</span> <span class="g-nick">'+esc(t.name)+'</span></span>';
-  return '<span class="g-name"><span class="g-nick">'+esc(fullName(t))+'</span></span>';
+  return '<span class="g-name">'+esc(fullName(t))+'</span>';
 }
 /* The score between the two names, for the side-by-side phone layout:
    away first like the names, the winner's figure at full strength. */
@@ -4770,7 +4768,7 @@ function rugbyRow(g, now){
   timeCell += '</div>';
 
   const side = (t, starred) => '<span class="g-side"><span class="g-team'+(starred?" starred":"")+(t.tbdSide?" tbd":"")+'">'
-    + '<span class="g-nick">'+esc(t.name)+'</span>'+(starred?'<span class="star-pip" aria-label="Starred nation">&#9733;</span>':"")+'</span></span>';
+    + '<span class="g-name">'+esc(t.name)+'</span>'+(starred?'<span class="star-pip" aria-label="Starred nation">&#9733;</span>':"")+'</span></span>';
   /* Away at home, like every other row; the score follows (flipped below). */
   const scored = !!(g.result && g.result.score && reveal && state !== "scheduled" && state !== "unknown");
   const teams = '<div class="g-teams'+(scored ? " scored" : "")+'">'+side(g.away,starB)
