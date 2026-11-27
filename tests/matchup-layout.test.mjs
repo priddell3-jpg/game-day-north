@@ -30,13 +30,16 @@ test("the score is printed the same way round as the names", () => {
   assert.deepEqual(P.scoreFor({comp:"UCL", away:LIV, home:BRU}, {score:[0, 3]}), [3, 0]);
 });
 
-test("a North American club is a city over a nickname; a one-word club stays one", () => {
-  /* One wrapper, so on a wide screen it reads as one name with one space
-     (the row's flex gap would otherwise open between city and nickname). */
-  assert.equal(P.teamNameHtml(DET, "NHL"), '<span class="g-name"><span class="g-city">Detroit</span> <span class="g-nick">Red Wings</span></span>');
-  assert.equal(P.teamNameHtml(LIV, "EPL"), '<span class="g-name"><span class="g-nick">Liverpool</span></span>');
-  assert.equal(P.teamNameHtml(BRU, "UCL"), '<span class="g-name"><span class="g-nick">Club Brugge</span></span>');
-  assert.equal(P.teamNameHtml(null, "NHL"), '<span class="g-name"><span class="g-nick">TBD</span></span>');
+test("every club is written the same way, by its full name", () => {
+  assert.equal(P.teamNameHtml(VAN, "NHL"), '<span class="g-name">Vancouver Canucks</span>');
+  assert.equal(P.teamNameHtml(DET, "NHL"), '<span class="g-name">Detroit Red Wings</span>');
+  assert.equal(P.teamNameHtml(team("van-mls", "MLS", "Vancouver", "Whitecaps FC", {display:"Vancouver Whitecaps"}), "MLS"),
+    '<span class="g-name">Vancouver Whitecaps</span>');
+  assert.equal(P.teamNameHtml(LIV, "EPL"), '<span class="g-name">Liverpool</span>');
+  assert.equal(P.teamNameHtml(BRU, "UCL"), '<span class="g-name">Club Brugge</span>');
+  assert.equal(P.teamNameHtml(null, "NHL"), '<span class="g-name">TBD</span>');
+  assert.doesNotMatch(SRC, /class="g-city"/, "no small city line for some clubs and not others");
+  assert.match(styleText(), /\.game\.matchup \.g-name\{display:block;text-wrap:balance/, "a long name wraps onto even lines");
 });
 
 test("the middle score marks the winner of a final, nobody in a draw or a live game", () => {
