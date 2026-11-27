@@ -840,6 +840,33 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .sd-facts dt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:3px}
 .sd-facts dd{margin:0;font-size:14px;line-height:1.35}
 .sd-watch{display:flex;flex-wrap:wrap;gap:4px 12px}
+.sd-loading,.sd-none{text-align:center;font-size:13px;color:var(--muted);margin:0 0 14px}
+.sd-details{margin:0 0 14px}
+.sd-line-wrap{overflow-x:auto;margin:0 0 10px}
+.sd-line{border-collapse:collapse;margin:0 auto;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+.sd-line th,.sd-line td{padding:3px 6px;text-align:center}
+.sd-line thead th{font-weight:500;color:var(--muted);font-size:10.5px}
+.sd-line tbody th{text-align:left;font-weight:600;padding-right:10px}
+.sd-line .sd-r{border-left:1px solid var(--line);padding-left:10px}
+.sd-line .sd-x{font-weight:600}
+.sd-notes{text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-2);margin:0 0 10px}
+.sd-h{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  margin:14px 0 6px;padding-top:10px;border-top:1px solid var(--line)}
+.sd-events,.sd-stand{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.sd-events li{display:grid;grid-template-columns:4.6em 3.2em minmax(0,1fr);gap:6px;align-items:baseline;font-size:13.5px;line-height:1.3}
+.sd-when{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.sd-abbr{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2)}
+.sd-tag{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line-strong);border-radius:4px;padding:0 4px;margin-left:4px;white-space:nowrap}
+.sd-tag.red{color:#fff;background:#c62828;border-color:#c62828}
+.sd-more{display:block;margin:8px auto 0;min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--line-strong);
+  background:transparent;color:var(--ink);font:inherit;font-size:13px}
+.sd-stand li{display:grid;grid-template-columns:3.2em minmax(0,1fr);gap:6px;font-size:13.5px;line-height:1.3}
+.sd-stand li:not(:has(.sd-abbr)){grid-template-columns:minmax(0,1fr)}
+.sd-stats{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.sd-stats thead th{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);padding:0 0 4px}
+.sd-stats td{width:30%;text-align:center;font-family:var(--mono);font-weight:600;padding:4px 0}
+.sd-stats tbody th{font-weight:400;color:var(--muted);font-size:12.5px;text-align:center}
 .sd-save{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;border-radius:12px;
   border:1px solid var(--line-strong);background:transparent;color:var(--ink);font:inherit;font-weight:600;font-size:15px}
 .sd-save[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
@@ -5260,6 +5287,7 @@ function gameDetail(g, now){
     + '<h2 class="vh" id="sheetTitle">'+esc(matchupLabel(g))+'</h2>'
     + '<div class="sd-teams'+(scored ? " scored" : "")+'">'+side(o.a)+mid+side(o.b)+'</div>'
     + '<p class="sd-status'+(st.status==="live" ? " live" : "")+'">'+status+'</p>'
+    + detailsBlock(g, now)
     + '<dl class="sd-facts">'
     + fact("When", when)
     + fact("Where", esc(where))
@@ -5284,7 +5312,8 @@ function sheetBox(){
     const al = e.target.closest("[data-alert]");
     if(al){ const id = al.getAttribute("data-alert"); alerts.has(id) ? alerts.delete(id) : alerts.add(id); persist(); render(); return; }
     const rv = e.target.closest("[data-reveal]");
-    if(rv){ revealed.add(rv.getAttribute("data-reveal")); render(); }
+    if(rv){ revealed.add(rv.getAttribute("data-reveal")); render(); return; }
+    if(e.target.closest("[data-sheet-all]")){ sheetShowAll = true; paintSheet(); }
   });
   /* Tab stays inside the window while it is open. */
   sheetEl.addEventListener("keydown", e => {
@@ -5300,7 +5329,14 @@ function sheetBox(){
 function paintSheet(){
   const g = sheetGame && GAMES.find(x => String(x.id) === sheetGame);
   if(!g){ closeGame(); return; }
-  sheetBox().querySelector(".sheet-in").innerHTML = gameDetail(g, Date.now());
+  const box = sheetBox(), now = Date.now();
+  /* A repaint replaces the window's contents; put focus back on the same
+     control so a keyboard or screen reader does not lose its place. */
+  const was = document.activeElement && box.contains(document.activeElement)
+    ? (document.activeElement.matches(".sd-close") ? ".sd-close" : document.activeElement.matches(".sd-save") ? ".sd-save" : null) : null;
+  box.querySelector(".sheet-in").innerHTML = gameDetail(g, now);
+  if(was){ const f = box.querySelector(was); if(f) f.focus(); }
+  ensureDetails(g, now);
 }
 function openGame(id, opener){
   sheetGame = String(id); sheetOpener = opener || null;
@@ -5309,6 +5345,8 @@ function openGame(id, opener){
   if(!sheetGame) return;
   box.hidden = false;
   document.documentElement.classList.add("sheet-open");
+  if(sheetTimer) clearInterval(sheetTimer);
+  sheetTimer = setInterval(() => { if(sheetGame) paintSheet(); }, DETAIL_TTL);
   const close = box.querySelector(".sd-close");
   if(close) close.focus();
 }
@@ -5322,7 +5360,225 @@ function closeGame(){
   let back = sheetOpener && document.contains(sheetOpener) ? sheetOpener : null;
   if(!back && id) back = [...document.querySelectorAll("#main [data-open]")].find(b => b.getAttribute("data-open") === id) || null;
   sheetOpener = null;
+  if(sheetTimer){ clearInterval(sheetTimer); sheetTimer = null; }
+  sheetShowAll = false;
   if(back) back.focus();
+}
+
+/* ---- game details: how it happened, who stood out, three numbers ----
+   From ESPN's game summary, the source the live scores already come
+   from (already named on the privacy page), fetched only when a game's
+   window is open and only once its score may be shown. Every sport fills
+   the same blocks: a score by period, the scoring in time order, the
+   players who stood out, and three team numbers. The parsers were written
+   against real summaries saved in tests/fixtures/summary-*.json; anything
+   missing from a summary simply leaves its block out. */
+const DETAILS = new Map();            // game id -> {model, at, busy, failed}
+const DETAIL_TTL = 30000;             // a live game is asked again after 30 s
+const DETAIL_ROWS = 6;                // scoring rows before "Show all"
+let sheetTimer = null;
+let sheetShowAll = false;
+function detailSport(comp){
+  const p = ESPN_PATH[comp] || "";
+  return p.startsWith("hockey/") ? "hockey" : p.startsWith("basketball/") ? "basketball"
+    : p.startsWith("football/") ? "football" : p.startsWith("baseball/") ? "baseball"
+    : p.startsWith("soccer/") ? "soccer" : null;
+}
+function detailsUrl(g){
+  if(!g || !g.eid || !ESPN_PATH[g.comp] || String(g.eid).indexOf(":") >= 0) return null;
+  return ESPN+ESPN_PATH[g.comp]+"/summary?event="+encodeURIComponent(g.eid);
+}
+const lastName = n => { const p = String(n || "").trim().split(/\s+/); return p.length > 1 ? p.slice(1).join(" ") : (p[0] || ""); };
+const ordinalWord = n => n + (["th","st","nd","rd"][(n % 100 - 20) % 10] || ["th","st","nd","rd"][n % 100] || "th");
+function parseDetails(sport, json){
+  if(!sport || !json || !json.header) return null;
+  const c = ((json.header.competitions || [])[0]) || {};
+  const comps = c.competitors || [];
+  const away = comps.find(x => x.homeAway === "away"), home = comps.find(x => x.homeAway === "home");
+  if(!away || !home || !away.team || !home.team) return null;
+  const tid = x => String(x.team.id), abbr = x => x.team.abbreviation || x.team.displayName || "";
+  const sideOf = id => String(id) === tid(away) ? "away" : String(id) === tid(home) ? "home" : null;
+  const abbrOf = side => side === "away" ? abbr(away) : side === "home" ? abbr(home) : "";
+  const status = (c.status || {}).type || {};
+  const stat = (x, name) => {
+    const t = ((json.boxscore || {}).teams || []).find(t => t.team && String(t.team.id) === tid(x));
+    const v = t && (t.statistics || []).find(s => s.name === name);
+    return v ? String(v.displayValue) : null;
+  };
+  const statRow = (label, fn) => { const a = fn(away), h = fn(home); return a != null && h != null ? {label, away:a, home:h} : null; };
+  const pct = name => x => { const v = stat(x, name); return v == null ? null : v + "%"; };
+  const leaderOf = (x, name) => {
+    const t = (json.leaders || []).find(t => t.team && String(t.team.id) === tid(x));
+    const cat = t && (t.leaders || []).find(l => l.name === name);
+    const top = cat && (cat.leaders || [])[0];
+    return top && top.athlete ? {who:lastName(top.athlete.displayName), value:String(top.displayValue)} : null;
+  };
+  const m = {sport, final:!!status.completed, awayAbbr:abbr(away), homeAbbr:abbr(home),
+             line:null, notes:[], eventsTitle:"", events:[], standTitle:"", stand:[], stats:[]};
+  const ls = x => (x.linescores || []).map(l => String(l.displayValue));
+  const la = ls(away), lh = ls(home), n = Math.max(la.length, lh.length);
+  const cells = (arr, fill) => Array.from({length:n}, (_, i) => arr[i] != null ? arr[i] : fill);
+
+  if(sport === "hockey"){
+    const so = /SO/.test(status.shortDetail || status.detail || "");
+    const labels = Array.from({length:n}, (_, i) => i < 3 ? ordinalWord(i + 1) : (so && i === n - 1) ? "SO" : (i === 3 ? "OT" : (i - 2) + "OT"));
+    if(n) m.line = {labels, away:cells(la, ""), home:cells(lh, "")};
+    m.eventsTitle = "Goals";
+    (json.plays || []).filter(p => p.scoringPlay).forEach(p => {
+      const parts = p.participants || [];
+      const sc = parts.find(x => x.type === "scorer"), as = parts.filter(x => x.type === "assister");
+      const str = ((p.strength || {}).abbreviation) || "";
+      const tag = /empty.?net/i.test(p.text || "") ? "EN" : str === "power-play" ? "PP" : str === "short-handed" ? "SH" : "";
+      const side = sideOf((p.team || {}).id);
+      m.events.push({when:[(p.period || {}).displayValue, (p.clock || {}).displayValue].filter(Boolean).join(" "), side, abbr:abbrOf(side),
+        text: sc && sc.athlete ? sc.athlete.displayName + (as.length ? " (" + as.map(a => lastName(a.athlete && a.athlete.displayName)).join(", ") + ")" : "") : String(p.text || ""),
+        tag});
+    });
+    m.standTitle = "Goalies";
+    ((json.boxscore || {}).players || []).forEach(t => {
+      const side = sideOf((t.team || {}).id);
+      const g = (t.statistics || []).find(s => s.name === "goalies");
+      if(!g || !side) return;
+      const k = g.keys || [], iS = k.indexOf("saves"), iA = k.indexOf("shotsAgainst");
+      (g.athletes || []).forEach(a => {
+        if(!a.athlete || iS < 0 || iA < 0) return;
+        m.stand.push({side, abbr:abbrOf(side), text:lastName(a.athlete.displayName)+" "+a.stats[iS]+" saves on "+a.stats[iA]});
+      });
+    });
+    m.stand.sort((a, b) => (a.side === "home") - (b.side === "home"));
+    m.stats = [statRow("Shots", x => stat(x, "shotsTotal")),
+      statRow("Power play", x => { const g = stat(x, "powerPlayGoals"), o = stat(x, "powerPlayOpportunities"); return g != null && o != null ? g+"/"+o : null; }),
+      statRow("Faceoffs", pct("faceoffPercent"))].filter(Boolean);
+  }
+  else if(sport === "soccer"){
+    if(la.length && lh.length) m.notes.push("Half-time: " + abbr(away) + " " + la[0] + "\u2013" + lh[0] + " " + abbr(home));
+    if(away.shootoutScore != null && home.shootoutScore != null)
+      m.notes.push("Penalties: " + abbr(away) + " " + away.shootoutScore + "\u2013" + home.shootoutScore + " " + abbr(home));
+    m.eventsTitle = "Goals";
+    (json.keyEvents || []).forEach(k => {
+      const type = ((k.type || {}).text) || "";
+      const red = /red card/i.test(type);
+      if(!k.scoringPlay && !red) return;
+      const og = /own goal/i.test(type), pen = /penalty/i.test(type);
+      const parts = (k.participants || []).map(x => x.athlete && x.athlete.displayName).filter(Boolean);
+      const side = sideOf((k.team || {}).id);   // a goal is filed under the side it counts for, own goals too
+      m.events.push({when:((k.clock || {}).displayValue) || "", side, abbr:abbrOf(side),
+        text:(parts[0] || String(k.shortText || "")) + (!og && !pen && !red && parts[1] ? " (" + lastName(parts[1]) + ")" : ""),
+        tag: red ? "red card" : og ? "own goal" : pen ? "pen" : ""});
+    });
+    m.stats = [statRow("Possession", pct("possessionPct")),
+      statRow("Shots on target", x => stat(x, "shotsOnTarget")),
+      statRow("Corners", x => stat(x, "wonCorners"))].filter(Boolean);
+  }
+  else if(sport === "basketball" || sport === "football"){
+    const labels = Array.from({length:n}, (_, i) => i < 4 ? "Q" + (i + 1) : (i === 4 ? "OT" : (i - 3) + "OT"));
+    if(n) m.line = {labels, away:cells(la, ""), home:cells(lh, "")};
+    m.standTitle = "Leaders";
+    if(sport === "basketball"){
+      [away, home].forEach(x => {
+        const side = x === away ? "away" : "home";
+        const bits = [["points","pts"],["rebounds","reb"],["assists","ast"]].map(([k, u]) => { const l = leaderOf(x, k); return l ? l.who+" "+l.value+" "+u : null; }).filter(Boolean);
+        if(bits.length) m.stand.push({side, abbr:abbrOf(side), text:bits.join(" \u00b7 ")});
+      });
+      m.stats = [statRow("Field goals", pct("fieldGoalPct")),
+        statRow("3-pointers", x => stat(x, "threePointFieldGoalsMade-threePointFieldGoalsAttempted")),
+        statRow("Turnovers", x => stat(x, "totalTurnovers"))].filter(Boolean);
+    } else {
+      m.eventsTitle = "Scoring plays";
+      (json.scoringPlays || []).forEach(sp => {
+        const q = (sp.period || {}).number;
+        const side = sideOf((sp.team || {}).id);
+        m.events.push({when:[q ? (q > 4 ? "OT" : "Q" + q) : "", (sp.clock || {}).displayValue].filter(Boolean).join(" "), side, abbr:abbrOf(side),
+          text:String(sp.text || "").trim(), tag:((sp.scoringType || {}).abbreviation) || ((sp.type || {}).abbreviation) || ""});
+      });
+      [away, home].forEach(x => {
+        const side = x === away ? "away" : "home";
+        const yds = l => { const mm = l && /(\d+)\s*YDS/i.exec(l.value); return mm ? l.who+" "+mm[1] : null; };
+        const bits = [["passingYards","pass"],["rushingYards","rush"],["receivingYards","rec"]].map(([k, u]) => { const y = yds(leaderOf(x, k)); return y ? y+" "+u : null; }).filter(Boolean);
+        if(bits.length) m.stand.push({side, abbr:abbrOf(side), text:bits.join(" \u00b7 ")});
+      });
+      m.stats = [statRow("Total yards", x => stat(x, "totalYards")),
+        statRow("Turnovers", x => stat(x, "turnovers")),
+        statRow("Possession", x => stat(x, "possessionTime"))].filter(Boolean);
+    }
+  }
+  else if(sport === "baseball"){
+    const inn = Math.max(9, n);
+    const pad = arr => Array.from({length:inn}, (_, i) => arr[i] != null ? arr[i] : (m.final ? "x" : ""));
+    if(n) m.line = {labels:Array.from({length:inn}, (_, i) => String(i + 1)), away:pad(la), home:pad(lh),
+      extra:{labels:["R","H","E"], away:[away.score, away.hits, away.errors].map(v => v == null ? "" : String(v)),
+                                   home:[home.score, home.hits, home.errors].map(v => v == null ? "" : String(v))}};
+    m.eventsTitle = "Scoring";
+    (json.plays || []).filter(p => p.scoringPlay).forEach(p => {
+      const per = p.period || {};
+      const side = sideOf((p.team || {}).id);
+      m.events.push({when:(per.type === "Top" ? "Top " : per.type === "Bottom" ? "Bot " : "") + (per.number ? ordinalWord(per.number) : ""),
+        side, abbr:abbrOf(side), text:String(p.text || ""), tag:/homered/i.test(p.text || "") ? "HR" : ""});
+    });
+    m.standTitle = "Pitchers";
+    const fa = (c.status || {}).featuredAthletes || [];
+    const pitcher = (name, letter, withRecord) => { const f = fa.find(x => x.name === name); return f && f.athlete ? letter+" "+lastName(f.athlete.displayName)+(withRecord && f.athlete.record ? " ("+f.athlete.record+")" : "") : null; };
+    const line = [pitcher("winningPitcher","W",true), pitcher("losingPitcher","L",true), pitcher("savingPitcher","S",false)].filter(Boolean);
+    if(line.length) m.stand.push({side:null, abbr:"", text:line.join(" \u00b7 ")});
+  }
+  return m;
+}
+function detailsHtml(m){
+  if(!m) return "";
+  let h = '<div class="sd-details">';
+  if(m.line){
+    const ex = m.line.extra;
+    const row = (side, ab) => '<tr><th scope="row">'+esc(ab)+'</th>'+m.line[side].map(v => '<td>'+esc(v)+'</td>').join("")
+      + (ex ? ex[side].map((v, i) => '<td class="'+(i ? "" : "sd-r ")+'sd-x">'+esc(v)+'</td>').join("") : "") + '</tr>';
+    h += '<div class="sd-line-wrap"><table class="sd-line"><thead><tr><th></th>'+m.line.labels.map(l => '<th scope="col">'+esc(l)+'</th>').join("")
+      + (ex ? ex.labels.map((l, i) => '<th scope="col" class="'+(i ? "" : "sd-r ")+'sd-x">'+esc(l)+'</th>').join("") : "")
+      + '</tr></thead><tbody>'+row("away", m.awayAbbr)+row("home", m.homeAbbr)+'</tbody></table></div>';
+  }
+  if(m.notes.length) h += '<p class="sd-notes">'+m.notes.map(esc).join(" &middot; ")+'</p>';
+  if(m.events.length){
+    const shown = sheetShowAll ? m.events : m.events.slice(0, DETAIL_ROWS);
+    h += '<h3 class="sd-h">'+esc(m.eventsTitle)+'</h3><ol class="sd-events">'
+      + shown.map(e => '<li class="'+(e.side || "")+'"><span class="sd-when">'+esc(e.when)+'</span><span class="sd-abbr">'+esc(e.abbr)+'</span>'
+        + '<span class="sd-what">'+esc(e.text)+(e.tag ? ' <span class="sd-tag'+(e.tag === "red card" ? " red" : "")+'">'+esc(e.tag)+'</span>' : '')+'</span></li>').join("")
+      + '</ol>';
+    if(m.events.length > shown.length)
+      h += '<button type="button" class="sd-more" data-sheet-all>Show all '+m.events.length+'</button>';
+  } else if(m.eventsTitle){
+    h += '<h3 class="sd-h">'+esc(m.eventsTitle)+'</h3><p class="sd-none">None yet.</p>';
+  }
+  if(m.stand.length)
+    h += '<h3 class="sd-h">'+esc(m.standTitle)+'</h3><ul class="sd-stand">'
+      + m.stand.map(s => '<li>'+(s.abbr ? '<span class="sd-abbr">'+esc(s.abbr)+'</span>' : '')+'<span>'+esc(s.text)+'</span></li>').join("") + '</ul>';
+  if(m.stats.length)
+    h += '<h3 class="sd-h">Team stats</h3><table class="sd-stats"><thead><tr><th scope="col">'+esc(m.awayAbbr)+'</th><th></th><th scope="col">'+esc(m.homeAbbr)+'</th></tr></thead><tbody>'
+      + m.stats.map(r => '<tr><td>'+esc(r.away)+'</td><th scope="row">'+esc(r.label)+'</th><td>'+esc(r.home)+'</td></tr>').join("") + '</tbody></table>';
+  return h + '</div>';
+}
+/* What the window shows under the score. Nothing before a game, nothing
+   with scores off until revealed, and nothing for a game ESPN has no
+   summary for (rugby, tennis, cycling). */
+function detailsBlock(g, now){
+  if(!detailsUrl(g) || !detailSport(g.comp)) return "";
+  const st = stateOf(g, now).status;
+  if(st !== "live" && st !== "final") return "";
+  if(!(showScores || revealed.has(g.id))) return "";
+  const d = DETAILS.get(g.id);
+  if(d && d.model) return detailsHtml(d.model);
+  if(d && d.failed) return '<p class="sd-loading">Game details aren&rsquo;t available right now.</p>';
+  return '<p class="sd-loading">Loading game details&hellip;</p>';
+}
+function ensureDetails(g, now){
+  const url = detailsUrl(g);
+  if(!url || !detailSport(g.comp)) return;
+  const st = stateOf(g, now).status;
+  if((st !== "live" && st !== "final") || !(showScores || revealed.has(g.id))) return;
+  const d = DETAILS.get(g.id) || {};
+  if(d.busy || (d.model && d.model.final) || (d.at && now - d.at < DETAIL_TTL)) return;
+  DETAILS.set(g.id, Object.assign({}, d, {busy:true}));
+  jget(url, 12000)
+    .then(json => { const model = parseDetails(detailSport(g.comp), json); DETAILS.set(g.id, model ? {model, at:Date.now()} : Object.assign({}, d, {failed:!d.model, at:Date.now()})); })
+    .catch(() => DETAILS.set(g.id, Object.assign({}, d, {failed:!d.model, at:Date.now()})))
+    .then(() => { if(sheetGame === String(g.id)) paintSheet(); });
 }
 
 function daySection(key, games, now, todayKey){

@@ -348,6 +348,7 @@ test("positions read the way a person says them", () => {
 
 const ROW_PREAMBLE = `
   const DAY = 86400000;
+  let sheetShowAll = false;
   let showScores = false, dataStale = false, liveMode = true;
   let services = new Set(), revealed = new Set(), alerts = new Set();
   let selected = new Set();
@@ -371,7 +372,7 @@ const ROW_NAMES = ["COMPS","SERVICES","CARRIER_SERVICE","SRC","CHECKED","RIGHTS"
   "fmtTime","fmtShortDate","countdownText","BELL","saveButton","provenanceOf","servicesFor",
   "covered","visibleRights","carrierHtml","orderedTeams","scoreFor","stateOf","timeState","START_VERB","verbOf","venueTag","seriesTag",
   "attachTables","tablePlayed","rowPlayed","recordFor","recordText","recordLine","ordinal","ORDINALS","shortScope",
-  "RESULTS_DAYS","spoiledTeams","gameRow","fmtLongDay","stripTags","gameDetail"];
+  "RESULTS_DAYS","spoiledTeams","gameRow","fmtLongDay","stripTags","ESPN","ESPN_PATH","DETAILS","DETAIL_ROWS","detailSport","detailsUrl","lastName","ordinalWord","parseDetails","detailsHtml","detailsBlock","gameDetail"];
 
 const NOW = Date.parse("2026-11-20T23:00:00Z");
 const TEAM = (id, city, name, comp) => ({id, home:comp, city, name, abbr:id.toUpperCase().slice(0,3), color:"#123456"});
